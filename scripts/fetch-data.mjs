@@ -149,7 +149,7 @@ async function fetchHarvestVaults() {
     },
     {
       asset: "USDT",
-      tokens: ["USDT"],
+      tokens: ["USDT", "USDT0"],
       slugPrefix: "usdt",
     },
     {
@@ -173,12 +173,21 @@ async function fetchHarvestVaults() {
   // First-match wins; ASSET_GROUPS order defines priority.
   const claimedAddresses = new Set();
 
+  // Normalize a tokenName so unicode/punctuation variants of the same
+  // symbol all collapse to one ASCII spelling. Eg "USD₮0" tether symbol
+  // → "USDT0", "USDT-0" → "USDT0", " usdT0 " → "USDT0".
+  const normalizeToken = (s) =>
+    String(s ?? "")
+      .toUpperCase()
+      .replace(/₮/g, "T")
+      .replace(/[^A-Z0-9]/g, "");
+
   for (const group of ASSET_GROUPS) {
-    const tokenSet = new Set(group.tokens.map((t) => t.toUpperCase()));
+    const tokenSet = new Set(group.tokens.map(normalizeToken));
     const matched = activeVaults.filter((v) => {
       if (claimedAddresses.has(v.vaultAddress)) return false;
       const names = v.tokenNames || [];
-      const hit = names.some((n) => tokenSet.has(String(n).toUpperCase()));
+      const hit = names.some((n) => tokenSet.has(normalizeToken(n)));
       if (hit) claimedAddresses.add(v.vaultAddress);
       return hit;
     });
@@ -216,9 +225,12 @@ async function fetchHarvestVaults() {
 
       // Surface the actual underlying token (e.g. wstETH) instead of the
       // group name, so users can tell apart ETH vs wstETH vs stETH vaults.
-      const matchedToken =
+      // USDT0 is a wrapped form of USDT we treat as plain USDT in the UI.
+      const matchedTokenRaw =
         (v.tokenNames || []).find((n) => tokenSet.has(String(n).toUpperCase())) ||
         group.asset;
+      const matchedToken =
+        String(matchedTokenRaw).toUpperCase() === "USDT0" ? "USDT" : matchedTokenRaw;
 
       const productName = strategy
         ? `${matchedToken} ${strategy}`

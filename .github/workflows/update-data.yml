@@ -12,8 +12,15 @@ jobs:
   update-data:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      # Always pin to main, regardless of which branch the repo's default
+      # is currently set to. Without this, schedule events were checking
+      # out a stale dev branch and the data refresh never landed on the
+      # branch Vercel deploys from.
+      - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,7 +37,19 @@ jobs:
           git add data/vaults.json data/history.json data/slugs.json
           if git diff --cached --quiet; then
             echo "No data changes detected."
-          else
-            git commit -m "chore: update vault data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git push
+            exit 0
           fi
+          git commit -m "chore: update vault data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # Race-safe push: if another commit landed on main between
+          # checkout and push, rebase onto it and try once more.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, rebasing on origin/main."
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "Failed to push after retries."
+          exit 1
