@@ -19,7 +19,7 @@ const NETWORK_HUBS = [
 const RESOURCES = [
   { label: "API", href: "#" },
   { label: "Methodology", href: "/methodology" },
-  { label: "Risk framework", href: "/risk-framework" },
+  { label: "Risk framework", href: "/methodology#risk-framework" },
   { label: "Docs", href: "#" },
   { label: "Status", href: "#" },
   { label: "Terms", href: "#" },
