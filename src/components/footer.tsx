@@ -61,7 +61,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mono dim foot-copy">&copy; 2026 · Data refreshed hourly</div>
+        <div className="mono dim foot-copy">&copy; 2026 · Data refreshed hourly.</div>
       </div>
     </footer>
   );
