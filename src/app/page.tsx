@@ -253,6 +253,7 @@ export default async function Home() {
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
     />
+    <div className="dot-bg-home" aria-hidden="true" />
     <TickerStrip vaults={vaults} sparklines={sparklines} />
     <main className="page">
       {/* === Hero v2 === */}

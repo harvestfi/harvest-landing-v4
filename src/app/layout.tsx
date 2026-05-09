@@ -50,7 +50,7 @@ export default async function RootLayout({
       lang="en"
       className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable}`}
     >
-      <body style={{ background: "var(--bg)", color: "var(--ink)", fontFamily: "var(--sans)" }}>
+      <body>
         <Header />
         {children}
         <Footer />
