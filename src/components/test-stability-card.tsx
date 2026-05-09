@@ -101,6 +101,8 @@ export function TestStabilityCard({
     <section className="pp-section uni-stability" id="consistency">
       <h2>Strategy stability</h2>
       <div className="uni-stability-card">
+        <div className="uni-stability-grid">
+        <div className="uni-stability-left">
         <div className="uni-stability-head">
           <div className="uni-stability-score-block">
             <div className="uni-stability-score">{s.score}</div>
@@ -148,6 +150,7 @@ export function TestStabilityCard({
               />
             );
           })}
+        </div>
         </div>
 
         <div className="uni-stability-stats">
@@ -200,6 +203,7 @@ export function TestStabilityCard({
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </section>

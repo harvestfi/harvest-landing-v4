@@ -1132,14 +1132,33 @@ body:has(.uni-shell) {
 .uni-shell .about-prose-icon--up { color: oklch(0.58 0.14 155); }
 .uni-shell .about-prose-icon--down { color: oklch(0.58 0.18 25); }
 
-/* Strategy stability card: replaces ConsistencyScore + YieldBreakdown
-   pair. Single full-width White Smoke surface; score gauge on top
-   left, label on top right, segmented progress bar across, four-stat
-   rail below (Mean / Volatility / Range / Sources). */
+/* Strategy stability card: 50/50 split on desktop. Left half holds
+   the score block + VU-meter gauge; right half holds the four-stat
+   rail (Mean / Volatility / Range / Sources). Below 900px the two
+   columns stack so the meter still reads at full width. */
 .uni-shell .uni-stability-card {
   background: var(--uni-card);
   border-radius: var(--uni-radius);
   padding: 28px 32px;
+}
+.uni-shell .uni-stability-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  align-items: center;
+}
+.uni-shell .uni-stability-left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .uni-shell .uni-stability-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
 }
 .uni-shell .uni-stability-head {
   display: flex;
@@ -1196,7 +1215,7 @@ body:has(.uni-shell) {
   align-items: flex-end;
   gap: 4px;
   height: 64px;
-  margin-bottom: 26px;
+  margin-bottom: 0;
   padding: 0 2px;
 }
 .uni-shell .uni-stab-tick {
@@ -1226,10 +1245,11 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-stability-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(25, 23, 23, 0.06);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 28px;
+  padding-top: 0;
+  border-top: 0;
+  align-self: center;
 }
 .uni-shell .uni-stability-stat {
   display: flex;
