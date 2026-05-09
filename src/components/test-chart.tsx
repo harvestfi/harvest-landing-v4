@@ -215,7 +215,7 @@ export function TestChart({ series }: Props) {
   // This was the root cause of the perceived "lag" when switching
   // between timeframes: every prior click was followed by a stream
   // of mouse-moves each triggering the whole computation again.
-  const { points, heightFor, linePath, areaPath } = useMemo(() => {
+  const { points, heightFor, linePath, areaPath, stepLinePath, stepAreaPath } = useMemo(() => {
     const all = series[metric] ?? [];
     const sorted = [...all].sort((a, b) => a.t - b.t);
     const downs = bucketByTime(sorted, range);
