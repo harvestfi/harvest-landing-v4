@@ -1187,20 +1187,42 @@ body:has(.uni-shell) {
   font-size: 13px;
   color: var(--uni-ink-3);
 }
-.uni-shell .uni-stability-bar {
-  position: relative;
-  height: 8px;
-  background: rgba(25, 23, 23, 0.06);
-  border-radius: var(--uni-radius-pill);
-  overflow: hidden;
-  margin-bottom: 24px;
+/* VU-meter score gauge replacing the linear bar. 20 ticks ramping
+   from short to tall left-to-right, filled gold based on score.
+   Each tick fades + scales up on mount with a staggered delay so
+   the gauge reads as "winding to max", not a static fill. */
+.uni-shell .uni-stability-meter {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 64px;
+  margin-bottom: 26px;
+  padding: 0 2px;
 }
-.uni-shell .uni-stability-bar-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
+.uni-shell .uni-stab-tick {
+  flex: 1;
+  min-width: 0;
+  background: rgba(25, 23, 23, 0.07);
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom center;
+  animation: uni-stab-rise 0.45s cubic-bezier(0.2, 0.65, 0.35, 1.05) backwards;
+}
+.uni-shell .uni-stab-tick.on {
   background: var(--uni-gold);
-  border-radius: var(--uni-radius-pill);
-  transition: width 0.4s ease;
+  box-shadow: 0 0 6px -1px rgba(255, 185, 54, 0.45);
+}
+@keyframes uni-stab-rise {
+  from {
+    transform: scaleY(0.25);
+    opacity: 0.4;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-shell .uni-stab-tick { animation: none; }
 }
 .uni-shell .uni-stability-stats {
   display: grid;

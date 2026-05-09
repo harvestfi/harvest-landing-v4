@@ -119,11 +119,35 @@ export function TestStabilityCard({
           </div>
         </div>
 
-        <div className="uni-stability-bar">
-          <div
-            className="uni-stability-bar-fill"
-            style={{ width: `${Math.max(2, s.score)}%` }}
-          />
+        {/* VU-meter style score gauge: 20 vertical ticks ramping from
+            short (left) to tall (right). Filled gold when the tick
+            index falls within the score band; staggered fade-in so
+            it reads as "the dial winding up to max", not a static
+            progress bar. */}
+        <div
+          className="uni-stability-meter"
+          role="meter"
+          aria-valuenow={s.score}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Stability score ${s.score} of 100`}
+        >
+          {Array.from({ length: 20 }).map((_, i) => {
+            const tickScore = (i + 1) * 5; // 5, 10, 15, ... 100
+            const isFilled = tickScore <= s.score;
+            // Height ramps from 38% (leftmost) to 100% (rightmost)
+            const heightPct = 38 + (i / 19) * 62;
+            return (
+              <span
+                key={i}
+                className={`uni-stab-tick${isFilled ? " on" : ""}`}
+                style={{
+                  height: `${heightPct}%`,
+                  animationDelay: `${i * 22}ms`,
+                }}
+              />
+            );
+          })}
         </div>
 
         <div className="uni-stability-stats">
