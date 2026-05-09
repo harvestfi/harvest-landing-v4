@@ -28,6 +28,7 @@ import { YieldTrajectory } from "@/components/yield-trajectory";
 import { TestChart, type ChartSeries } from "@/components/test-chart";
 import { TestJumpNav } from "@/components/test-jumpnav";
 import { TestStabilityCard } from "@/components/test-stability-card";
+import { TestStickyHeader } from "@/components/test-sticky-header";
 import "./test.css";
 
 const TEST_SLUG = "usdc-40-acres-base";
@@ -129,7 +130,11 @@ export default async function TestPage() {
 
   return (
     <div className="uni-shell">
-      {/* Breadcrumb: Home › {Asset} Yield › {Product} */}
+      {/* Mobile-only sticky sub-header that appears once user scrolls
+          past the jump nav. */}
+      <TestStickyHeader productName={vault.productName} asset={vault.asset} />
+
+      {/* Breadcrumb: Home › {Asset} Yield Ranking › {Product} */}
       <div className="uni-crumbs">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
@@ -154,7 +159,7 @@ export default async function TestPage() {
           spec sheet. */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
-          <AssetIcon asset={vault.asset} size={52} />
+          <AssetIcon asset={vault.asset} size={68} />
         </span>
         <h1 className="uni-title">{vault.productName}</h1>
         <div className="uni-title-meta">

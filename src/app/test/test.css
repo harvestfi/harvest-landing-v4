@@ -96,14 +96,18 @@ body:has(.uni-shell) {
   gap: 6px;
   min-width: 0;
 }
+/* Product title is now the largest type on the page (was second to
+   the chart bignum). Swapped scales: title bumps to 50px, chart
+   bignum-value drops from 48 → 32px. The icon scales up to 68px so
+   it still anchors the title visually. */
 .uni-shell .uni-title {
   font-family: var(--display);
-  font-size: 34px;
+  font-size: 50px;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.025em;
   color: var(--uni-ink);
   margin: 0;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 .uni-shell .uni-title-byline {
   margin: 0;
@@ -228,10 +232,10 @@ body:has(.uni-shell) {
 
 .uni-shell .uni-bignum-value {
   font-family: var(--display);
-  font-size: 48px;
+  font-size: 32px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  letter-spacing: -0.014em;
+  line-height: 1.1;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
@@ -460,34 +464,34 @@ body:has(.uni-shell) {
   top: 24px;
 }
 
-/* Secondary CTA: outlined Sunflower Gold pill with gold icon and
-   Onyx text. The page's primary CTA is the eco-network "See all N
-   strategies" button (filled gold) - this one sits above the stats
-   card and is intentionally less loud so it doesn't compete. Soft
-   gold-tinted fill on hover keeps the same family. */
+/* Primary CTA: filled Sunflower Gold pill with Onyx ink. The
+   conversion path on the page; the rest of the CTAs (eco "See all"
+   etc.) keep their existing layouts. Soft lift + gold glow on hover. */
 .uni-shell .uni-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12.5px 18px;
-  background: transparent;
+  padding: 14px 18px;
+  background: var(--uni-gold);
   color: var(--uni-ink);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.005em;
   border-radius: var(--uni-radius);
   text-decoration: none;
-  border: 1.5px solid var(--uni-gold);
-  transition: background 0.15s ease, transform 0.15s ease;
+  border: 0;
+  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
+  transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .uni-shell .uni-cta:hover {
-  background: var(--uni-gold-bg);
+  filter: brightness(0.96);
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px rgba(255, 185, 54, 0.55);
 }
 .uni-shell .uni-cta-icon {
   flex-shrink: 0;
-  color: var(--uni-gold);
+  color: var(--uni-ink);
   transition: transform 0.15s ease;
 }
 .uni-shell .uni-cta:hover .uni-cta-icon {
@@ -713,6 +717,78 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-jump-item:hover .uni-jump-icon { stroke: var(--uni-gold); }
 .uni-shell .uni-jump-label { line-height: 1; }
+
+/* === Mobile sticky sub-header ======================================
+   Pinned below the global topnav once the user scrolls past the
+   jump-to nav. Asset icon + product name on the left, four short
+   quick-jump links on the right. Slides in/out via transform on the
+   `visible` class. Hidden entirely on desktop (>=901px). */
+.uni-shell .uni-sticky-bar {
+  display: none;
+}
+@media (max-width: 900px) {
+  .uni-shell .uni-sticky-bar {
+    display: block;
+    position: fixed;
+    top: 52px;
+    left: 0;
+    right: 0;
+    z-index: 28;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--uni-line);
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+  .uni-shell .uni-sticky-bar.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .uni-shell .uni-sticky-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    max-width: var(--shell-max);
+    margin: 0 auto;
+  }
+  .uni-shell .uni-sticky-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--uni-ink);
+    text-decoration: none;
+    min-width: 0;
+  }
+  .uni-shell .uni-sticky-left img {
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .uni-shell .uni-sticky-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .uni-shell .uni-sticky-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .uni-shell .uni-sticky-right a {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--uni-ink-2);
+    text-decoration: none;
+  }
+  .uni-shell .uni-sticky-right a:hover { color: var(--uni-ink); }
+}
 
 /* Mobile: jump rail wraps and items fall back to natural width so
    labels don't get squashed when divided into 7 equal columns. */
@@ -1573,9 +1649,10 @@ body:has(.uni-shell) {
 }
 @media (max-width: 700px) {
   .uni-shell { padding: 16px 16px 60px; }
-  .uni-shell .uni-title { font-size: 26px; }
+  .uni-shell .uni-title { font-size: 32px; }
   .uni-shell .uni-title-byline { font-size: 13px; gap: 6px; }
-  .uni-shell .uni-bignum-value { font-size: 34px; }
+  .uni-shell .uni-title-icon img { width: 48px !important; height: 48px !important; }
+  .uni-shell .uni-bignum-value { font-size: 26px; }
   .uni-shell .uni-side-headline { font-size: 26px; }
   .uni-shell .uni-side-value { font-size: 18px; }
   .uni-shell .uni-soft-card { padding: 20px 18px; }

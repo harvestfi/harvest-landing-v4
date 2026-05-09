@@ -122,8 +122,8 @@ export interface Crumb {
 export function productPageCrumbs(vault: YieldVault): Crumb[] {
   const isUmbrella = isUmbrellaAsset(vault.asset);
   const familyLabel = isUmbrella
-    ? `${getSubAssetFamilyName(vault.asset)} Yield`
-    : `${vault.asset} Yield`;
+    ? `${getSubAssetFamilyName(vault.asset)} Yield Ranking`
+    : `${vault.asset} Yield Ranking`;
   const hubPath = `${SITE_URL}/${vault.asset.toLowerCase()}`;
 
   return [
@@ -136,8 +136,8 @@ export function productPageCrumbs(vault: YieldVault): Crumb[] {
 export function assetHubCrumbs(asset: string): Crumb[] {
   const isUmbrella = isUmbrellaAsset(asset);
   const label = isUmbrella
-    ? `${getSubAssetFamilyName(asset)} Yield`
-    : `${asset} Yield`;
+    ? `${getSubAssetFamilyName(asset)} Yield Ranking`
+    : `${asset} Yield Ranking`;
   return [{ name: "Home", url: SITE_URL }, { name: label }];
 }
 
