@@ -1,51 +1,38 @@
 /* =====================================================================
-   Uniswap-flavored visual language, scoped to .uni-shell on /test only.
-   Tokens (pink/blue gradient bg, hot-pink accent, very rounded cards,
-   soft drop shadow, navy ink) approximate the public uniswap.org/swap
-   look. Targets only descendants of .uni-shell so the rest of the
-   site is untouched.
+   Uniswap interface visual language, scoped to .uni-shell on /test.
+   Reference: app.uniswap.org Pool detail / Explore / Swap. Mostly
+   white background, hot magenta accent (#FF007A) used sparingly for
+   chart bars and CTAs only, soft #F7F8FA card surfaces with no heavy
+   shadow, navy #0D111C ink, neutral chip pills.
    ===================================================================== */
 .uni-shell {
-  --uni-bg-from: #FFE9F4;
-  --uni-bg-to:   #EAF1FF;
-  --uni-card:    #FFFFFF;
-  --uni-card-shadow:
-    0 24px 60px -20px rgba(13, 17, 28, 0.12),
-    0 8px 20px -10px rgba(13, 17, 28, 0.06),
-    0 0 0 1px rgba(13, 17, 28, 0.04);
-  --uni-radius:    24px;
-  --uni-radius-sm: 16px;
-  --uni-radius-pill: 999px;
-  --uni-pink:      #FC72FF;
-  --uni-pink-2:    #FF007A;
-  --uni-pink-soft: #FFE3F1;
-  --uni-blue:      #4C82FB;
-  --uni-ink:       #0D111C;
-  --uni-ink-2:     #5D6785;
-  --uni-ink-3:     #98A1C0;
-  --uni-line:      rgba(13, 17, 28, 0.06);
+  --uni-bg:           #FFFFFF;
+  --uni-card:         #F7F8FA;
+  --uni-card-border:  rgba(13, 17, 28, 0.04);
+  --uni-radius:       20px;
+  --uni-radius-sm:    14px;
+  --uni-radius-pill:  999px;
+  --uni-pink:         #FF007A;
+  --uni-pink-soft:    #FFD9EA;
+  --uni-pink-bg:      #FFE8F2;
+  --uni-ink:          #0D111C;
+  --uni-ink-2:        #5D6785;
+  --uni-ink-3:        #98A1C0;
+  --uni-line:         #E5E7EB;
 
-  position: relative;
-  max-width: 1080px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 28px var(--shell-pad) 80px;
+  padding: 24px var(--shell-pad) 80px;
   color: var(--uni-ink);
   font-family: var(--sans);
-  isolation: isolate;
+  background: var(--uni-bg);
 }
 
-/* Pink+blue background gradient — radial blobs that fade off so it
-   doesn't dominate, plus a faint top-down wash. Sits on z=-1 so all
-   real content layers above it. */
-.uni-shell .uni-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(60% 50% at 18% 12%, var(--uni-bg-from) 0%, transparent 60%),
-    radial-gradient(55% 45% at 82% 18%, var(--uni-bg-to) 0%, transparent 60%),
-    linear-gradient(180deg, #FFFFFF 0%, #FAFBFE 100%);
+/* Dotted-bg layer from the homepage motif sits behind body. The /test
+   page is white-on-white; explicitly clear it so the dot grid doesn't
+   poke through and break the "swap.uniswap.org" cleanness. */
+body:has(.uni-shell) {
+  background-image: none !important;
 }
 
 /* Test-page banner */
@@ -53,334 +40,405 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px 8px 12px;
-  margin-bottom: 24px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
+  padding: 7px 14px 7px 12px;
+  margin-bottom: 22px;
+  background: var(--uni-pink-bg);
   border-radius: var(--uni-radius-pill);
-  border: 1px solid var(--uni-line);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--uni-ink-2);
+  border: 1px solid var(--uni-pink-soft);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--uni-pink);
+  font-weight: 500;
 }
 .uni-shell .uni-banner-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--uni-pink-2);
-  box-shadow: 0 0 8px rgba(255, 0, 122, 0.55);
+  background: var(--uni-pink);
 }
 
-/* Hero */
-.uni-shell .uni-hero {
-  padding: 36px 8px 28px;
-  margin-bottom: 24px;
-}
-.uni-shell .uni-hero-eyebrow {
+/* Breadcrumbs */
+.uni-shell .uni-crumbs {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--uni-ink-2);
 }
-.uni-shell .uni-chip {
+.uni-shell .uni-crumbs a {
+  color: var(--uni-ink-2);
+  font-weight: 500;
+}
+.uni-shell .uni-crumbs a:hover { color: var(--uni-ink); }
+.uni-shell .uni-crumbs-sep { color: var(--uni-ink-3); font-weight: 400; }
+.uni-shell .uni-crumbs-current { color: var(--uni-ink); font-weight: 500; }
+
+/* Title row */
+.uni-shell .uni-title-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 6px 0 18px;
+}
+.uni-shell .uni-title-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid var(--uni-line);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.uni-shell .uni-title-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.uni-shell .uni-title-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.uni-shell .uni-title {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--uni-ink);
+  margin: 0;
+  line-height: 1.1;
+}
+.uni-shell .uni-pill {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: var(--uni-radius-pill);
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--uni-line);
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--uni-ink-2);
-  letter-spacing: 0.02em;
-  backdrop-filter: blur(8px);
-}
-.uni-shell .uni-hero-title {
-  font-family: var(--display);
-  font-size: 56px;
-  line-height: 1.02;
-  letter-spacing: -0.025em;
-  font-weight: 600;
-  margin: 0 0 10px;
-  color: var(--uni-ink);
-  background: linear-gradient(120deg, var(--uni-ink) 0%, var(--uni-pink-2) 120%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.uni-shell .uni-hero-sub {
-  font-size: 16px;
-  color: var(--uni-ink-2);
-  margin: 0 0 28px;
-}
-.uni-shell .uni-hero-sub a {
-  color: var(--uni-pink-2);
-  border-bottom: 1px solid currentColor;
-}
-
-.uni-shell .uni-hero-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 14px;
-}
-.uni-shell .uni-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 22px 24px;
-  background: var(--uni-card);
-  border-radius: var(--uni-radius-sm);
-  box-shadow: var(--uni-card-shadow);
-  min-width: 0;
-}
-.uni-shell .uni-stat-label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--uni-ink-3);
-  letter-spacing: 0.02em;
 }
-.uni-shell .uni-stat-value {
+.uni-shell .uni-pill-version {
+  background: var(--uni-card);
+  color: var(--uni-ink-2);
+}
+.uni-shell .uni-pill-fee {
+  background: var(--uni-card);
+  color: var(--uni-ink-2);
+}
+.uni-shell .uni-title-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--uni-ink-2);
+}
+.uni-shell .uni-addr-text { letter-spacing: 0.02em; }
+
+.uni-shell .uni-divider {
+  height: 1px;
+  background: var(--uni-line);
+  margin: 4px 0 24px;
+}
+
+/* Main grid: chart left, sticky stats sidebar right */
+.uni-shell .uni-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 28px;
+  align-items: start;
+}
+
+.uni-shell .uni-detail-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Big number above chart */
+.uni-shell .uni-bignum-value {
   font-family: var(--display);
-  font-size: 26px;
+  font-size: 44px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.018em;
+  line-height: 1.1;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
-.uni-shell .uni-stat-value-xl {
-  font-size: 52px;
-  line-height: 1.05;
-  background: linear-gradient(135deg, #00C2A8 0%, var(--uni-pink-2) 110%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.uni-shell .uni-bignum-meta {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--uni-ink-2);
 }
-.uni-shell .uni-stat-meta {
-  font-size: 12px;
+
+/* Bar chart */
+.uni-shell .uni-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 0;
+  min-height: 240px;
+}
+.uni-shell .uni-chart-empty {
+  align-items: center;
+  justify-content: center;
   color: var(--uni-ink-3);
+  font-size: 13px;
+  border: 1px dashed var(--uni-line);
+  border-radius: var(--uni-radius-sm);
+  min-height: 200px;
+  display: flex;
+}
+.uni-shell .uni-chart-bars {
+  flex: 1;
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+.uni-shell .uni-chart-bar {
+  flex: 1;
+  min-width: 4px;
+  min-height: 2px;
+  background: var(--uni-pink);
+  border-radius: 2px 2px 0 0;
+  transition: filter 0.12s ease;
+}
+.uni-shell .uni-chart-bar:hover {
+  filter: brightness(0.92);
+}
+.uni-shell .uni-chart-axis {
+  display: flex;
+  justify-content: space-between;
   font-family: var(--mono);
+  font-size: 11px;
+  color: var(--uni-ink-3);
+  padding: 2px 0;
 }
 
-@media (max-width: 900px) {
-  .uni-shell .uni-hero-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .uni-shell .uni-stat-headline {
-    grid-column: span 2;
-  }
-  .uni-shell .uni-hero-title { font-size: 40px; }
-  .uni-shell .uni-stat-value-xl { font-size: 40px; }
+/* Time-pill toolbar + tab text */
+.uni-shell .uni-chart-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.uni-shell .uni-tab-pills {
+  display: inline-flex;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-pill);
+  padding: 4px;
+  gap: 2px;
+}
+.uni-shell .uni-pill-btn {
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: var(--uni-radius-pill);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--uni-ink-2);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.uni-shell .uni-pill-btn:hover { color: var(--uni-ink); }
+.uni-shell .uni-pill-btn.active {
+  background: #FFFFFF;
+  color: var(--uni-ink);
+  box-shadow: 0 1px 3px rgba(13, 17, 28, 0.06);
+  font-weight: 500;
+}
+.uni-shell .uni-tab-text {
+  display: inline-flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--uni-ink-3);
+}
+.uni-shell .uni-tab-text .active {
+  color: var(--uni-ink);
+  font-weight: 500;
 }
 
-/* Section cards */
-.uni-shell .uni-card {
+/* Sidebar stack */
+.uni-shell .uni-detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 24px;
+}
+.uni-shell .uni-side-card {
   background: var(--uni-card);
   border-radius: var(--uni-radius);
-  box-shadow: var(--uni-card-shadow);
-  padding: 28px 32px;
-  margin-bottom: 20px;
+  padding: 18px 20px;
 }
-.uni-shell .uni-section-head {
-  margin-bottom: 22px;
+.uni-shell .uni-side-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  margin-bottom: 14px;
 }
-.uni-shell .uni-section-head h2 {
+.uni-shell .uni-side-label {
+  font-size: 13px;
+  color: var(--uni-ink-2);
+}
+.uni-shell .uni-side-headline {
+  margin-top: 6px;
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.uni-shell .uni-side-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(13, 17, 28, 0.05);
+}
+.uni-shell .uni-side-stat:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+.uni-shell .uni-side-value {
   font-family: var(--display);
   font-size: 22px;
   font-weight: 600;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
+}
+.uni-shell .uni-side-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  color: var(--uni-ink);
+  font-size: 14px;
+  font-weight: 500;
+  border-top: 1px solid rgba(13, 17, 28, 0.05);
+  transition: color 0.12s ease;
+}
+.uni-shell .uni-side-link:first-of-type { border-top: 0; }
+.uni-shell .uni-side-link:hover { color: var(--uni-pink); }
+.uni-shell .uni-side-link-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--uni-pink);
+  flex-shrink: 0;
+}
+.uni-shell .uni-side-link-arrow {
+  margin-left: auto;
+  color: var(--uni-ink-3);
+}
+
+/* Below-the-fold sections — keep them but skinned to soft cards */
+.uni-shell .uni-below {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.uni-shell .uni-soft-card {
+  background: var(--uni-card);
+  border-radius: var(--uni-radius);
+  padding: 24px 26px;
+}
+.uni-shell .uni-soft-head { margin-bottom: 18px; }
+.uni-shell .uni-soft-head h2 {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 600;
   letter-spacing: -0.012em;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   color: var(--uni-ink);
 }
-.uni-shell .uni-section-head p {
-  font-size: 14px;
+.uni-shell .uni-soft-head p {
+  font-size: 13.5px;
   color: var(--uni-ink-2);
   margin: 0;
 }
 
-/* Override embedded section h2/p (MarketBenchmark / EcosystemContext
-   each render their own .pp-section h2). Keep the heading style
-   consistent with .uni-section-head. */
-.uni-shell .pp-section {
-  margin: 0;
-}
+/* Override the embedded .pp-section h2 from MarketBenchmark + Eco so
+   they render with the same Uniswap heading treatment. */
+.uni-shell .pp-section { margin: 0; }
 .uni-shell .pp-section h2 {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.012em;
   color: var(--uni-ink);
   border: 0;
   padding: 0;
-  margin: 0 0 14px;
+  margin: 0 0 12px;
 }
 .uni-shell .pp-section p {
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--uni-ink-2);
   line-height: 1.6;
 }
 .uni-shell .pp-section p strong { color: var(--uni-ink); }
 
-/* Re-skin shared product-page primitives inside the test shell:
-   editorial-ledger borders/dotted dividers stay (they read fine on
-   white) but card surfaces get the rounder radius and softer shadow
-   so they sit consistently inside .uni-card containers. */
-
-/* bench-stats */
-.uni-shell .bench-stats {
-  background: linear-gradient(180deg, #FFFFFF 0%, #FBFBFE 100%);
-  border: 1px solid var(--uni-line);
-  border-radius: var(--uni-radius-sm);
-  box-shadow: 0 2px 0 rgba(13, 17, 28, 0.02) inset;
-  padding: 24px 28px;
-}
-.uni-shell .bs-l {
-  color: var(--uni-ink-3);
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-}
-.uni-shell .bs-v {
-  color: var(--uni-ink);
-  font-family: var(--display);
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.012em;
-  font-feature-settings: "tnum";
-}
-.uni-shell .bs-v.up { color: var(--uni-pink-2); }
-
-/* bench-table */
-.uni-shell .bench-table {
-  background: linear-gradient(180deg, #FFFFFF 0%, #FCFBFE 100%);
-  border: 1px solid var(--uni-line);
-  border-radius: var(--uni-radius-sm);
-  overflow: hidden;
-}
-.uni-shell .bt-head {
-  border-bottom: 2px solid var(--uni-pink);
-  color: var(--uni-ink-2);
-}
-.uni-shell .bt-row { border-bottom: 1px dotted var(--uni-line); }
-.uni-shell .bt-row.you { background: var(--uni-pink-soft); }
-.uni-shell .bt-row .here-pill {
-  background: var(--uni-pink-2);
-  border-radius: var(--uni-radius-pill);
-}
-
-/* eco-chart */
-.uni-shell .eco-chart-wrap {
-  background: linear-gradient(180deg, #FFFFFF 0%, #FBFBFE 100%);
-  border: 1px solid var(--uni-line);
-  border-radius: var(--uni-radius-sm);
-  padding: 28px 30px;
-}
-.uni-shell .eco-bar-col.you .eco-bar {
-  outline-color: var(--uni-pink-2);
-}
-.uni-shell .eco-legend-head {
-  border-bottom: 2px solid var(--uni-pink);
-  color: var(--uni-ink-2);
-}
-.uni-shell .eco-legend-row.you .eco-legend-name {
-  color: var(--uni-pink-2);
-}
-.uni-shell .here-pill {
-  background: var(--uni-pink-2);
-  border-radius: var(--uni-radius-pill);
-}
-
-/* hist-table */
+/* Re-skin the shared primitives that show up inside MarketBenchmark
+   and EcosystemContext so they match the soft-card aesthetic. */
+.uni-shell .bench-stats,
+.uni-shell .bench-table,
+.uni-shell .eco-chart-wrap,
 .uni-shell .hist-table {
   background: #FFFFFF;
   border: 1px solid var(--uni-line);
   border-radius: var(--uni-radius-sm);
+  box-shadow: none;
 }
-.uni-shell .hist-table tr { border-bottom: 1px dotted var(--uni-line); }
+.uni-shell .bs-l,
 .uni-shell .hist-table th {
   color: var(--uni-ink-3);
   font-family: var(--mono);
   font-size: 10.5px;
 }
+.uni-shell .bs-v {
+  color: var(--uni-ink);
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.uni-shell .bs-v.up { color: var(--uni-pink); }
+.uni-shell .bt-head { border-bottom: 2px solid var(--uni-pink); color: var(--uni-ink-2); }
+.uni-shell .bt-row { border-bottom: 1px solid rgba(13, 17, 28, 0.04); }
+.uni-shell .bt-row.you { background: var(--uni-pink-bg); }
+.uni-shell .here-pill {
+  background: var(--uni-pink);
+  border-radius: var(--uni-radius-pill);
+}
+.uni-shell .eco-bar-col.you .eco-bar { outline-color: var(--uni-pink); }
+.uni-shell .eco-legend-head { border-bottom: 2px solid var(--uni-pink); color: var(--uni-ink-2); }
+.uni-shell .eco-legend-row.you .eco-legend-name { color: var(--uni-pink); }
 .uni-shell .hist-table td {
   color: var(--uni-ink);
   font-family: var(--mono);
-  font-size: 14px;
 }
 .uni-shell .hist-block h3 {
   font-family: var(--display);
   color: var(--uni-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
 }
 
-/* Strategy details (test page native; not the shared cd-row) */
-.uni-shell .uni-details {
-  display: flex;
-  flex-direction: column;
+@media (max-width: 1000px) {
+  .uni-shell .uni-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .uni-shell .uni-detail-side { position: static; }
 }
-.uni-shell .uni-row {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  align-items: center;
-  gap: 20px;
-  padding: 16px 0;
-  border-bottom: 1px dotted var(--uni-line);
-}
-.uni-shell .uni-row:last-child { border-bottom: 0; }
-.uni-shell .uni-row-label {
-  font-family: var(--mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--uni-ink-3);
-}
-.uni-shell .uni-row-value {
-  font-family: var(--mono);
-  font-size: 14px;
-  color: var(--uni-ink);
-  font-feature-settings: "tnum";
-}
-.uni-shell .uni-row-value a {
-  color: var(--uni-pink-2);
-  border-bottom: 1px solid currentColor;
-}
-.uni-shell .uni-addr-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.uni-shell .uni-addr {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--uni-ink);
-  word-break: break-all;
-}
-.uni-shell .uni-explorer {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--uni-radius-pill);
-  background: var(--uni-pink-soft);
-  color: var(--uni-pink-2);
-  font-size: 14px;
-  text-decoration: none;
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-.uni-shell .uni-explorer:hover {
-  background: var(--uni-pink-2);
-  color: #FFFFFF;
-  transform: translateY(-1px);
-}
-
 @media (max-width: 700px) {
-  .uni-shell { padding: 18px 18px 60px; }
-  .uni-shell .uni-card { padding: 22px 20px; border-radius: 20px; }
-  .uni-shell .uni-row { grid-template-columns: 1fr; gap: 4px; padding: 14px 0; }
-  .uni-shell .uni-hero { padding: 22px 4px 18px; }
-  .uni-shell .uni-hero-title { font-size: 34px; }
-  .uni-shell .uni-stat { padding: 18px 18px; }
+  .uni-shell { padding: 16px 16px 60px; }
+  .uni-shell .uni-title { font-size: 24px; }
+  .uni-shell .uni-bignum-value { font-size: 32px; }
+  .uni-shell .uni-side-headline { font-size: 26px; }
+  .uni-shell .uni-side-value { font-size: 18px; }
+  .uni-shell .uni-soft-card { padding: 18px 16px; }
 }

@@ -1,6 +1,8 @@
-// Test page: 40 Acres product data rendered in a Uniswap-flavored
-// visual language. Scoped to /test only; production pages untouched.
-// All overrides live under .uni-shell in test.css.
+// Test page: 40 Acres rendered in Uniswap interface visual language.
+// Layout cloned from app.uniswap.org Pool detail (left = title +
+// big number + bar chart + time pills; right sticky stack = Total
+// APY card, Stats card, Links card). Scoped under .uni-shell so the
+// rest of the site is unaffected.
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,10 +14,11 @@ import {
 } from "@/lib/data";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { chainToSlug } from "@/lib/networks";
-import { PerformanceHistory } from "@/components/performance-history";
+import { AssetIcon } from "@/components/token-icons";
+import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
 import { MarketBenchmark, EcosystemContext } from "@/components/market-sections";
-import { CopyAddressButton } from "@/components/copy-address-button";
+import { TestTvlChart } from "@/components/test-tvl-chart";
 import "./test.css";
 
 const TEST_SLUG = "usdc-40-acres-base";
@@ -28,6 +31,11 @@ const CHAIN_EXPLORERS: Record<string, string> = {
   zkSync: "https://explorer.zksync.io/address/",
   HyperEVM: "https://hyperscan.xyz/address/",
 };
+
+function shortAddress(a: string): string {
+  if (a.length < 12) return a;
+  return `${a.slice(0, 6)}...${a.slice(-4)}`;
+}
 
 export default async function TestPage() {
   const vault = await getVaultBySlug(TEST_SLUG);
@@ -44,23 +52,6 @@ export default async function TestPage() {
     ? `${CHAIN_EXPLORERS[vault.chain]}${vault.contractAddress}`
     : null;
 
-  const apyChartData = history.apyHistory.map((p) => ({ timestamp: p.timestamp, value: p.apy }));
-  const tvlChartData = history.tvlHistory.map((p) => ({ timestamp: p.timestamp, value: p.value }));
-  const sharePriceChartData = history.sharePriceHistory.map((p) => ({ timestamp: p.timestamp, value: p.sharePrice }));
-
-  const latestSharePrice =
-    history.sharePriceHistory.length > 0
-      ? history.sharePriceHistory[history.sharePriceHistory.length - 1].sharePrice
-      : null;
-
-  const sharePriceGrowth = (() => {
-    if (history.sharePriceHistory.length < 2) return null;
-    const sorted = [...history.sharePriceHistory].sort((a, b) => a.timestamp - b.timestamp);
-    const first = sorted[0].sharePrice;
-    if (first <= 0) return null;
-    return ((sorted[sorted.length - 1].sharePrice - first) / first) * 100;
-  })();
-
   const validApy = history.apyHistory.filter((p) => p.apy >= 0);
   let trackedDays = 0;
   if (validApy.length > 0) {
@@ -70,138 +61,151 @@ export default async function TestPage() {
     );
   }
 
+  // 30-day TVL history for the hero bar chart
+  const nowSec = Math.floor(Date.now() / 1000);
+  const cutoff = nowSec - 30 * 86400;
+  const tvlSeries = history.tvlHistory
+    .filter((p) => p.timestamp >= cutoff)
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((p) => ({ t: p.timestamp, v: p.value }));
+
+  const protocolName = stripChainSuffix(vault.category, vault.chain);
+
   return (
     <div className="uni-shell">
-      <div className="uni-bg" aria-hidden="true" />
-
       <div className="uni-banner">
         <span className="uni-banner-dot" />
-        Test page · /test · Uniswap-flavored UI applied to {vault.productName}
+        Test page · /test · {vault.productName} in Uniswap visual language
       </div>
 
-      {/* Hero */}
-      <section className="uni-hero">
-        <div className="uni-hero-eyebrow">
-          <span className="uni-chip">{vault.chain}</span>
-          <span className="uni-chip">{vault.vaultType}</span>
-          <span className="uni-chip">{vault.asset}</span>
-        </div>
-        <h1 className="uni-hero-title">{vault.productName}</h1>
-        <p className="uni-hero-sub">
-          {stripChainSuffix(vault.category, vault.chain)} on{" "}
-          <Link href={`/${chainToSlug(vault.chain)}`}>{vault.chain}</Link>
-        </p>
+      {/* Breadcrumb */}
+      <div className="uni-crumbs">
+        <Link href={`/${chainToSlug(vault.chain)}`}>{vault.chain}</Link>
+        <span className="uni-crumbs-sep">›</span>
+        <span className="uni-crumbs-current">{vault.productName}</span>
+      </div>
 
-        <div className="uni-hero-grid">
-          <div className="uni-stat uni-stat-headline">
-            <span className="uni-stat-label">Current APY (24h)</span>
-            <span className="uni-stat-value uni-stat-value-xl">{formatAPY(vault.apy24h)}</span>
-            <span className="uni-stat-meta">30-day avg {formatAPY(vault.apy30d)}</span>
+      {/* Title row */}
+      <header className="uni-title-row">
+        <div className="uni-title-icon" aria-hidden="true">
+          <AssetIcon asset={vault.asset} size={44} />
+        </div>
+        <div className="uni-title-main">
+          <div className="uni-title-line">
+            <h1 className="uni-title">{vault.productName}</h1>
+            <span className="uni-pill uni-pill-version">{protocolName}</span>
+            <span className="uni-pill uni-pill-fee">{vault.chain}</span>
           </div>
-          <div className="uni-stat">
-            <span className="uni-stat-label">Total deposits</span>
-            <span className="uni-stat-value">{formatTVL(vault.tvl)}</span>
-          </div>
-          <div className="uni-stat">
-            <span className="uni-stat-label">Holders</span>
-            <span className="uni-stat-value">
-              {holderCount !== null ? holderCount.toLocaleString("en-US") : "—"}
-            </span>
-          </div>
-          <div className="uni-stat">
-            <span className="uni-stat-label">Tracked for</span>
-            <span className="uni-stat-value">
-              {trackedDays > 0 ? `${trackedDays} days` : "—"}
-            </span>
+          <div className="uni-title-sub">
+            <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
+            <CopyAddressButton address={vault.contractAddress} compact />
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Performance history */}
-      {(history.apyHistory.length > 0 || history.tvlHistory.length > 0) && (
-        <section className="uni-card uni-section">
-          <header className="uni-section-head">
-            <h2>Performance history</h2>
-            <p>APY, TVL and share price across timeframes.</p>
+      <div className="uni-divider" aria-hidden="true" />
+
+      {/* Main grid: chart + sidebar stats */}
+      <div className="uni-detail-grid">
+        <div className="uni-detail-main">
+          <div className="uni-bignum">
+            <div className="uni-bignum-value">{formatTVL(vault.tvl)}</div>
+            <div className="uni-bignum-meta">Total deposits</div>
+          </div>
+
+          <TestTvlChart series={tvlSeries} />
+
+          <div className="uni-chart-controls">
+            <div className="uni-tab-pills">
+              <button className="uni-pill-btn">1D</button>
+              <button className="uni-pill-btn active">1M</button>
+              <button className="uni-pill-btn">3M</button>
+              <button className="uni-pill-btn">1Y</button>
+              <button className="uni-pill-btn">ALL</button>
+            </div>
+            <div className="uni-tab-text">
+              <span className="active">TVL</span>
+              <span>APY</span>
+              <span>Share price</span>
+            </div>
+          </div>
+        </div>
+
+        <aside className="uni-detail-side">
+          <div className="uni-side-card">
+            <div className="uni-side-label">Total APY</div>
+            <div className="uni-side-headline">{formatAPY(vault.apy24h)}</div>
+          </div>
+
+          <div className="uni-side-card">
+            <div className="uni-side-card-title">Stats</div>
+
+            <div className="uni-side-stat">
+              <div className="uni-side-label">Holders</div>
+              <div className="uni-side-value">
+                {holderCount !== null ? holderCount.toLocaleString("en-US") : "—"}
+              </div>
+            </div>
+
+            <div className="uni-side-stat">
+              <div className="uni-side-label">TVL</div>
+              <div className="uni-side-value">{formatTVL(vault.tvl)}</div>
+            </div>
+
+            <div className="uni-side-stat">
+              <div className="uni-side-label">30d avg APY</div>
+              <div className="uni-side-value">{formatAPY(vault.apy30d)}</div>
+            </div>
+
+            <div className="uni-side-stat">
+              <div className="uni-side-label">Tracked for</div>
+              <div className="uni-side-value">
+                {trackedDays > 0 ? `${trackedDays} days` : "—"}
+              </div>
+            </div>
+          </div>
+
+          <div className="uni-side-card">
+            <div className="uni-side-card-title">Links</div>
+            <Link href={`/${vault.slug}`} className="uni-side-link">
+              <span className="uni-side-link-dot" />
+              Production page
+              <span className="uni-side-link-arrow">↗</span>
+            </Link>
+            {explorerUrl && (
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="uni-side-link"
+              >
+                <span className="uni-side-link-dot" />
+                Block explorer
+                <span className="uni-side-link-arrow">↗</span>
+              </a>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* Below the fold: keep the detailed sections, soft-card-skinned */}
+      <div className="uni-below">
+        <section className="uni-soft-card">
+          <header className="uni-soft-head">
+            <h2>Historical statistics</h2>
+            <p>Long-term distribution of APY and TVL across the tracked window.</p>
           </header>
-          <PerformanceHistory
-            apyData={apyChartData}
-            tvlData={tvlChartData}
-            sharePriceData={sharePriceChartData}
-            currentApy={vault.apy24h}
-            currentTvl={vault.tvl}
-            currentSharePrice={latestSharePrice}
-            sharePriceGrowth={sharePriceGrowth}
-          />
+          <HistoricalStats history={history} asset={vault.asset} />
         </section>
-      )}
 
-      {/* Historical statistics */}
-      <section className="uni-card uni-section">
-        <header className="uni-section-head">
-          <h2>Historical statistics</h2>
-          <p>Long-term distribution of APY and TVL across the tracked window.</p>
-        </header>
-        <HistoricalStats history={history} asset={vault.asset} />
-      </section>
+        <section className="uni-soft-card">
+          <MarketBenchmark vault={vault} allVaults={allVaults} />
+        </section>
 
-      {/* Market benchmarking */}
-      <section className="uni-card uni-section">
-        <MarketBenchmark vault={vault} allVaults={allVaults} />
-      </section>
-
-      {/* Ecosystem context */}
-      <section className="uni-card uni-section">
-        <EcosystemContext vault={vault} allVaults={allVaults} />
-      </section>
-
-      {/* Strategy details */}
-      <section className="uni-card uni-section" id="details">
-        <header className="uni-section-head">
-          <h2>Strategy details</h2>
-          <p>Onchain identifiers and metadata.</p>
-        </header>
-        <div className="uni-details">
-          <UniRow label="Strategy">
-            {stripChainSuffix(vault.category, vault.chain)}
-          </UniRow>
-          <UniRow label="Network">
-            <Link href={`/${chainToSlug(vault.chain)}`}>{vault.chain}</Link>
-          </UniRow>
-          <UniRow label="Type">{vault.vaultType}</UniRow>
-          <UniRow label="Underlying">{vault.asset}</UniRow>
-          <UniRow label="Operator">{vault.protocol.name}</UniRow>
-          {trackedDays > 0 && <UniRow label="Tracked for">{trackedDays} days</UniRow>}
-          {holderCount !== null && (
-            <UniRow label="Holders">{holderCount.toLocaleString("en-US")}</UniRow>
-          )}
-          <UniRow label="Vault contract">
-            <span className="uni-addr-row">
-              <span className="uni-addr">{vault.contractAddress}</span>
-              <CopyAddressButton address={vault.contractAddress} compact />
-              {explorerUrl && (
-                <a
-                  href={explorerUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="uni-explorer"
-                >
-                  ↗
-                </a>
-              )}
-            </span>
-          </UniRow>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function UniRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="uni-row">
-      <span className="uni-row-label">{label}</span>
-      <span className="uni-row-value">{children}</span>
+        <section className="uni-soft-card">
+          <EcosystemContext vault={vault} allVaults={allVaults} />
+        </section>
+      </div>
     </div>
   );
 }
