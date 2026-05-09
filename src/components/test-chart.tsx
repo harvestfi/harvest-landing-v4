@@ -67,8 +67,20 @@ export function TestChart({ series }: Props) {
   }
 
   const latest = points.length > 0 ? points[points.length - 1].v : 0;
-  const maxV = points.length > 0 ? Math.max(...points.map((p) => p.v)) : 0;
-  const denom = maxV > 0 ? maxV : 1;
+
+  // Min-max scaling so changes are legible even for slow-moving series
+  // like share price (typically 1.00 → 1.09, ~9% absolute movement).
+  // Bars span the 8-100% band: smallest is 8% tall (clearly visible),
+  // largest is 100%. Without this, bars all land in a narrow 90-100%
+  // band and the chart reads as flat.
+  const values = points.map((p) => p.v);
+  const minV = values.length > 0 ? Math.min(...values) : 0;
+  const maxV = values.length > 0 ? Math.max(...values) : 0;
+  const span = maxV - minV;
+  const heightFor = (v: number): number => {
+    if (span <= 0) return 60; // perfectly flat data: show a uniform mid bar
+    return ((v - minV) / span) * 92 + 8;
+  };
 
   return (
     <div className="uni-chart-wrap">
@@ -87,7 +99,7 @@ export function TestChart({ series }: Props) {
                 <span
                   key={p.t}
                   className="uni-chart-bar"
-                  style={{ height: `${(p.v / denom) * 100}%` }}
+                  style={{ height: `${heightFor(p.v)}%` }}
                   title={`${fmtDate(p.t)} · ${formatValue(metric, p.v)}`}
                 />
               ))}
