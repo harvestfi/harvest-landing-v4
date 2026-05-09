@@ -274,12 +274,23 @@ body:has(.uni-shell) {
 .uni-shell .uni-side-card {
   background: var(--uni-card);
   border-radius: var(--uni-radius);
-  padding: 20px 22px;
+  padding: 22px 24px;
+}
+.uni-shell .uni-side-headline-block {
+  margin-bottom: 4px;
+}
+.uni-shell .uni-side-card-divider {
+  height: 1px;
+  background: rgba(25, 23, 23, 0.08);
+  margin: 18px 0 16px;
 }
 .uni-shell .uni-side-card-title {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--uni-ink);
+  color: var(--uni-ink-2);
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   margin-bottom: 14px;
 }
 .uni-shell .uni-side-label {
@@ -288,11 +299,11 @@ body:has(.uni-shell) {
   font-weight: 500;
 }
 .uni-shell .uni-side-headline {
-  margin-top: 8px;
+  margin-top: 6px;
   font-family: var(--display);
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 600;
-  letter-spacing: -0.018em;
+  letter-spacing: -0.02em;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
@@ -340,36 +351,43 @@ body:has(.uni-shell) {
   color: var(--uni-ink-3);
 }
 
-/* Below-the-fold sections — soft-card skin. */
+/* Below-the-fold sections live on the plain white page background.
+   No surround card; the editorial copy reads as text, not as a
+   tile. Tables and stat blocks inside each section pick up the
+   gray hero-card surface so they stay grouped as datasets. */
 .uni-shell .uni-below {
-  margin-top: 36px;
+  margin-top: 44px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 36px;
 }
-.uni-shell .uni-soft-card {
-  background: var(--uni-card);
-  border-radius: var(--uni-radius);
-  padding: 28px 30px;
+.uni-shell .uni-section-plain {
+  /* No background, no padding — just a hook for spacing/identification. */
 }
 
-/* The .uni-soft-head wrapper is only used where the embedded
-   component does NOT render its own h2 (none today, but keep the
-   styles in case we add new sections). */
-.uni-shell .uni-soft-head { margin-bottom: 18px; }
-.uni-shell .uni-soft-head h2 {
-  font-family: var(--display);
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.012em;
-  margin: 0 0 6px;
-  color: var(--uni-ink);
+/* Bottom Links section */
+.uni-shell .uni-bottom-links {
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--uni-line);
 }
-.uni-shell .uni-soft-head p {
-  font-size: 15px;
+.uni-shell .uni-bottom-links-title {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--uni-ink-2);
-  margin: 0;
-  line-height: 1.55;
+  margin: 0 0 12px;
+}
+.uni-shell .uni-bottom-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+.uni-shell .uni-bottom-links .uni-side-link {
+  border-top: 0;
+  padding: 6px 0;
 }
 
 /* Embedded component overrides: the shared MarketBenchmark, Eco
@@ -414,15 +432,21 @@ body:has(.uni-shell) {
    600, color = Graphite (var(--uni-ink-2)). That's the user's main
    complaint - tables read as inactive because labels are too light. */
 
+/* Stat tiles + tables share the hero-side-card surface (White Smoke,
+   no border, generous radius) so the page feels composed of two
+   atoms: white editorial space + gray data tiles. */
 .uni-shell .bench-stats,
 .uni-shell .bench-table,
 .uni-shell .eco-chart-wrap,
 .uni-shell .hist-table {
-  background: var(--uni-card-2);
-  border: 1px solid var(--uni-line);
-  border-radius: var(--uni-radius-sm);
+  background: var(--uni-card);
+  border: 0;
+  border-radius: var(--uni-radius);
   box-shadow: none;
 }
+.uni-shell .bench-stats { padding: 22px 24px; }
+.uni-shell .eco-chart-wrap { padding: 24px 26px; }
+.uni-shell .bench-table { overflow: hidden; }
 
 /* bench-stats */
 .uni-shell .bs-l {

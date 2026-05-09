@@ -110,11 +110,13 @@ export default async function TestPage() {
 
         <aside className="uni-detail-side">
           <div className="uni-side-card">
-            <div className="uni-side-label">Total APY</div>
-            <div className="uni-side-headline">{formatAPY(vault.apy24h)}</div>
-          </div>
+            <div className="uni-side-headline-block">
+              <div className="uni-side-label">Total APY</div>
+              <div className="uni-side-headline">{formatAPY(vault.apy24h)}</div>
+            </div>
 
-          <div className="uni-side-card">
+            <div className="uni-side-card-divider" aria-hidden="true" />
+
             <div className="uni-side-card-title">Stats</div>
 
             <div className="uni-side-stat">
@@ -141,44 +143,50 @@ export default async function TestPage() {
               </div>
             </div>
           </div>
-
-          <div className="uni-side-card">
-            <div className="uni-side-card-title">Links</div>
-            <Link href={`/${vault.slug}`} className="uni-side-link">
-              <span className="uni-side-link-dot" />
-              Production page
-              <span className="uni-side-link-arrow">↗</span>
-            </Link>
-            {explorerUrl && (
-              <a
-                href={explorerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="uni-side-link"
-              >
-                <span className="uni-side-link-dot" />
-                Block explorer
-                <span className="uni-side-link-arrow">↗</span>
-              </a>
-            )}
-          </div>
         </aside>
       </div>
 
-      {/* Below the fold: keep the detailed sections, soft-card-skinned */}
+      {/* Below the fold: text + tables on plain white. Tables and key
+          stats inside each section keep the gray hero-card surface so
+          they read as datasets, while the surrounding narrative reads
+          as editorial copy. */}
       <div className="uni-below">
-        <section className="uni-soft-card">
+        <section className="uni-section-plain">
           <HistoricalStats history={history} asset={vault.asset} />
         </section>
 
-        <section className="uni-soft-card">
+        <section className="uni-section-plain">
           <MarketBenchmark vault={vault} allVaults={allVaults} />
         </section>
 
-        <section className="uni-soft-card">
+        <section className="uni-section-plain">
           <EcosystemContext vault={vault} allVaults={allVaults} />
         </section>
       </div>
+
+      {/* Links pinned to the very bottom of the page. */}
+      <section className="uni-bottom-links">
+        <h2 className="uni-bottom-links-title">Links</h2>
+        <div className="uni-bottom-links-row">
+          <Link href={`/${vault.slug}`} className="uni-side-link">
+            <span className="uni-side-link-dot" />
+            Production page
+            <span className="uni-side-link-arrow">↗</span>
+          </Link>
+          {explorerUrl && (
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="uni-side-link"
+            >
+              <span className="uni-side-link-dot" />
+              Block explorer
+              <span className="uni-side-link-arrow">↗</span>
+            </a>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
