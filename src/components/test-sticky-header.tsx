@@ -31,24 +31,47 @@ const QUICK_LINKS: { href: string; label: string }[] = [
 
 export function TestStickyHeader({ productName, asset, apyLabel, tvlLabel }: Props) {
   const [show, setShow] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
+  // Show / hide the bar once the jump nav scrolls out of view.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const sentinel = document.querySelector(".uni-jump");
     if (!sentinel) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Show the sticky bar once the jump nav is fully out of view
-        // ABOVE the viewport (i.e. user has scrolled past it).
         const past =
           !entry.isIntersecting && entry.boundingClientRect.top < 0;
         setShow(past);
       },
-      { threshold: 0, rootMargin: "0px 0px 0px 0px" },
+      { threshold: 0 },
     );
-
     observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
+  // Scroll-spy: highlight the link of the section that's currently
+  // dominating the viewport. rootMargin pulls the trigger band into
+  // the upper third of the viewport so the highlight tracks the
+  // section the user is reading, not just the topmost edge.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ids = QUICK_LINKS.map((l) => l.href.slice(1));
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length > 0) setActiveId(visible[0].target.id);
+      },
+      { rootMargin: "-120px 0px -55% 0px", threshold: [0, 0.1, 0.5, 1] },
+    );
+    sections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();
   }, []);
 
@@ -73,9 +96,18 @@ export function TestStickyHeader({ productName, asset, apyLabel, tvlLabel }: Pro
           </span>
         </div>
         <nav className="uni-sticky-right" aria-label="Jump to section">
-          {QUICK_LINKS.map((l) => (
-            <a key={l.href} href={l.href}>{l.label}</a>
-          ))}
+          {QUICK_LINKS.map((l) => {
+            const id = l.href.slice(1);
+            return (
+              <a
+                key={l.href}
+                href={l.href}
+                className={activeId === id ? "active" : ""}
+              >
+                {l.label}
+              </a>
+            );
+          })}
         </nav>
       </div>
     </div>

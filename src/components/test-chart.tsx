@@ -265,22 +265,32 @@ export function TestChart({ series }: Props) {
     };
   }, [series, metric, range]);
 
-  // Latest share price across the full series (independent of the
-  // selected metric/range) - used as a worked example in the share-
-  // price tooltip.
-  const latestSharePrice = useMemo(() => {
-    const arr = series.sharePrice;
-    if (!arr || arr.length === 0) return null;
-    let max = arr[0];
-    for (const p of arr) if (p.t > max.t) max = p;
-    return max.v;
-  }, [series.sharePrice]);
-
   const isHovering =
     hoverIdx !== null && hoverIdx >= 0 && hoverIdx < points.length;
   const activeIdx = isHovering ? hoverIdx! : points.length - 1;
   const activePoint = points[activeIdx];
-  const latest = activePoint ? activePoint.v : 0;
+
+  // Default headline value uses the most recent RAW observation for
+  // the selected metric (not the last bucket's average). With
+  // bucketization the last bucket can average several days of data
+  // and drift away from the side-card "24h APY" value, which reads
+  // as a data inconsistency. On hover we use the bucketed value so
+  // the scrubber still matches what the bar represents.
+  const latestRawByMetric = useMemo(() => {
+    const out: Record<Metric, number> = { tvl: 0, apy: 0, sharePrice: 0 };
+    (["tvl", "apy", "sharePrice"] as Metric[]).forEach((m) => {
+      const arr = series[m];
+      if (!arr || arr.length === 0) return;
+      let max = arr[0];
+      for (const p of arr) if (p.t > max.t) max = p;
+      out[m] = max.v;
+    });
+    return out;
+  }, [series]);
+
+  const latest = isHovering && activePoint
+    ? activePoint.v
+    : latestRawByMetric[metric];
 
   const activeX =
     points.length > 1 ? (activeIdx / (points.length - 1)) * 100 : 50;
@@ -317,7 +327,12 @@ export function TestChart({ series }: Props) {
       <div className="uni-bignum" id="performance">
         <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
         <div className="uni-bignum-meta">
-          <span className="uni-bignum-label">{metricLabel(metric, isHovering)}</span>
+          <span
+            className="uni-bignum-label"
+            data-tooltip={metricTooltip(metric, latestRawByMetric.sharePrice || null)}
+          >
+            {metricLabel(metric, isHovering)}
+          </span>
           {isHovering && activePoint && (
             <>
               <span className="uni-bignum-dot" aria-hidden="true">·</span>
@@ -405,43 +420,19 @@ export function TestChart({ series }: Props) {
       </div>
 
       <div className="uni-chart-controls">
-        <div className="uni-tab-pills" role="tablist" aria-label="Time range">
-          {RANGES.map((r) => (
-            <button
-              key={r}
-              type="button"
-              className={`uni-pill-btn${range === r ? " active" : ""}`}
-              onClick={() => onRange(r)}
-              aria-pressed={range === r}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-        <div className="uni-controls-right">
-          <div className="uni-tab-text" role="tablist" aria-label="Metric">
-            {(["tvl", "apy", "sharePrice"] as Metric[]).map((m) => {
-              const latestShare = latestSharePrice;
-              return (
-                <span key={m} className="uni-tab-with-info">
-                  <button
-                    type="button"
-                    className={`uni-tab-btn${metric === m ? " active" : ""}`}
-                    onClick={() => onMetric(m)}
-                    aria-pressed={metric === m}
-                  >
-                    {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
-                  </button>
-                  <span
-                    className="uni-tab-info"
-                    data-tooltip={metricTooltip(m, latestShare)}
-                    aria-label={`What is ${m === "tvl" ? "TVL" : m === "apy" ? "APY" : "share price"}?`}
-                  >
-                    ?
-                  </span>
-                </span>
-              );
-            })}
+        <div className="uni-controls-left">
+          <div className="uni-tab-pills" role="tablist" aria-label="Time range">
+            {RANGES.map((r) => (
+              <button
+                key={r}
+                type="button"
+                className={`uni-pill-btn${range === r ? " active" : ""}`}
+                onClick={() => onRange(r)}
+                aria-pressed={range === r}
+              >
+                {r}
+              </button>
+            ))}
           </div>
           <div className="uni-style-mini" role="tablist" aria-label="Chart style">
             <button
@@ -480,6 +471,19 @@ export function TestChart({ series }: Props) {
               </svg>
             </button>
           </div>
+        </div>
+        <div className="uni-tab-text" role="tablist" aria-label="Metric">
+          {(["tvl", "apy", "sharePrice"] as Metric[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`uni-tab-btn${metric === m ? " active" : ""}`}
+              onClick={() => onMetric(m)}
+              aria-pressed={metric === m}
+            >
+              {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
+            </button>
+          ))}
         </div>
       </div>
     </div>

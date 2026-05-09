@@ -197,14 +197,15 @@ body:has(.uni-shell) {
   flex: 1;
 }
 
-/* Right cluster of the chart controls bar: metric tabs + minimal
-   chart-style switcher. The style switcher is intentionally the
-   least-dominant control in the area - bare icon buttons, no rail,
-   no fill, gold tint on active and on hover. */
-.uni-shell .uni-controls-right {
+/* Left cluster of the chart controls bar: timeframe pills next to
+   the minimal chart-style icon switcher. Right cluster: metric
+   tabs (TVL / APY / Share price). The style switcher is intention-
+   ally the least-dominant control in the area - bare icon buttons,
+   no rail, no fill, gold tint on active. */
+.uni-shell .uni-controls-left {
   display: inline-flex;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
 }
 .uni-shell .uni-style-mini {
   display: inline-flex;
@@ -434,31 +435,6 @@ body:has(.uni-shell) {
   font-size: 14px;
   align-items: center;
 }
-/* Metric tab + ? info icon as a single inline group so the
-   tooltip-on-hover affordance reads as part of the label. */
-.uni-shell .uni-tab-with-info {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  position: relative;
-}
-.uni-shell .uni-tab-info {
-  display: inline-grid;
-  place-items: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1px solid currentColor;
-  font-family: var(--sans);
-  font-size: 9.5px;
-  font-weight: 700;
-  color: var(--uni-ink-3);
-  cursor: help;
-  line-height: 1;
-  user-select: none;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.uni-shell .uni-tab-info:hover { color: var(--uni-gold); }
 .uni-shell .uni-tab-btn {
   position: relative;
   border: 0;
@@ -962,13 +938,29 @@ body:has(.uni-shell) {
   flex-shrink: 0;
 }
 .uni-shell .uni-sticky-right a {
+  position: relative;
   font-size: 14px;
   font-weight: 500;
   color: var(--uni-ink-2);
   text-decoration: none;
+  padding: 6px 0;
   transition: color 0.15s ease;
 }
 .uni-shell .uni-sticky-right a:hover { color: var(--uni-gold); }
+.uni-shell .uni-sticky-right a.active {
+  color: var(--uni-ink);
+  font-weight: 600;
+}
+.uni-shell .uni-sticky-right a.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--uni-gold);
+  border-radius: 1px;
+}
 
 /* Tighter spacing + drop the longer link labels on narrower screens
    so the bar never overflows the viewport. */
