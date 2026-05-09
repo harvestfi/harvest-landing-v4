@@ -84,35 +84,47 @@ export default async function TestPage() {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   const crumbs = productPageCrumbs(vault);
 
-  // Lightweight FAQ generator inlined here so /test is self-contained
-  // and matches the production reading flow (the production slug page
-  // builds the same list and feeds it to <VaultFaq />).
+  // FAQ: short, conversational questions without the product name
+  // jammed into every line. Long substitution names made the
+  // production list read awkwardly ("What is the current APY for
+  // USDC 40 Acres?"); these are plain questions that the answers
+  // contextualize.
   const faqItems = [
     {
-      question: `What is the current APY for ${vault.productName}?`,
+      question: "What's the current APY?",
       answer:
         vault.apy24h > 0
-          ? `${vault.productName} currently offers a 24-hour APY of ${formatAPY(vault.apy24h)} and a 30-day average APY of ${formatAPY(vault.apy30d)}. APY rates are variable and change with market conditions.`
-          : `APY data is currently unavailable for ${vault.productName}.`,
+          ? `${vault.productName} is showing a 24-hour APY of ${formatAPY(vault.apy24h)} with a 30-day average of ${formatAPY(vault.apy30d)}. Rates are variable and move with market conditions, liquidity, and the underlying protocol's incentives.`
+          : "APY data is currently unavailable for this strategy.",
     },
     {
-      question: `What chain is ${vault.productName} on?`,
-      answer: `${vault.productName} is deployed on ${vault.chain}. It is operated by ${vault.protocol.name} and accepts ${vault.asset} deposits.`,
+      question: "How does this vault work?",
+      answer: `It's a ${vault.vaultType.toLowerCase()} on ${vault.chain} operated by ${vault.protocol.name}. You deposit ${vault.asset}, and the vault routes capital through the ${protocolName} strategy on your behalf - harvesting rewards, swapping them back to ${vault.asset}, and redepositing without manual steps.`,
     },
     {
-      question: `How does ${vault.productName} work?`,
-      answer: `${vault.productName} is a ${vault.vaultType.toLowerCase()} on ${vault.chain} run by ${vault.protocol.name}. It accepts ${vault.asset} deposits and automatically manages them to generate yield.`,
+      question: "Where does the yield come from?",
+      answer:
+        vault.apyBreakdown.length > 0
+          ? `Yield is composed of: ${vault.apyBreakdown.filter((s) => s.apy > 0).map((s) => `${s.apy.toFixed(2)}% from ${s.source}`).join(", ")}. Sources can include base lending rates, protocol token rewards and liquidity incentives.`
+          : "Yield comes from the underlying protocol's lending and reward streams. DeFi yields depend on supply, demand and protocol incentives.",
     },
     {
-      question: `What is the TVL of ${vault.productName}?`,
+      question: "How stable has the APY been?",
+      answer:
+        vault.apy24h > 0 && vault.apy30d > 0
+          ? `${formatAPY(vault.apy24h)} over the last 24 hours vs ${formatAPY(vault.apy30d)} over 30 days. ${Math.abs(vault.apy24h - vault.apy30d) < 1 ? "Spread is small, suggesting the rate has been steady." : "Notable drift between the short and longer window, common in DeFi."}`
+          : "APY history is too short to call stability one way or the other.",
+    },
+    {
+      question: "How much is currently deposited?",
       answer:
         vault.tvl > 0
-          ? `${vault.productName} currently has a total value locked (TVL) of ${formatTVL(vault.tvl)}.`
-          : `TVL data is currently unavailable for ${vault.productName}.`,
+          ? `Total value locked sits at ${formatTVL(vault.tvl)} right now. TVL changes as users deposit and withdraw; we update the figure every hour from the chain.`
+          : "TVL data is currently unavailable.",
     },
     {
-      question: `Is the yield from ${vault.productName} sustainable?`,
-      answer: `Yield comes from ${vault.apyBreakdown.length > 0 ? vault.apyBreakdown.map((s) => s.source).join(", ") : "the underlying protocol"}. DeFi yields are variable and depend on market conditions, liquidity, and protocol incentives. Past APY is not a guarantee of future returns.`,
+      question: "Is this safe?",
+      answer: "No DeFi yield strategy is risk-free. Smart-contract risk, oracle risk, liquidity risk and depeg risk all apply. This vault is operated by Harvest Finance; per-strategy risk levels we display are editorial classifications, not a quantitative model.",
     },
   ];
 

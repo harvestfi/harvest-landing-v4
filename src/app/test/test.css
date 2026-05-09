@@ -778,29 +778,121 @@ body:has(.uni-shell) {
   .uni-pair-50 { grid-template-columns: 1fr; gap: 28px; }
 }
 
-/* Consistency block: pick up the gold remap automatically. The
-   surround ring + label inherit `var(--up)` which is now gold; just
-   tone down the surround and align padding with /test rhythm. */
+/* Consistency block: White Smoke surface, bigger score number, and
+   a vertical layout (ring on top, label + paragraph below) so the
+   card breathes when paired 50/50 with Yield Sources. */
 .uni-shell .consistency {
   border: 0;
   border-radius: var(--uni-radius);
   background: var(--uni-card);
-  padding: 22px 24px;
-  gap: 24px;
+  padding: 28px 30px;
+  gap: 22px;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
 }
-.uni-shell .consistency-score .num { font-size: 30px; }
-.uni-shell .consistency-label {
-  font-size: 14px;
-  color: var(--uni-ink);
+.uni-shell .consistency-score { width: 96px; height: 96px; flex-shrink: 0; }
+.uni-shell .consistency-score .num {
+  font-family: var(--display);
+  font-size: 36px;
   font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--uni-ink);
+}
+/* Inline `style={{ color: ... }}` on consistency-label needs
+   !important to be beaten so it inherits the .uni-shell theme. */
+.uni-shell .consistency-label {
+  font-family: var(--display);
+  font-size: 19px !important;
+  font-weight: 600;
+  color: var(--uni-ink) !important;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.uni-shell .consistency p {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-2) !important;
+  margin: 0 !important;
 }
 
-/* Yield sources: bars and value get the gold-remap treatment. */
-.uni-shell .ys-bars { margin-top: 18px; }
-.uni-shell .ys-row { padding: 12px 0; }
-.uni-shell .ys-name { font-size: 15px; font-weight: 500; color: var(--uni-ink); }
-.uni-shell .ys-bar { background: rgba(25, 23, 23, 0.06); }
-.uni-shell .ys-val { font-size: 15px; }
+/* Yield sources: White Smoke card, larger row footprint, total APY
+   pinned at the bottom even when there's only one source. */
+.uni-shell .pp-section[id="sources"] {
+  background: var(--uni-card);
+  border-radius: var(--uni-radius);
+  padding: 28px 30px;
+}
+.uni-shell .pp-section[id="sources"] h2 { margin-bottom: 4px; }
+.uni-shell .ys-bars { margin-top: 20px; }
+.uni-shell .ys-row {
+  padding: 14px 0;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+}
+.uni-shell .ys-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--uni-ink);
+}
+.uni-shell .ys-bar {
+  background: rgba(25, 23, 23, 0.06);
+  height: 10px;
+}
+.uni-shell .ys-val {
+  font-size: 18px;
+  font-feature-settings: "tnum";
+}
+
+/* === Daily history table - Uniswap Explore feel ===
+   Bigger row padding, larger numeric typography, gold underline on
+   the header row, soft hover bg. */
+.uni-shell .chart-datatable thead th {
+  padding: 16px 22px 12px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--uni-ink-2);
+  border-bottom: 2px solid var(--uni-gold);
+}
+.uni-shell .chart-datatable tbody tr {
+  border-bottom: 1px solid rgba(25, 23, 23, 0.05);
+  transition: background-color 0.12s ease;
+}
+.uni-shell .chart-datatable tbody tr:hover {
+  background: rgba(255, 185, 54, 0.08);
+}
+.uni-shell .chart-datatable tbody td {
+  padding: 16px 22px;
+  font-size: 16px;
+  color: var(--uni-ink);
+}
+.uni-shell .chart-datatable tbody td.r {
+  font-family: var(--mono);
+  font-feature-settings: "tnum";
+  font-weight: 600;
+}
+.uni-shell .chart-datatable-foot {
+  padding: 14px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--uni-ink-2);
+  border-top: 1px solid rgba(25, 23, 23, 0.06);
+  background: transparent;
+}
+.uni-shell .chart-datatable-foot .pager button {
+  background: var(--uni-card);
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  padding: 6px 12px;
+  border-radius: var(--uni-radius-pill);
+}
+.uni-shell .chart-datatable-foot .pager button:hover:not(:disabled) {
+  background: var(--uni-gold);
+}
 
 /* === Embedded primitives, re-skinned ===
 
