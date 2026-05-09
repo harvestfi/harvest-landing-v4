@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AssetIcon } from "./token-icons";
-import { formatAPY, formatTVL } from "@/lib/format";
+import { AssetIcon, ChainIcon } from "./token-icons";
+import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 
 export interface SearchItem {
   slug: string;
@@ -67,7 +67,7 @@ export function SearchBox({ items }: Props) {
       if (s > 0) scored.push({ ...it, _score: s + Math.log10(Math.max(1, it.tvl)) });
     }
     scored.sort((a, b) => b._score - a._score);
-    return scored.slice(0, 8);
+    return scored.slice(0, 5);
   }, [items, query]);
 
   useEffect(() => {
@@ -91,11 +91,15 @@ export function SearchBox({ items }: Props) {
   }, []);
 
   useEffect(() => {
-    function onClick(e: MouseEvent) {
+    function onPointer(e: Event) {
       if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+    };
   }, []);
 
   function go(slug: string) {
@@ -123,6 +127,14 @@ export function SearchBox({ items }: Props) {
 
   return (
     <div className="search-wrap" ref={wrapRef}>
+      {showDropdown && (
+        <div
+          className="search-backdrop"
+          aria-hidden="true"
+          onMouseDown={(e) => { e.preventDefault(); setOpen(false); }}
+          onTouchStart={(e) => { e.preventDefault(); setOpen(false); }}
+        />
+      )}
       <label className="search-box">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
@@ -162,7 +174,12 @@ export function SearchBox({ items }: Props) {
                   <span className="sr-icon"><AssetIcon asset={r.asset} size={16} /></span>
                   <span className="sr-main">
                     <span className="sr-name">{r.productName}</span>
-                    <span className="sr-meta">{r.protocol} · {r.chain} · {r.asset}</span>
+                    <span className="sr-meta">
+                      <ChainIcon chain={r.chain} size={12} />
+                      <span>{r.chain}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{stripChainSuffix(r.category, r.chain)}</span>
+                    </span>
                   </span>
                   <span className="sr-stats">
                     <span className="sr-apy">{formatAPY(r.apy24h)}</span>

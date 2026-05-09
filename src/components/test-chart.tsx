@@ -155,6 +155,14 @@ function fmtDate(t: number): string {
   });
 }
 
+function fmtDateMobile(t: number): string {
+  return new Date(t * 1000).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function fmtDateShort(t: number): string {
   return new Date(t * 1000).toLocaleDateString("en-US", {
     month: "short",
@@ -353,7 +361,8 @@ export function TestChart({ series }: Props) {
             {isHovering && activePoint && (
               <>
                 <span className="uni-bignum-dot" aria-hidden="true">·</span>
-                <span className="uni-bignum-date">{fmtDate(activePoint.t)}</span>
+                <span className="uni-bignum-date uni-bignum-date-long">{fmtDate(activePoint.t)}</span>
+                <span className="uni-bignum-date uni-bignum-date-short">{fmtDateMobile(activePoint.t)}</span>
               </>
             )}
           </div>

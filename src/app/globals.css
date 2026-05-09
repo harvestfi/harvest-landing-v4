@@ -194,7 +194,15 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 11.5px;
   color: var(--ink-3);
   margin-top: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+.sr-meta svg { flex: none; }
 .sr-stats {
   display: flex;
   flex-direction: column;
@@ -229,6 +237,7 @@ button { font-family: inherit; cursor: pointer; }
   padding: 1px 4px;
   color: var(--ink-2);
 }
+.search-backdrop { display: none; }
 
 /* === shared === */
 .page {
@@ -942,6 +951,23 @@ button { font-family: inherit; cursor: pointer; }
 @media (max-width: 900px) {
   .navlinks { display: none; }
   .search-box { min-width: 180px; }
+  .search-pop {
+    position: fixed;
+    top: 56px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+  }
+  .search-pop-foot { display: none; }
+  .search-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    background: rgba(15, 17, 21, 0.18);
+    -webkit-tap-highlight-color: transparent;
+  }
   .hero h1 { font-size: 28px; }
   .hero-right, .cat-grid { grid-template-columns: repeat(2, 1fr); }
   .ranking { font-size: 12px; }
