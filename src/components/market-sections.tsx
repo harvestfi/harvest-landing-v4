@@ -3,7 +3,7 @@ import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL } from "@/lib/format";
 import { depositRef, apyToMonthly, fmtEarnings, tvlPercentileLabel, benchmarkQualifier } from "@/lib/contextualize";
 import { chainToSlug } from "@/lib/networks";
-import { ChainIcon } from "./token-icons";
+import { AssetIcon, ChainIcon } from "./token-icons";
 
 interface Props {
   vault: YieldVault;
@@ -81,11 +81,19 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
           return (
             <div key={v.id} className={`bt-row${isYou ? " you" : ""}`}>
               <span className="mono dim">#{displayRank}</span>
-              <span>
-                <strong>{v.productName}</strong>
+              <span className="bt-product-cell">
+                <span className="bt-product">
+                  <AssetIcon asset={v.asset} size={22} />
+                  <strong>{v.productName}</strong>
+                </span>
                 {isYou && <span className="here-pill">You are here</span>}
               </span>
-              <span><span className="chip">{v.chain}</span></span>
+              <span>
+                <span className="chip">
+                  <ChainIcon chain={v.chain} size={12} />
+                  {v.chain}
+                </span>
+              </span>
               <span className="r mono"><strong className="up">{formatAPY(v.apy24h)}</strong></span>
               <span className="r mono">{formatTVL(v.tvl)}</span>
             </div>

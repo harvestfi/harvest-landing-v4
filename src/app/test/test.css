@@ -550,18 +550,21 @@ body:has(.uni-shell) {
 .uni-shell .uni-jump {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 2px;
-  margin: 28px 0 32px;
+  align-items: stretch;
+  gap: 4px;
+  margin: 64px 0 36px;
   padding: 6px;
   background: var(--uni-card);
   border-radius: var(--uni-radius-pill);
 }
 .uni-shell .uni-jump-item {
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 9px;
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-radius: var(--uni-radius-pill);
   background: transparent;
   color: var(--uni-ink-2);
@@ -618,11 +621,16 @@ body:has(.uni-shell) {
   transform: scale(1.12);
 }
 
-/* Mobile: jump rail wraps gracefully and the items stay tappable. */
+/* Mobile: jump rail wraps and items fall back to natural width so
+   labels don't get squashed when divided into 7 equal columns. */
+@media (max-width: 900px) {
+  .uni-shell .uni-jump-item { flex: 0 1 auto; }
+}
 @media (max-width: 700px) {
   .uni-shell .uni-jump {
     border-radius: 18px;
     padding: 4px;
+    margin-top: 44px;
   }
   .uni-shell .uni-jump-item {
     padding: 8px 12px;
@@ -866,6 +874,10 @@ body:has(.uni-shell) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.uni-shell .bt-head, .uni-shell .bt-row {
+  padding: 16px 22px;
+  gap: 18px;
+}
 .uni-shell .bt-row {
   border-bottom: 1px solid rgba(25, 23, 23, 0.06);
   font-size: 17px;
@@ -874,6 +886,48 @@ body:has(.uni-shell) {
 }
 .uni-shell .bt-row:hover:not(.you):not(.avg) {
   background: rgba(255, 185, 54, 0.10);
+}
+.uni-shell .bt-product-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.uni-shell .bt-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.uni-shell .bt-product img {
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
+}
+.uni-shell .bt-product strong {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chain chip in bench-table: pill with icon + name. */
+.uni-shell .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 8px;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
+}
+.uni-shell .chip img {
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
 }
 /* You-row: no full-row tint; the gold pill carries the highlight. */
 .uni-shell .bt-row.you { background: transparent; }
