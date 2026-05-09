@@ -1,0 +1,500 @@
+/* =====================================================================
+   /home-test - rebuilt homepage. Full-bleed Sunflower Gold hero plus
+   a centered shell for the rest of the content. Tokens shared with
+   /test and /btc-test (Onyx + Graphite + White Smoke + Alabaster).
+   ===================================================================== */
+.uni-home-test {
+  --uni-bg:           #ffffff;
+  --uni-card:         #f1f5f4;
+  --uni-card-2:       #ffffff;
+  --uni-radius:       20px;
+  --uni-radius-sm:    14px;
+  --uni-radius-pill:  999px;
+  --uni-gold:         #ffb936;
+  --uni-gold-soft:    #ffd98a;
+  --uni-gold-bg:      #fff5d9;
+  --uni-ink:          #191717;
+  --uni-ink-2:        #32312b;
+  --uni-ink-3:        #6e6c66;
+  --uni-line:         #dddee0;
+  --uni-max:          1380px;
+
+  color: var(--uni-ink);
+  font-family: var(--sans);
+  background: var(--uni-bg);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+body:has(.uni-home-test) {
+  background-image: none !important;
+  overscroll-behavior-y: contain;
+}
+
+/* === Full-bleed Sunflower Gold hero ================================ */
+.uni-home-test .uni-home-hero {
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  padding: 64px 0 72px;
+  /* Sit above the gradient header bg without bleeding into content. */
+  position: relative;
+}
+.uni-home-test .uni-home-hero-inner {
+  max-width: var(--uni-max);
+  margin: 0 auto;
+  padding: 0 var(--shell-pad);
+}
+.uni-home-test .uni-home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
+  background: rgba(25, 23, 23, 0.08);
+  border-radius: var(--uni-radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--uni-ink);
+  margin: 0 0 22px;
+}
+.uni-home-test .uni-home-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--uni-ink);
+}
+.uni-home-test .uni-home-h1 {
+  font-family: var(--display);
+  font-size: clamp(40px, 6.6vw, 72px);
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.02;
+  color: var(--uni-ink);
+  margin: 0 0 22px;
+  max-width: 18ch;
+}
+.uni-home-test .uni-home-sub {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--uni-ink);
+  max-width: 56ch;
+  margin: 0 0 36px;
+  opacity: 0.78;
+}
+
+.uni-home-test .uni-home-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+  max-width: 720px;
+}
+.uni-home-test .uni-home-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(6px);
+  border-radius: var(--uni-radius-sm);
+  border: 1px solid rgba(25, 23, 23, 0.06);
+}
+.uni-home-test .uni-home-hero-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--uni-ink);
+  opacity: 0.72;
+}
+.uni-home-test .uni-home-hero-stat-value {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+
+.uni-home-test .uni-home-hero-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.uni-home-test .uni-home-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  background: var(--uni-ink);
+  color: #ffffff;
+  border-radius: var(--uni-radius-pill);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.uni-home-test .uni-home-cta-primary:hover {
+  transform: translateY(-1px);
+  background: #2b2826;
+}
+.uni-home-test .uni-home-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 18px;
+  background: transparent;
+  color: var(--uni-ink);
+  border: 1.5px solid rgba(25, 23, 23, 0.18);
+  border-radius: var(--uni-radius-pill);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.uni-home-test .uni-home-cta-secondary:hover {
+  background: rgba(25, 23, 23, 0.06);
+  border-color: rgba(25, 23, 23, 0.32);
+}
+
+/* === Centered content shell ======================================== */
+.uni-home-test .uni-home-shell {
+  max-width: var(--uni-max);
+  margin: 0 auto;
+  padding: 56px var(--shell-pad) 80px;
+  overflow-x: clip;
+}
+
+.uni-home-test .uni-home-section {
+  margin-bottom: 56px;
+}
+.uni-home-test .uni-home-section:last-child { margin-bottom: 0; }
+.uni-home-test .uni-home-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.uni-home-test .uni-home-section-title {
+  font-family: var(--display);
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  color: var(--uni-ink);
+  margin: 0 0 4px;
+}
+.uni-home-test .uni-home-section-sub {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .uni-home-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--uni-line);
+  padding-bottom: 2px;
+  transition: border-color 0.15s ease;
+}
+.uni-home-test .uni-home-section-link:hover { border-color: var(--uni-gold); }
+
+/* === Top yields ranking table ===================================== */
+.uni-home-test .uni-home-table { background: transparent; }
+.uni-home-test .uni-home-thead,
+.uni-home-test .uni-home-tbody .uni-hub-row {
+  display: grid;
+  grid-template-columns: 56px minmax(180px, 2.2fr) 1fr 1fr 110px 110px 110px 130px;
+  align-items: center;
+  gap: 16px;
+}
+.uni-home-test .uni-home-thead {
+  padding: 14px 22px 12px;
+  border-bottom: 1px solid var(--uni-line);
+}
+.uni-home-test .uni-home-th {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .uni-home-th-num { text-align: right; }
+.uni-home-test .uni-home-rank-h { text-align: left; }
+
+/* TestHubRow uses .uni-hub-row utility classes. Re-skin them in
+   the home-test scope so the row reads identically to /btc-test
+   without re-importing that page's stylesheet. */
+.uni-home-test .uni-hub-row {
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(25, 23, 23, 0.05);
+  text-decoration: none;
+  color: var(--uni-ink);
+  transition: background-color 0.12s ease;
+}
+.uni-home-test .uni-hub-row:hover { background: rgba(255, 185, 54, 0.06); }
+.uni-home-test .uni-hub-row:last-child { border-bottom: 0; }
+.uni-home-test .uni-hub-cell { min-width: 0; }
+.uni-home-test .uni-hub-rank {
+  font-family: var(--display);
+  font-size: 14.5px;
+  color: var(--uni-ink-3);
+  font-weight: 500;
+  font-feature-settings: "tnum";
+}
+.uni-home-test .uni-hub-vault {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.uni-home-test .uni-hub-vault img {
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
+}
+.uni-home-test .uni-hub-vault-name {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--uni-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-home-test .uni-hub-network {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--uni-ink);
+}
+.uni-home-test .uni-hub-network img {
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
+}
+.uni-home-test .uni-hub-strategy {
+  font-size: 14px;
+  color: var(--uni-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-home-test .uni-hub-num {
+  text-align: right;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-feature-settings: "tnum";
+  color: var(--uni-ink);
+}
+.uni-home-test .uni-hub-num-secondary {
+  color: var(--uni-ink-2);
+  font-weight: 500;
+}
+.uni-home-test .uni-hub-spark {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.uni-home-test .uni-hub-spark svg { width: 100px; height: 32px; display: block; }
+.uni-home-test .uni-hub-spark-empty { color: var(--uni-ink-3); font-family: var(--mono); }
+
+/* === Featured asset cards ========================================== */
+.uni-home-test .uni-home-asset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.uni-home-test .uni-home-asset-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 22px 20px;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius);
+  text-decoration: none;
+  color: var(--uni-ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-home-test .uni-home-asset-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -16px rgba(25, 23, 23, 0.18);
+}
+.uni-home-test .uni-home-asset-card-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.uni-home-test .uni-home-asset-card-head img {
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+.uni-home-test .uni-home-asset-card-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.uni-home-test .uni-home-asset-card-label {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--uni-ink);
+}
+.uni-home-test .uni-home-asset-card-sub {
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .uni-home-asset-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(25, 23, 23, 0.06);
+}
+.uni-home-test .uni-home-asset-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.uni-home-test .uni-home-asset-stat-label {
+  font-size: 12px;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .uni-home-asset-stat-value {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.uni-home-test .uni-home-asset-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .uni-home-asset-card-arrow {
+  color: var(--uni-gold);
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+.uni-home-test .uni-home-asset-card:hover .uni-home-asset-card-arrow {
+  transform: translateX(3px);
+}
+
+/* === Network shortcut row ========================================== */
+.uni-home-test .uni-home-network-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.uni-home-test .uni-home-network-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.uni-home-test .uni-home-network-pill img {
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+.uni-home-test .uni-home-network-pill:hover { background: var(--uni-gold-bg); }
+
+/* === SEO content section ========================================== */
+.uni-home-test .uni-home-content {
+  max-width: 70ch;
+  margin: 0 auto;
+}
+.uni-home-test .uni-home-content h2 {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--uni-ink);
+  margin: 0 0 14px;
+}
+.uni-home-test .uni-home-content p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--uni-ink-2);
+  margin: 0 0 14px;
+}
+.uni-home-test .uni-home-content p:last-child { margin-bottom: 0; }
+.uni-home-test .uni-home-content a {
+  color: var(--uni-ink);
+  border-bottom: 1px solid var(--uni-line);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+.uni-home-test .uni-home-content a:hover { border-color: var(--uni-gold); }
+
+/* === Responsive ===================================================== */
+@media (max-width: 1100px) {
+  .uni-home-test .uni-home-asset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .uni-home-test .uni-home-thead,
+  .uni-home-test .uni-home-tbody .uni-hub-row {
+    grid-template-columns: 40px minmax(140px, 2fr) 1fr 100px 100px 110px;
+  }
+  .uni-home-test .uni-home-thead .uni-home-th:nth-child(4),
+  .uni-home-test .uni-home-tbody .uni-hub-row .uni-hub-cell:nth-child(4) {
+    display: none;
+  }
+}
+@media (max-width: 800px) {
+  .uni-home-test .uni-home-hero { padding: 48px 0 56px; }
+  .uni-home-test .uni-home-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .uni-home-test .uni-home-thead,
+  .uni-home-test .uni-home-tbody .uni-hub-row {
+    grid-template-columns: 32px minmax(120px, 2fr) 90px 90px 90px;
+    padding-left: 16px;
+    padding-right: 16px;
+    gap: 10px;
+  }
+  .uni-home-test .uni-home-thead .uni-home-th:nth-child(3),
+  .uni-home-test .uni-home-tbody .uni-hub-row .uni-hub-cell:nth-child(3) {
+    display: none;
+  }
+}
+@media (max-width: 540px) {
+  .uni-home-test .uni-home-hero { padding: 36px 0 44px; }
+  .uni-home-test .uni-home-asset-grid { grid-template-columns: 1fr; }
+  .uni-home-test .uni-home-shell { padding: 36px 16px 60px; }
+  .uni-home-test .uni-home-thead,
+  .uni-home-test .uni-home-tbody .uni-hub-row {
+    grid-template-columns: 28px minmax(110px, 2fr) 80px 90px;
+    gap: 8px;
+  }
+  .uni-home-test .uni-home-thead .uni-home-th:nth-child(5),
+  .uni-home-test .uni-home-tbody .uni-hub-row .uni-hub-cell:nth-child(5) {
+    display: none;
+  }
+  .uni-home-test .uni-home-asset-card { padding: 18px 18px 16px; }
+  .uni-home-test .uni-home-network-pill { padding: 8px 13px; font-size: 13px; }
+  .uni-home-test .uni-home-cta-primary,
+  .uni-home-test .uni-home-cta-secondary { padding: 11px 18px; font-size: 14px; }
+  .uni-home-test .uni-home-hero-stat { padding: 12px 14px; }
+  .uni-home-test .uni-home-hero-stat-value { font-size: 19px; }
+}

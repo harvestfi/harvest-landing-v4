@@ -10,6 +10,7 @@ export async function Header() {
     { label: "BTC", href: "/btc" },
     { label: "Test", href: "/test" },
     { label: "BTC test", href: "/btc-test" },
+    { label: "Home test", href: "/home-test" },
   ];
 
   const vaults = await getLiveVaults();
