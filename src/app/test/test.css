@@ -673,9 +673,9 @@ body:has(.uni-shell) {
 }
 
 /* Jump-to nav: very soft pill rail with refined lucide-style icons.
-   Sticky below the global topnav on desktop so the section index
-   stays accessible while the user scrolls into the body. Hover
-   flips both the icon stroke and the label text to Sunflower Gold. */
+   Lives in the document flow (not sticky) - once it scrolls past
+   the viewport, the dedicated full-width sticky sub-header takes
+   over and pins below the global topnav. */
 .uni-shell .uni-jump {
   display: flex;
   flex-wrap: wrap;
@@ -683,13 +683,8 @@ body:has(.uni-shell) {
   gap: 2px;
   margin: 64px 0 36px;
   padding: 6px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: saturate(1.4) blur(10px);
+  background: rgba(25, 23, 23, 0.025);
   border-radius: var(--uni-radius-pill);
-  position: sticky;
-  top: 60px;
-  z-index: 25;
-  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
 }
 .uni-shell .uni-jump-item {
   flex: 1 1 0;
@@ -841,91 +836,94 @@ body:has(.uni-shell) {
   .uni-shell .uni-similar-grid { grid-template-columns: 1fr; }
 }
 
-/* === Mobile sticky sub-header ======================================
+/* === Sticky sub-header ============================================
    Pinned below the global topnav once the user scrolls past the
-   jump-to nav. Asset icon + product name on the left, four short
-   quick-jump links on the right. Slides in/out via transform on the
-   `visible` class. Hidden entirely on desktop (>=901px). */
+   jump-to nav. Full-width, solid white (matches --panel of the
+   topnav) so it reads as a true second row of the nav. Asset icon
+   + product name on the left, full set of section anchors on the
+   right. Slides in/out via transform on the `visible` class. */
 .uni-shell .uni-sticky-bar {
-  display: none;
+  display: block;
+  position: fixed;
+  top: 52px;
+  left: 0;
+  right: 0;
+  z-index: 28;
+  background: #ffffff;
+  border-bottom: 1px solid var(--uni-line);
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.18s ease, opacity 0.18s ease;
 }
+.uni-shell .uni-sticky-bar.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Full-bleed: no max-width clamp; only horizontal padding gives the
+   content gutters so it never touches the screen edge. */
+.uni-shell .uni-sticky-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px var(--shell-pad);
+}
+.uni-shell .uni-sticky-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  text-decoration: none;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.uni-shell .uni-sticky-left img {
+  border-radius: 50%;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+}
+.uni-shell .uni-sticky-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uni-shell .uni-sticky-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  flex-shrink: 0;
+}
+.uni-shell .uni-sticky-right a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.uni-shell .uni-sticky-right a:hover { color: var(--uni-gold); }
+
+/* Tighter spacing + drop the longer link labels on narrower screens
+   so the bar never overflows the viewport. */
 @media (max-width: 900px) {
-  .uni-shell .uni-sticky-bar {
-    display: block;
-    position: fixed;
-    top: 52px;
-    left: 0;
-    right: 0;
-    z-index: 28;
-    /* Solid white to match the global topnav (var(--panel) = #fff).
-       No backdrop blur, no transparency - reads as a real second
-       row of the nav, not a floating overlay. */
-    background: #ffffff;
-    border-bottom: 1px solid var(--uni-line);
-    transform: translateY(-100%);
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.18s ease, opacity 0.18s ease;
-  }
-  .uni-shell .uni-sticky-bar.visible {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  /* Full-width: no max-width clamp; only horizontal padding gives
-     the content gutters so it never touches the screen edge. */
-  .uni-shell .uni-sticky-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 16px;
-  }
-  .uni-shell .uni-sticky-left {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--uni-ink);
-    text-decoration: none;
-    min-width: 0;
-  }
-  .uni-shell .uni-sticky-left img {
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .uni-shell .uni-sticky-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .uni-shell .uni-sticky-right {
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-    flex-shrink: 0;
-  }
-  .uni-shell .uni-sticky-right a {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--uni-ink-2);
-    text-decoration: none;
-  }
-  .uni-shell .uni-sticky-right a:hover { color: var(--uni-ink); }
+  .uni-shell .uni-sticky-inner { gap: 14px; padding: 10px 16px; }
+  .uni-shell .uni-sticky-right { gap: 14px; }
+  .uni-shell .uni-sticky-right a { font-size: 13px; }
+  .uni-shell .uni-sticky-right a[href="#ecosystem"],
+  .uni-shell .uni-sticky-right a[href="#details"],
+  .uni-shell .uni-sticky-right a[href="#about"] { display: none; }
+}
+@media (max-width: 540px) {
+  .uni-shell .uni-sticky-right a[href="#benchmark"] { display: none; }
 }
 
 /* Mobile: jump rail wraps and items fall back to natural width so
-   labels don't get squashed when divided into 7 equal columns. The
-   dedicated sticky sub-header takes over on scroll, so we drop the
-   jump nav's own position:sticky on mobile to avoid two pinned bars. */
+   labels don't get squashed when divided into 7 equal columns. */
 @media (max-width: 900px) {
-  .uni-shell .uni-jump {
-    position: static;
-    background: rgba(25, 23, 23, 0.025);
-    backdrop-filter: none;
-    box-shadow: none;
-  }
   .uni-shell .uni-jump-item { flex: 0 1 auto; }
 }
 @media (max-width: 700px) {

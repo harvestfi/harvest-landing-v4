@@ -15,10 +15,15 @@ interface Props {
   asset: string;
 }
 
+// Full set of section anchors mirroring the jump-nav. The CSS hides
+// extra ones on narrow screens so this list never wraps.
 const QUICK_LINKS: { href: string; label: string }[] = [
-  { href: "#performance", label: "Perf" },
-  { href: "#benchmark", label: "Bench" },
-  { href: "#history", label: "Hist" },
+  { href: "#about", label: "Overview" },
+  { href: "#performance", label: "Performance" },
+  { href: "#benchmark", label: "Benchmarks" },
+  { href: "#ecosystem", label: "Ecosystem" },
+  { href: "#history", label: "History" },
+  { href: "#details", label: "Details" },
   { href: "#faq", label: "FAQ" },
 ];
 
