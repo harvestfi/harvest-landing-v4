@@ -6,7 +6,7 @@
 // page passes in full per-metric histories and we slice by the
 // selected range in the client.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type Metric = "tvl" | "apy" | "sharePrice";
 type Range = "1M" | "3M" | "1Y" | "ALL";
@@ -93,12 +93,31 @@ export function TestChart({ series }: Props) {
   }
   const points = downsample(raw);
 
-  const activeIdx =
-    hoverIdx !== null && hoverIdx >= 0 && hoverIdx < points.length
-      ? hoverIdx
-      : points.length - 1;
+  // The hovered bar drives the bignum; when no hover, fall back to the
+  // most recent point so the headline always shows something. We track
+  // isHovering separately so the latest bar isn't visually styled as
+  // active (and dimmed) by default - it only takes the gold-extension
+  // treatment when the cursor is actually over the chart.
+  const isHovering =
+    hoverIdx !== null && hoverIdx >= 0 && hoverIdx < points.length;
+  const activeIdx = isHovering ? hoverIdx! : points.length - 1;
   const activePoint = points[activeIdx];
   const latest = activePoint ? activePoint.v : 0;
+
+  // Mouse-move on the bars container picks the column under the cursor
+  // by x-position, so hovering between bar gaps OR over the empty space
+  // above a bar still selects the right column.
+  const barsRef = useRef<HTMLDivElement | null>(null);
+  const onBarsMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = barsRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || points.length === 0) return;
+    const relX = e.clientX - rect.left;
+    const idx = Math.min(
+      points.length - 1,
+      Math.max(0, Math.floor((relX / rect.width) * points.length)),
+    );
+    if (idx !== hoverIdx) setHoverIdx(idx);
+  };
 
   // Min-max scaling so changes are legible even for slow-moving series
   // like share price (typically 1.00 → 1.09, ~9% absolute movement).
@@ -129,22 +148,27 @@ export function TestChart({ series }: Props) {
         </div>
       </div>
 
-      <div
-        className="uni-chart"
-        onMouseLeave={() => setHoverIdx(null)}
-      >
+      <div className="uni-chart">
         {points.length === 0 ? (
           <div className="uni-chart-empty">No data for this range.</div>
         ) : (
           <>
-            <div className="uni-chart-bars">
+            <div
+              ref={barsRef}
+              className="uni-chart-bars"
+              onMouseMove={onBarsMove}
+              onMouseLeave={() => setHoverIdx(null)}
+            >
               {points.map((p, i) => (
-                <span
+                <div
                   key={p.t}
-                  className={`uni-chart-bar${i === activeIdx ? " active" : ""}`}
-                  style={{ height: `${heightFor(p.v)}%` }}
-                  onMouseEnter={() => setHoverIdx(i)}
-                />
+                  className={`uni-bar-col${isHovering && i === hoverIdx ? " active" : ""}`}
+                >
+                  <span
+                    className="uni-chart-bar"
+                    style={{ height: `${heightFor(p.v)}%` }}
+                  />
+                </div>
               ))}
             </div>
             <div className="uni-chart-axis">

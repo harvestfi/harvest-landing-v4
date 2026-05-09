@@ -190,7 +190,10 @@ body:has(.uni-shell) {
 }
 
 /* Bar chart - flex:1 pushes uni-chart-controls to the bottom of the
-   chart-wrap (and so to the bottom of the left grid column). */
+   chart-wrap (and so to the bottom of the left grid column). The plot
+   gets a barely-visible dotted texture so the empty space above the
+   bars doesn't read as a void; pattern stays at <8% opacity so it
+   never competes with the gold bars themselves. */
 .uni-shell .uni-chart {
   display: flex;
   flex-direction: column;
@@ -198,6 +201,13 @@ body:has(.uni-shell) {
   padding: 18px 0;
   min-height: 280px;
   flex: 1;
+  background-image: radial-gradient(
+    circle,
+    rgba(25, 23, 23, 0.07) 1px,
+    transparent 1.2px
+  );
+  background-size: 14px 14px;
+  background-position: 0 100%;
 }
 .uni-shell .uni-chart-empty {
   align-items: center;
@@ -213,24 +223,43 @@ body:has(.uni-shell) {
   flex: 1;
   min-height: 220px;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch; /* columns fill full plot height so empty
+                            space above each bar is still hover-able */
   gap: 3px;
-  overflow: hidden; /* defensive: bars are downsampled to MAX_BARS but
-                        clamp here too so a future edge case can't
-                        spill bars into the sidebar. */
+  overflow: hidden;
 }
-.uni-shell .uni-chart-bar {
+.uni-shell .uni-bar-col {
   flex: 1;
   min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+}
+/* The "ghost" extension above the active bar - barely visible gray
+   filling the empty space from the top of the plot down to the
+   actual gold bar. Sits behind the bar (z-index 0 vs bar z-index 1)
+   so the gold cap is still clean. */
+.uni-shell .uni-bar-col.active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(25, 23, 23, 0.05);
+  border-radius: 5px 5px 0 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.uni-shell .uni-chart-bar {
+  position: relative;
+  z-index: 1;
+  width: 100%;
   min-height: 2px;
   background: var(--uni-gold);
-  border-radius: 2px 2px 0 0;
-  transition: filter 0.12s ease, background-color 0.12s ease;
-  cursor: crosshair;
+  border-radius: 5px 5px 0 0;
+  transition: filter 0.12s ease;
 }
-.uni-shell .uni-chart-bar:hover,
-.uni-shell .uni-chart-bar.active {
-  filter: brightness(0.78) saturate(1.1);
+.uni-shell .uni-bar-col.active .uni-chart-bar {
+  filter: brightness(0.92);
 }
 .uni-shell .uni-chart-axis {
   display: flex;
@@ -395,17 +424,17 @@ body:has(.uni-shell) {
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
+/* No per-row borders inside the stats stack - the divider above
+   (after the Total APY headline) is the only separator. Stats sit
+   in a tight rhythm with vertical padding doing the spacing work. */
 .uni-shell .uni-side-stat {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px 0;
-  border-top: 1px solid rgba(25, 23, 23, 0.08);
+  padding: 10px 0;
 }
-.uni-shell .uni-side-stat:first-of-type {
-  border-top: 0;
-  padding-top: 0;
-}
+.uni-shell .uni-side-stat:first-of-type { padding-top: 0; }
+.uni-shell .uni-side-stat:last-of-type { padding-bottom: 0; }
 .uni-shell .uni-side-value {
   font-family: var(--display);
   font-size: 22px;
