@@ -74,11 +74,14 @@ body:has(.uni-shell) {
 .uni-shell .uni-crumbs-sep { color: var(--uni-ink-3); font-weight: 400; }
 .uni-shell .uni-crumbs-current { color: var(--uni-ink); font-weight: 600; }
 
-/* Title row: icon + title on the left as focal point; pills +
-   address clustered on the right edge as supporting metadata. */
+/* Title row: icon + title on the left as focal point; byline pinned
+   to the right edge on desktop, drops underneath on mobile. Wrap
+   so very long product names break gracefully instead of pushing
+   the byline off-screen. */
 .uni-shell .uni-title-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 6px 0 18px;
 }
@@ -92,31 +95,27 @@ body:has(.uni-shell) {
   display: block;
   border-radius: 50%;
 }
-/* Right-side cluster: address + copy on top, byline beneath. Sits
-   margin-left:auto so it always pins to the right edge of the row. */
-.uni-shell .uni-title-meta {
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  min-width: 0;
-}
-/* Product title is the largest type on the page but trimmed back to
-   40px (was 50px) so it stops crowding the hero. Still bigger than
-   the chart bignum (32px) so the visual hierarchy stays intact:
-   title > bignum > body. Icon mirrors the trim at 54px. */
+/* Product title: fluid scale via clamp() so very long names shrink
+   gracefully on narrower viewports without overflowing the row.
+   Still > the chart bignum (32px) so the title remains the
+   largest type on the page. flex:1 + min-width:0 lets the title
+   shrink/wrap inside the flex row instead of forcing the byline
+   off-screen. */
 .uni-shell .uni-title {
   font-family: var(--display);
-  font-size: 40px;
+  font-size: clamp(28px, 4.6vw, 40px);
   font-weight: 600;
   letter-spacing: -0.022em;
   color: var(--uni-ink);
   margin: 0;
   line-height: 1.05;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
 }
 .uni-shell .uni-title-byline {
   margin: 0;
+  margin-left: auto;
   font-size: 14px;
   font-weight: 500;
   color: var(--uni-ink-2);
@@ -125,6 +124,7 @@ body:has(.uni-shell) {
   align-items: center;
   gap: 8px;
   line-height: 1.4;
+  flex-shrink: 0;
 }
 .uni-shell .uni-byline-sep {
   color: var(--uni-ink-3);
@@ -1936,9 +1936,17 @@ body:has(.uni-shell) {
 }
 @media (max-width: 700px) {
   .uni-shell { padding: 16px 16px 60px; }
-  .uni-shell .uni-title { font-size: 32px; }
-  .uni-shell .uni-title-byline { font-size: 13px; gap: 6px; }
-  .uni-shell .uni-title-icon img { width: 48px !important; height: 48px !important; }
+  /* Title row tightens to 12px gap; icon shrinks; byline drops
+     onto its own row beneath the icon + title via flex-basis 100%
+     so it always fits regardless of product-name length. */
+  .uni-shell .uni-title-row { gap: 12px; padding: 4px 0 14px; }
+  .uni-shell .uni-title-icon img { width: 44px !important; height: 44px !important; }
+  .uni-shell .uni-title-byline {
+    flex-basis: 100%;
+    margin-left: 0;
+    font-size: 13px;
+    gap: 6px;
+  }
   .uni-shell .uni-bignum-value { font-size: 26px; }
   .uni-shell .uni-side-headline { font-size: 26px; }
   .uni-shell .uni-side-value { font-size: 18px; }

@@ -79,6 +79,17 @@ function computeStability(history: FullVaultHistory) {
   };
 }
 
+// Label colour follows the same 4-zone ramp as the VU-meter ticks
+// so the headline status word ("Highly variable" / "Variable" /
+// "Consistent" / "Very consistent") inherits the tier colour and the
+// gauge + label visually agree on what "92" or "30" means.
+function labelColorForScore(score: number): string {
+  if (score < 25) return "#e5484d";
+  if (score < 50) return "#f4801a";
+  if (score < 75) return "#ffb936";
+  return "#27a567";
+}
+
 export function TestStabilityCard({ history, asset }: Props) {
   const s = computeStability(history);
   const assetFullName = ASSET_FULL_NAMES[asset] ?? asset;
@@ -112,6 +123,7 @@ export function TestStabilityCard({ history, asset }: Props) {
             <div
               className="uni-stability-label"
               data-tooltip="Lower coefficient-of-variation in 30-day APY = higher score. 90-100 Very consistent, 70-89 Consistent, 40-69 Variable, 0-39 Highly variable."
+              style={{ color: labelColorForScore(s.score) }}
             >
               {s.label}
             </div>
