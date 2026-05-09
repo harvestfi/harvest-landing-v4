@@ -18,6 +18,39 @@ function formatDate(ts: number): string {
   return new Date(ts * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+// Plain-language explanations attached to each metric label as a
+// data-tooltip attribute. Surfaces only render visually where CSS
+// hooks them (currently /test only); production HTML carries the
+// attribute as a no-op.
+const APY_LABEL_TOOLTIPS: Record<string, string> = {
+  "30D Low": "The lowest single APY observation recorded over the last 30 days.",
+  "30D High": "The highest single APY observation recorded over the last 30 days.",
+  "30D Average": "Mean of all daily APY observations in the last 30 days. Negative readings are filtered out.",
+  "Median APY": "The middle value of the 30-day APY distribution. Less sensitive to outlier spikes than the mean.",
+  "Best day": "The single calendar day in the last 30 days with the highest indexed APY.",
+  "Worst day": "The single calendar day in the last 30 days with the lowest indexed APY.",
+  "Volatility": "Standard deviation of daily APY across the 30-day window. Higher number = more day-to-day swings.",
+  "APY range": "30D high minus 30D low, expressed in percentage points (pp).",
+};
+const TVL_LABEL_TOOLTIPS: Record<string, string> = {
+  "30D Low": "The lowest TVL value recorded by the indexer over the last 30 days.",
+  "30D High": "The highest TVL value recorded by the indexer over the last 30 days.",
+  "30D Average": "Mean of all daily TVL observations in the last 30 days.",
+  "Median TVL": "The middle value of the 30-day TVL distribution. Robust to deposit/withdraw spikes.",
+  "Best day": "The single calendar day in the last 30 days with the highest TVL.",
+  "Worst day": "The single calendar day in the last 30 days with the lowest TVL.",
+  "Current TVL": "Most recent TVL value we have indexed for this strategy.",
+  "Largest daily change": "The biggest absolute movement (deposit or withdrawal) between two consecutive daily TVL points in the last 30 days.",
+};
+function tooltipFor(label: string, kind: "apy" | "tvl"): string | undefined {
+  if (label.startsWith("Lifetime avg")) {
+    return kind === "apy"
+      ? "Mean APY across the entire indexed history of this strategy."
+      : "Mean TVL across the entire indexed history of this strategy.";
+  }
+  return kind === "apy" ? APY_LABEL_TOOLTIPS[label] : TVL_LABEL_TOOLTIPS[label];
+}
+
 export function HistoricalStats({ history, asset }: { history: FullVaultHistory; asset: string }) {
   const now = Math.floor(Date.now() / 1000);
   const thirtyDaysAgo = now - 30 * 86400;
@@ -169,7 +202,10 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
             <table className="hist-table">
               <tbody>
                 {apyRows.slice(0, apyHalf).map((r) => (
-                  <tr key={r.label}><th>{r.label}</th><td>{r.value}</td></tr>
+                  <tr key={r.label}>
+                    <th data-tooltip={tooltipFor(r.label, "apy")}>{r.label}</th>
+                    <td>{r.value}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -181,7 +217,10 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
             <table className="hist-table">
               <tbody>
                 {apyRows.slice(apyHalf).map((r) => (
-                  <tr key={r.label}><th>{r.label}</th><td>{r.value}</td></tr>
+                  <tr key={r.label}>
+                    <th data-tooltip={tooltipFor(r.label, "apy")}>{r.label}</th>
+                    <td>{r.value}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -193,7 +232,10 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
             <table className="hist-table">
               <tbody>
                 {tvlRows.slice(0, tvlHalf).map((r) => (
-                  <tr key={r.label}><th>{r.label}</th><td>{r.value}</td></tr>
+                  <tr key={r.label}>
+                    <th data-tooltip={tooltipFor(r.label, "tvl")}>{r.label}</th>
+                    <td>{r.value}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -205,7 +247,10 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
             <table className="hist-table">
               <tbody>
                 {tvlRows.slice(tvlHalf).map((r) => (
-                  <tr key={r.label}><th>{r.label}</th><td>{r.value}</td></tr>
+                  <tr key={r.label}>
+                    <th data-tooltip={tooltipFor(r.label, "tvl")}>{r.label}</th>
+                    <td>{r.value}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>

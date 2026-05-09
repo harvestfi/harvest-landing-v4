@@ -164,31 +164,56 @@ export default async function TestPage() {
 
           <div className="uni-side-card">
             <div className="uni-side-headline-block">
-              <div className="uni-side-label">Total APY</div>
+              <div
+                className="uni-side-label"
+                data-tooltip="The latest 24-hour annualized yield reported by our hosted indexer for this strategy."
+              >
+                Total APY
+              </div>
               <div className="uni-side-headline">{formatAPY(vault.apy24h)}</div>
             </div>
 
             <div className="uni-side-card-divider" aria-hidden="true" />
 
             <div className="uni-side-stat">
-              <div className="uni-side-label">Holders</div>
+              <div
+                className="uni-side-label"
+                data-tooltip="Number of distinct on-chain addresses currently holding this vault token, sourced from the chain explorer."
+              >
+                Holders
+              </div>
               <div className="uni-side-value">
                 {holderCount !== null ? holderCount.toLocaleString("en-US") : "—"}
               </div>
             </div>
 
             <div className="uni-side-stat">
-              <div className="uni-side-label">TVL</div>
+              <div
+                className="uni-side-label"
+                data-tooltip="Total value locked: USD value of all deposits currently held by the vault contract."
+              >
+                TVL
+              </div>
               <div className="uni-side-value">{formatTVL(vault.tvl)}</div>
             </div>
 
             <div className="uni-side-stat">
-              <div className="uni-side-label">30d avg APY</div>
+              <div
+                className="uni-side-label"
+                data-tooltip="Mean 24-hour APY across the last 30 days of indexed observations."
+              >
+                30d avg APY
+              </div>
               <div className="uni-side-value">{formatAPY(vault.apy30d)}</div>
             </div>
 
             <div className="uni-side-stat">
-              <div className="uni-side-label">Tracked for</div>
+              <div
+                className="uni-side-label"
+                data-tooltip="Number of days of continuous indexed APY history we have for this strategy."
+              >
+                Tracked for
+              </div>
               <div className="uni-side-value">
                 {trackedDays > 0 ? `${trackedDays} days` : "—"}
               </div>

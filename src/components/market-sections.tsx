@@ -32,10 +32,42 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
       <BenchmarkIntro vault={vault} rank={rank} sameAssetCount={sameAsset.length} avgApy={avgApy} vsAvg={vsAvg} />
 
       <div className="bench-stats">
-        <div><div className="bs-l">Asset average APY</div><div className="bs-v mono">{formatAPY(avgApy)}</div></div>
-        <div><div className="bs-l">This product APY</div><div className="bs-v mono up">{formatAPY(vault.apy24h)}</div></div>
-        <div><div className="bs-l">Market rank</div><div className="bs-v mono">#{rank} / {sameAsset.length}</div></div>
-        <div><div className="bs-l">vs. Average</div><div className="bs-v mono up">{vsAvg >= 0 ? "+" : ""}{vsAvg.toFixed(1)}%</div></div>
+        <div>
+          <div
+            className="bs-l"
+            data-tooltip={`Mean 24-hour APY across every ${vault.asset} strategy currently in our index. Stale and broken vaults are excluded.`}
+          >
+            Asset average APY
+          </div>
+          <div className="bs-v mono">{formatAPY(avgApy)}</div>
+        </div>
+        <div>
+          <div
+            className="bs-l"
+            data-tooltip="The latest 24-hour annualized yield reported by our hosted indexer for this strategy."
+          >
+            This product APY
+          </div>
+          <div className="bs-v mono up">{formatAPY(vault.apy24h)}</div>
+        </div>
+        <div>
+          <div
+            className="bs-l"
+            data-tooltip={`Where this strategy sits when the ${sameAsset.length} indexed ${vault.asset} vaults are sorted from highest to lowest 24h APY.`}
+          >
+            Market rank
+          </div>
+          <div className="bs-v mono">#{rank} / {sameAsset.length}</div>
+        </div>
+        <div>
+          <div
+            className="bs-l"
+            data-tooltip="How much higher (+) or lower (-) this product's 24h APY runs compared to the asset-cohort average."
+          >
+            vs. Average
+          </div>
+          <div className="bs-v mono up">{vsAvg >= 0 ? "+" : ""}{vsAvg.toFixed(1)}%</div>
+        </div>
       </div>
 
       <div className="bench-table">

@@ -492,6 +492,66 @@ body:has(.uni-shell) {
   color: var(--uni-ink-3);
 }
 
+/* === Hover tooltips on technical labels (no icon) ==================
+   Any element with a data-tooltip attribute inside .uni-shell renders
+   a small dark popup on hover that explains the term in plain
+   language. Cursor turns into 'help' so the affordance is clear
+   without an icon. The popup is a single ::after pseudo, positioned
+   above the label and clipped to a max width that stays inside the
+   surface even on the side-card column. */
+.uni-shell [data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+.uni-shell [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  width: max-content;
+  max-width: 280px;
+  padding: 10px 12px;
+  background: var(--uni-ink);
+  color: #ffffff;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px -12px rgba(25, 23, 23, 0.45),
+              0 2px 6px -2px rgba(25, 23, 23, 0.20);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease 0.20s, transform 0.12s ease 0.20s;
+  white-space: normal;
+}
+/* Tiny arrow pointing down to the label */
+.uni-shell [data-tooltip]::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 14px;
+  z-index: 51;
+  width: 8px;
+  height: 8px;
+  background: var(--uni-ink);
+  transform: rotate(45deg) translateY(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease 0.20s;
+}
+.uni-shell [data-tooltip]:hover::after,
+.uni-shell [data-tooltip]:hover::before {
+  opacity: 1;
+}
+.uni-shell [data-tooltip]:hover::after {
+  transform: translateY(0);
+}
+
 /* Jump-to nav: 4 anchor pills sitting between the hero and the
    below-the-fold sections. Static (not pinned) - bookmarks the
    section flow without competing with the existing global topnav.
@@ -645,7 +705,8 @@ body:has(.uni-shell) {
    keeps the rhythm; the outer container is invisible. bench-stats
    gets thin vertical dividers between the four stat tiles in lieu
    of a card frame. */
-.uni-shell .bench-stats,
+/* bench-table / hist-table / eco-chart sit nakedly on white; only
+   their internal row dividers do the structural work. */
 .uni-shell .bench-table,
 .uni-shell .eco-chart-wrap,
 .uni-shell .hist-table {
@@ -654,20 +715,25 @@ body:has(.uni-shell) {
   border-radius: 0;
   box-shadow: none;
 }
-.uni-shell .bench-stats {
-  padding: 4px 0 16px;
-  gap: 0;
-}
-.uni-shell .bench-stats > div {
-  padding: 4px 24px;
-  border-left: 1px solid var(--uni-line);
-}
-.uni-shell .bench-stats > div:first-child {
-  padding-left: 0;
-  border-left: 0;
-}
 .uni-shell .eco-chart-wrap { padding: 4px 0; }
 .uni-shell .bench-table { overflow: visible; }
+/* Globals.css clips hist-table with overflow:hidden for radius
+   masking; on /test there's no card frame to clip to, and we need
+   the tooltips on row labels to escape the table box. */
+.uni-shell .hist-table { overflow: visible; }
+
+/* bench-stats is the exception: a White Smoke card so it reads as a
+   visual break mid-page, the same surface as the hero side card. The
+   four stat tiles share the surface (no internal dividers) and the
+   number gets room to breathe. */
+.uni-shell .bench-stats {
+  background: var(--uni-card);
+  border: 0;
+  border-radius: var(--uni-radius);
+  padding: 24px 28px;
+  gap: 24px;
+}
+.uni-shell .bench-stats > div { padding: 0; border: 0; }
 
 /* bench-stats */
 .uni-shell .bs-l {
@@ -708,7 +774,9 @@ body:has(.uni-shell) {
 .uni-shell .bt-row:hover:not(.you):not(.avg) {
   background: rgba(255, 185, 54, 0.10);
 }
-.uni-shell .bt-row.you { background: var(--uni-gold-bg); }
+/* You-row: no full-row tint; the gold pill carries the highlight. */
+.uni-shell .bt-row.you { background: transparent; }
+.uni-shell .bt-row.you:hover { background: rgba(255, 185, 54, 0.10); }
 .uni-shell .bt-row .here-pill {
   background: var(--uni-gold);
   color: var(--uni-ink);
@@ -716,8 +784,21 @@ body:has(.uni-shell) {
   font-weight: 600;
 }
 
-/* eco-chart */
-.uni-shell .eco-bar-col.you .eco-bar { outline-color: var(--uni-ink); }
+/* eco-chart: collapse the rainbow palette to flagship only. Active
+   strategy = Sunflower Gold; everyone else = Graphite. The bars and
+   their legend swatches inherit the same colors so the chart reads
+   as 'you vs the cohort' instead of a 6-way colour-coded ranking.
+   !important is needed because the bar/swatch backgrounds are set
+   inline by the shared component. */
+.uni-shell .eco-bar { background: var(--uni-ink-2) !important; }
+.uni-shell .eco-bar-col.you .eco-bar { background: var(--uni-gold) !important; }
+.uni-shell .eco-bar-col.you .eco-bar { outline: 0; }
+.uni-shell .eco-legend-swatch { background: var(--uni-ink-2) !important; }
+.uni-shell .eco-legend-row.you .eco-legend-swatch { background: var(--uni-gold) !important; }
+.uni-shell .eco-legend-swatch.baseline {
+  background: transparent !important;
+  border: 1px dashed var(--uni-ink-3) !important;
+}
 .uni-shell .eco-legend-head {
   border-bottom: 2px solid var(--uni-gold);
   color: var(--uni-ink-2);
