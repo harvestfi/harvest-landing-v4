@@ -271,7 +271,7 @@ export default async function Home() {
             Onchain Yield Index
           </div>
           <h1>
-            Best DeFi Yields
+            Best DeFi Yields.
             <br />
             <span className="dim">
               Compare {stats.vaultCount} strategies ranked by APY across USDC, USDT, ETH and Bitcoin.
