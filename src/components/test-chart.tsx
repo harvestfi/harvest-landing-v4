@@ -156,7 +156,7 @@ export function TestChart({ series }: Props) {
 
   return (
     <div className="uni-chart-wrap">
-      <div className="uni-bignum" id="hero">
+      <div className="uni-bignum" id="performance">
         <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
         <div className="uni-bignum-meta">
           <span className="uni-bignum-label">{metricLabel(metric, isHovering)}</span>

@@ -16,10 +16,17 @@ import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { productPageCrumbs } from "@/lib/seo";
 import { SITE_URL } from "@/lib/constants";
 import { harvestAppUrl } from "@/lib/harvest-app";
-import { AssetIcon } from "@/components/token-icons";
+import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
+import { HistoricalNarrative } from "@/components/historical-narrative";
 import { MarketBenchmark, EcosystemContext } from "@/components/market-sections";
+import { VaultCommentary } from "@/components/vault-commentary";
+import { VaultHistoryTable } from "@/components/vault-history-table";
+import { VaultFaq } from "@/components/vault-faq";
+import { YieldBreakdown } from "@/components/yield-breakdown";
+import { YieldTrajectory } from "@/components/yield-trajectory";
+import { ConsistencyScore } from "@/components/consistency-score";
 import { TestChart, type ChartSeries } from "@/components/test-chart";
 import { TestJumpNav } from "@/components/test-jumpnav";
 import "./test.css";
@@ -77,6 +84,38 @@ export default async function TestPage() {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   const crumbs = productPageCrumbs(vault);
 
+  // Lightweight FAQ generator inlined here so /test is self-contained
+  // and matches the production reading flow (the production slug page
+  // builds the same list and feeds it to <VaultFaq />).
+  const faqItems = [
+    {
+      question: `What is the current APY for ${vault.productName}?`,
+      answer:
+        vault.apy24h > 0
+          ? `${vault.productName} currently offers a 24-hour APY of ${formatAPY(vault.apy24h)} and a 30-day average APY of ${formatAPY(vault.apy30d)}. APY rates are variable and change with market conditions.`
+          : `APY data is currently unavailable for ${vault.productName}.`,
+    },
+    {
+      question: `What chain is ${vault.productName} on?`,
+      answer: `${vault.productName} is deployed on ${vault.chain}. It is operated by ${vault.protocol.name} and accepts ${vault.asset} deposits.`,
+    },
+    {
+      question: `How does ${vault.productName} work?`,
+      answer: `${vault.productName} is a ${vault.vaultType.toLowerCase()} on ${vault.chain} run by ${vault.protocol.name}. It accepts ${vault.asset} deposits and automatically manages them to generate yield.`,
+    },
+    {
+      question: `What is the TVL of ${vault.productName}?`,
+      answer:
+        vault.tvl > 0
+          ? `${vault.productName} currently has a total value locked (TVL) of ${formatTVL(vault.tvl)}.`
+          : `TVL data is currently unavailable for ${vault.productName}.`,
+    },
+    {
+      question: `Is the yield from ${vault.productName} sustainable?`,
+      answer: `Yield comes from ${vault.apyBreakdown.length > 0 ? vault.apyBreakdown.map((s) => s.source).join(", ") : "the underlying protocol"}. DeFi yields are variable and depend on market conditions, liquidity, and protocol incentives. Past APY is not a guarantee of future returns.`,
+    },
+  ];
+
   return (
     <div className="uni-shell">
       {/* Breadcrumb: Home › {Asset} Yield › {Product} */}
@@ -97,10 +136,9 @@ export default async function TestPage() {
         })}
       </div>
 
-      {/* Title row: icon + (title stacked over a metadata caption) on
-          the left; pills + address cluster on the right edge. The
-          caption reads like a publication byline so the icon, title
-          and supporting facts compose as one block. */}
+      {/* Title row: icon + (title over byline) on the left, contract
+          address + copy on the right. The byline reads as a slim
+          publication caption: vault type, chain (with icon), operator. */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
           <AssetIcon asset={vault.asset} size={52} />
@@ -108,24 +146,19 @@ export default async function TestPage() {
         <div className="uni-title-main">
           <h1 className="uni-title">{vault.productName}</h1>
           <p className="uni-title-byline">
-            by {vault.protocol.name}
+            <span>{vault.vaultType}</span>
             <span className="uni-byline-sep" aria-hidden="true">·</span>
-            {protocolName}
+            <span className="uni-byline-chain">
+              <ChainIcon chain={vault.chain} size={14} />
+              {vault.chain}
+            </span>
             <span className="uni-byline-sep" aria-hidden="true">·</span>
-            {vault.vaultType}
-            <span className="uni-byline-sep" aria-hidden="true">·</span>
-            Operated on {vault.chain}
+            <span>on Harvest</span>
           </p>
         </div>
-        <div className="uni-title-meta">
-          <div className="uni-title-pills">
-            <span className="uni-pill uni-pill-version">{protocolName}</span>
-            <span className="uni-pill uni-pill-fee">{vault.chain}</span>
-          </div>
-          <div className="uni-title-sub">
-            <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
-            <CopyAddressButton address={vault.contractAddress} compact />
-          </div>
+        <div className="uni-title-sub">
+          <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
+          <CopyAddressButton address={vault.contractAddress} compact />
         </div>
       </header>
 
@@ -227,22 +260,144 @@ export default async function TestPage() {
           #ecosystem); #hero is set on the chart bignum. */}
       <TestJumpNav />
 
-      {/* Below the fold: text + tables on plain white. Tables and key
-          stats inside each section keep the gray hero-card surface so
-          they read as datasets, while the surrounding narrative reads
-          as editorial copy. */}
+      {/* Below the fold: every production section, in the same
+          reading order as the slug page. Components render their own
+          .pp-section h2 and pick up the .uni-shell theme overrides. */}
       <div className="uni-below">
-        <section className="uni-section-plain">
-          <HistoricalStats history={history} asset={vault.asset} />
+        {/* About */}
+        <section className="pp-section" id="about">
+          <h2>About {vault.productName}</h2>
+          <div className="about-prose">
+            <p>
+              <strong>{vault.productName}</strong> is a{" "}
+              {vault.vaultType.toLowerCase()} vault on{" "}
+              <strong>{vault.chain}</strong> that accepts {vault.asset} deposits
+              and routes them into the {protocolName} strategy.{" "}
+              {vault.vaultType === "Autocompounder"
+                ? `The vault automatically harvests rewards, swaps them back into ${vault.asset} and redeposits, compounding returns over time.`
+                : `It allocates ${vault.asset} deposits across optimized yield strategies.`}
+            </p>
+            {vault.tvl > 0 && vault.apy24h > 0 && (
+              <p>
+                The vault currently holds <strong>{formatTVL(vault.tvl)}</strong>{" "}
+                in deposits and is generating{" "}
+                <strong>{formatAPY(vault.apy24h)} APY</strong> over the last 24
+                hours. The 30-day average APY sits at{" "}
+                <strong>{formatAPY(vault.apy30d)}</strong>.
+              </p>
+            )}
+          </div>
         </section>
 
-        <section className="uni-section-plain">
-          <MarketBenchmark vault={vault} allVaults={allVaults} />
+        <VaultCommentary
+          vault={vault}
+          allVaults={allVaults}
+          history={history}
+          numbered
+        />
+
+        <MarketBenchmark vault={vault} allVaults={allVaults} />
+
+        <EcosystemContext vault={vault} allVaults={allVaults} />
+
+        <YieldTrajectory
+          history={history}
+          productName={vault.productName}
+          apy24h={vault.apy24h}
+          asset={vault.asset}
+        />
+
+        <ConsistencyScore
+          history={history}
+          spotAPY={vault.apy24h}
+          asset={vault.asset}
+        />
+
+        {vault.apyBreakdown.length > 0 && (
+          <YieldBreakdown
+            apyBreakdown={vault.apyBreakdown}
+            boostedApy={vault.boostedApy}
+          />
+        )}
+
+        <HistoricalNarrative history={history} asset={vault.asset} />
+
+        <HistoricalStats history={history} asset={vault.asset} />
+
+        <VaultHistoryTable history={history} />
+
+        {/* Strategy details */}
+        <section className="pp-section" id="details">
+          <h2>Strategy details</h2>
+          <div className="contract-details-grid">
+            <div className="cd-row">
+              <span className="cd-label">Strategy</span>
+              <span className="cd-val">{protocolName}</span>
+            </div>
+            <div className="cd-row">
+              <span className="cd-label">Network</span>
+              <span className="cd-val">{vault.chain}</span>
+            </div>
+            <div className="cd-row">
+              <span className="cd-label">Type</span>
+              <span className="cd-val">{vault.vaultType}</span>
+            </div>
+            <div className="cd-row">
+              <span className="cd-label">Underlying</span>
+              <span className="cd-val">{vault.asset}</span>
+            </div>
+            <div className="cd-row">
+              <span className="cd-label">Operator</span>
+              <span className="cd-val">{vault.protocol.name}</span>
+            </div>
+            {trackedDays > 0 && (
+              <div className="cd-row">
+                <span className="cd-label">Tracked for</span>
+                <span className="cd-val">{trackedDays} days</span>
+              </div>
+            )}
+            {holderCount !== null && (
+              <div className="cd-row">
+                <span className="cd-label">Holders</span>
+                <span className="cd-val">
+                  {holderCount.toLocaleString("en-US")}
+                </span>
+              </div>
+            )}
+            <div className="cd-row cd-row-full">
+              <span className="cd-label">Vault contract</span>
+              <div className="cd-addr-wrap">
+                <span className="cd-addr mono">{vault.contractAddress}</span>
+                <CopyAddressButton address={vault.contractAddress} compact />
+                {explorerUrl && (
+                  <a
+                    href={explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cd-explorer"
+                    aria-label="View on explorer"
+                    title="View on block explorer"
+                  >
+                    ↗
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section className="uni-section-plain">
-          <EcosystemContext vault={vault} allVaults={allVaults} />
-        </section>
+        <VaultFaq
+          productName={vault.productName}
+          protocolName={vault.protocol.name}
+          asset={vault.asset}
+          chain={vault.chain}
+          vaultType={vault.vaultType}
+          apy24h={formatAPY(vault.apy24h)}
+          tvl={formatTVL(vault.tvl)}
+          riskLevel={vault.riskLevel}
+          description={vault.description}
+          faqItems={faqItems}
+        />
       </div>
 
       {/* Links pinned to the very bottom of the page. */}

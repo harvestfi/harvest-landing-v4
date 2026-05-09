@@ -79,21 +79,6 @@ body:has(.uni-shell) {
   display: block;
   border-radius: 50%;
 }
-.uni-shell .uni-title-meta {
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  min-width: 0;
-}
-.uni-shell .uni-title-pills {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
 .uni-shell .uni-title-main {
   display: flex;
   flex-direction: column;
@@ -125,29 +110,26 @@ body:has(.uni-shell) {
   font-weight: 700;
   line-height: 0.6;
 }
-.uni-shell .uni-pill {
+.uni-shell .uni-byline-chain {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
-  border-radius: var(--uni-radius-pill);
-  font-size: 12.5px;
-  font-weight: 600;
+  gap: 6px;
 }
-.uni-shell .uni-pill-version,
-.uni-shell .uni-pill-fee {
-  background: var(--uni-card);
-  color: var(--uni-ink);
+.uni-shell .uni-byline-chain img {
+  border-radius: 50%;
+  display: block;
 }
 .uni-shell .uni-title-sub {
-  display: flex;
+  margin-left: auto;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   font-family: var(--mono);
   font-size: 13px;
   color: var(--uni-ink-2);
   font-weight: 500;
+  flex-shrink: 0;
 }
-
 .uni-shell .uni-divider {
   height: 1px;
   background: var(--uni-line);
@@ -552,39 +534,38 @@ body:has(.uni-shell) {
   transform: translateY(0);
 }
 
-/* Jump-to nav: 4 anchor pills sitting between the hero and the
-   below-the-fold sections. Static (not pinned) - bookmarks the
-   section flow without competing with the existing global topnav.
-   Subtle hover: background tint + the icon lifts a couple of px
-   while inheriting current color. Each icon also gets a one-off
-   transform that hints at its section's content (clock hand spins,
-   chart line slides, bars taper, network rotates). */
+/* Jump-to nav: White Smoke rail of pills with section anchors.
+   Single bottom rule (no top + bottom 'fence' that read as
+   redundant). Pill bg pops to white on hover with a soft shadow
+   to mimic Uniswap's tab bar treatment. Per-icon micro-transforms
+   nod at the section's content. */
 .uni-shell .uni-jump {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  margin: 32px 0 12px;
-  padding: 10px 6px;
-  border-top: 1px solid var(--uni-line);
-  border-bottom: 1px solid var(--uni-line);
+  gap: 2px;
+  margin: 28px 0 32px;
+  padding: 6px;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-pill);
 }
 .uni-shell .uni-jump-item {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 9px 14px;
+  padding: 10px 16px;
   border-radius: var(--uni-radius-pill);
   background: transparent;
   color: var(--uni-ink-2);
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .uni-shell .uni-jump-item:hover {
-  background: var(--uni-card);
+  background: #ffffff;
   color: var(--uni-ink);
+  box-shadow: 0 1px 3px rgba(25, 23, 23, 0.08);
 }
 .uni-shell .uni-jump-icon-wrap {
   display: inline-flex;
@@ -602,21 +583,43 @@ body:has(.uni-shell) {
   transition: stroke 0.15s ease;
 }
 .uni-shell .uni-jump-item:hover .uni-jump-icon { stroke: var(--uni-gold); }
+.uni-shell .uni-jump-label { line-height: 1; }
 
 /* Per-icon hover micro-animations. Keep them <0.3s, a single
    transform each, no bouncing - the goal is "it nodded back at
    you", not "it celebrated". */
-.uni-shell .uni-jump-item:hover .uni-jump-hero {
+.uni-shell .uni-jump-item:hover .uni-jump-about {
+  transform: translateY(-1px);
+}
+.uni-shell .uni-jump-item:hover .uni-jump-performance {
   transform: translate(2px, -2px);
+}
+.uni-shell .uni-jump-item:hover .uni-jump-benchmark {
+  transform: scaleY(1.15);
+}
+.uni-shell .uni-jump-item:hover .uni-jump-ecosystem {
+  transform: rotate(-20deg);
 }
 .uni-shell .uni-jump-item:hover .uni-jump-history {
   transform: rotate(40deg);
 }
-.uni-shell .uni-jump-item:hover .uni-jump-benchmark {
+.uni-shell .uni-jump-item:hover .uni-jump-details {
+  transform: translateX(2px);
+}
+.uni-shell .uni-jump-item:hover .uni-jump-faq {
   transform: scale(1.12);
 }
-.uni-shell .uni-jump-item:hover .uni-jump-ecosystem {
-  transform: rotate(-20deg);
+
+/* Mobile: jump rail wraps gracefully and the items stay tappable. */
+@media (max-width: 700px) {
+  .uni-shell .uni-jump {
+    border-radius: 18px;
+    padding: 4px;
+  }
+  .uni-shell .uni-jump-item {
+    padding: 8px 12px;
+    font-size: 13.5px;
+  }
 }
 
 /* Below-the-fold sections live on the plain white page background.
