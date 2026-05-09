@@ -176,40 +176,118 @@ export function EcosystemContext({ vault, allVaults }: Props) {
       <h2>Ecosystem context</h2>
       <EcosystemIntro vault={vault} rank={rank} sameChainCount={sameChain.length} networkAvg={networkAvg} vsNetAvg={vsNetAvg} />
 
-      <div className="eco-rank-head">
-        <span>{vault.asset} on {vault.chain}</span>
-        <span className="mono dim">#{rank} of {sameChain.length} by APY</span>
-      </div>
-      <div className="eco-rank">
-        {top6.map((v) => {
-          const isYou = v.id === vault.id;
-          const displayRank = sameChain.findIndex((s) => s.id === v.id) + 1;
-          return (
-            <div key={v.id} className={`eco-row${isYou ? " you" : ""}`}>
-              <span className="er-rank mono dim">#{displayRank}</span>
-              <span className="er-name">
-                {v.productName}
-                {isYou && <span className="here-pill">You are here</span>}
-              </span>
-              <span className="er-bar">
-                <span style={{ width: `${(v.apy24h / maxApy) * 100}%` }} />
-              </span>
-              <span className="er-apy mono">{formatAPY(v.apy24h)}</span>
-            </div>
-          );
-        })}
-        <div className="eco-row baseline">
-          <span></span>
-          <span className="dim">Tracked network average</span>
-          <span className="er-bar">
-            <span style={{ width: `${(networkAvg / maxApy) * 100}%`, background: "var(--ink-4)" }} />
-          </span>
-          <span className="er-apy mono dim">{formatAPY(networkAvg)}</span>
-        </div>
-      </div>
+      <EcosystemChart
+        vault={vault}
+        rows={top6}
+        sameChainAll={sameChain}
+        networkAvg={networkAvg}
+        maxApy={maxApy}
+      />
 
       <ClosingEcosystem vault={vault} sameChain={sameChain} rank={rank} />
     </section>
+  );
+}
+
+// Distinct, balanced palette for the per-strategy bars + legend swatches.
+// Index N in the legend always maps to bar N in the chart, so the user
+// can read color → strategy unambiguously. Hues spread around the wheel
+// at constant lightness/chroma so no single bar visually dominates.
+const ECO_PALETTE = [
+  "oklch(0.62 0.16 150)",
+  "oklch(0.62 0.16 245)",
+  "oklch(0.66 0.17 55)",
+  "oklch(0.58 0.20 320)",
+  "oklch(0.66 0.14 195)",
+  "oklch(0.58 0.18 285)",
+];
+
+function EcosystemChart({
+  vault,
+  rows,
+  sameChainAll,
+  networkAvg,
+  maxApy,
+}: {
+  vault: YieldVault;
+  rows: YieldVault[];
+  sameChainAll: YieldVault[];
+  networkAvg: number;
+  maxApy: number;
+}) {
+  // Anchor the y-axis slightly above maxApy so the tallest bar doesn't
+  // touch the ceiling and the avg line stays visible inside the plot.
+  const ceil = Math.max(maxApy * 1.08, networkAvg * 1.2, 0.0001);
+  const avgPct = (networkAvg / ceil) * 100;
+
+  return (
+    <div className="eco-chart-wrap">
+      <div className="eco-chart-col">
+        <div className="eco-chart" role="img" aria-label="APY comparison chart">
+          <span
+            className="eco-chart-baseline"
+            style={{ bottom: `${avgPct}%` }}
+          >
+            <span className="eco-chart-baseline-label mono">
+              Network avg {formatAPY(networkAvg)}
+            </span>
+          </span>
+          {rows.map((v, i) => {
+            const isYou = v.id === vault.id;
+            const heightPct = (v.apy24h / ceil) * 100;
+            return (
+              <div key={v.id} className={`eco-bar-col${isYou ? " you" : ""}`}>
+                <span
+                  className="eco-bar"
+                  style={{ height: `${heightPct}%`, background: ECO_PALETTE[i % ECO_PALETTE.length] }}
+                  title={`${v.productName}: ${formatAPY(v.apy24h)}`}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <div className="eco-chart-axis">
+          {rows.map((v) => {
+            const displayRank = sameChainAll.findIndex((s) => s.id === v.id) + 1;
+            return (
+              <span key={v.id} className="mono">#{displayRank}</span>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="eco-legend">
+        <div className="eco-legend-head">
+          <span>{vault.asset} on {vault.chain}</span>
+          <span className="mono dim">#{sameChainAll.findIndex((s) => s.id === vault.id) + 1} of {sameChainAll.length}</span>
+        </div>
+        {rows.map((v, i) => {
+          const isYou = v.id === vault.id;
+          const displayRank = sameChainAll.findIndex((s) => s.id === v.id) + 1;
+          return (
+            <div key={v.id} className={`eco-legend-row${isYou ? " you" : ""}`}>
+              <span
+                className="eco-legend-swatch"
+                style={{ background: ECO_PALETTE[i % ECO_PALETTE.length] }}
+                aria-hidden="true"
+              />
+              <span className="eco-legend-rank mono">#{displayRank}</span>
+              <span className="eco-legend-name">
+                {v.productName}
+                {isYou && <span className="here-pill">You</span>}
+              </span>
+              <span className="eco-legend-apy mono">{formatAPY(v.apy24h)}</span>
+            </div>
+          );
+        })}
+        <div className="eco-legend-row baseline">
+          <span className="eco-legend-swatch baseline" aria-hidden="true" />
+          <span></span>
+          <span className="eco-legend-name">Network average</span>
+          <span className="eco-legend-apy mono">{formatAPY(networkAvg)}</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
