@@ -346,7 +346,8 @@ export default async function TestPage() {
 
         <VaultHistoryTable history={history} />
 
-        {/* Strategy details */}
+        {/* Strategy details: full production set including rewards,
+            strategy contract and underlying token. */}
         <section className="pp-section" id="details">
           <h2>Strategy details</h2>
           <div className="contract-details-grid">
@@ -369,6 +370,14 @@ export default async function TestPage() {
               <span className="cd-label">Underlying</span>
               <span className="cd-val">{vault.asset}</span>
             </div>
+            {vault.rewardTokens && vault.rewardTokens.length > 0 && (
+              <div className="cd-row">
+                <span className="cd-label">Rewards</span>
+                <span className="cd-val">
+                  {vault.rewardTokens.map((r) => r.symbol).join(", ")}
+                </span>
+              </div>
+            )}
             <div className="cd-row">
               <span className="cd-label">Operator</span>
               <span className="cd-val">{vault.protocol.name}</span>
@@ -406,6 +415,48 @@ export default async function TestPage() {
                 )}
               </div>
             </div>
+            {vault.strategyAddress && (
+              <div className="cd-row cd-row-full">
+                <span className="cd-label">Strategy contract</span>
+                <div className="cd-addr-wrap">
+                  <span className="cd-addr mono">{vault.strategyAddress}</span>
+                  <CopyAddressButton address={vault.strategyAddress} compact />
+                  {CHAIN_EXPLORERS[vault.chain] && (
+                    <a
+                      href={`${CHAIN_EXPLORERS[vault.chain]}${vault.strategyAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cd-explorer"
+                      aria-label="View strategy on explorer"
+                      title="View on block explorer"
+                    >
+                      ↗
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+            {vault.tokenAddress && (
+              <div className="cd-row cd-row-full">
+                <span className="cd-label">Underlying token</span>
+                <div className="cd-addr-wrap">
+                  <span className="cd-addr mono">{vault.tokenAddress}</span>
+                  <CopyAddressButton address={vault.tokenAddress} compact />
+                  {CHAIN_EXPLORERS[vault.chain] && (
+                    <a
+                      href={`${CHAIN_EXPLORERS[vault.chain]}${vault.tokenAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cd-explorer"
+                      aria-label="View token on explorer"
+                      title="View on block explorer"
+                    >
+                      ↗
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

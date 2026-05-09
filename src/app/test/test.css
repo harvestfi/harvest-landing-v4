@@ -1453,8 +1453,12 @@ body:has(.uni-shell) {
   border-top: 2px dashed var(--uni-gold);
 }
 .uni-shell .eco-chart-baseline-label {
+  background: var(--uni-gold);
   color: var(--uni-ink);
-  font-weight: 600;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
 }
 .uni-shell .eco-legend-head {
   border-bottom: 2px solid var(--uni-gold);
@@ -1535,13 +1539,14 @@ body:has(.uni-shell) {
   gap: 20px;
 }
 .uni-shell .cd-row:last-child { border-bottom: 0; }
-/* Strategy details: match the hero side-card stats family + scale -
-   sans 14px label / display 20px value, weight 500/600. The cd-row
-   list reads as a tall version of the side stat block. */
+/* Strategy details: match the standardized table relationship -
+   sans 13px label, display 16px value, weight 500/600. Same scale
+   as the hist-table / bench-table cells so adjacent sections read
+   as one typographic system. */
 .uni-shell .cd-label {
   color: var(--uni-ink-2);
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -1549,10 +1554,10 @@ body:has(.uni-shell) {
 .uni-shell .cd-val {
   color: var(--uni-ink);
   font-family: var(--display);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   font-feature-settings: "tnum";
-  letter-spacing: -0.012em;
+  letter-spacing: -0.005em;
 }
 .uni-shell .cd-addr {
   font-family: var(--mono);

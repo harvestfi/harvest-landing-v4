@@ -33,20 +33,84 @@ const RANGE_SECONDS: Record<Exclude<Range, "ALL">, number> = {
   "1Y": 365 * 86400,
 };
 
-const MAX_BARS = 90;
+// Each non-ALL range is bucketized to a fixed visual density so the
+// bar count stays predictable regardless of how dense the indexer's
+// data happens to be. Empty buckets forward-fill from the previous
+// bucket so 1M always renders ~30 bars even when the indexer only
+// emitted 14 raw points in the last 30 days.
+const TARGET_BARS: Record<Range, number> = {
+  "1M": 30,
+  "3M": 45,
+  "1Y": 90,
+  ALL: 90,
+};
 
-function downsample(points: Point[]): Point[] {
-  if (points.length <= MAX_BARS) return points;
-  const bucketSize = points.length / MAX_BARS;
+function bucketByTime(sorted: Point[], range: Range): Point[] {
+  if (sorted.length === 0) return [];
+  const targetBars = TARGET_BARS[range];
+
+  if (range === "ALL") {
+    if (sorted.length <= targetBars) return sorted;
+    const bucketSize = sorted.length / targetBars;
+    const out: Point[] = [];
+    for (let i = 0; i < targetBars; i++) {
+      const start = Math.floor(i * bucketSize);
+      const end = Math.min(sorted.length, Math.floor((i + 1) * bucketSize));
+      if (start >= end) continue;
+      const slice = sorted.slice(start, end);
+      const avgV = slice.reduce((s, p) => s + p.v, 0) / slice.length;
+      const midT = slice[Math.floor(slice.length / 2)].t;
+      out.push({ t: midT, v: avgV });
+    }
+    return out;
+  }
+
+  // Time-window bucket fill: anchor to the latest observation, walk
+  // backward in `targetBars` equal slots, average points that fall
+  // inside each slot, forward-fill the most recent prior value when
+  // a slot is empty so the chart stays a smooth stairway instead of
+  // collapsing to a sparse handful of bars.
+  const lastTs = sorted[sorted.length - 1].t;
+  const spanSec = RANGE_SECONDS[range as Exclude<Range, "ALL">];
+  const startTs = lastTs - spanSec;
+  const bucketSec = spanSec / targetBars;
+
+  const firstAtOrAfter = sorted.findIndex((p) => p.t >= startTs);
+  let prevValue: number | null = null;
+  if (firstAtOrAfter > 0) {
+    prevValue = sorted[firstAtOrAfter - 1].v;
+  } else if (firstAtOrAfter === 0) {
+    prevValue = null;
+  } else {
+    // No point inside the window; everything is before startTs - use
+    // the latest existing value as the seed for forward-fill.
+    prevValue = sorted[sorted.length - 1].v;
+  }
+  let cursor = Math.max(0, firstAtOrAfter);
+
   const out: Point[] = [];
-  for (let i = 0; i < MAX_BARS; i++) {
-    const start = Math.floor(i * bucketSize);
-    const end = Math.min(points.length, Math.floor((i + 1) * bucketSize));
-    if (start >= end) continue;
-    const slice = points.slice(start, end);
-    const avgV = slice.reduce((s, p) => s + p.v, 0) / slice.length;
-    const midT = slice[Math.floor(slice.length / 2)].t;
-    out.push({ t: midT, v: avgV });
+  for (let i = 0; i < targetBars; i++) {
+    const bStart = startTs + i * bucketSec;
+    const bEnd = bStart + bucketSec;
+    let sum = 0;
+    let count = 0;
+    while (cursor < sorted.length && sorted[cursor].t < bEnd) {
+      if (sorted[cursor].t >= bStart) {
+        sum += sorted[cursor].v;
+        count++;
+      }
+      cursor++;
+    }
+    let v: number;
+    if (count > 0) {
+      v = sum / count;
+      prevValue = v;
+    } else if (prevValue !== null) {
+      v = prevValue;
+    } else {
+      continue;
+    }
+    out.push({ t: bStart + bucketSec / 2, v });
   }
   return out;
 }
@@ -133,15 +197,7 @@ export function TestChart({ series }: Props) {
   const { points, heightFor, linePath, areaPath } = useMemo(() => {
     const all = series[metric] ?? [];
     const sorted = [...all].sort((a, b) => a.t - b.t);
-
-    let raw: Point[] = sorted;
-    if (range !== "ALL" && sorted.length > 0) {
-      const last = sorted[sorted.length - 1].t;
-      const cutoff = last - RANGE_SECONDS[range];
-      raw = sorted.filter((p) => p.t >= cutoff);
-      if (raw.length === 0) raw = sorted;
-    }
-    const downs = downsample(raw);
+    const downs = bucketByTime(sorted, range);
 
     // Manual min/max loop is faster than Math.min(...values) for
     // arrays larger than a few hundred entries (no spread overhead).
