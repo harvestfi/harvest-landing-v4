@@ -147,15 +147,21 @@ export default async function TestPage() {
         })}
       </div>
 
-      {/* Title row: icon + (title over byline) on the left, contract
-          address + copy on the right. The byline reads as a slim
-          publication caption: vault type, chain (with icon), operator. */}
+      {/* Title row: icon + title on the left; right cluster stacks
+          contract address + copy on top, byline (vault type · chain ·
+          operator) directly underneath. Keeps the title as the focal
+          point and lets the metadata read as a single right-aligned
+          spec sheet. */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
           <AssetIcon asset={vault.asset} size={52} />
         </span>
-        <div className="uni-title-main">
-          <h1 className="uni-title">{vault.productName}</h1>
+        <h1 className="uni-title">{vault.productName}</h1>
+        <div className="uni-title-meta">
+          <div className="uni-title-sub">
+            <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
+            <CopyAddressButton address={vault.contractAddress} compact />
+          </div>
           <p className="uni-title-byline">
             <span>{vault.vaultType}</span>
             <span className="uni-byline-sep" aria-hidden="true">·</span>
@@ -166,10 +172,6 @@ export default async function TestPage() {
             <span className="uni-byline-sep" aria-hidden="true">·</span>
             <span>on Harvest</span>
           </p>
-        </div>
-        <div className="uni-title-sub">
-          <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
-          <CopyAddressButton address={vault.contractAddress} compact />
         </div>
       </header>
 

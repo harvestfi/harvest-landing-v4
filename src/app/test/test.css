@@ -86,9 +86,13 @@ body:has(.uni-shell) {
   display: block;
   border-radius: 50%;
 }
-.uni-shell .uni-title-main {
+/* Right-side cluster: address + copy on top, byline beneath. Sits
+   margin-left:auto so it always pins to the right edge of the row. */
+.uni-shell .uni-title-meta {
+  margin-left: auto;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 6px;
   min-width: 0;
 }
@@ -127,7 +131,6 @@ body:has(.uni-shell) {
   display: block;
 }
 .uni-shell .uni-title-sub {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -443,33 +446,34 @@ body:has(.uni-shell) {
   top: 24px;
 }
 
-/* Primary CTA. Sunflower Gold pill with Onyx ink. Sits above the
-   stats card so the deposit path is the first thing the eye lands
-   on after the headline number. Subtle lift on hover, no shadow at
-   rest so it doesn't compete with the soft card surface below. */
+/* Secondary CTA: outlined Sunflower Gold pill with gold icon and
+   Onyx text. The page's primary CTA is the eco-network "See all N
+   strategies" button (filled gold) - this one sits above the stats
+   card and is intentionally less loud so it doesn't compete. Soft
+   gold-tinted fill on hover keeps the same family. */
 .uni-shell .uni-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 18px;
-  background: var(--uni-gold);
+  padding: 12.5px 18px;
+  background: transparent;
   color: var(--uni-ink);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.005em;
   border-radius: var(--uni-radius);
   text-decoration: none;
-  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
+  border: 1.5px solid var(--uni-gold);
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 .uni-shell .uni-cta:hover {
-  filter: brightness(0.96);
+  background: var(--uni-gold-bg);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px -8px rgba(255, 185, 54, 0.55);
 }
 .uni-shell .uni-cta-icon {
   flex-shrink: 0;
+  color: var(--uni-gold);
   transition: transform 0.15s ease;
 }
 .uni-shell .uni-cta:hover .uni-cta-icon {
@@ -828,7 +832,10 @@ body:has(.uni-shell) {
 }
 .uni-shell .pp-num-text strong { color: var(--uni-ink); font-weight: 600; }
 
-/* Long-term performance arrow list: same scale bump. */
+/* Long-term performance arrow list: same scale bump. Up arrows
+   stay green, down arrows stay red - the page-wide --up gold remap
+   is overridden here so trajectory direction reads at a glance,
+   the universal convention beats brand consistency. */
 .uni-shell .about-prose-list { gap: 14px; }
 .uni-shell .about-prose-item {
   grid-template-columns: 24px minmax(0, 1fr);
@@ -841,6 +848,8 @@ body:has(.uni-shell) {
   font-size: 18px;
   line-height: 1.4;
 }
+.uni-shell .about-prose-icon--up { color: oklch(0.58 0.14 155); }
+.uni-shell .about-prose-icon--down { color: oklch(0.58 0.18 25); }
 
 /* Strategy stability card: replaces ConsistencyScore + YieldBreakdown
    pair. Single full-width White Smoke surface; score gauge on top
@@ -926,11 +935,11 @@ body:has(.uni-shell) {
   min-width: 0;
 }
 .uni-shell .uni-stability-stat-label {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--uni-ink-2);
 }
 .uni-shell .uni-stability-stat-value {
@@ -1055,11 +1064,11 @@ body:has(.uni-shell) {
   gap: 2px;
 }
 .uni-shell .chart-data-tabs button {
-  font-family: var(--mono);
-  font-size: 12.5px;
+  font-family: var(--sans);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--uni-ink-2);
   border-radius: var(--uni-radius-pill);
   padding: 6px 14px;
@@ -1073,11 +1082,11 @@ body:has(.uni-shell) {
 
 .uni-shell .chart-datatable thead th {
   padding: 16px 22px 12px;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--uni-ink-2);
   border-bottom: 2px solid var(--uni-gold);
 }
@@ -1094,9 +1103,10 @@ body:has(.uni-shell) {
   color: var(--uni-ink);
 }
 .uni-shell .chart-datatable tbody td.r {
-  font-family: var(--mono);
+  font-family: var(--display);
   font-feature-settings: "tnum";
   font-weight: 600;
+  letter-spacing: -0.005em;
 }
 .uni-shell .chart-datatable-foot {
   padding: 14px 22px;
@@ -1121,15 +1131,16 @@ body:has(.uni-shell) {
 
 /* === Embedded primitives, re-skinned ===
 
-   Uniform table typography across /test. ONE size for technical
-   labels (mono caps), ONE size for value cells, ONE size for sans
-   text cells. Removes the previous mix of 11.5/12.5/13/14/15/16/17/18
-   that made adjacent tables read as if they came from different
-   stylesheets.
+   Uniform table typography across /test, sourced from the same
+   font family as the hero side-card stats:
+   --table-label: 13px / sans / weight 500 / regular case / ink-2
+   --table-num:   16px / display / weight 600 / tnum / ink
+   --table-sans:  16px / display / weight 600 / ink
 
-   --table-label: 13px / mono / weight 600 / uppercase / ink-2
-   --table-num:   16px / mono / weight 600 / tnum / ink
-   --table-sans:  16px / sans / weight 600 / ink */
+   No mono caps anywhere on table labels - the page now reads as
+   one typographic system (Inter for body, Inter Tight for
+   numbers/headlines) instead of mixing ledger-style caps with
+   the editorial hero stack. */
 
 /* Below-the-fold tables: no card surround, only the internal
    separator lines do the structural work. Each row's bottom border
@@ -1166,16 +1177,15 @@ body:has(.uni-shell) {
 }
 .uni-shell .bench-stats > div { padding: 0; border: 0; }
 
-/* bench-stats - uses display font and bigger size since this is the
-   "headline stats" tile, not a regular table. The four stat values
-   are the showpiece of the section. */
+/* bench-stats: showpiece headline tiles. Sans label / display value
+   to match the hero side card. */
 .uni-shell .bs-l {
   color: var(--uni-ink-2);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .uni-shell .bs-v {
   color: var(--uni-ink);
@@ -1192,11 +1202,11 @@ body:has(.uni-shell) {
   background: transparent;
   border-bottom: 2px solid var(--uni-gold);
   color: var(--uni-ink-2);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .uni-shell .bt-head, .uni-shell .bt-row {
   padding: 16px 22px;
@@ -1308,16 +1318,20 @@ body:has(.uni-shell) {
   border: 1px dashed var(--uni-ink-3) !important;
 }
 .uni-shell .eco-chart-baseline {
-  border-top: 1px dashed var(--uni-ink-3);
+  border-top: 2px dashed var(--uni-gold);
+}
+.uni-shell .eco-chart-baseline-label {
+  color: var(--uni-ink);
+  font-weight: 600;
 }
 .uni-shell .eco-legend-head {
   border-bottom: 2px solid var(--uni-gold);
   color: var(--uni-ink-2);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .uni-shell .eco-legend-head-title {
   display: inline-flex;
@@ -1391,18 +1405,19 @@ body:has(.uni-shell) {
 .uni-shell .cd-row:last-child { border-bottom: 0; }
 .uni-shell .cd-label {
   color: var(--uni-ink-2);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .uni-shell .cd-val {
   color: var(--uni-ink);
-  font-family: var(--mono);
+  font-family: var(--display);
   font-size: 16px;
   font-weight: 600;
   font-feature-settings: "tnum";
+  letter-spacing: -0.005em;
 }
 .uni-shell .cd-addr {
   font-family: var(--mono);
@@ -1449,9 +1464,10 @@ body:has(.uni-shell) {
 .uni-shell .eco-legend-apy {
   color: var(--uni-ink);
   font-size: 16px;
-  font-family: var(--mono);
+  font-family: var(--display);
   font-feature-settings: "tnum";
   font-weight: 600;
+  letter-spacing: -0.005em;
 }
 .uni-shell .eco-chart-axis > span { color: var(--uni-ink-2); font-weight: 500; }
 .uni-shell .eco-chart-baseline-label {
@@ -1469,18 +1485,19 @@ body:has(.uni-shell) {
 }
 .uni-shell .hist-table th {
   color: var(--uni-ink-2);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .uni-shell .hist-table td {
   color: var(--uni-ink);
-  font-family: var(--mono);
+  font-family: var(--display);
   font-size: 16px;
   font-weight: 600;
   font-feature-settings: "tnum";
+  letter-spacing: -0.005em;
 }
 .uni-shell .hist-block h3 {
   font-family: var(--display);
