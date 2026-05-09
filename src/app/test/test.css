@@ -22,6 +22,13 @@
   --uni-line:         #dddee0;       /* Alabaster Grey */
   --uni-line-2:       #ebebe7;
 
+  /* Remap the global --up green to Sunflower Gold inside .uni-shell so
+     every component that reads `var(--up)` directly (yield-source bars,
+     consistency ring + label, long-term up-trajectory icon, etc.)
+     picks up the flagship accent without per-class overrides. */
+  --up:    #ffb936;
+  --up-bg: #fff5d9;
+
   max-width: 1280px;
   margin: 0 auto;
   padding: 24px var(--shell-pad) 80px;
@@ -713,6 +720,80 @@ body:has(.uni-shell) {
 .uni-shell .pp-section a { color: var(--uni-ink); border-bottom: 1px solid var(--uni-line); }
 .uni-shell .pp-section a:hover { color: var(--uni-ink); border-color: var(--uni-gold); }
 
+/* Numbered list (Performance overview): bump body and badge sizes
+   so the 01/02/03/04 rail reads at the same scale as the rest of
+   the below-hero text. */
+.uni-shell .pp-numbered-list { margin-top: 18px; }
+.uni-shell .pp-numbered-item {
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom-color: rgba(25, 23, 23, 0.06);
+}
+.uni-shell .pp-num-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: 13px;
+  background: var(--uni-card);
+  border: 0;
+  color: var(--uni-ink-2);
+}
+.uni-shell .pp-num-text {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+}
+.uni-shell .pp-num-text strong { color: var(--uni-ink); font-weight: 600; }
+
+/* Long-term performance arrow list: same scale bump. */
+.uni-shell .about-prose-list { gap: 14px; }
+.uni-shell .about-prose-item {
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 14px;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--uni-ink-2);
+}
+.uni-shell .about-prose-icon {
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+/* Pair-50 grid: ConsistencyScore + YieldBreakdown side-by-side. */
+.uni-pair-50 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .uni-pair-50 { grid-template-columns: 1fr; gap: 28px; }
+}
+
+/* Consistency block: pick up the gold remap automatically. The
+   surround ring + label inherit `var(--up)` which is now gold; just
+   tone down the surround and align padding with /test rhythm. */
+.uni-shell .consistency {
+  border: 0;
+  border-radius: var(--uni-radius);
+  background: var(--uni-card);
+  padding: 22px 24px;
+  gap: 24px;
+}
+.uni-shell .consistency-score .num { font-size: 30px; }
+.uni-shell .consistency-label {
+  font-size: 14px;
+  color: var(--uni-ink);
+  font-weight: 600;
+}
+
+/* Yield sources: bars and value get the gold-remap treatment. */
+.uni-shell .ys-bars { margin-top: 18px; }
+.uni-shell .ys-row { padding: 12px 0; }
+.uni-shell .ys-name { font-size: 15px; font-weight: 500; color: var(--uni-ink); }
+.uni-shell .ys-bar { background: rgba(25, 23, 23, 0.06); }
+.uni-shell .ys-val { font-size: 15px; }
+
 /* === Embedded primitives, re-skinned ===
 
    The shared primitives use editorial-ledger labels (small mono caps).
@@ -870,30 +951,49 @@ body:has(.uni-shell) {
   display: block;
 }
 
-/* Network CTA at the bottom of the legend column - small but
-   actionable, gold underline grows on hover. */
+/* Network CTA at the bottom of the legend column. Same flagship-
+   gold pill treatment as the hero View Strategy CTA, just sized
+   smaller. Two segments: chain icon + label on the left, arrow on
+   the right; arrow translates on hover. */
 .uni-shell .eco-network-cta {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 18px;
-  padding: 10px 14px;
-  background: var(--uni-gold-bg);
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 13px 18px;
+  background: var(--uni-gold);
   color: var(--uni-ink);
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 600;
-  border-radius: var(--uni-radius-pill);
+  letter-spacing: -0.005em;
+  border-radius: var(--uni-radius);
   text-decoration: none;
-  transition: background 0.15s ease, transform 0.15s ease;
-  align-self: flex-start;
+  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
+  transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .uni-shell .eco-network-cta:hover {
-  background: var(--uni-gold);
-  transform: translateX(2px);
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px rgba(255, 185, 54, 0.55);
 }
-.uni-shell .eco-network-cta img { border-radius: 50%; display: block; }
-.uni-shell .eco-network-cta span { transition: transform 0.15s ease; }
-.uni-shell .eco-network-cta:hover span { transform: translateX(2px); }
+.uni-shell .eco-network-cta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.uni-shell .eco-network-cta-label img {
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+.uni-shell .eco-network-cta-arrow {
+  font-size: 16px;
+  font-weight: 500;
+  transition: transform 0.15s ease;
+}
+.uni-shell .eco-network-cta:hover .eco-network-cta-arrow { transform: translateX(3px); }
 
 /* Strategy details Network row: chain icon next to the name. */
 .uni-shell .cd-network {

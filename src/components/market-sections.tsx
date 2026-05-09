@@ -335,9 +335,11 @@ function EcosystemChart({
           <span className="eco-legend-apy mono">{formatAPY(networkAvg)}</span>
         </div>
         <Link href={`/${chainToSlug(vault.chain)}`} className="eco-network-cta">
-          <ChainIcon chain={vault.chain} size={14} />
-          See all {sameChainAll.length} {vault.asset} strategies on {vault.chain}
-          <span aria-hidden="true">→</span>
+          <span className="eco-network-cta-label">
+            <ChainIcon chain={vault.chain} size={14} />
+            See all {sameChainAll.length} {vault.asset} strategies on {vault.chain}
+          </span>
+          <span className="eco-network-cta-arrow" aria-hidden="true">→</span>
         </Link>
       </div>
     </div>

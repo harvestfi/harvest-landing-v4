@@ -307,18 +307,23 @@ export default async function TestPage() {
           asset={vault.asset}
         />
 
-        <ConsistencyScore
-          history={history}
-          spotAPY={vault.apy24h}
-          asset={vault.asset}
-        />
-
-        {vault.apyBreakdown.length > 0 && (
-          <YieldBreakdown
-            apyBreakdown={vault.apyBreakdown}
-            boostedApy={vault.boostedApy}
+        {/* APY consistency + Yield sources side by side - the two are
+            both small "spot characterisation" tiles and pair naturally
+            in a 50/50 grid, freeing vertical real estate for the
+            chart-heavy sections that follow. */}
+        <div className="uni-pair-50">
+          <ConsistencyScore
+            history={history}
+            spotAPY={vault.apy24h}
+            asset={vault.asset}
           />
-        )}
+          {vault.apyBreakdown.length > 0 && (
+            <YieldBreakdown
+              apyBreakdown={vault.apyBreakdown}
+              boostedApy={vault.boostedApy}
+            />
+          )}
+        </div>
 
         <HistoricalNarrative history={history} asset={vault.asset} />
 
