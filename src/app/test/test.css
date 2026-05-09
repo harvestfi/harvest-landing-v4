@@ -1044,6 +1044,33 @@ body:has(.uni-shell) {
 /* === Daily history table - Uniswap Explore feel ===
    Bigger row padding, larger numeric typography, gold underline on
    the header row, soft hover bg. */
+/* Daily history tabs (TVL / APY / Share Price metric switch above
+   the table) re-skinned to match the chart range pills: White Smoke
+   rail, mono caps labels, gold pill on active. */
+.uni-shell .chart-data-tabs {
+  background: var(--uni-card);
+  border: 0;
+  border-radius: var(--uni-radius-pill);
+  padding: 4px;
+  gap: 2px;
+}
+.uni-shell .chart-data-tabs button {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--uni-ink-2);
+  border-radius: var(--uni-radius-pill);
+  padding: 6px 14px;
+}
+.uni-shell .chart-data-tabs button:hover { color: var(--uni-ink); }
+.uni-shell .chart-data-tabs button.active {
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
+}
+
 .uni-shell .chart-datatable thead th {
   padding: 16px 22px 12px;
   font-family: var(--mono);
@@ -1345,6 +1372,62 @@ body:has(.uni-shell) {
   transition: transform 0.15s ease;
 }
 .uni-shell .eco-network-cta:hover .eco-network-cta-arrow { transform: translateX(3px); }
+
+/* Strategy details: align with the standard table scale. cd-row
+   labels become 13px mono caps weight 600 ink-2; values 16px mono
+   weight 600 Onyx. The container loses its production border + bg
+   so it sits transparently like the other below-hero tables. */
+.uni-shell .contract-details-grid {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.uni-shell .cd-row {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(25, 23, 23, 0.06);
+  gap: 20px;
+}
+.uni-shell .cd-row:last-child { border-bottom: 0; }
+.uni-shell .cd-label {
+  color: var(--uni-ink-2);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.uni-shell .cd-val {
+  color: var(--uni-ink);
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}
+.uni-shell .cd-addr {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--uni-ink);
+  font-weight: 500;
+}
+/* Copy + explorer buttons re-skinned for the gold theme: White
+   Smoke chip with subtle hover lift, no production border. */
+.uni-shell .cd-copy-btn,
+.uni-shell .cd-explorer {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-pill);
+  color: var(--uni-ink-2);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.uni-shell .cd-copy-btn:hover,
+.uni-shell .cd-explorer:hover {
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  transform: translateY(-1px);
+}
 
 /* Strategy details Network row: chain icon next to the name. */
 .uni-shell .cd-network {
