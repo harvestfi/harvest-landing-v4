@@ -2,11 +2,11 @@
 // Fetches ERC-20 holder counts for every indexed vault and writes them
 // to data/holders.json keyed by lowercased contract address.
 //
-// Source: per-chain Blockscout v2 (`/api/v2/tokens/{address}` returns a
-// `holders` field as a string of the current positive-balance count).
-// Chains without a public Blockscout instance (e.g. HyperEVM) are
-// skipped; the missing entries simply don't render the holders row on
-// the product page.
+// Source: per-chain Blockscout v2 (`/api/v2/tokens/{address}` returns
+// the count under either `holders_count` or `holders` depending on the
+// instance version, so we read both). Chains without a public
+// Blockscout instance (e.g. HyperEVM) are skipped; the missing entries
+// simply don't render the holders row on the product page.
 
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -27,21 +27,42 @@ const MAX_ATTEMPTS = 3;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchHolderCount(host, address) {
+let firstFailureLogged = false;
+
+function readCount(data) {
+  // Blockscout >=6.x returns `holders_count` (string); older instances
+  // expose it as `holders`. Fall through both before declaring a miss.
+  for (const key of ["holders_count", "holders"]) {
+    const raw = data?.[key];
+    if (raw == null || raw === "") continue;
+    const n = typeof raw === "number" ? raw : parseInt(String(raw), 10);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+async function fetchHolderCount(host, address, label) {
   const url = `${host}/api/v2/tokens/${address}`;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const res = await fetch(url, { headers: { accept: "application/json" } });
-      if (res.status === 404) return null;
+      if (res.status === 404) {
+        console.warn(`  ! ${label}: 404 ${url}`);
+        return null;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const raw = data?.holders;
-      if (raw == null) return null;
-      const n = typeof raw === "number" ? raw : parseInt(String(raw), 10);
-      return Number.isFinite(n) ? n : null;
+      const n = readCount(data);
+      if (n == null && !firstFailureLogged) {
+        firstFailureLogged = true;
+        console.warn(
+          `  ! ${label}: response had no holders/holders_count. Sample keys: ${Object.keys(data ?? {}).join(", ")}`,
+        );
+      }
+      return n;
     } catch (err) {
       if (attempt === MAX_ATTEMPTS) {
-        console.warn(`  ! ${address}: ${err.message}`);
+        console.warn(`  ! ${label}: ${err.message}`);
         return null;
       }
       await sleep(500 * attempt);
@@ -62,11 +83,13 @@ for (const v of vaults) {
     skipped++;
     continue;
   }
-  const count = await fetchHolderCount(host, v.contractAddress);
+  const label = `${v.productName} [${v.chain}]`;
+  const count = await fetchHolderCount(host, v.contractAddress, label);
   if (count == null) {
     failed++;
   } else {
     out[v.contractAddress.toLowerCase()] = count;
+    console.log(`  ok ${label}: ${count}`);
     ok++;
   }
   await sleep(REQUEST_DELAY_MS);
