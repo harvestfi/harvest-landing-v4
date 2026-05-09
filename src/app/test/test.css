@@ -1947,7 +1947,34 @@ body:has(.uni-shell) {
     font-size: 13px;
     gap: 6px;
   }
+
+  /* Hero grid + chart: tighter vertical so the chart doesn't take
+     the whole viewport on a narrow phone. */
+  .uni-shell .uni-detail-grid { gap: 18px; }
+  .uni-shell .uni-chart { min-height: 220px; padding: 12px 0; }
+  .uni-shell .uni-chart-bars { min-height: 180px; }
   .uni-shell .uni-bignum-value { font-size: 26px; }
+  .uni-shell .uni-bignum-meta { font-size: 14px; gap: 8px; }
+
+  /* Chart controls stack into two clean rows on mobile so 1M-ALL,
+     style icons, and TVL/APY/Share price each get a full-width
+     row instead of competing on the same line. */
+  .uni-shell .uni-chart-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .uni-shell .uni-controls-left {
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .uni-shell .uni-tab-text { gap: 18px; flex-wrap: wrap; }
+  .uni-shell .uni-tab-pills { padding: 3px; }
+  .uni-shell .uni-pill-btn { padding: 5px 11px; font-size: 12px; }
+
+  /* Side card and other cards: trim padding for narrow phones. */
+  .uni-shell .uni-side-card { padding: 18px 20px; }
   .uni-shell .uni-side-headline { font-size: 26px; }
   .uni-shell .uni-side-value { font-size: 18px; }
   .uni-shell .uni-soft-card { padding: 20px 18px; }
@@ -1960,4 +1987,15 @@ body:has(.uni-shell) {
   .uni-shell .bt-row,
   .uni-shell .eco-legend-row { font-size: 15px; }
   .uni-shell .hist-table td { font-size: 16px; }
+
+  /* Section gap + card padding compacted for phones. */
+  .uni-shell .uni-below { gap: 36px; }
+  .uni-shell .uni-stability-card { padding: 20px 18px; }
+  .uni-shell .bench-stats { padding: 18px 20px; gap: 14px; }
+  .uni-shell .uni-similar-card { padding: 18px 20px; }
+  .uni-shell .eco-chart-wrap { padding: 4px 0 12px; }
+
+  /* Stability card stack: 2x2 stats row tightens further on phones */
+  .uni-shell .uni-stability-stats { gap: 16px; }
+  .uni-shell .uni-stability-score { font-size: 42px; }
 }
