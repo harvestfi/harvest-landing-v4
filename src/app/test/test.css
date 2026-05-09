@@ -170,6 +170,45 @@ body:has(.uni-shell) {
   flex: 1;
 }
 
+/* Chart header: bignum on left, chart-style toggle on right. */
+.uni-shell .uni-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.uni-shell .uni-chart-style {
+  display: inline-flex;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-pill);
+  padding: 4px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.uni-shell .uni-style-btn {
+  border: 0;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--uni-radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uni-ink-3);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.uni-shell .uni-style-btn:hover { color: var(--uni-ink-2); }
+.uni-shell .uni-style-btn.active {
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
+}
+.uni-shell .uni-style-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .uni-shell .uni-bignum-value {
   font-family: var(--display);
   font-size: 48px;
@@ -236,10 +275,45 @@ body:has(.uni-shell) {
   flex: 1;
   min-height: 220px;
   display: flex;
-  align-items: stretch; /* columns fill full plot height so empty
-                            space above each bar is still hover-able */
+  align-items: stretch;
   gap: 3px;
   overflow: hidden;
+  position: relative; /* anchor for absolute SVG line + scrub cursor */
+}
+
+/* Line-mode: hide the bars and the active-bar ghost; the SVG path
+   carries the data, the scrub cursor + dot mark the hovered point. */
+.uni-shell .uni-chart--line .uni-chart-bar { visibility: hidden; }
+.uni-shell .uni-chart--line .uni-bar-col.active::before { display: none; }
+
+.uni-shell .uni-chart-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.uni-shell .uni-chart-line-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(25, 23, 23, 0.18);
+  pointer-events: none;
+  z-index: 2;
+}
+.uni-shell .uni-chart-line-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--uni-gold);
+  border: 2px solid #ffffff;
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 1px 4px rgba(255, 185, 54, 0.45);
 }
 .uni-shell .uni-bar-col {
   flex: 1;
@@ -542,19 +616,18 @@ body:has(.uni-shell) {
   transform: translateY(0);
 }
 
-/* Jump-to nav: White Smoke rail of pills with section anchors.
-   Single bottom rule (no top + bottom 'fence' that read as
-   redundant). Pill bg pops to white on hover with a soft shadow
-   to mimic Uniswap's tab bar treatment. Per-icon micro-transforms
-   nod at the section's content. */
+/* Jump-to nav: very soft pill rail with refined lucide-style icons.
+   Hover flips ONLY the icon stroke to Sunflower Gold and the text
+   color to Onyx. No background fill change, no shadow, no per-icon
+   transforms - the goal is a quiet, premium index. */
 .uni-shell .uni-jump {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 4px;
+  gap: 2px;
   margin: 64px 0 36px;
   padding: 6px;
-  background: var(--uni-card);
+  background: rgba(25, 23, 23, 0.025);
   border-radius: var(--uni-radius-pill);
 }
 .uni-shell .uni-jump-item {
@@ -571,12 +644,12 @@ body:has(.uni-shell) {
   font-size: 14.5px;
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition: color 0.15s ease;
 }
 .uni-shell .uni-jump-item:hover {
-  background: #ffffff;
+  background: transparent;
   color: var(--uni-ink);
-  box-shadow: 0 1px 3px rgba(25, 23, 23, 0.08);
+  box-shadow: none;
 }
 .uni-shell .uni-jump-icon-wrap {
   display: inline-flex;
@@ -585,41 +658,14 @@ body:has(.uni-shell) {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  transition: transform 0.25s ease;
 }
 .uni-shell .uni-jump-icon {
   width: 18px;
   height: 18px;
-  stroke-width: 2;
   transition: stroke 0.15s ease;
 }
 .uni-shell .uni-jump-item:hover .uni-jump-icon { stroke: var(--uni-gold); }
 .uni-shell .uni-jump-label { line-height: 1; }
-
-/* Per-icon hover micro-animations. Keep them <0.3s, a single
-   transform each, no bouncing - the goal is "it nodded back at
-   you", not "it celebrated". */
-.uni-shell .uni-jump-item:hover .uni-jump-about {
-  transform: translateY(-1px);
-}
-.uni-shell .uni-jump-item:hover .uni-jump-performance {
-  transform: translate(2px, -2px);
-}
-.uni-shell .uni-jump-item:hover .uni-jump-benchmark {
-  transform: scaleY(1.15);
-}
-.uni-shell .uni-jump-item:hover .uni-jump-ecosystem {
-  transform: rotate(-20deg);
-}
-.uni-shell .uni-jump-item:hover .uni-jump-history {
-  transform: rotate(40deg);
-}
-.uni-shell .uni-jump-item:hover .uni-jump-details {
-  transform: translateX(2px);
-}
-.uni-shell .uni-jump-item:hover .uni-jump-faq {
-  transform: scale(1.12);
-}
 
 /* Mobile: jump rail wraps and items fall back to natural width so
    labels don't get squashed when divided into 7 equal columns. */

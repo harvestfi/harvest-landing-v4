@@ -1,15 +1,24 @@
 // Jump-to nav for /test. Anchors to the major sections below the
-// hero in a White Smoke pill rail. Hover lifts the icon, tints it
-// Sunflower Gold and applies a per-icon micro-transform.
+// hero in a soft pill rail with refined Lucide-style icons. Hover
+// flips the icon to Sunflower Gold and the label to Onyx; nothing
+// else (no bg flip, no shadow, no transform).
 
 import Link from "next/link";
 
 interface Item {
   href: string;
   label: string;
-  icon: React.ReactNode;
   key: string;
+  icon: React.ReactNode;
 }
+
+const stroke = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "1.75",
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
 
 const ITEMS: Item[] = [
   {
@@ -17,20 +26,9 @@ const ITEMS: Item[] = [
     label: "Overview",
     key: "about",
     icon: (
-      <svg
-        className="uni-jump-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M4 4h7a3 3 0 013 3v13" />
-        <path d="M20 4h-7a3 3 0 00-3 3" />
-        <path d="M4 4v16h7" />
-        <path d="M20 4v16h-7" />
+      // Activity / pulse line
+      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
       </svg>
     ),
   },
@@ -39,18 +37,10 @@ const ITEMS: Item[] = [
     label: "Performance",
     key: "performance",
     icon: (
-      <svg
-        className="uni-jump-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M3 17l6-6 4 4 8-8" />
-        <path d="M21 7v0M21 7h-5" />
+      // Trending-up arrow with corner mark
+      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
+        <path d="M22 7l-8.5 8.5-5-5L2 17" />
+        <path d="M16 7h6v6" />
       </svg>
     ),
   },
@@ -59,19 +49,11 @@ const ITEMS: Item[] = [
     label: "Benchmarks",
     key: "benchmark",
     icon: (
-      <svg
-        className="uni-jump-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <line x1="6" y1="20" x2="6" y2="13" />
-        <line x1="12" y1="20" x2="12" y2="9" />
-        <line x1="18" y1="20" x2="18" y2="16" />
+      // Sorted bars (rounded rectangles)
+      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
+        <rect x="3" y="13" width="4" height="8" rx="1" />
+        <rect x="10" y="8" width="4" height="13" rx="1" />
+        <rect x="17" y="11" width="4" height="10" rx="1" />
       </svg>
     ),
   },
@@ -80,19 +62,13 @@ const ITEMS: Item[] = [
     label: "Ecosystem",
     key: "ecosystem",
     icon: (
-      <svg
-        className="uni-jump-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3 12h18" />
-        <path d="M12 3a14 14 0 010 18M12 3a14 14 0 000 18" />
+      // Three connected nodes (network graph)
+      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
+        <circle cx="18" cy="5" r="2.5" />
+        <circle cx="6" cy="12" r="2.5" />
+        <circle cx="18" cy="19" r="2.5" />
+        <line x1="8.3" y1="13.4" x2="15.7" y2="17.6" />
+        <line x1="15.7" y1="6.4" x2="8.3" y2="10.6" />
       </svg>
     ),
   },
@@ -101,17 +77,10 @@ const ITEMS: Item[] = [
     label: "History",
     key: "history",
     icon: (
-      <svg
-        className="uni-jump-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="9" />
+      // Counter-clockwise rotate (history / undo motion)
+      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <path d="M3 3v5h5" />
         <path d="M12 7v5l3 2" />
       </svg>
     ),
@@ -121,17 +90,12 @@ const ITEMS: Item[] = [
     label: "Details",
     key: "details",
     icon: (
-      <svg
-        className="uni-jump-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M4 9h16M4 15h16M9 4l-2 16M17 4l-2 16" />
+      // Document with text lines (file-text)
+      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+        <line x1="9" y1="13" x2="15" y2="13" />
+        <line x1="9" y1="17" x2="15" y2="17" />
       </svg>
     ),
   },
@@ -140,19 +104,9 @@ const ITEMS: Item[] = [
     label: "FAQ",
     key: "faq",
     icon: (
-      <svg
-        className="uni-jump-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9.5 9a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 4" />
-        <path d="M12 17.5v.01" />
+      // Chat bubble (message-square)
+      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     ),
   },

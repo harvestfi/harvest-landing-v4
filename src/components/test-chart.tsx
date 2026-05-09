@@ -1,15 +1,17 @@
 "use client";
 
-// Interactive bar chart for /test. Holds time-range and metric state
-// internally so the time pills + TVL/APY/Share price tabs actually
-// filter the displayed series. Pure CSS heights for the bars; the
-// page passes in full per-metric histories and we slice by the
-// selected range in the client.
+// Interactive chart for /test. Holds time-range, metric and chart-
+// style state internally. Bars mode = gold columns (default). Line
+// mode = smooth gold line with a soft yellow gradient area below.
+// Mouse-move on the bars container picks the column under the
+// cursor by x-position so hovering between gaps OR over empty space
+// above a bar still selects the right column in either mode.
 
 import { useRef, useState } from "react";
 
 type Metric = "tvl" | "apy" | "sharePrice";
 type Range = "1M" | "3M" | "1Y" | "ALL";
+type ChartStyle = "bars" | "line";
 
 interface Point { t: number; v: number }
 
@@ -31,9 +33,6 @@ const RANGE_SECONDS: Record<Exclude<Range, "ALL">, number> = {
   "1Y": 365 * 86400,
 };
 
-// Cap the number of bars so 1Y/ALL views (300+ daily points) don't
-// overflow the chart container. Average values within fixed-size
-// buckets so visual density stays clean while still showing trend.
 const MAX_BARS = 90;
 
 function downsample(points: Point[]): Point[] {
@@ -52,12 +51,6 @@ function downsample(points: Point[]): Point[] {
   return out;
 }
 
-// Default headline label vs the short "metric only" label that shows
-// while a bar is actually under the cursor. "Current APY (24h)" reads
-// as a live ticker by default, but stops making sense the moment you
-// scrub back through history - on hover we collapse to "APY". Same
-// treatment for "Total deposits" → "TVL". Share price reads the same
-// in both states.
 function metricLabel(m: Metric, isHovering: boolean): string {
   if (m === "tvl") return isHovering ? "TVL" : "Total deposits";
   if (m === "apy") return isHovering ? "APY" : "Current APY (24h)";
@@ -76,9 +69,6 @@ function formatValue(m: Metric, v: number): string {
 }
 
 function fmtDate(t: number): string {
-  // "6 May 2026" - day, full month, full year. en-GB orders the
-  // day before the month so the format matches the format the user
-  // asked for explicitly.
   return new Date(t * 1000).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -87,19 +77,50 @@ function fmtDate(t: number): string {
 }
 
 function fmtDateShort(t: number): string {
-  // Compact axis label form, e.g. "Jun 2025" - used at the chart edges.
   return new Date(t * 1000).toLocaleDateString("en-US", {
     month: "short",
     year: "numeric",
   });
 }
 
+// SVG path builder: smooth-ish line through point heights via cubic
+// catmull-rom segments. Returns both the line path and the matching
+// area path (line, then drop to baseline, close back to start).
+function buildSmoothPaths(
+  ys: number[],
+): { line: string; area: string } {
+  if (ys.length === 0) return { line: "", area: "" };
+  if (ys.length === 1) {
+    const y = ys[0];
+    return { line: `M0,${y}`, area: `M0,${y} L0,100 Z` };
+  }
+  const xs = ys.map((_, i) => (i / (ys.length - 1)) * 100);
+
+  let line = `M${xs[0]},${ys[0]}`;
+  for (let i = 0; i < ys.length - 1; i++) {
+    const x0 = xs[Math.max(0, i - 1)];
+    const y0 = ys[Math.max(0, i - 1)];
+    const x1 = xs[i];
+    const y1 = ys[i];
+    const x2 = xs[i + 1];
+    const y2 = ys[i + 1];
+    const x3 = xs[Math.min(ys.length - 1, i + 2)];
+    const y3 = ys[Math.min(ys.length - 1, i + 2)];
+
+    const cp1x = x1 + (x2 - x0) / 6;
+    const cp1y = y1 + (y2 - y0) / 6;
+    const cp2x = x2 - (x3 - x1) / 6;
+    const cp2y = y2 - (y3 - y1) / 6;
+    line += ` C${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${x2.toFixed(2)},${y2.toFixed(2)}`;
+  }
+  const area = `${line} L${xs[xs.length - 1].toFixed(2)},100 L0,100 Z`;
+  return { line, area };
+}
+
 export function TestChart({ series }: Props) {
   const [metric, setMetric] = useState<Metric>("tvl");
   const [range, setRange] = useState<Range>("ALL");
-  // Index of the bar currently under the cursor; null means "no hover,
-  // show the latest point". Resets to null whenever the metric or range
-  // changes so we don't carry a stale index across point arrays.
+  const [style, setStyle] = useState<ChartStyle>("bars");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   const all = series[metric] ?? [];
@@ -114,20 +135,12 @@ export function TestChart({ series }: Props) {
   }
   const points = downsample(raw);
 
-  // The hovered bar drives the bignum; when no hover, fall back to the
-  // most recent point so the headline always shows something. We track
-  // isHovering separately so the latest bar isn't visually styled as
-  // active (and dimmed) by default - it only takes the gold-extension
-  // treatment when the cursor is actually over the chart.
   const isHovering =
     hoverIdx !== null && hoverIdx >= 0 && hoverIdx < points.length;
   const activeIdx = isHovering ? hoverIdx! : points.length - 1;
   const activePoint = points[activeIdx];
   const latest = activePoint ? activePoint.v : 0;
 
-  // Mouse-move on the bars container picks the column under the cursor
-  // by x-position, so hovering between bar gaps OR over the empty space
-  // above a bar still selects the right column.
   const barsRef = useRef<HTMLDivElement | null>(null);
   const onBarsMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = barsRef.current?.getBoundingClientRect();
@@ -140,32 +153,64 @@ export function TestChart({ series }: Props) {
     if (idx !== hoverIdx) setHoverIdx(idx);
   };
 
-  // Min-max scaling so changes are legible even for slow-moving series
-  // like share price (typically 1.00 → 1.09, ~9% absolute movement).
-  // Bars span the 8-100% band: smallest is 8% tall (clearly visible),
-  // largest is 100%. Without this, bars all land in a narrow 90-100%
-  // band and the chart reads as flat.
   const values = points.map((p) => p.v);
   const minV = values.length > 0 ? Math.min(...values) : 0;
   const maxV = values.length > 0 ? Math.max(...values) : 0;
   const span = maxV - minV;
   const heightFor = (v: number): number => {
-    if (span <= 0) return 60; // perfectly flat data: show a uniform mid bar
+    if (span <= 0) return 60;
     return ((v - minV) / span) * 92 + 8;
   };
 
+  // SVG in y-down coordinates for the line: convert heightFor% → y
+  // by inverting (100 - h) so larger values plot higher on the chart.
+  const ys = points.map((p) => 100 - heightFor(p.v));
+  const { line: linePath, area: areaPath } = buildSmoothPaths(ys);
+  const activeX = points.length > 1
+    ? (activeIdx / (points.length - 1)) * 100
+    : 50;
+  const activeYpct = activePoint ? heightFor(activePoint.v) : 0;
+
   return (
-    <div className="uni-chart-wrap">
-      <div className="uni-bignum" id="performance">
-        <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
-        <div className="uni-bignum-meta">
-          <span className="uni-bignum-label">{metricLabel(metric, isHovering)}</span>
-          {isHovering && activePoint && (
-            <>
-              <span className="uni-bignum-dot" aria-hidden="true">·</span>
-              <span className="uni-bignum-date">{fmtDate(activePoint.t)}</span>
-            </>
-          )}
+    <div className={`uni-chart-wrap uni-chart--${style}`}>
+      <div className="uni-chart-header">
+        <div className="uni-bignum" id="performance">
+          <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
+          <div className="uni-bignum-meta">
+            <span className="uni-bignum-label">{metricLabel(metric, isHovering)}</span>
+            {isHovering && activePoint && (
+              <>
+                <span className="uni-bignum-dot" aria-hidden="true">·</span>
+                <span className="uni-bignum-date">{fmtDate(activePoint.t)}</span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="uni-chart-style" role="tablist" aria-label="Chart style">
+          <button
+            type="button"
+            className={`uni-style-btn${style === "bars" ? " active" : ""}`}
+            onClick={() => setStyle("bars")}
+            aria-pressed={style === "bars"}
+            aria-label="Bar chart"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="13" width="3.5" height="8" rx="1" />
+              <rect x="10.25" y="8" width="3.5" height="13" rx="1" />
+              <rect x="16.5" y="11" width="3.5" height="10" rx="1" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`uni-style-btn${style === "line" ? " active" : ""}`}
+            onClick={() => setStyle("line")}
+            aria-pressed={style === "line"}
+            aria-label="Line chart"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M3 17l6-6 4 4 8-8" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -191,6 +236,45 @@ export function TestChart({ series }: Props) {
                   />
                 </div>
               ))}
+              {style === "line" && (
+                <svg
+                  className="uni-chart-line"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <linearGradient id="uni-gold-fade" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ffb936" stopOpacity="0.32" />
+                      <stop offset="100%" stopColor="#ffb936" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d={areaPath} fill="url(#uni-gold-fade)" stroke="none" />
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="#ffb936"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+              )}
+              {style === "line" && isHovering && activePoint && (
+                <>
+                  <span
+                    className="uni-chart-line-cursor"
+                    style={{ left: `${activeX}%` }}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="uni-chart-line-dot"
+                    style={{ left: `${activeX}%`, bottom: `${activeYpct}%` }}
+                    aria-hidden="true"
+                  />
+                </>
+              )}
             </div>
             <div className="uni-chart-axis">
               <span>{fmtDateShort(points[0].t)}</span>
