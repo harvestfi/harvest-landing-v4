@@ -121,6 +121,21 @@ function metricLabel(m: Metric, isHovering: boolean): string {
   return "Share price";
 }
 
+function metricTooltip(m: Metric, latestShare: number | null): string {
+  if (m === "tvl") {
+    return "Total Value Locked: the USD value of all deposits currently held by the vault contract. Updated every hour from the chain.";
+  }
+  if (m === "apy") {
+    return "Annual Percentage Yield: the latest 24-hour annualized yield reported by our indexer. Variable - moves with market conditions, liquidity and the underlying protocol's reward streams.";
+  }
+  // Share price
+  if (latestShare != null && latestShare > 0) {
+    const valueOf1k = latestShare * 1000;
+    return `Each deposit mints a share token. Share price starts at 1.0 and grows as yield compounds. Right now this vault's share price is ${latestShare.toFixed(4)}, so $1,000 deposited at inception would today be worth ~$${valueOf1k.toFixed(2)}.`;
+  }
+  return "Each deposit mints a share token; share price grows above 1.0 as the vault accrues yield. Track its slope to see how the strategy is compounding.";
+}
+
 function formatValue(m: Metric, v: number): string {
   if (m === "tvl") {
     if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
@@ -249,6 +264,17 @@ export function TestChart({ series }: Props) {
       stepAreaPath: step.area,
     };
   }, [series, metric, range]);
+
+  // Latest share price across the full series (independent of the
+  // selected metric/range) - used as a worked example in the share-
+  // price tooltip.
+  const latestSharePrice = useMemo(() => {
+    const arr = series.sharePrice;
+    if (!arr || arr.length === 0) return null;
+    let max = arr[0];
+    for (const p of arr) if (p.t > max.t) max = p;
+    return max.v;
+  }, [series.sharePrice]);
 
   const isHovering =
     hoverIdx !== null && hoverIdx >= 0 && hoverIdx < points.length;
@@ -394,17 +420,28 @@ export function TestChart({ series }: Props) {
         </div>
         <div className="uni-controls-right">
           <div className="uni-tab-text" role="tablist" aria-label="Metric">
-            {(["tvl", "apy", "sharePrice"] as Metric[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                className={`uni-tab-btn${metric === m ? " active" : ""}`}
-                onClick={() => onMetric(m)}
-                aria-pressed={metric === m}
-              >
-                {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
-              </button>
-            ))}
+            {(["tvl", "apy", "sharePrice"] as Metric[]).map((m) => {
+              const latestShare = latestSharePrice;
+              return (
+                <span key={m} className="uni-tab-with-info">
+                  <button
+                    type="button"
+                    className={`uni-tab-btn${metric === m ? " active" : ""}`}
+                    onClick={() => onMetric(m)}
+                    aria-pressed={metric === m}
+                  >
+                    {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
+                  </button>
+                  <span
+                    className="uni-tab-info"
+                    data-tooltip={metricTooltip(m, latestShare)}
+                    aria-label={`What is ${m === "tvl" ? "TVL" : m === "apy" ? "APY" : "share price"}?`}
+                  >
+                    ?
+                  </span>
+                </span>
+              );
+            })}
           </div>
           <div className="uni-style-mini" role="tablist" aria-label="Chart style">
             <button

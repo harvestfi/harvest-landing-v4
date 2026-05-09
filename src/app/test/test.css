@@ -29,9 +29,13 @@
   --up:    #ffb936;
   --up-bg: #fff5d9;
 
-  /* Match the global topnav shell so the page edges line up with
-     the nav: same max-width and same horizontal padding. */
-  max-width: var(--shell-max);
+  /* Custom shell width for /test - slightly narrower than the nav
+     shell so the product page reads as a focused single-product
+     view (vs the full-bleed list pages). The sticky sub-bar's
+     inner content reuses --uni-max so its content always lines up
+     with the page below. */
+  --uni-max: 1320px;
+  max-width: var(--uni-max);
   margin: 0 auto;
   padding: 24px var(--shell-pad) 80px;
   color: var(--uni-ink);
@@ -426,7 +430,33 @@ body:has(.uni-shell) {
   display: inline-flex;
   gap: 22px;
   font-size: 14px;
+  align-items: center;
 }
+/* Metric tab + ? info icon as a single inline group so the
+   tooltip-on-hover affordance reads as part of the label. */
+.uni-shell .uni-tab-with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+.uni-shell .uni-tab-info {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--uni-ink-3);
+  cursor: help;
+  line-height: 1;
+  user-select: none;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.uni-shell .uni-tab-info:hover { color: var(--uni-gold); }
 .uni-shell .uni-tab-btn {
   position: relative;
   border: 0;
@@ -862,14 +892,18 @@ body:has(.uni-shell) {
   opacity: 1;
   pointer-events: auto;
 }
-/* Full-bleed: no max-width clamp; only horizontal padding gives the
-   content gutters so it never touches the screen edge. */
+/* Bar bg is full-bleed (the .uni-sticky-bar is position:fixed
+   left:0 right:0); the inner content respects the same --uni-max
+   as the page below so the sticky row always lines up with the
+   product content beneath it. */
 .uni-shell .uni-sticky-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   padding: 12px var(--shell-pad);
+  max-width: var(--uni-max);
+  margin: 0 auto;
 }
 .uni-shell .uni-sticky-left {
   display: inline-flex;
