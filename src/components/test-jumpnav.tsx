@@ -3,7 +3,10 @@
 // flips the icon to Sunflower Gold and the label to Onyx; nothing
 // else (no bg flip, no shadow, no transform).
 
-import Link from "next/link";
+// Plain <a> for in-page hash anchors. Next.js <Link> on hash-only
+// hrefs occasionally appended the new fragment to the existing one
+// (#ecosystem + #faq → /test#ecosystem#faq), which is invalid URL
+// shape and breaks back-forward history.
 
 interface Item {
   href: string;
@@ -116,12 +119,12 @@ export function TestJumpNav() {
   return (
     <nav className="uni-jump" aria-label="Jump to section">
       {ITEMS.map((it) => (
-        <Link key={it.key} href={it.href} className="uni-jump-item">
+        <a key={it.key} href={it.href} className="uni-jump-item">
           <span className={`uni-jump-icon-wrap uni-jump-${it.key}`}>
             {it.icon}
           </span>
           <span className="uni-jump-label">{it.label}</span>
-        </Link>
+        </a>
       ))}
     </nav>
   );

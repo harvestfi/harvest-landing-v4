@@ -124,8 +124,25 @@ export default async function TestPage() {
           : "TVL data is currently unavailable.",
     },
     {
-      question: "Is this safe?",
-      answer: "No DeFi yield strategy is risk-free. Smart-contract risk, oracle risk, liquidity risk and depeg risk all apply. This vault is operated by Harvest Finance; per-strategy risk levels we display are editorial classifications, not a quantitative model.",
+      question: "What are the strategy risks?",
+      answer: (
+        <>
+          No DeFi yield strategy is risk-free. The main vectors that apply to{" "}
+          {vault.productName} are <strong>smart-contract risk</strong> (a bug
+          or upgrade in the vault or the underlying {protocolName} protocol
+          could cause loss of funds), <strong>oracle risk</strong> (mis-priced
+          price feeds can drain a strategy in a single block),{" "}
+          <strong>liquidity risk</strong> (large withdrawals at the wrong
+          moment can clip the share-price), <strong>depeg risk</strong> (the
+          underlying {vault.asset} de-pegging from its target value), and{" "}
+          <strong>governance risk</strong> (admin keys, parameter changes, fee
+          switches). Risk levels we display on the site are editorial
+          classifications, not a quantitative model. The full framework — what
+          each tier means, how we score, and the open questions we leave on the
+          table — lives on the{" "}
+          <Link href="/risk-framework">risk framework page</Link>.
+        </>
+      ),
     },
   ];
 

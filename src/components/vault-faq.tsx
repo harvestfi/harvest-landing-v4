@@ -1,6 +1,12 @@
+import type { ReactNode } from "react";
+
 interface FaqItem {
   question: string;
-  answer: string;
+  // Accept either a plain string (production answers) or a React
+  // node (so /test can embed a Next.js Link to the risk-framework
+  // page inside the answer body without losing the rest of the
+  // sentence).
+  answer: string | ReactNode;
 }
 
 interface VaultFaqProps {

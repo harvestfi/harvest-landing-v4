@@ -1656,13 +1656,19 @@ body:has(.uni-shell) {
   z-index: 5;
 }
 .uni-shell .eco-chart-baseline-label {
-  background: var(--uni-gold);
-  color: var(--uni-ink);
+  background: var(--uni-gold) !important;
+  color: var(--uni-ink) !important;
+  font-family: var(--sans);
   font-weight: 700;
-  padding: 2px 8px;
+  font-size: 11px;
+  padding: 3px 9px;
   border-radius: 6px;
   letter-spacing: 0.02em;
+  text-transform: none;
   z-index: 6;
+  position: absolute;
+  right: 0;
+  top: -22px;
 }
 .uni-shell .eco-legend-head {
   border-bottom: 2px solid var(--uni-gold);
@@ -1683,33 +1689,37 @@ body:has(.uni-shell) {
   display: block;
 }
 
-/* Network CTA at the bottom of the legend column. Outlined Sun-
-   flower Gold — secondary treatment so the hero View Strategy CTA
-   remains the primary conversion. Hover paints the soft gold tint. */
-.uni-shell .eco-network-cta {
+/* Eco network CTA - rebuilt fresh. Solid 1px ink-line border so
+   every edge renders identically (no subpixel oddness from 1.5/2px
+   gold seams). Onyx text + gold arrow + chain icon. Hover swaps
+   border + text to gold and tints the bg with the soft gold wash. */
+.uni-shell .eco-network-cta,
+.uni-shell .eco-network-cta:link,
+.uni-shell .eco-network-cta:visited {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: 22px;
-  padding: 11px 18px;
+  padding: 12px 18px;
   background: transparent;
   color: var(--uni-ink);
+  font-family: var(--sans);
   font-size: 14.5px;
   font-weight: 600;
   letter-spacing: -0.005em;
-  /* 2px solid gold all around (was 1.5px which subpixel-rendered
-     unevenly on some screens). Matches the 2px gold used for the
-     network-avg baseline for a consistent accent weight. */
-  border: 2px solid var(--uni-gold);
+  border: 1px solid rgba(25, 23, 23, 0.18);
   border-radius: var(--uni-radius);
   text-decoration: none;
-  transition: background 0.15s ease, transform 0.15s ease;
+  box-shadow: none;
+  outline: 0;
   box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .uni-shell .eco-network-cta:hover {
   background: var(--uni-gold-bg);
-  transform: translateY(-1px);
+  border-color: var(--uni-gold);
+  color: var(--uni-ink);
 }
 .uni-shell .eco-network-cta-label {
   display: inline-flex;
@@ -1833,11 +1843,6 @@ body:has(.uni-shell) {
   letter-spacing: -0.005em;
 }
 .uni-shell .eco-chart-axis > span { color: var(--uni-ink-2); font-weight: 500; }
-.uni-shell .eco-chart-baseline-label {
-  background: var(--uni-card-2);
-  color: var(--uni-ink-2);
-  font-weight: 600;
-}
 
 /* hist-table */
 .uni-shell .hist-table tr {
