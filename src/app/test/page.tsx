@@ -24,11 +24,10 @@ import { MarketBenchmark, EcosystemContext } from "@/components/market-sections"
 import { VaultCommentary } from "@/components/vault-commentary";
 import { VaultHistoryTable } from "@/components/vault-history-table";
 import { VaultFaq } from "@/components/vault-faq";
-import { YieldBreakdown } from "@/components/yield-breakdown";
 import { YieldTrajectory } from "@/components/yield-trajectory";
-import { ConsistencyScore } from "@/components/consistency-score";
 import { TestChart, type ChartSeries } from "@/components/test-chart";
 import { TestJumpNav } from "@/components/test-jumpnav";
+import { TestStabilityCard } from "@/components/test-stability-card";
 import "./test.css";
 
 const TEST_SLUG = "usdc-40-acres-base";
@@ -319,23 +318,17 @@ export default async function TestPage() {
           asset={vault.asset}
         />
 
-        {/* APY consistency + Yield sources side by side - the two are
-            both small "spot characterisation" tiles and pair naturally
-            in a 50/50 grid, freeing vertical real estate for the
-            chart-heavy sections that follow. */}
-        <div className="uni-pair-50">
-          <ConsistencyScore
-            history={history}
-            spotAPY={vault.apy24h}
-            asset={vault.asset}
-          />
-          {vault.apyBreakdown.length > 0 && (
-            <YieldBreakdown
-              apyBreakdown={vault.apyBreakdown}
-              boostedApy={vault.boostedApy}
-            />
-          )}
-        </div>
+        {/* Combined stability + sources card. ConsistencyScore +
+            YieldBreakdown each looked sparse on their own (most
+            products have one source, leaving a lonely bar); the
+            stability card collapses both into a single horizontal
+            block: score gauge, key stats rail, source chips. */}
+        <TestStabilityCard
+          history={history}
+          asset={vault.asset}
+          apyBreakdown={vault.apyBreakdown}
+          boostedApy={vault.boostedApy}
+        />
 
         <HistoricalNarrative history={history} asset={vault.asset} />
 

@@ -555,6 +555,35 @@ body:has(.uni-shell) {
   color: var(--uni-ink-3);
 }
 
+/* === FAQ symmetry: question and answer at the same body size ======
+   The shared component renders <summary> at 15px and <p> at 14px,
+   which made the answer look "smaller than the question" (com-ically
+   so per the user). On /test we equalize to 16px, weight 600 on the
+   summary, weight 400 on the answer, both Onyx/Graphite. */
+.uni-shell .faq details {
+  border-bottom-color: rgba(25, 23, 23, 0.08);
+  padding: 18px 0;
+}
+.uni-shell .faq details:first-child {
+  border-top-color: rgba(25, 23, 23, 0.08);
+}
+.uni-shell .faq summary {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--uni-ink);
+}
+.uni-shell .faq summary::after {
+  font-size: 20px;
+  color: var(--uni-ink-2);
+}
+.uni-shell .faq details > p {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--uni-ink-2);
+  margin-top: 14px;
+}
+
 /* === Hover tooltips on technical labels (no icon) ==================
    Any element with a data-tooltip attribute inside .uni-shell renders
    a small dark popup on hover that explains the term in plain
@@ -813,15 +842,138 @@ body:has(.uni-shell) {
   line-height: 1.4;
 }
 
-/* Pair-50 grid: ConsistencyScore + YieldBreakdown side-by-side. */
-.uni-pair-50 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  align-items: start;
+/* Strategy stability card: replaces ConsistencyScore + YieldBreakdown
+   pair. Single full-width White Smoke surface; score gauge on top
+   left, label on top right, segmented progress bar across, four-stat
+   rail below (Mean / Volatility / Range / Sources). */
+.uni-shell .uni-stability-card {
+  background: var(--uni-card);
+  border-radius: var(--uni-radius);
+  padding: 28px 32px;
 }
-@media (max-width: 900px) {
-  .uni-pair-50 { grid-template-columns: 1fr; gap: 28px; }
+.uni-shell .uni-stability-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.uni-shell .uni-stability-score-block {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.uni-shell .uni-stability-score {
+  font-family: var(--display);
+  font-size: 56px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.uni-shell .uni-stability-out-of {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--uni-ink-3);
+}
+.uni-shell .uni-stability-label-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+.uni-shell .uni-stability-label {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--uni-ink);
+}
+.uni-shell .uni-stability-sublabel {
+  font-size: 13px;
+  color: var(--uni-ink-3);
+}
+.uni-shell .uni-stability-bar {
+  position: relative;
+  height: 8px;
+  background: rgba(25, 23, 23, 0.06);
+  border-radius: var(--uni-radius-pill);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.uni-shell .uni-stability-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--uni-gold);
+  border-radius: var(--uni-radius-pill);
+  transition: width 0.4s ease;
+}
+.uni-shell .uni-stability-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(25, 23, 23, 0.06);
+}
+.uni-shell .uni-stability-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.uni-shell .uni-stability-stat-label {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--uni-ink-2);
+}
+.uni-shell .uni-stability-stat-value {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.uni-shell .uni-stability-sources {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.uni-shell .uni-stability-source-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 11px;
+  background: var(--uni-gold-bg);
+  border-radius: var(--uni-radius-pill);
+  font-size: 14px;
+}
+.uni-shell .uni-stability-source-name { font-weight: 600; color: var(--uni-ink); }
+.uni-shell .uni-stability-source-apy {
+  font-family: var(--mono);
+  font-feature-settings: "tnum";
+  font-weight: 500;
+  color: var(--uni-ink-2);
+}
+.uni-shell .uni-stability-empty {
+  margin: 0;
+  font-size: 16px;
+  color: var(--uni-ink-2);
+}
+
+@media (max-width: 700px) {
+  .uni-shell .uni-stability-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .uni-shell .uni-stability-score { font-size: 42px; }
+  .uni-shell .uni-stability-label { font-size: 18px; }
 }
 
 /* Consistency block: White Smoke surface, bigger score number, and
@@ -895,7 +1047,7 @@ body:has(.uni-shell) {
 .uni-shell .chart-datatable thead th {
   padding: 16px 22px 12px;
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -942,10 +1094,15 @@ body:has(.uni-shell) {
 
 /* === Embedded primitives, re-skinned ===
 
-   The shared primitives use editorial-ledger labels (small mono caps).
-   On /test we want them dialed up: 11.5px instead of 10.5px, weight
-   600, color = Graphite (var(--uni-ink-2)). That's the user's main
-   complaint - tables read as inactive because labels are too light. */
+   Uniform table typography across /test. ONE size for technical
+   labels (mono caps), ONE size for value cells, ONE size for sans
+   text cells. Removes the previous mix of 11.5/12.5/13/14/15/16/17/18
+   that made adjacent tables read as if they came from different
+   stylesheets.
+
+   --table-label: 13px / mono / weight 600 / uppercase / ink-2
+   --table-num:   16px / mono / weight 600 / tnum / ink
+   --table-sans:  16px / sans / weight 600 / ink */
 
 /* Below-the-fold tables: no card surround, only the internal
    separator lines do the structural work. Each row's bottom border
@@ -982,7 +1139,9 @@ body:has(.uni-shell) {
 }
 .uni-shell .bench-stats > div { padding: 0; border: 0; }
 
-/* bench-stats */
+/* bench-stats - uses display font and bigger size since this is the
+   "headline stats" tile, not a regular table. The four stat values
+   are the showpiece of the section. */
 .uni-shell .bs-l {
   color: var(--uni-ink-2);
   font-family: var(--mono);
@@ -994,9 +1153,9 @@ body:has(.uni-shell) {
 .uni-shell .bs-v {
   color: var(--uni-ink);
   font-family: var(--display);
-  font-size: 33px;
+  font-size: 28px;
   font-weight: 600;
-  letter-spacing: -0.014em;
+  letter-spacing: -0.012em;
   font-feature-settings: "tnum";
 }
 .uni-shell .bs-v.up { color: var(--uni-ink); }
@@ -1018,7 +1177,7 @@ body:has(.uni-shell) {
 }
 .uni-shell .bt-row {
   border-bottom: 1px solid rgba(25, 23, 23, 0.06);
-  font-size: 17px;
+  font-size: 16px;
   color: var(--uni-ink);
   transition: background-color 0.12s ease;
 }
@@ -1195,7 +1354,7 @@ body:has(.uni-shell) {
 }
 .uni-shell .cd-network img { border-radius: 50%; display: block; }
 .uni-shell .eco-legend-row {
-  font-size: 17px;
+  font-size: 16px;
   color: var(--uni-ink);
   transition: background-color 0.12s ease;
 }
@@ -1206,7 +1365,10 @@ body:has(.uni-shell) {
 .uni-shell .eco-legend-rank { color: var(--uni-ink-2); font-weight: 600; }
 .uni-shell .eco-legend-apy {
   color: var(--uni-ink);
-  font-size: 17px;
+  font-size: 16px;
+  font-family: var(--mono);
+  font-feature-settings: "tnum";
+  font-weight: 600;
 }
 .uni-shell .eco-chart-axis > span { color: var(--uni-ink-2); font-weight: 500; }
 .uni-shell .eco-chart-baseline-label {
@@ -1233,7 +1395,7 @@ body:has(.uni-shell) {
 .uni-shell .hist-table td {
   color: var(--uni-ink);
   font-family: var(--mono);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   font-feature-settings: "tnum";
 }
