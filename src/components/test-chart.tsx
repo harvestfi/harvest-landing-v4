@@ -11,7 +11,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
 
 type Metric = "tvl" | "apy" | "sharePrice";
 type Range = "1M" | "3M" | "1Y" | "ALL";
-type ChartStyle = "bars" | "line";
+type ChartStyle = "bars" | "line" | "step";
 
 interface Point { t: number; v: number }
 
@@ -147,6 +147,27 @@ function fmtDateShort(t: number): string {
   });
 }
 
+// Sharp 90-degree staircase: hold each value horizontally until the
+// next x, then step vertically to the next y. Reads as a discrete
+// "value held until refresh" view of the same series.
+function buildStepPaths(ys: number[]): { line: string; area: string } {
+  if (ys.length === 0) return { line: "", area: "" };
+  if (ys.length === 1) {
+    const y = ys[0];
+    return {
+      line: `M0,${y} L100,${y}`,
+      area: `M0,${y} L100,${y} L100,100 L0,100 Z`,
+    };
+  }
+  const xs = ys.map((_, i) => (i / (ys.length - 1)) * 100);
+  let line = `M${xs[0].toFixed(2)},${ys[0].toFixed(2)}`;
+  for (let i = 1; i < ys.length; i++) {
+    line += ` H${xs[i].toFixed(2)} V${ys[i].toFixed(2)}`;
+  }
+  const area = `${line} L100,100 L0,100 Z`;
+  return { line, area };
+}
+
 // SVG path builder: smooth-ish line through point heights via cubic
 // catmull-rom segments. Returns both the line path and the matching
 // area path (line, then drop to baseline, close back to start).
@@ -216,13 +237,16 @@ export function TestChart({ series }: Props) {
     };
 
     const ys = downs.map((p) => 100 - heightFor(p.v));
-    const { line, area } = buildSmoothPaths(ys);
+    const smooth = buildSmoothPaths(ys);
+    const step = buildStepPaths(ys);
 
     return {
       points: downs,
       heightFor,
-      linePath: line,
-      areaPath: area,
+      linePath: smooth.line,
+      areaPath: smooth.area,
+      stepLinePath: step.line,
+      stepAreaPath: step.area,
     };
   }, [series, metric, range]);
 
@@ -302,6 +326,17 @@ export function TestChart({ series }: Props) {
               <path d="M3 17l6-6 4 4 8-8" />
             </svg>
           </button>
+          <button
+            type="button"
+            className={`uni-style-btn${style === "step" ? " active" : ""}`}
+            onClick={() => setStyle("step")}
+            aria-pressed={style === "step"}
+            aria-label="Step chart"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+              <path d="M3 17 H8 V12 H13 V8 H18 V14 H21" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -327,7 +362,7 @@ export function TestChart({ series }: Props) {
                   />
                 </div>
               ))}
-              {style === "line" && (
+              {(style === "line" || style === "step") && (
                 <svg
                   className="uni-chart-line"
                   viewBox="0 0 100 100"
@@ -340,19 +375,23 @@ export function TestChart({ series }: Props) {
                       <stop offset="100%" stopColor="#ffb936" stopOpacity="0" />
                     </linearGradient>
                   </defs>
-                  <path d={areaPath} fill="url(#uni-gold-fade)" stroke="none" />
                   <path
-                    d={linePath}
+                    d={style === "line" ? areaPath : stepAreaPath}
+                    fill="url(#uni-gold-fade)"
+                    stroke="none"
+                  />
+                  <path
+                    d={style === "line" ? linePath : stepLinePath}
                     fill="none"
                     stroke="#ffb936"
                     strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    strokeLinecap={style === "line" ? "round" : "square"}
+                    strokeLinejoin={style === "line" ? "round" : "miter"}
                     vectorEffect="non-scaling-stroke"
                   />
                 </svg>
               )}
-              {style === "line" && isHovering && activePoint && (
+              {(style === "line" || style === "step") && isHovering && activePoint && (
                 <>
                   <span
                     className="uni-chart-line-cursor"

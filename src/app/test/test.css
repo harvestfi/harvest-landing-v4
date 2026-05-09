@@ -29,7 +29,9 @@
   --up:    #ffb936;
   --up-bg: #fff5d9;
 
-  max-width: 1280px;
+  /* Match the global topnav shell so the page edges line up with
+     the nav: same max-width and same horizontal padding. */
+  max-width: var(--shell-max);
   margin: 0 auto;
   padding: 24px var(--shell-pad) 80px;
   color: var(--uni-ink);
@@ -302,10 +304,13 @@ body:has(.uni-shell) {
   position: relative; /* anchor for absolute SVG line + scrub cursor */
 }
 
-/* Line-mode: hide the bars and the active-bar ghost; the SVG path
-   carries the data, the scrub cursor + dot mark the hovered point. */
-.uni-shell .uni-chart--line .uni-chart-bar { visibility: hidden; }
-.uni-shell .uni-chart--line .uni-bar-col.active::before { display: none; }
+/* Line + step modes: hide the bars and the active-bar ghost; the
+   SVG path carries the data, the scrub cursor + dot mark the
+   hovered point. */
+.uni-shell .uni-chart--line .uni-chart-bar,
+.uni-shell .uni-chart--step .uni-chart-bar { visibility: hidden; }
+.uni-shell .uni-chart--line .uni-bar-col.active::before,
+.uni-shell .uni-chart--step .uni-bar-col.active::before { display: none; }
 
 .uni-shell .uni-chart-line {
   position: absolute;
@@ -1353,18 +1358,28 @@ body:has(.uni-shell) {
   transition: background-color 0.12s ease;
 }
 .uni-shell .chart-datatable tbody tr:hover {
-  background: rgba(255, 185, 54, 0.08);
+  background: rgba(255, 185, 54, 0.04);
 }
 .uni-shell .chart-datatable tbody td {
   padding: 16px 22px;
-  font-size: 16px;
   color: var(--uni-ink);
+}
+/* Date cell takes label scale (sans 13px / weight 500 / Graphite),
+   matching the .hist-table th label so the date reads as context
+   for the value, not as a value itself. */
+.uni-shell .chart-datatable tbody td:not(.r) {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
 }
 .uni-shell .chart-datatable tbody td.r {
   font-family: var(--display);
+  font-size: 16px;
   font-feature-settings: "tnum";
   font-weight: 600;
   letter-spacing: -0.005em;
+  color: var(--uni-ink);
 }
 .uni-shell .chart-datatable-foot {
   padding: 14px 22px;
@@ -1477,7 +1492,7 @@ body:has(.uni-shell) {
   transition: background-color 0.12s ease;
 }
 .uni-shell .bt-row:hover:not(.you):not(.avg) {
-  background: rgba(255, 185, 54, 0.10);
+  background: rgba(255, 185, 54, 0.04);
 }
 .uni-shell .bt-product-cell {
   display: inline-flex;
@@ -1523,7 +1538,7 @@ body:has(.uni-shell) {
 }
 /* You-row: no full-row tint; the gold pill carries the highlight. */
 .uni-shell .bt-row.you { background: transparent; }
-.uni-shell .bt-row.you:hover { background: rgba(255, 185, 54, 0.10); }
+.uni-shell .bt-row.you:hover { background: rgba(255, 185, 54, 0.04); }
 .uni-shell .bt-row .here-pill {
   background: var(--uni-gold);
   color: var(--uni-ink);
@@ -1722,7 +1737,7 @@ body:has(.uni-shell) {
   transition: background-color 0.12s ease;
 }
 .uni-shell .eco-legend-row:hover:not(.you):not(.baseline) {
-  background: rgba(255, 185, 54, 0.10);
+  background: rgba(255, 185, 54, 0.04);
 }
 .uni-shell .eco-legend-row.you .eco-legend-name { color: var(--uni-ink); font-weight: 700; }
 .uni-shell .eco-legend-rank { color: var(--uni-ink-2); font-weight: 600; }
@@ -1746,7 +1761,7 @@ body:has(.uni-shell) {
   transition: background-color 0.12s ease;
 }
 .uni-shell .hist-table tr:hover {
-  background: rgba(255, 185, 54, 0.10);
+  background: rgba(255, 185, 54, 0.04);
 }
 .uni-shell .hist-table th {
   color: var(--uni-ink-2);

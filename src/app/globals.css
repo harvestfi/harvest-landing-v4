@@ -681,11 +681,10 @@ button { font-family: inherit; cursor: pointer; }
 /* === footer === */
 .foot {
   margin-top: 48px;
-  border-top: 1px solid var(--line);
+  /* Sunflower Gold top hairline picks up the flagship accent we use
+     across the brand wordmark, /test charts, and primary CTAs. */
+  border-top: 2px solid #ffb936;
   padding: 36px 0 28px;
-  /* Pure white background globally so the footer reads as a clean
-     close to the page instead of inheriting the slightly cream
-     body bg (#fafaf9). */
   background: #ffffff;
 }
 .foot-inner {
@@ -742,7 +741,7 @@ button { font-family: inherit; cursor: pointer; }
   margin: 6px 0 4px;
 }
 .foot-blurb a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 2px; }
-.foot-blurb a:hover { color: var(--ink); }
+.foot-blurb a:hover { color: #ffb936; text-decoration-color: #ffb936; }
 .foot-stats {
   display: flex;
   flex-wrap: wrap;
@@ -766,7 +765,7 @@ button { font-family: inherit; cursor: pointer; }
   background: transparent;
   transition: color .15s, border-color .15s;
 }
-.foot-social-link:hover { color: var(--ink); border-color: var(--ink-3); }
+.foot-social-link:hover { color: #ffb936; border-color: #ffb936; }
 .foot-col-label {
   font-size: 10px !important;
   letter-spacing: 0.08em;
@@ -779,7 +778,7 @@ button { font-family: inherit; cursor: pointer; }
   line-height: 1.5;
   display: block;
 }
-.foot-link:hover { color: var(--ink); }
+.foot-link:hover { color: #ffb936; }
 .foot-count { color: var(--ink-4); font-variant-numeric: tabular-nums; font-size: 11px; }
 
 
