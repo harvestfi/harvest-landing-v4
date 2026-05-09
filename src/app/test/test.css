@@ -784,20 +784,48 @@ body:has(.uni-shell) {
   font-weight: 600;
 }
 
-/* eco-chart: collapse the rainbow palette to flagship only. Active
-   strategy = Sunflower Gold; everyone else = Graphite. The bars and
-   their legend swatches inherit the same colors so the chart reads
-   as 'you vs the cohort' instead of a 6-way colour-coded ranking.
-   !important is needed because the bar/swatch backgrounds are set
-   inline by the shared component. */
+/* eco-chart: inherit hero-chart visual language so the two charts on
+   the page read as siblings. Bar radius bumped to 5px (hero) and the
+   inset shadow + lift-on-hover are dropped (hero just dims). The
+   plot area picks up the same barely-visible dotted texture as the
+   hero chart so empty space reads as deliberate canvas, not a void.
+   Solid axis lines from globals are softened to thin dashed Alabaster
+   so they don't compete with the dot pattern. */
+.uni-shell .eco-chart {
+  border-left: 1px dashed var(--uni-line);
+  border-bottom: 1px dashed var(--uni-line);
+  background-image: radial-gradient(
+    circle,
+    rgba(25, 23, 23, 0.07) 1px,
+    transparent 1.2px
+  );
+  background-size: 14px 14px;
+  background-position: 0 100%;
+}
+.uni-shell .eco-bar {
+  border-radius: 5px 5px 0 0 !important;
+  box-shadow: none !important;
+  transition: filter 0.12s ease;
+}
+.uni-shell .eco-bar-col:hover .eco-bar {
+  filter: brightness(0.85);
+  transform: none;
+}
 .uni-shell .eco-bar { background: var(--uni-ink-2) !important; }
 .uni-shell .eco-bar-col.you .eco-bar { background: var(--uni-gold) !important; }
 .uni-shell .eco-bar-col.you .eco-bar { outline: 0; }
-.uni-shell .eco-legend-swatch { background: var(--uni-ink-2) !important; }
+.uni-shell .eco-legend-swatch {
+  background: var(--uni-ink-2) !important;
+  box-shadow: none !important;
+  border-radius: 4px !important;
+}
 .uni-shell .eco-legend-row.you .eco-legend-swatch { background: var(--uni-gold) !important; }
 .uni-shell .eco-legend-swatch.baseline {
   background: transparent !important;
   border: 1px dashed var(--uni-ink-3) !important;
+}
+.uni-shell .eco-chart-baseline {
+  border-top: 1px dashed var(--uni-ink-3);
 }
 .uni-shell .eco-legend-head {
   border-bottom: 2px solid var(--uni-gold);
