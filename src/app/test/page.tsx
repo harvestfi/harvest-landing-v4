@@ -29,6 +29,7 @@ import { TestChart, type ChartSeries } from "@/components/test-chart";
 import { TestJumpNav } from "@/components/test-jumpnav";
 import { TestStabilityCard } from "@/components/test-stability-card";
 import { TestStickyHeader } from "@/components/test-sticky-header";
+import { TestSimilar } from "@/components/test-similar";
 import "./test.css";
 
 const TEST_SLUG = "usdc-40-acres-base";
@@ -222,7 +223,7 @@ export default async function TestPage() {
                 className="uni-side-label"
                 data-tooltip="The latest 24-hour annualized yield reported by our hosted indexer for this strategy."
               >
-                Total APY
+                24h APY
               </div>
               <div className="uni-side-headline">{formatAPY(vault.apy24h)}</div>
             </div>
@@ -472,6 +473,8 @@ export default async function TestPage() {
           description={vault.description}
           faqItems={faqItems}
         />
+
+        <TestSimilar vault={vault} allVaults={allVaults} />
       </div>
 
       {/* Links pinned to the very bottom of the page. */}

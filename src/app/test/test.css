@@ -668,9 +668,9 @@ body:has(.uni-shell) {
 }
 
 /* Jump-to nav: very soft pill rail with refined lucide-style icons.
-   Hover flips ONLY the icon stroke to Sunflower Gold and the text
-   color to Onyx. No background fill change, no shadow, no per-icon
-   transforms - the goal is a quiet, premium index. */
+   Sticky below the global topnav on desktop so the section index
+   stays accessible while the user scrolls into the body. Hover
+   flips both the icon stroke and the label text to Sunflower Gold. */
 .uni-shell .uni-jump {
   display: flex;
   flex-wrap: wrap;
@@ -678,8 +678,13 @@ body:has(.uni-shell) {
   gap: 2px;
   margin: 64px 0 36px;
   padding: 6px;
-  background: rgba(25, 23, 23, 0.025);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(1.4) blur(10px);
   border-radius: var(--uni-radius-pill);
+  position: sticky;
+  top: 60px;
+  z-index: 25;
+  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
 }
 .uni-shell .uni-jump-item {
   flex: 1 1 0;
@@ -699,7 +704,7 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-jump-item:hover {
   background: transparent;
-  color: var(--uni-ink);
+  color: var(--uni-gold);
   box-shadow: none;
 }
 .uni-shell .uni-jump-icon-wrap {
@@ -717,6 +722,119 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-jump-item:hover .uni-jump-icon { stroke: var(--uni-gold); }
 .uni-shell .uni-jump-label { line-height: 1; }
+
+/* === Similar {asset} opportunities ================================
+   Cross-sell rail under the FAQ. Three-column card grid on desktop,
+   single column on mobile. Cards lift on hover with a soft shadow. */
+.uni-shell .uni-similar { }
+.uni-shell .uni-similar > .uni-similar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.uni-shell .uni-similar > .uni-similar-head h2 { margin: 0; }
+.uni-shell .uni-similar-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uni-ink-2);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.uni-shell .uni-similar-all:hover { color: var(--uni-gold); }
+.uni-shell .uni-similar-all-arrow {
+  color: var(--uni-gold);
+  transition: transform 0.15s ease;
+}
+.uni-shell .uni-similar-all:hover .uni-similar-all-arrow {
+  transform: translateX(3px);
+}
+
+.uni-shell .uni-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.uni-shell .uni-similar-card {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 22px 24px;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius);
+  text-decoration: none;
+  color: var(--uni-ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-shell .uni-similar-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -16px rgba(25, 23, 23, 0.18);
+}
+.uni-shell .uni-similar-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.uni-shell .uni-similar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.uni-shell .uni-similar-icon img { border-radius: 50%; display: block; }
+.uni-shell .uni-similar-id { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.uni-shell .uni-similar-name {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--uni-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-shell .uni-similar-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+  font-weight: 500;
+}
+.uni-shell .uni-similar-meta img { border-radius: 50%; display: block; }
+.uni-shell .uni-similar-meta-sep { color: var(--uni-ink-3); }
+.uni-shell .uni-similar-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(25, 23, 23, 0.06);
+}
+.uni-shell .uni-similar-stat-r { text-align: right; }
+.uni-shell .uni-similar-stat-label {
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.uni-shell .uni-similar-stat-value {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  font-feature-settings: "tnum";
+  color: var(--uni-ink);
+}
+.uni-shell .uni-similar-apy { color: var(--uni-ink); }
+
+@media (max-width: 900px) {
+  .uni-shell .uni-similar-grid { grid-template-columns: 1fr; }
+}
 
 /* === Mobile sticky sub-header ======================================
    Pinned below the global topnav once the user scrolls past the
@@ -791,8 +909,16 @@ body:has(.uni-shell) {
 }
 
 /* Mobile: jump rail wraps and items fall back to natural width so
-   labels don't get squashed when divided into 7 equal columns. */
+   labels don't get squashed when divided into 7 equal columns. The
+   dedicated sticky sub-header takes over on scroll, so we drop the
+   jump nav's own position:sticky on mobile to avoid two pinned bars. */
 @media (max-width: 900px) {
+  .uni-shell .uni-jump {
+    position: static;
+    background: rgba(25, 23, 23, 0.025);
+    backdrop-filter: none;
+    box-shadow: none;
+  }
   .uni-shell .uni-jump-item { flex: 0 1 auto; }
 }
 @media (max-width: 700px) {
@@ -1479,31 +1605,29 @@ body:has(.uni-shell) {
   display: block;
 }
 
-/* Network CTA at the bottom of the legend column. Same flagship-
-   gold pill treatment as the hero View Strategy CTA, just sized
-   smaller. Two segments: chain icon + label on the left, arrow on
-   the right; arrow translates on hover. */
+/* Network CTA at the bottom of the legend column. Outlined Sun-
+   flower Gold — secondary treatment so the hero View Strategy CTA
+   remains the primary conversion. Hover paints the soft gold tint. */
 .uni-shell .eco-network-cta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: 22px;
-  padding: 13px 18px;
-  background: var(--uni-gold);
+  padding: 11.5px 18px;
+  background: transparent;
   color: var(--uni-ink);
   font-size: 14.5px;
   font-weight: 600;
   letter-spacing: -0.005em;
+  border: 1.5px solid var(--uni-gold);
   border-radius: var(--uni-radius);
   text-decoration: none;
-  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
-  transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 .uni-shell .eco-network-cta:hover {
-  filter: brightness(0.96);
+  background: var(--uni-gold-bg);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px -8px rgba(255, 185, 54, 0.55);
 }
 .uni-shell .eco-network-cta-label {
   display: inline-flex;
@@ -1518,7 +1642,8 @@ body:has(.uni-shell) {
 }
 .uni-shell .eco-network-cta-arrow {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 700;
+  color: var(--uni-gold);
   transition: transform 0.15s ease;
 }
 .uni-shell .eco-network-cta:hover .eco-network-cta-arrow { transform: translateX(3px); }

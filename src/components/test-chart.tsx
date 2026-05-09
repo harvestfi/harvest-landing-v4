@@ -369,6 +369,9 @@ export function TestChart({ series }: Props) {
             </div>
             <div className="uni-chart-axis">
               <span>{fmtDateShort(points[0].t)}</span>
+              {points.length >= 3 && (
+                <span>{fmtDateShort(points[Math.floor(points.length / 2)].t)}</span>
+              )}
               <span>{fmtDateShort(points[points.length - 1].t)}</span>
             </div>
           </>
