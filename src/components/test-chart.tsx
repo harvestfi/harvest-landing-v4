@@ -118,7 +118,7 @@ function buildSmoothPaths(
 }
 
 export function TestChart({ series }: Props) {
-  const [metric, setMetric] = useState<Metric>("tvl");
+  const [metric, setMetric] = useState<Metric>("sharePrice");
   const [range, setRange] = useState<Range>("ALL");
   const [style, setStyle] = useState<ChartStyle>("bars");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);

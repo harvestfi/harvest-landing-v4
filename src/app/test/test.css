@@ -130,6 +130,20 @@ body:has(.uni-shell) {
   border-radius: 50%;
   display: block;
 }
+.uni-shell .uni-byline-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: var(--uni-ink);
+}
+.uni-shell .uni-byline-brand-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: var(--uni-gold);
+  display: inline-block;
+}
 .uni-shell .uni-title-sub {
   display: inline-flex;
   align-items: center;
@@ -821,9 +835,10 @@ body:has(.uni-shell) {
   height: 34px;
   border-radius: 10px;
   font-size: 13px;
-  background: var(--uni-card);
+  background: var(--uni-gold);
   border: 0;
-  color: var(--uni-ink-2);
+  color: var(--uni-ink);
+  font-weight: 700;
 }
 .uni-shell .pp-num-text {
   font-size: 18px;
@@ -1053,6 +1068,47 @@ body:has(.uni-shell) {
 /* === Daily history table - Uniswap Explore feel ===
    Bigger row padding, larger numeric typography, gold underline on
    the header row, soft hover bg. */
+/* Daily history table wrap on /test: strip the production card, lay
+   the metric tabs on the LEFT and the lifetime summary INLINE on
+   the right of the same row. */
+.uni-shell .vh-table-wrap {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.uni-shell .vh-table-header {
+  border-bottom: 1px solid rgba(25, 23, 23, 0.06);
+  background: transparent;
+  padding: 0 0 14px;
+  margin-bottom: 4px;
+  align-items: center;
+}
+.uni-shell .vh-summary {
+  font-size: 14px;
+  color: var(--uni-ink-2);
+  gap: 22px;
+}
+.uni-shell .vh-summary-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.uni-shell .vh-summary-label {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--uni-ink-2);
+  font-weight: 500;
+}
+.uni-shell .vh-summary strong {
+  color: var(--uni-ink);
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.005em;
+}
+
 /* Daily history tabs (TVL / APY / Share Price metric switch above
    the table) re-skinned to match the chart range pills: White Smoke
    rail, mono caps labels, gold pill on active. */
@@ -1403,10 +1459,13 @@ body:has(.uni-shell) {
   gap: 20px;
 }
 .uni-shell .cd-row:last-child { border-bottom: 0; }
+/* Strategy details: match the hero side-card stats family + scale -
+   sans 14px label / display 20px value, weight 500/600. The cd-row
+   list reads as a tall version of the side stat block. */
 .uni-shell .cd-label {
   color: var(--uni-ink-2);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -1414,10 +1473,10 @@ body:has(.uni-shell) {
 .uni-shell .cd-val {
   color: var(--uni-ink);
   font-family: var(--display);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   font-feature-settings: "tnum";
-  letter-spacing: -0.005em;
+  letter-spacing: -0.012em;
 }
 .uni-shell .cd-addr {
   font-family: var(--mono);

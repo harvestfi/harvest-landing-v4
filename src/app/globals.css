@@ -1038,6 +1038,39 @@ button { font-family: inherit; cursor: pointer; }
 /* Charts card */
 
 /* Chart/Data toggle tabs */
+/* Vault history table layout (production defaults; .uni-shell on
+   /test overrides these for the gold theme). */
+.vh-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+}
+.vh-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.vh-summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.vh-summary-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.vh-summary-label { color: var(--ink-3); }
+.vh-summary strong { color: var(--ink); font-weight: 600; }
+
 .chart-data-tabs {
   display: inline-flex;
   background: var(--bg-2);

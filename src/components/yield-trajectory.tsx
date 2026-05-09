@@ -99,19 +99,24 @@ export function YieldTrajectory({ history, productName, apy24h, asset }: Props) 
 
   const sentences: string[] = [];
 
-  // #8 Streak sentence with contextualization
-  const streakPrefix = streakLen === 1
-    ? `${productName}, in the latest update,`
-    : `${productName} has been on a ${streakLen}-day ${streakLabel} streak,`;
-  let streakSentence = `${streakPrefix} with APY moving from ${formatAPY(streakFrom)} to ${formatAPY(streakTo)} over this period.`;
+  // #8 Streak sentence - only meaningful when there's an actual
+  // multi-day streak. With streakLen === 1 the "from X to Y" framing
+  // collapses to "from X to X" (same number twice), which is exactly
+  // what the user flagged: a sentence that says nothing. Skip it and
+  // let the next sentence (30-day positive-yield rhythm) carry the
+  // section opener.
+  if (streakLen >= 2 && streakDir !== "flat") {
+    const streakPrefix = `${productName} has been on a ${streakLen}-day ${streakLabel} streak,`;
+    let streakSentence = `${streakPrefix} with APY moving from ${formatAPY(streakFrom)} to ${formatAPY(streakTo)} over this period.`;
 
-  const fromMonthly = apyToMonthly(streakFrom, ref.amount);
-  const toMonthly = apyToMonthly(streakTo, ref.amount);
-  const swing = Math.abs(fromMonthly - toMonthly);
-  if (swing >= 1) {
-    streakSentence += ` On a ${ref.label} deposit, that's a swing from earning ${fmtEarnings(fromMonthly, asset)}/mo to ${fmtEarnings(toMonthly, asset)}/mo.`;
+    const fromMonthly = apyToMonthly(streakFrom, ref.amount);
+    const toMonthly = apyToMonthly(streakTo, ref.amount);
+    const swing = Math.abs(fromMonthly - toMonthly);
+    if (swing >= 1) {
+      streakSentence += ` On a ${ref.label} deposit, that's a swing from earning ${fmtEarnings(fromMonthly, asset)}/mo to ${fmtEarnings(toMonthly, asset)}/mo.`;
+    }
+    sentences.push(streakSentence);
   }
-  sentences.push(streakSentence);
 
   sentences.push(
     `Over the past 30 days, the vault delivered positive yields on ${daysWithYield} out of ${recent30d.length} days.`,

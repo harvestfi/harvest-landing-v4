@@ -149,65 +149,45 @@ export function VaultHistoryTable({ history }: VaultHistoryTableProps) {
         </p>
       )}
 
-      <div
-        style={{
-          border: "1px solid var(--line)",
-          borderRadius: "var(--radius)",
-          overflow: "hidden",
-          background: "var(--panel)",
-        }}
-      >
-        {/* Tabs */}
-        <div className="chart-data-tabs" style={{ margin: "12px 14px" }}>
-          {tabs.map((t) => (
-            <button
-              key={t}
-              className={tab === t ? "active" : ""}
-              onClick={() => {
-                setTab(t);
-                setPage(0);
-              }}
-            >
-              {TAB_CONFIG[t].label}
-            </button>
-          ))}
-        </div>
-
-        {/* Summary */}
-        {summary && (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "16px",
-              padding: "8px 14px 10px",
-              borderBottom: "1px solid var(--line)",
-              background: "var(--bg-2)",
-              fontSize: "12px",
-              color: "var(--ink-3)",
-            }}
-          >
-            <span>
-              Lifetime Avg:{" "}
-              <strong style={{ color: "var(--ink)" }}>
-                {formatFn(summary.avg)}
-              </strong>
-            </span>
-            <span>
-              High:{" "}
-              <strong style={{ color: "var(--ink)" }}>
-                {formatFn(summary.high)}
-              </strong>
-            </span>
-            <span>
-              Low:{" "}
-              <strong style={{ color: "var(--ink)" }}>
-                {formatFn(summary.low)}
-              </strong>
-            </span>
-            <span>{summary.count} data points</span>
+      <div className="vh-table-wrap">
+        {/* Header: metric tabs on the left, lifetime summary inline
+            on the right of the same row. */}
+        <div className="vh-table-header">
+          <div className="chart-data-tabs">
+            {tabs.map((t) => (
+              <button
+                key={t}
+                className={tab === t ? "active" : ""}
+                onClick={() => {
+                  setTab(t);
+                  setPage(0);
+                }}
+              >
+                {TAB_CONFIG[t].label}
+              </button>
+            ))}
           </div>
-        )}
+          {summary && (
+            <div className="vh-summary">
+              <span className="vh-summary-item">
+                <span className="vh-summary-label">Lifetime avg</span>
+                <strong>{formatFn(summary.avg)}</strong>
+              </span>
+              <span className="vh-summary-item">
+                <span className="vh-summary-label">High</span>
+                <strong>{formatFn(summary.high)}</strong>
+              </span>
+              <span className="vh-summary-item">
+                <span className="vh-summary-label">Low</span>
+                <strong>{formatFn(summary.low)}</strong>
+              </span>
+              <span className="vh-summary-item">
+                <span className="vh-summary-label">Data points</span>
+                <strong>{summary.count}</strong>
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* Table */}
         {pageItems.length > 0 ? (

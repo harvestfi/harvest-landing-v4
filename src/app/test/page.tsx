@@ -170,7 +170,10 @@ export default async function TestPage() {
               {vault.chain}
             </span>
             <span className="uni-byline-sep" aria-hidden="true">·</span>
-            <span>on Harvest</span>
+            <span className="uni-byline-brand">
+              Harvest
+              <span className="uni-byline-brand-dot" aria-hidden="true" />
+            </span>
           </p>
         </div>
       </header>
