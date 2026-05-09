@@ -8,7 +8,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getLiveVaults, getAllSparklines } from "@/lib/data";
 import { AssetIcon } from "@/components/token-icons";
-import { formatAPY, formatTVL } from "@/lib/format";
+import { formatAPY } from "@/lib/format";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import {
   assetHubTitle,
@@ -46,7 +46,6 @@ export default async function BtcTestPage() {
     .filter((v) => v.asset === ASSET)
     .sort((a, b) => b.apy24h - a.apy24h);
 
-  const totalTvl = vaults.reduce((s, v) => s + v.tvl, 0);
   const bestApy = vaults.reduce((b, v) => (v.apy24h > b ? v.apy24h : b), 0);
   const avgApy =
     vaults.length > 0
@@ -100,15 +99,6 @@ export default async function BtcTestPage() {
           <div className="uni-hub-stat">
             <div
               className="uni-hub-stat-label"
-              data-tooltip="Total value locked across every Bitcoin strategy in the index. Sum of each vault's current USD-denominated balance."
-            >
-              Total TVL
-            </div>
-            <div className="uni-hub-stat-value">{formatTVL(totalTvl)}</div>
-          </div>
-          <div className="uni-hub-stat">
-            <div
-              className="uni-hub-stat-label"
               data-tooltip="Highest 24-hour APY among the indexed Bitcoin strategies right now."
             >
               Best APY
@@ -127,15 +117,6 @@ export default async function BtcTestPage() {
             <div className="uni-hub-stat-value">
               {avgApy > 0 ? formatAPY(avgApy) : "-"}
             </div>
-          </div>
-          <div className="uni-hub-stat">
-            <div
-              className="uni-hub-stat-label"
-              data-tooltip="Number of distinct networks Bitcoin strategies are deployed on inside the index."
-            >
-              Networks
-            </div>
-            <div className="uni-hub-stat-value">{chainCount}</div>
           </div>
         </div>
       </header>
@@ -178,6 +159,43 @@ export default async function BtcTestPage() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* SEO content (placeholder) */}
+      <section className="uni-hub-content" aria-labelledby="about-bitcoin">
+        <h2 id="about-bitcoin">About Bitcoin yield</h2>
+        <p>
+          Bitcoin is a non-yielding asset out of the box; BTC sitting
+          in a self-custody wallet earns nothing on its own. To
+          produce yield, holders bridge BTC into wrapped or liquid
+          variants (WBTC, cbBTC, tBTC, etc.) and route those tokens
+          through lending markets, automated vault strategies, or
+          basis trades against perpetual funding. Each of the
+          strategies we currently track on this page reflects that
+          pattern: a wrapped Bitcoin token accepted on a specific
+          chain and put to work through a specific underlying
+          protocol.
+        </p>
+        <p>
+          APY on any single strategy is variable. The 24-hour reading
+          is the latest annualised return our hosted indexer pulled
+          from the underlying protocol. The 30-day average is the
+          simple mean of daily APY observations across the last 30
+          days in the cohort we monitor. Both numbers move with
+          market activity, lending-pool utilisation, and protocol
+          reward emissions. Past APY is not a guarantee of future
+          returns.
+        </p>
+        <p>
+          Risk applies on every wrapped-BTC strategy. Smart-contract
+          risk on the vault and on the underlying protocol, bridge
+          or wrapping risk on the BTC variant, oracle risk on the
+          price feeds the strategy depends on, and governance risk
+          on the parameters that operators can change. The full
+          framework, including how each strategy is scored and what
+          we deliberately leave out, lives on the{" "}
+          <Link href="/risk-framework">risk framework page</Link>.
+        </p>
       </section>
 
       {/* Bottom rail: bridge to per-network filtered views */}

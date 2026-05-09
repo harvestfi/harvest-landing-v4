@@ -9,6 +9,7 @@ export async function Header() {
     { label: "ETH", href: "/eth" },
     { label: "BTC", href: "/btc" },
     { label: "Test", href: "/test" },
+    { label: "BTC test", href: "/btc-test" },
   ];
 
   const vaults = await getLiveVaults();

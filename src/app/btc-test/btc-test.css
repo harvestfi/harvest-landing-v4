@@ -101,7 +101,7 @@ body:has(.uni-hub-test) {
 
 .uni-hub-test .uni-hub-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 .uni-hub-test .uni-hub-stat {
@@ -288,6 +288,38 @@ body:has(.uni-hub-test) {
   background: var(--uni-card);
   border-radius: var(--uni-radius);
 }
+
+/* === SEO content section ============================================
+   Plain narrative under the ranking table. Editorial body voice,
+   ~70ch reading width, gold underline on links so the only
+   inline-link option matches the brand accent. */
+.uni-hub-test .uni-hub-content {
+  max-width: 70ch;
+  margin: 56px auto 0;
+  padding: 0 2px;
+}
+.uni-hub-test .uni-hub-content h2 {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--uni-ink);
+  margin: 0 0 14px;
+}
+.uni-hub-test .uni-hub-content p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--uni-ink-2);
+  margin: 0 0 14px;
+}
+.uni-hub-test .uni-hub-content p:last-child { margin-bottom: 0; }
+.uni-hub-test .uni-hub-content a {
+  color: var(--uni-ink);
+  border-bottom: 1px solid var(--uni-line);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+.uni-hub-test .uni-hub-content a:hover { border-color: var(--uni-gold); }
 
 /* === Bottom CTA rail (network shortcuts) =========================== */
 .uni-hub-test .uni-hub-cta-row {
