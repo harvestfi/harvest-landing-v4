@@ -96,21 +96,22 @@ export default async function TestPage() {
         })}
       </div>
 
-      {/* Title row: bare icon + title line + sub-address row. The icon
-          spans both rows so the title line is visually centered against
-          the icon, not floating above the address. */}
+      {/* Title row: title alone on the left as the focal point; pills
+          + address cluster on the right as supporting metadata. */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
           <AssetIcon asset={vault.asset} size={48} />
         </span>
-        <div className="uni-title-line">
-          <h1 className="uni-title">{vault.productName}</h1>
-          <span className="uni-pill uni-pill-version">{protocolName}</span>
-          <span className="uni-pill uni-pill-fee">{vault.chain}</span>
-        </div>
-        <div className="uni-title-sub">
-          <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
-          <CopyAddressButton address={vault.contractAddress} compact />
+        <h1 className="uni-title">{vault.productName}</h1>
+        <div className="uni-title-meta">
+          <div className="uni-title-pills">
+            <span className="uni-pill uni-pill-version">{protocolName}</span>
+            <span className="uni-pill uni-pill-fee">{vault.chain}</span>
+          </div>
+          <div className="uni-title-sub">
+            <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
+            <CopyAddressButton address={vault.contractAddress} compact />
+          </div>
         </div>
       </header>
 

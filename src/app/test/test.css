@@ -61,34 +61,38 @@ body:has(.uni-shell) {
 .uni-shell .uni-crumbs-sep { color: var(--uni-ink-3); font-weight: 400; }
 .uni-shell .uni-crumbs-current { color: var(--uni-ink); font-weight: 600; }
 
-/* Title row: 2-row grid. Icon spans both rows so the title line
-   (h1 + pills) is visually centered against the icon, with the
-   address sub-line tucked underneath in column 2. No wrapper otoczka
-   around the icon - the asset PNG is rendered raw at 48px. */
+/* Title row: icon + title on the left as focal point; pills +
+   address clustered on the right edge as supporting metadata. */
 .uni-shell .uni-title-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 16px;
-  row-gap: 4px;
+  display: flex;
   align-items: center;
+  gap: 16px;
   padding: 6px 0 18px;
 }
 .uni-shell .uni-title-icon {
-  grid-row: 1 / span 2;
-  align-self: center;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .uni-shell .uni-title-icon img {
   display: block;
   border-radius: 50%;
 }
-.uni-shell .uni-title-line {
+.uni-shell .uni-title-meta {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+.uni-shell .uni-title-pills {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .uni-shell .uni-title {
   font-family: var(--display);
@@ -266,20 +270,25 @@ body:has(.uni-shell) {
   transition: background 0.12s ease, color 0.12s ease;
 }
 .uni-shell .uni-pill-btn:hover { color: var(--uni-ink); }
+/* Active pill: Sunflower Gold fill with Onyx ink (gold + onyx is
+   ~7.5:1 contrast, well above WCAG AA, and a yellow chip on a
+   white-smoke pill rail reads as a clear positive selection).
+   Avoids the gold-on-white legibility risk. */
 .uni-shell .uni-pill-btn.active {
-  background: #FFFFFF;
+  background: var(--uni-gold);
   color: var(--uni-ink);
-  box-shadow: 0 1px 3px rgba(25, 23, 23, 0.08);
+  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
 }
 .uni-shell .uni-tab-text {
   display: inline-flex;
-  gap: 18px;
+  gap: 22px;
   font-size: 14px;
 }
 .uni-shell .uni-tab-btn {
+  position: relative;
   border: 0;
   background: transparent;
-  padding: 4px 0;
+  padding: 6px 0 8px;
   margin: 0;
   font-family: inherit;
   font-size: 14px;
@@ -289,9 +298,24 @@ body:has(.uni-shell) {
   transition: color 0.12s ease;
 }
 .uni-shell .uni-tab-btn:hover { color: var(--uni-ink-2); }
+/* Active metric tab: keep the text Onyx (bold) so it reads against
+   white, but plant a 2px gold underline so the selection is
+   colour-coded the same way as the time pill. The pseudo-element
+   sits flush with the bottom of the button rather than below text
+   to avoid descender clipping. */
 .uni-shell .uni-tab-btn.active {
   color: var(--uni-ink);
   font-weight: 600;
+}
+.uni-shell .uni-tab-btn.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--uni-gold);
+  border-radius: 2px;
 }
 
 /* Sidebar stack */
@@ -496,21 +520,34 @@ body:has(.uni-shell) {
    600, color = Graphite (var(--uni-ink-2)). That's the user's main
    complaint - tables read as inactive because labels are too light. */
 
-/* Stat tiles + tables share the hero-side-card surface (White Smoke,
-   no border, generous radius) so the page feels composed of two
-   atoms: white editorial space + gray data tiles. */
+/* Below-the-fold tables: no card surround, only the internal
+   separator lines do the structural work. Each row's bottom border
+   keeps the rhythm; the outer container is invisible. bench-stats
+   gets thin vertical dividers between the four stat tiles in lieu
+   of a card frame. */
 .uni-shell .bench-stats,
 .uni-shell .bench-table,
 .uni-shell .eco-chart-wrap,
 .uni-shell .hist-table {
-  background: var(--uni-card);
+  background: transparent;
   border: 0;
-  border-radius: var(--uni-radius);
+  border-radius: 0;
   box-shadow: none;
 }
-.uni-shell .bench-stats { padding: 22px 24px; }
-.uni-shell .eco-chart-wrap { padding: 24px 26px; }
-.uni-shell .bench-table { overflow: hidden; }
+.uni-shell .bench-stats {
+  padding: 4px 0 16px;
+  gap: 0;
+}
+.uni-shell .bench-stats > div {
+  padding: 4px 24px;
+  border-left: 1px solid var(--uni-line);
+}
+.uni-shell .bench-stats > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.uni-shell .eco-chart-wrap { padding: 4px 0; }
+.uni-shell .bench-table { overflow: visible; }
 
 /* bench-stats */
 .uni-shell .bs-l {
@@ -533,7 +570,7 @@ body:has(.uni-shell) {
 
 /* bench-table */
 .uni-shell .bt-head {
-  background: var(--uni-card);
+  background: transparent;
   border-bottom: 2px solid var(--uni-gold);
   color: var(--uni-ink-2);
   font-family: var(--mono);
