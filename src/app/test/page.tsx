@@ -168,10 +168,6 @@ export default async function TestPage() {
       {/* Below the fold: keep the detailed sections, soft-card-skinned */}
       <div className="uni-below">
         <section className="uni-soft-card">
-          <header className="uni-soft-head">
-            <h2>Historical statistics</h2>
-            <p>Long-term distribution of APY and TVL across the tracked window.</p>
-          </header>
           <HistoricalStats history={history} asset={vault.asset} />
         </section>
 

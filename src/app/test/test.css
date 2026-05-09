@@ -1,24 +1,26 @@
 /* =====================================================================
-   Uniswap interface visual language, scoped to .uni-shell on /test.
-   Reference: app.uniswap.org Pool detail / Explore / Swap. Mostly
-   white background, hot magenta accent (#FF007A) used sparingly for
-   chart bars and CTAs only, soft #F7F8FA card surfaces with no heavy
-   shadow, navy #0D111C ink, neutral chip pills.
+   /test color scheme: Sunflower Gold + Onyx + Graphite + Alabaster
+   Grey + White Smoke. Mostly white background, gold (#ffb936) reserved
+   for chart bars / "you" highlights / accent dividers; everything else
+   is Onyx-on-WhiteSmoke for maximum legibility.
    ===================================================================== */
 .uni-shell {
   --uni-bg:           #FFFFFF;
-  --uni-card:         #F7F8FA;
-  --uni-card-border:  rgba(13, 17, 28, 0.04);
+  --uni-card:         #f1f5f4;       /* White Smoke */
+  --uni-card-2:       #ffffff;
   --uni-radius:       20px;
   --uni-radius-sm:    14px;
   --uni-radius-pill:  999px;
-  --uni-pink:         #FF007A;
-  --uni-pink-soft:    #FFD9EA;
-  --uni-pink-bg:      #FFE8F2;
-  --uni-ink:          #0D111C;
-  --uni-ink-2:        #5D6785;
-  --uni-ink-3:        #98A1C0;
-  --uni-line:         #E5E7EB;
+
+  --uni-gold:         #ffb936;       /* Sunflower Gold */
+  --uni-gold-soft:    #ffd98a;
+  --uni-gold-bg:      #fff5d9;
+
+  --uni-ink:          #191717;       /* Onyx */
+  --uni-ink-2:        #32312b;       /* Graphite (body text + labels) */
+  --uni-ink-3:        #6e6c66;       /* Lighter graphite (tertiary) */
+  --uni-line:         #dddee0;       /* Alabaster Grey */
+  --uni-line-2:       #ebebe7;
 
   max-width: 1280px;
   margin: 0 auto;
@@ -26,11 +28,12 @@
   color: var(--uni-ink);
   font-family: var(--sans);
   background: var(--uni-bg);
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 /* Dotted-bg layer from the homepage motif sits behind body. The /test
-   page is white-on-white; explicitly clear it so the dot grid doesn't
-   poke through and break the "swap.uniswap.org" cleanness. */
+   page is white-on-white; explicitly clear it. */
 body:has(.uni-shell) {
   background-image: none !important;
 }
@@ -50,7 +53,7 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-crumbs a:hover { color: var(--uni-ink); }
 .uni-shell .uni-crumbs-sep { color: var(--uni-ink-3); font-weight: 400; }
-.uni-shell .uni-crumbs-current { color: var(--uni-ink); font-weight: 500; }
+.uni-shell .uni-crumbs-current { color: var(--uni-ink); font-weight: 600; }
 
 /* Title row */
 .uni-shell .uni-title-row {
@@ -79,7 +82,7 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-title {
   font-family: var(--display);
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 600;
   letter-spacing: -0.015em;
   color: var(--uni-ink);
@@ -89,18 +92,15 @@ body:has(.uni-shell) {
 .uni-shell .uni-pill {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: var(--uni-radius-pill);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 600;
 }
-.uni-shell .uni-pill-version {
-  background: var(--uni-card);
-  color: var(--uni-ink-2);
-}
+.uni-shell .uni-pill-version,
 .uni-shell .uni-pill-fee {
   background: var(--uni-card);
-  color: var(--uni-ink-2);
+  color: var(--uni-ink);
 }
 .uni-shell .uni-title-sub {
   display: flex;
@@ -109,8 +109,8 @@ body:has(.uni-shell) {
   font-family: var(--mono);
   font-size: 13px;
   color: var(--uni-ink-2);
+  font-weight: 500;
 }
-.uni-shell .uni-addr-text { letter-spacing: 0.02em; }
 
 .uni-shell .uni-divider {
   height: 1px;
@@ -126,32 +126,29 @@ body:has(.uni-shell) {
   align-items: start;
 }
 
-.uni-shell .uni-detail-main {
-  min-width: 0;
-}
+.uni-shell .uni-detail-main { min-width: 0; }
 
-/* Chart wrap: hosts bignum + chart + controls in one column with
-   matching rhythm. Lives inside .uni-detail-main. */
+/* Chart wrap: bignum + chart + controls in one column. */
 .uni-shell .uni-chart-wrap {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-/* Big number above chart */
 .uni-shell .uni-bignum-value {
   font-family: var(--display);
-  font-size: 44px;
+  font-size: 48px;
   font-weight: 600;
-  letter-spacing: -0.018em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
 .uni-shell .uni-bignum-meta {
-  margin-top: 2px;
-  font-size: 14px;
+  margin-top: 4px;
+  font-size: 15px;
   color: var(--uni-ink-2);
+  font-weight: 500;
 }
 
 /* Bar chart */
@@ -166,7 +163,7 @@ body:has(.uni-shell) {
   align-items: center;
   justify-content: center;
   color: var(--uni-ink-3);
-  font-size: 13px;
+  font-size: 14px;
   border: 1px dashed var(--uni-line);
   border-radius: var(--uni-radius-sm);
   min-height: 200px;
@@ -183,19 +180,18 @@ body:has(.uni-shell) {
   flex: 1;
   min-width: 4px;
   min-height: 2px;
-  background: var(--uni-pink);
+  background: var(--uni-gold);
   border-radius: 2px 2px 0 0;
   transition: filter 0.12s ease;
 }
-.uni-shell .uni-chart-bar:hover {
-  filter: brightness(0.92);
-}
+.uni-shell .uni-chart-bar:hover { filter: brightness(0.92); }
 .uni-shell .uni-chart-axis {
   display: flex;
   justify-content: space-between;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--uni-ink-3);
+  font-weight: 500;
   padding: 2px 0;
 }
 
@@ -217,10 +213,11 @@ body:has(.uni-shell) {
 .uni-shell .uni-pill-btn {
   border: 0;
   background: transparent;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: var(--uni-radius-pill);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--uni-ink-2);
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
@@ -229,13 +226,12 @@ body:has(.uni-shell) {
 .uni-shell .uni-pill-btn.active {
   background: #FFFFFF;
   color: var(--uni-ink);
-  box-shadow: 0 1px 3px rgba(13, 17, 28, 0.06);
-  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(25, 23, 23, 0.08);
 }
 .uni-shell .uni-tab-text {
   display: inline-flex;
   gap: 18px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .uni-shell .uni-tab-btn {
   border: 0;
@@ -243,7 +239,8 @@ body:has(.uni-shell) {
   padding: 4px 0;
   margin: 0;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--uni-ink-3);
   cursor: pointer;
   transition: color 0.12s ease;
@@ -251,7 +248,7 @@ body:has(.uni-shell) {
 .uni-shell .uni-tab-btn:hover { color: var(--uni-ink-2); }
 .uni-shell .uni-tab-btn.active {
   color: var(--uni-ink);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Sidebar stack */
@@ -265,24 +262,25 @@ body:has(.uni-shell) {
 .uni-shell .uni-side-card {
   background: var(--uni-card);
   border-radius: var(--uni-radius);
-  padding: 18px 20px;
+  padding: 20px 22px;
 }
 .uni-shell .uni-side-card-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--uni-ink);
   margin-bottom: 14px;
 }
 .uni-shell .uni-side-label {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--uni-ink-2);
+  font-weight: 500;
 }
 .uni-shell .uni-side-headline {
-  margin-top: 6px;
+  margin-top: 8px;
   font-family: var(--display);
   font-size: 32px;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.018em;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
@@ -290,8 +288,8 @@ body:has(.uni-shell) {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 0;
-  border-top: 1px solid rgba(13, 17, 28, 0.05);
+  padding: 12px 0;
+  border-top: 1px solid rgba(25, 23, 23, 0.08);
 }
 .uni-shell .uni-side-stat:first-of-type {
   border-top: 0;
@@ -303,26 +301,26 @@ body:has(.uni-shell) {
   font-weight: 600;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
-  letter-spacing: -0.01em;
+  letter-spacing: -0.012em;
 }
 .uni-shell .uni-side-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 0;
+  padding: 12px 0;
   color: var(--uni-ink);
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 500;
-  border-top: 1px solid rgba(13, 17, 28, 0.05);
+  border-top: 1px solid rgba(25, 23, 23, 0.08);
   transition: color 0.12s ease;
 }
 .uni-shell .uni-side-link:first-of-type { border-top: 0; }
-.uni-shell .uni-side-link:hover { color: var(--uni-pink); }
+.uni-shell .uni-side-link:hover { color: var(--uni-ink-2); }
 .uni-shell .uni-side-link-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--uni-pink);
+  background: var(--uni-gold);
   flex-shrink: 0;
 }
 .uni-shell .uni-side-link-arrow {
@@ -330,7 +328,7 @@ body:has(.uni-shell) {
   color: var(--uni-ink-3);
 }
 
-/* Below-the-fold sections — keep them but skinned to soft cards */
+/* Below-the-fold sections — soft-card skin. */
 .uni-shell .uni-below {
   margin-top: 36px;
   display: flex;
@@ -340,85 +338,168 @@ body:has(.uni-shell) {
 .uni-shell .uni-soft-card {
   background: var(--uni-card);
   border-radius: var(--uni-radius);
-  padding: 24px 26px;
+  padding: 28px 30px;
 }
+
+/* The .uni-soft-head wrapper is only used where the embedded
+   component does NOT render its own h2 (none today, but keep the
+   styles in case we add new sections). */
 .uni-shell .uni-soft-head { margin-bottom: 18px; }
 .uni-shell .uni-soft-head h2 {
   font-family: var(--display);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.012em;
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   color: var(--uni-ink);
 }
 .uni-shell .uni-soft-head p {
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--uni-ink-2);
   margin: 0;
+  line-height: 1.55;
 }
 
-/* Override the embedded .pp-section h2 from MarketBenchmark + Eco so
-   they render with the same Uniswap heading treatment. */
+/* Embedded component overrides: the shared MarketBenchmark, Eco
+   Context and HistoricalStats components each render their own
+   .pp-section h2 + narrative paragraphs. Re-skin them in the gold
+   scheme without duplicating titles. */
 .uni-shell .pp-section { margin: 0; }
 .uni-shell .pp-section h2 {
   font-family: var(--display);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.012em;
   color: var(--uni-ink);
   border: 0;
   padding: 0;
-  margin: 0 0 12px;
+  margin: 0 0 14px;
 }
 .uni-shell .pp-section p {
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--uni-ink-2);
-  line-height: 1.6;
+  line-height: 1.65;
+  font-weight: 400;
 }
-.uni-shell .pp-section p strong { color: var(--uni-ink); }
+.uni-shell .pp-section p strong {
+  color: var(--uni-ink);
+  font-weight: 600;
+}
+.uni-shell .about-prose p {
+  font-size: 15px;
+  color: var(--uni-ink-2);
+  line-height: 1.65;
+}
+.uni-shell .about-prose strong {
+  color: var(--uni-ink);
+  font-weight: 600;
+}
 
-/* Re-skin the shared primitives that show up inside MarketBenchmark
-   and EcosystemContext so they match the soft-card aesthetic. */
+/* === Embedded primitives, re-skinned ===
+
+   The shared primitives use editorial-ledger labels (small mono caps).
+   On /test we want them dialed up: 11.5px instead of 10.5px, weight
+   600, color = Graphite (var(--uni-ink-2)). That's the user's main
+   complaint - tables read as inactive because labels are too light. */
+
 .uni-shell .bench-stats,
 .uni-shell .bench-table,
 .uni-shell .eco-chart-wrap,
 .uni-shell .hist-table {
-  background: #FFFFFF;
+  background: var(--uni-card-2);
   border: 1px solid var(--uni-line);
   border-radius: var(--uni-radius-sm);
   box-shadow: none;
 }
-.uni-shell .bs-l,
-.uni-shell .hist-table th {
-  color: var(--uni-ink-3);
+
+/* bench-stats */
+.uni-shell .bs-l {
+  color: var(--uni-ink-2);
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .uni-shell .bs-v {
   color: var(--uni-ink);
   font-family: var(--display);
+  font-size: 28px;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.014em;
+  font-feature-settings: "tnum";
 }
-.uni-shell .bs-v.up { color: var(--uni-pink); }
-.uni-shell .bt-head { border-bottom: 2px solid var(--uni-pink); color: var(--uni-ink-2); }
-.uni-shell .bt-row { border-bottom: 1px solid rgba(13, 17, 28, 0.04); }
-.uni-shell .bt-row.you { background: var(--uni-pink-bg); }
-.uni-shell .here-pill {
-  background: var(--uni-pink);
+.uni-shell .bs-v.up { color: var(--uni-ink); }
+
+/* bench-table */
+.uni-shell .bt-head {
+  background: var(--uni-card);
+  border-bottom: 2px solid var(--uni-gold);
+  color: var(--uni-ink-2);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.uni-shell .bt-row {
+  border-bottom: 1px solid rgba(25, 23, 23, 0.06);
+  font-size: 14px;
+  color: var(--uni-ink);
+}
+.uni-shell .bt-row.you { background: var(--uni-gold-bg); }
+.uni-shell .bt-row .here-pill {
+  background: var(--uni-gold);
+  color: var(--uni-ink);
   border-radius: var(--uni-radius-pill);
+  font-weight: 600;
 }
-.uni-shell .eco-bar-col.you .eco-bar { outline-color: var(--uni-pink); }
-.uni-shell .eco-legend-head { border-bottom: 2px solid var(--uni-pink); color: var(--uni-ink-2); }
-.uni-shell .eco-legend-row.you .eco-legend-name { color: var(--uni-pink); }
+
+/* eco-chart */
+.uni-shell .eco-bar-col.you .eco-bar { outline-color: var(--uni-ink); }
+.uni-shell .eco-legend-head {
+  border-bottom: 2px solid var(--uni-gold);
+  color: var(--uni-ink-2);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.uni-shell .eco-legend-row {
+  font-size: 14px;
+  color: var(--uni-ink);
+}
+.uni-shell .eco-legend-row.you .eco-legend-name { color: var(--uni-ink); font-weight: 700; }
+.uni-shell .eco-legend-rank { color: var(--uni-ink-2); font-weight: 600; }
+.uni-shell .eco-legend-apy { color: var(--uni-ink); }
+.uni-shell .eco-chart-axis > span { color: var(--uni-ink-2); font-weight: 500; }
+.uni-shell .eco-chart-baseline-label {
+  background: var(--uni-card-2);
+  color: var(--uni-ink-2);
+  font-weight: 600;
+}
+
+/* hist-table */
+.uni-shell .hist-table th {
+  color: var(--uni-ink-2);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .uni-shell .hist-table td {
   color: var(--uni-ink);
   font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
 }
 .uni-shell .hist-block h3 {
   font-family: var(--display);
   color: var(--uni-ink);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -430,9 +511,12 @@ body:has(.uni-shell) {
 }
 @media (max-width: 700px) {
   .uni-shell { padding: 16px 16px 60px; }
-  .uni-shell .uni-title { font-size: 24px; }
-  .uni-shell .uni-bignum-value { font-size: 32px; }
+  .uni-shell .uni-title { font-size: 26px; }
+  .uni-shell .uni-bignum-value { font-size: 34px; }
   .uni-shell .uni-side-headline { font-size: 26px; }
   .uni-shell .uni-side-value { font-size: 18px; }
-  .uni-shell .uni-soft-card { padding: 18px 16px; }
+  .uni-shell .uni-soft-card { padding: 20px 18px; }
+  .uni-shell .pp-section p,
+  .uni-shell .uni-soft-head p,
+  .uni-shell .about-prose p { font-size: 14.5px; }
 }
