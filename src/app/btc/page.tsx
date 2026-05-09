@@ -67,7 +67,7 @@ export default async function BtcPage() {
       <nav className="pp-crumbs" aria-label="Breadcrumb">
         <Link href="/">Home</Link>
         <span className="sep">›</span>
-        <span className="current">Bitcoin Yield</span>
+        <span className="current">Bitcoin Yield Ranking</span>
       </nav>
 
       <section className="hero">

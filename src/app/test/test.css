@@ -74,10 +74,9 @@ body:has(.uni-shell) {
 .uni-shell .uni-crumbs-sep { color: var(--uni-ink-3); font-weight: 400; }
 .uni-shell .uni-crumbs-current { color: var(--uni-ink); font-weight: 600; }
 
-/* Title row: icon + title on the left as focal point; byline pinned
-   to the right edge on desktop, drops underneath on mobile. Wrap
-   so very long product names break gracefully instead of pushing
-   the byline off-screen. */
+/* Title row: icon + title on the left; address+copy + byline stack
+   on the right edge on desktop. flex-wrap so long product names
+   break gracefully without pushing the meta column off-screen. */
 .uni-shell .uni-title-row {
   display: flex;
   align-items: center;
@@ -94,6 +93,24 @@ body:has(.uni-shell) {
 .uni-shell .uni-title-icon img {
   display: block;
   border-radius: 50%;
+}
+.uni-shell .uni-title-meta {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+.uni-shell .uni-title-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--uni-ink-2);
+  font-weight: 500;
+  flex-shrink: 0;
 }
 /* Product title: fluid scale via clamp() so very long names shrink
    gracefully on narrower viewports without overflowing the row.
@@ -115,7 +132,6 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-title-byline {
   margin: 0;
-  margin-left: auto;
   font-size: 14px;
   font-weight: 500;
   color: var(--uni-ink-2);
@@ -124,7 +140,6 @@ body:has(.uni-shell) {
   align-items: center;
   gap: 8px;
   line-height: 1.4;
-  flex-shrink: 0;
 }
 .uni-shell .uni-byline-sep {
   color: var(--uni-ink-3);
@@ -1941,12 +1956,20 @@ body:has(.uni-shell) {
      so it always fits regardless of product-name length. */
   .uni-shell .uni-title-row { gap: 12px; padding: 4px 0 14px; }
   .uni-shell .uni-title-icon img { width: 44px !important; height: 44px !important; }
+  .uni-shell .uni-title-meta {
+    flex-basis: 100%;
+    margin-left: 0;
+    align-items: flex-start;
+  }
   .uni-shell .uni-title-byline {
     flex-basis: 100%;
     margin-left: 0;
     font-size: 13px;
     gap: 6px;
   }
+  /* Hide address+copy on mobile - the same vault contract is
+     surfaced under Strategy details below. */
+  .uni-shell .uni-title-sub { display: none; }
 
   /* Hero grid + chart: tighter vertical so the chart doesn't take
      the whole viewport on a narrow phone. */

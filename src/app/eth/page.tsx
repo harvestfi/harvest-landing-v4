@@ -67,7 +67,7 @@ export default async function EthPage() {
       <nav className="pp-crumbs" aria-label="Breadcrumb">
         <Link href="/">Home</Link>
         <span className="sep">›</span>
-        <span className="current">Ethereum Yield</span>
+        <span className="current">Ethereum Yield Ranking</span>
       </nav>
 
       <section className="hero">

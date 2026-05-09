@@ -64,7 +64,7 @@ export default async function UsdtPage() {
       <nav className="pp-crumbs" aria-label="Breadcrumb">
         <Link href="/">Home</Link>
         <span className="sep">›</span>
-        <span className="current">USDT Yield</span>
+        <span className="current">USDT Yield Ranking</span>
       </nav>
 
       <section className="hero">

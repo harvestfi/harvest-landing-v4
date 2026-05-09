@@ -43,6 +43,11 @@ const CHAIN_EXPLORERS: Record<string, string> = {
   HyperEVM: "https://hyperscan.xyz/address/",
 };
 
+function shortAddress(a: string): string {
+  if (a.length < 12) return a;
+  return `${a.slice(0, 6)}...${a.slice(-4)}`;
+}
+
 export default async function TestPage() {
   const vault = await getVaultBySlug(TEST_SLUG);
   if (!vault) notFound();
@@ -170,28 +175,33 @@ export default async function TestPage() {
         })}
       </div>
 
-      {/* Title row: icon + title on the left; byline pinned to the
-          right edge on desktop, drops underneath the title on mobile.
-          Address + copy intentionally not in the hero; they're
-          surfaced under Strategy details below. */}
+      {/* Title row: icon + title on the left; address + copy + byline
+          stacked on the right. Address+copy hidden on mobile (it's
+          surfaced again under Strategy details below). */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
           <AssetIcon asset={vault.asset} size={54} />
         </span>
         <h1 className="uni-title">{vault.productName}</h1>
-        <p className="uni-title-byline">
-          <span>{vault.vaultType}</span>
-          <span className="uni-byline-sep" aria-hidden="true">·</span>
-          <span className="uni-byline-chain">
-            <ChainIcon chain={vault.chain} size={14} />
-            {vault.chain}
-          </span>
-          <span className="uni-byline-sep" aria-hidden="true">·</span>
-          <span className="uni-byline-brand">
-            Harvest
-            <span className="uni-byline-brand-dot" aria-hidden="true" />
-          </span>
-        </p>
+        <div className="uni-title-meta">
+          <div className="uni-title-sub">
+            <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
+            <CopyAddressButton address={vault.contractAddress} compact />
+          </div>
+          <p className="uni-title-byline">
+            <span>{vault.vaultType}</span>
+            <span className="uni-byline-sep" aria-hidden="true">·</span>
+            <span className="uni-byline-chain">
+              <ChainIcon chain={vault.chain} size={14} />
+              {vault.chain}
+            </span>
+            <span className="uni-byline-sep" aria-hidden="true">·</span>
+            <span className="uni-byline-brand">
+              Harvest
+              <span className="uni-byline-brand-dot" aria-hidden="true" />
+            </span>
+          </p>
+        </div>
       </header>
 
       <div className="uni-divider" aria-hidden="true" />
