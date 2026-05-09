@@ -39,21 +39,40 @@ export function TestStickyHeader({
   const [show, setShow] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // Show / hide the bar once the jump nav scrolls out of view.
+  // Show / hide the bar once the right sentinel scrolls out of view.
+  // Desktop sentinel = .uni-jump (jump nav rail). Mobile sentinel =
+  // .uni-cta (View Strategy CTA in the hero side card) since the
+  // jump nav is hidden on mobile and IntersectionObserver doesn't
+  // fire for display:none elements. Re-attaches on resize so a rotate
+  // or window-drag picks the right sentinel.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const sentinel = document.querySelector(".uni-jump");
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const past =
-          !entry.isIntersecting && entry.boundingClientRect.top < 0;
-        setShow(past);
-      },
-      { threshold: 0 },
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
+    let observer: IntersectionObserver | null = null;
+
+    const attach = () => {
+      if (observer) observer.disconnect();
+      const isMobile = window.matchMedia("(max-width: 900px)").matches;
+      const sentinel = isMobile
+        ? document.querySelector(".uni-cta")
+        : document.querySelector(".uni-jump");
+      if (!sentinel) return;
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          const past =
+            !entry.isIntersecting && entry.boundingClientRect.top < 0;
+          setShow(past);
+        },
+        { threshold: 0 },
+      );
+      observer.observe(sentinel);
+    };
+
+    attach();
+    window.addEventListener("resize", attach);
+    return () => {
+      if (observer) observer.disconnect();
+      window.removeEventListener("resize", attach);
+    };
   }, []);
 
   // Scroll-spy: highlight the link of the section that's currently

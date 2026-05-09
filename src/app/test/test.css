@@ -46,13 +46,14 @@
 }
 
 /* Dotted-bg layer from the homepage motif sits behind body. The /test
-   page is white-on-white; explicitly clear it. Plus clamp horizontal
-   scroll so any wide table or chart can't push the page past the
-   viewport on mobile, which previously left an empty edge gap on
-   the right + a phantom scroll past the footer. */
+   page is white-on-white; explicitly clear it. overflow-x: clip lives
+   on .uni-shell only (not body) - on mobile Safari, putting it on
+   body created a phantom vertical scroll past the footer because the
+   clip context bumped into the dynamic viewport bar. overscroll-
+   behavior-y: contain on the body kills any rubber-band bounce. */
 body:has(.uni-shell) {
   background-image: none !important;
-  overflow-x: clip;
+  overscroll-behavior-y: contain;
 }
 .uni-shell {
   overflow-x: clip;
@@ -1000,16 +1001,11 @@ body:has(.uni-shell) {
 /* Tighter spacing + drop the longer link labels on narrower screens
    so the bar never overflows the viewport. */
 @media (max-width: 900px) {
-  /* Sticky sub-bar always visible on mobile (we hide the jump nav
-     entirely below 900px since horizontal pill rails read poorly on
-     narrow screens). The IntersectionObserver-driven .visible class
-     is overridden so the bar shows from page load. */
+  /* Hide the jump nav entirely (horizontal pill rails read poorly
+     on narrow screens). The sub-bar still slides in/out as the user
+     scrolls past the View Strategy CTA - sentinel switching is
+     handled in TestStickyHeader. */
   .uni-shell .uni-jump { display: none; }
-  .uni-shell .uni-sticky-bar {
-    transform: translateY(0) !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
   .uni-shell .uni-sticky-inner { gap: 12px; padding: 9px 14px; }
   .uni-shell .uni-sticky-left { gap: 10px; flex-wrap: wrap; }
   /* Hide the jump-link nav on mobile - the sub-bar surfaces icon +

@@ -297,15 +297,31 @@ export function TestChart({ series }: Props) {
   const activeYpct = activePoint ? heightFor(activePoint.v) : 0;
 
   const barsRef = useRef<HTMLDivElement | null>(null);
-  const onBarsMove = (e: React.MouseEvent<HTMLDivElement>) => {
+
+  const indexAtClientX = (clientX: number): number | null => {
     const rect = barsRef.current?.getBoundingClientRect();
-    if (!rect || rect.width <= 0 || points.length === 0) return;
-    const relX = e.clientX - rect.left;
-    const idx = Math.min(
+    if (!rect || rect.width <= 0 || points.length === 0) return null;
+    const relX = clientX - rect.left;
+    return Math.min(
       points.length - 1,
       Math.max(0, Math.floor((relX / rect.width) * points.length)),
     );
-    if (idx !== hoverIdx) setHoverIdx(idx);
+  };
+
+  const onBarsMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const idx = indexAtClientX(e.clientX);
+    if (idx !== null && idx !== hoverIdx) setHoverIdx(idx);
+  };
+
+  // Touch handlers mirror the mouse-move logic so the chart is
+  // scrubbable on phones too. preventDefault on touchmove stops the
+  // page from scrolling while the user is dragging across bars.
+  const onBarsTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0];
+    if (!t) return;
+    if (e.type === "touchmove") e.preventDefault();
+    const idx = indexAtClientX(t.clientX);
+    if (idx !== null && idx !== hoverIdx) setHoverIdx(idx);
   };
 
   // Range + metric clicks are wrapped in startTransition so React can
@@ -367,6 +383,10 @@ export function TestChart({ series }: Props) {
               className="uni-chart-bars"
               onMouseMove={onBarsMove}
               onMouseLeave={() => setHoverIdx(null)}
+              onTouchStart={onBarsTouch}
+              onTouchMove={onBarsTouch}
+              onTouchEnd={() => setHoverIdx(null)}
+              onTouchCancel={() => setHoverIdx(null)}
             >
               {points.map((p, i) => (
                 <div
