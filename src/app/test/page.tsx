@@ -137,9 +137,9 @@ export default async function TestPage() {
           underlying {vault.asset} de-pegging from its target value), and{" "}
           <strong>governance risk</strong> (admin keys, parameter changes, fee
           switches). Risk levels we display on the site are editorial
-          classifications, not a quantitative model. The full framework — what
-          each tier means, how we score, and the open questions we leave on the
-          table — lives on the{" "}
+          classifications, not a quantitative model. The full framework,
+          including what each tier means, how we score, and the open questions
+          we leave on the table, lives on the{" "}
           <Link href="/risk-framework">risk framework page</Link>.
         </>
       ),
@@ -260,7 +260,7 @@ export default async function TestPage() {
                 Holders
               </div>
               <div className="uni-side-value">
-                {holderCount !== null ? holderCount.toLocaleString("en-US") : "—"}
+                {holderCount !== null ? holderCount.toLocaleString("en-US") : "-"}
               </div>
             </div>
 
@@ -292,7 +292,7 @@ export default async function TestPage() {
                 Tracked for
               </div>
               <div className="uni-side-value">
-                {trackedDays > 0 ? `${trackedDays} days` : "—"}
+                {trackedDays > 0 ? `${trackedDays} days` : "-"}
               </div>
             </div>
           </div>

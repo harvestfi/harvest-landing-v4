@@ -180,7 +180,7 @@ export function TestStabilityCard({
               30-day range
             </div>
             <div className="uni-stability-stat-value">
-              {s.minApy.toFixed(2)}% – {s.maxApy.toFixed(2)}%
+              {s.minApy.toFixed(2)}% to {s.maxApy.toFixed(2)}%
             </div>
           </div>
           <div className="uni-stability-stat">

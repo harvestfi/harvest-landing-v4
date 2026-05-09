@@ -36,18 +36,6 @@ const ITEMS: Item[] = [
     ),
   },
   {
-    href: "#performance",
-    label: "Performance",
-    key: "performance",
-    icon: (
-      // Trending-up arrow with corner mark
-      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
-        <path d="M22 7l-8.5 8.5-5-5L2 17" />
-        <path d="M16 7h6v6" />
-      </svg>
-    ),
-  },
-  {
     href: "#benchmark",
     label: "Benchmarks",
     key: "benchmark",
