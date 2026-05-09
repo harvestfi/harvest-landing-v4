@@ -52,9 +52,15 @@ function downsample(points: Point[]): Point[] {
   return out;
 }
 
-function metricLabel(m: Metric): string {
-  if (m === "tvl") return "Total deposits";
-  if (m === "apy") return "Current APY (24h)";
+// Default headline label vs the short "metric only" label that shows
+// while a bar is actually under the cursor. "Current APY (24h)" reads
+// as a live ticker by default, but stops making sense the moment you
+// scrub back through history - on hover we collapse to "APY". Same
+// treatment for "Total deposits" → "TVL". Share price reads the same
+// in both states.
+function metricLabel(m: Metric, isHovering: boolean): string {
+  if (m === "tvl") return isHovering ? "TVL" : "Total deposits";
+  if (m === "apy") return isHovering ? "APY" : "Current APY (24h)";
   return "Share price";
 }
 
@@ -70,7 +76,22 @@ function formatValue(m: Metric, v: number): string {
 }
 
 function fmtDate(t: number): string {
-  return new Date(t * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  // "6 May 2026" - day, full month, full year. en-GB orders the
+  // day before the month so the format matches the format the user
+  // asked for explicitly.
+  return new Date(t * 1000).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function fmtDateShort(t: number): string {
+  // Compact axis label form, e.g. "Jun 2025" - used at the chart edges.
+  return new Date(t * 1000).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export function TestChart({ series }: Props) {
@@ -135,11 +156,11 @@ export function TestChart({ series }: Props) {
 
   return (
     <div className="uni-chart-wrap">
-      <div className="uni-bignum">
+      <div className="uni-bignum" id="hero">
         <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
         <div className="uni-bignum-meta">
-          {metricLabel(metric)}
-          {activePoint && (
+          <span className="uni-bignum-label">{metricLabel(metric, isHovering)}</span>
+          {isHovering && activePoint && (
             <>
               <span className="uni-bignum-dot" aria-hidden="true">·</span>
               <span className="uni-bignum-date">{fmtDate(activePoint.t)}</span>
@@ -172,8 +193,8 @@ export function TestChart({ series }: Props) {
               ))}
             </div>
             <div className="uni-chart-axis">
-              <span>{fmtDate(points[0].t)}</span>
-              <span>{fmtDate(points[points.length - 1].t)}</span>
+              <span>{fmtDateShort(points[0].t)}</span>
+              <span>{fmtDateShort(points[points.length - 1].t)}</span>
             </div>
           </>
         )}

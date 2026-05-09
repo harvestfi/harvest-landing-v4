@@ -21,6 +21,7 @@ import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
 import { MarketBenchmark, EcosystemContext } from "@/components/market-sections";
 import { TestChart, type ChartSeries } from "@/components/test-chart";
+import { TestJumpNav } from "@/components/test-jumpnav";
 import "./test.css";
 
 const TEST_SLUG = "usdc-40-acres-base";
@@ -182,6 +183,11 @@ export default async function TestPage() {
           </div>
         </aside>
       </div>
+
+      {/* Jump-to menu between hero and the rest. Anchors point to the
+          ids that the embedded sections render (#history, #benchmark,
+          #ecosystem); #hero is set on the chart bignum. */}
+      <TestJumpNav />
 
       {/* Below the fold: text + tables on plain white. Tables and key
           stats inside each section keep the gray hero-card surface so
