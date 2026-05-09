@@ -94,6 +94,12 @@ body:has(.uni-shell) {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.uni-shell .uni-title-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
 .uni-shell .uni-title {
   font-family: var(--display);
   font-size: 34px;
@@ -102,6 +108,22 @@ body:has(.uni-shell) {
   color: var(--uni-ink);
   margin: 0;
   line-height: 1.1;
+}
+.uni-shell .uni-title-byline {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+}
+.uni-shell .uni-byline-sep {
+  color: var(--uni-ink-3);
+  font-weight: 700;
+  line-height: 0.6;
 }
 .uni-shell .uni-pill {
   display: inline-flex;
@@ -576,25 +598,25 @@ body:has(.uni-shell) {
   padding: 6px 0;
 }
 
-/* Embedded component overrides: the shared MarketBenchmark, Eco
-   Context and HistoricalStats components each render their own
-   .pp-section h2 + narrative paragraphs. Re-skin them in the gold
-   scheme without duplicating titles. */
+/* Embedded component overrides. Below-hero copy bumped ~20%
+   (15px → 18px) for legibility, headings to 26px, table values to
+   17-18px, label captions to 13px so the whole below-the-fold scale
+   reads comfortably. */
 .uni-shell .pp-section { margin: 0; }
 .uni-shell .pp-section h2 {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 600;
   letter-spacing: -0.012em;
   color: var(--uni-ink);
   border: 0;
   padding: 0;
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 .uni-shell .pp-section p {
-  font-size: 15px;
+  font-size: 18px;
   color: var(--uni-ink-2);
-  line-height: 1.65;
+  line-height: 1.6;
   font-weight: 400;
 }
 .uni-shell .pp-section p strong {
@@ -602,9 +624,9 @@ body:has(.uni-shell) {
   font-weight: 600;
 }
 .uni-shell .about-prose p {
-  font-size: 15px;
+  font-size: 18px;
   color: var(--uni-ink-2);
-  line-height: 1.65;
+  line-height: 1.6;
 }
 .uni-shell .about-prose strong {
   color: var(--uni-ink);
@@ -651,7 +673,7 @@ body:has(.uni-shell) {
 .uni-shell .bs-l {
   color: var(--uni-ink-2);
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -659,7 +681,7 @@ body:has(.uni-shell) {
 .uni-shell .bs-v {
   color: var(--uni-ink);
   font-family: var(--display);
-  font-size: 28px;
+  font-size: 33px;
   font-weight: 600;
   letter-spacing: -0.014em;
   font-feature-settings: "tnum";
@@ -672,15 +694,19 @@ body:has(.uni-shell) {
   border-bottom: 2px solid var(--uni-gold);
   color: var(--uni-ink-2);
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .uni-shell .bt-row {
   border-bottom: 1px solid rgba(25, 23, 23, 0.06);
-  font-size: 14px;
+  font-size: 17px;
   color: var(--uni-ink);
+  transition: background-color 0.12s ease;
+}
+.uni-shell .bt-row:hover:not(.you):not(.avg) {
+  background: rgba(255, 185, 54, 0.10);
 }
 .uni-shell .bt-row.you { background: var(--uni-gold-bg); }
 .uni-shell .bt-row .here-pill {
@@ -696,18 +722,25 @@ body:has(.uni-shell) {
   border-bottom: 2px solid var(--uni-gold);
   color: var(--uni-ink-2);
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .uni-shell .eco-legend-row {
-  font-size: 14px;
+  font-size: 17px;
   color: var(--uni-ink);
+  transition: background-color 0.12s ease;
+}
+.uni-shell .eco-legend-row:hover:not(.you):not(.baseline) {
+  background: rgba(255, 185, 54, 0.10);
 }
 .uni-shell .eco-legend-row.you .eco-legend-name { color: var(--uni-ink); font-weight: 700; }
 .uni-shell .eco-legend-rank { color: var(--uni-ink-2); font-weight: 600; }
-.uni-shell .eco-legend-apy { color: var(--uni-ink); }
+.uni-shell .eco-legend-apy {
+  color: var(--uni-ink);
+  font-size: 17px;
+}
 .uni-shell .eco-chart-axis > span { color: var(--uni-ink-2); font-weight: 500; }
 .uni-shell .eco-chart-baseline-label {
   background: var(--uni-card-2);
@@ -716,10 +749,16 @@ body:has(.uni-shell) {
 }
 
 /* hist-table */
+.uni-shell .hist-table tr {
+  transition: background-color 0.12s ease;
+}
+.uni-shell .hist-table tr:hover {
+  background: rgba(255, 185, 54, 0.10);
+}
 .uni-shell .hist-table th {
   color: var(--uni-ink-2);
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -727,14 +766,14 @@ body:has(.uni-shell) {
 .uni-shell .hist-table td {
   color: var(--uni-ink);
   font-family: var(--mono);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   font-feature-settings: "tnum";
 }
 .uni-shell .hist-block h3 {
   font-family: var(--display);
   color: var(--uni-ink);
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 600;
 }
 
@@ -747,11 +786,18 @@ body:has(.uni-shell) {
 @media (max-width: 700px) {
   .uni-shell { padding: 16px 16px 60px; }
   .uni-shell .uni-title { font-size: 26px; }
+  .uni-shell .uni-title-byline { font-size: 13px; gap: 6px; }
   .uni-shell .uni-bignum-value { font-size: 34px; }
   .uni-shell .uni-side-headline { font-size: 26px; }
   .uni-shell .uni-side-value { font-size: 18px; }
   .uni-shell .uni-soft-card { padding: 20px 18px; }
+  /* Below-hero copy still bigger than baseline but compact for phones. */
+  .uni-shell .pp-section h2 { font-size: 21px; }
   .uni-shell .pp-section p,
   .uni-shell .uni-soft-head p,
-  .uni-shell .about-prose p { font-size: 14.5px; }
+  .uni-shell .about-prose p { font-size: 16px; }
+  .uni-shell .bs-v { font-size: 26px; }
+  .uni-shell .bt-row,
+  .uni-shell .eco-legend-row { font-size: 15px; }
+  .uni-shell .hist-table td { font-size: 16px; }
 }

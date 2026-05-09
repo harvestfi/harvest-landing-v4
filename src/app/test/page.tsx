@@ -97,13 +97,26 @@ export default async function TestPage() {
         })}
       </div>
 
-      {/* Title row: title alone on the left as the focal point; pills
-          + address cluster on the right as supporting metadata. */}
+      {/* Title row: icon + (title stacked over a metadata caption) on
+          the left; pills + address cluster on the right edge. The
+          caption reads like a publication byline so the icon, title
+          and supporting facts compose as one block. */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
-          <AssetIcon asset={vault.asset} size={48} />
+          <AssetIcon asset={vault.asset} size={52} />
         </span>
-        <h1 className="uni-title">{vault.productName}</h1>
+        <div className="uni-title-main">
+          <h1 className="uni-title">{vault.productName}</h1>
+          <p className="uni-title-byline">
+            by {vault.protocol.name}
+            <span className="uni-byline-sep" aria-hidden="true">·</span>
+            {protocolName}
+            <span className="uni-byline-sep" aria-hidden="true">·</span>
+            {vault.vaultType}
+            <span className="uni-byline-sep" aria-hidden="true">·</span>
+            Operated on {vault.chain}
+          </p>
+        </div>
         <div className="uni-title-meta">
           <div className="uni-title-pills">
             <span className="uni-pill uni-pill-version">{protocolName}</span>
