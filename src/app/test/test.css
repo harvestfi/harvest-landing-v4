@@ -193,43 +193,44 @@ body:has(.uni-shell) {
   flex: 1;
 }
 
-/* Chart header: bignum on left, chart-style toggle on right. */
-.uni-shell .uni-chart-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-}
-.uni-shell .uni-chart-style {
+/* Right cluster of the chart controls bar: metric tabs + minimal
+   chart-style switcher. The style switcher is intentionally the
+   least-dominant control in the area - bare icon buttons, no rail,
+   no fill, gold tint on active and on hover. */
+.uni-shell .uni-controls-right {
   display: inline-flex;
-  background: var(--uni-card);
-  border-radius: var(--uni-radius-pill);
-  padding: 4px;
-  gap: 2px;
-  flex-shrink: 0;
+  align-items: center;
+  gap: 22px;
 }
-.uni-shell .uni-style-btn {
+.uni-shell .uni-style-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.uni-shell .uni-style-mini-btn {
   border: 0;
   background: transparent;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--uni-radius-pill);
+  padding: 4px;
+  margin: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--uni-ink-3);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease;
+  border-radius: 4px;
 }
-.uni-shell .uni-style-btn:hover { color: var(--uni-ink-2); }
-.uni-shell .uni-style-btn.active {
-  background: var(--uni-gold);
-  color: var(--uni-ink);
-  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
+.uni-shell .uni-style-mini-btn:hover { color: var(--uni-ink-2); }
+.uni-shell .uni-style-mini-btn.active { color: var(--uni-gold); }
+.uni-shell .uni-style-mini-btn svg {
+  width: 15px;
+  height: 15px;
 }
-.uni-shell .uni-style-btn svg {
-  width: 16px;
-  height: 16px;
+
+/* Mobile: drop the metric tabs gap and shrink the style switcher
+   so all controls fit on a tight row. */
+@media (max-width: 540px) {
+  .uni-shell .uni-controls-right { gap: 14px; }
 }
 
 .uni-shell .uni-bignum-value {
@@ -1629,16 +1630,20 @@ body:has(.uni-shell) {
   justify-content: space-between;
   gap: 12px;
   margin-top: 22px;
-  padding: 11.5px 18px;
+  padding: 11px 18px;
   background: transparent;
   color: var(--uni-ink);
   font-size: 14.5px;
   font-weight: 600;
   letter-spacing: -0.005em;
-  border: 1.5px solid var(--uni-gold);
+  /* 2px solid gold all around (was 1.5px which subpixel-rendered
+     unevenly on some screens). Matches the 2px gold used for the
+     network-avg baseline for a consistent accent weight. */
+  border: 2px solid var(--uni-gold);
   border-radius: var(--uni-radius);
   text-decoration: none;
   transition: background 0.15s ease, transform 0.15s ease;
+  box-sizing: border-box;
 }
 .uni-shell .eco-network-cta:hover {
   background: var(--uni-gold-bg);
