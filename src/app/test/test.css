@@ -46,9 +46,16 @@
 }
 
 /* Dotted-bg layer from the homepage motif sits behind body. The /test
-   page is white-on-white; explicitly clear it. */
+   page is white-on-white; explicitly clear it. Plus clamp horizontal
+   scroll so any wide table or chart can't push the page past the
+   viewport on mobile, which previously left an empty edge gap on
+   the right + a phantom scroll past the footer. */
 body:has(.uni-shell) {
   background-image: none !important;
+  overflow-x: clip;
+}
+.uni-shell {
+  overflow-x: clip;
 }
 
 /* Breadcrumbs */
@@ -448,23 +455,24 @@ body:has(.uni-shell) {
   align-items: center;
   border: 1px solid var(--uni-line);
   border-radius: var(--uni-radius-pill);
-  padding: 4px;
+  padding: 3px;
   gap: 2px;
   flex-shrink: 0;
 }
 .uni-shell .uni-tab-btn {
   border: 0;
   background: transparent;
-  padding: 6px 14px;
+  padding: 4px 10px;
   margin: 0;
   border-radius: var(--uni-radius-pill);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--uni-ink-2);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 .uni-shell .uni-tab-btn:hover { color: var(--uni-ink); }
 .uni-shell .uni-tab-btn.active {
@@ -992,17 +1000,30 @@ body:has(.uni-shell) {
 /* Tighter spacing + drop the longer link labels on narrower screens
    so the bar never overflows the viewport. */
 @media (max-width: 900px) {
-  .uni-shell .uni-sticky-inner { gap: 14px; padding: 10px 16px; }
-  .uni-shell .uni-sticky-left { gap: 12px; }
-  .uni-shell .uni-sticky-right { gap: 14px; }
-  .uni-shell .uni-sticky-right a { font-size: 13px; }
-  .uni-shell .uni-sticky-right a[href="#ecosystem"],
-  .uni-shell .uni-sticky-right a[href="#details"],
-  .uni-shell .uni-sticky-right a[href="#about"] { display: none; }
-  .uni-shell .uni-sticky-cta { display: none; }
-}
-@media (max-width: 700px) {
-  .uni-shell .uni-sticky-stat { display: none; }
+  /* Sticky sub-bar always visible on mobile (we hide the jump nav
+     entirely below 900px since horizontal pill rails read poorly on
+     narrow screens). The IntersectionObserver-driven .visible class
+     is overridden so the bar shows from page load. */
+  .uni-shell .uni-jump { display: none; }
+  .uni-shell .uni-sticky-bar {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  .uni-shell .uni-sticky-inner { gap: 12px; padding: 9px 14px; }
+  .uni-shell .uni-sticky-left { gap: 10px; flex-wrap: wrap; }
+  /* Hide the jump-link nav on mobile - the sub-bar surfaces icon +
+     name + APY + TVL + View Strategy CTA only. */
+  .uni-shell .uni-sticky-right { display: none; }
+  .uni-shell .uni-sticky-cta {
+    display: inline-flex;
+    padding: 6px 11px;
+    font-size: 12.5px;
+    gap: 4px;
+  }
+  /* Keep the live APY + TVL chips visible alongside the name. */
+  .uni-shell .uni-sticky-stat { font-size: 12.5px; gap: 4px; }
+  .uni-shell .uni-sticky-stat strong { font-size: 13px; }
 }
 @media (max-width: 540px) {
   .uni-shell .uni-sticky-right a[href="#benchmark"] { display: none; }
@@ -1999,7 +2020,7 @@ body:has(.uni-shell) {
   .uni-shell .uni-chart-controls { gap: 12px; }
   .uni-shell .uni-tab-pills { padding: 3px; }
   .uni-shell .uni-pill-btn { padding: 5px 11px; font-size: 12px; }
-  .uni-shell .uni-tab-btn { padding: 5px 11px; font-size: 12px; }
+  .uni-shell .uni-tab-btn { padding: 3px 8px; font-size: 10.5px; }
 
   /* Side card and other cards: trim padding for narrow phones. */
   .uni-shell .uni-side-card { padding: 18px 20px; }
@@ -2021,6 +2042,29 @@ body:has(.uni-shell) {
   .uni-shell .uni-stability-card { padding: 20px 18px; }
   .uni-shell .bench-stats { padding: 18px 20px; gap: 14px; }
   .uni-shell .eco-chart-wrap { padding: 4px 0 12px; }
+
+  /* Tables bleed to the screen edges on mobile. The shell has
+     16px horizontal padding; we negate it and re-apply as cell
+     padding so labels hug the left edge of the screen and values
+     hug the right edge. Stops values from wrapping prematurely
+     while there's free real estate on either side. */
+  .uni-shell .hist-table,
+  .uni-shell .bench-table,
+  .uni-shell .chart-datatable {
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+  }
+  .uni-shell .hist-table th { padding-left: 16px; padding-right: 12px; }
+  .uni-shell .hist-table td { padding-right: 16px; padding-left: 12px; }
+  .uni-shell .chart-datatable thead th:first-child,
+  .uni-shell .chart-datatable tbody td:first-child { padding-left: 16px; }
+  .uni-shell .chart-datatable thead th:last-child,
+  .uni-shell .chart-datatable tbody td:last-child { padding-right: 16px; }
+  .uni-shell .bt-head, .uni-shell .bt-row {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
   /* Stability card stack: 2x2 stats row tightens further on phones */
   .uni-shell .uni-stability-stats { gap: 16px; }
