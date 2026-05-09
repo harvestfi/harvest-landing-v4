@@ -98,15 +98,15 @@ body:has(.uni-shell) {
   gap: 6px;
   min-width: 0;
 }
-/* Product title is now the largest type on the page (was second to
-   the chart bignum). Swapped scales: title bumps to 50px, chart
-   bignum-value drops from 48 → 32px. The icon scales up to 68px so
-   it still anchors the title visually. */
+/* Product title is the largest type on the page but trimmed back to
+   40px (was 50px) so it stops crowding the hero. Still bigger than
+   the chart bignum (32px) so the visual hierarchy stays intact:
+   title > bignum > body. Icon mirrors the trim at 54px. */
 .uni-shell .uni-title {
   font-family: var(--display);
-  font-size: 50px;
+  font-size: 40px;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.022em;
   color: var(--uni-ink);
   margin: 0;
   line-height: 1.05;
@@ -857,8 +857,10 @@ body:has(.uni-shell) {
     left: 0;
     right: 0;
     z-index: 28;
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: saturate(1.4) blur(10px);
+    /* Solid white to match the global topnav (var(--panel) = #fff).
+       No backdrop blur, no transparency - reads as a real second
+       row of the nav, not a floating overlay. */
+    background: #ffffff;
     border-bottom: 1px solid var(--uni-line);
     transform: translateY(-100%);
     opacity: 0;
@@ -870,14 +872,14 @@ body:has(.uni-shell) {
     opacity: 1;
     pointer-events: auto;
   }
+  /* Full-width: no max-width clamp; only horizontal padding gives
+     the content gutters so it never touches the screen edge. */
   .uni-shell .uni-sticky-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     padding: 10px 16px;
-    max-width: var(--shell-max);
-    margin: 0 auto;
   }
   .uni-shell .uni-sticky-left {
     display: inline-flex;

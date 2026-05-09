@@ -160,7 +160,7 @@ export default async function TestPage() {
           spec sheet. */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
-          <AssetIcon asset={vault.asset} size={68} />
+          <AssetIcon asset={vault.asset} size={54} />
         </span>
         <h1 className="uni-title">{vault.productName}</h1>
         <div className="uni-title-meta">
