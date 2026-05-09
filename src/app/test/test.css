@@ -219,16 +219,18 @@ body:has(.uni-shell) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--uni-ink-3);
+  /* Bumped from --ink-3 to --ink-2 so the icons read clearly on
+     white instead of looking inactive. */
+  color: var(--uni-ink-2);
   cursor: pointer;
   transition: color 0.15s ease;
   border-radius: 4px;
 }
-.uni-shell .uni-style-mini-btn:hover { color: var(--uni-ink-2); }
+.uni-shell .uni-style-mini-btn:hover { color: var(--uni-ink); }
 .uni-shell .uni-style-mini-btn.active { color: var(--uni-gold); }
 .uni-shell .uni-style-mini-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 /* Mobile: drop the metric tabs gap and shrink the style switcher
@@ -908,15 +910,21 @@ body:has(.uni-shell) {
 .uni-shell .uni-sticky-left {
   display: inline-flex;
   align-items: center;
+  gap: 18px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.uni-shell .uni-sticky-name-link {
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
   font-size: 15px;
   font-weight: 600;
   color: var(--uni-ink);
   text-decoration: none;
   min-width: 0;
-  flex-shrink: 1;
 }
-.uni-shell .uni-sticky-left img {
+.uni-shell .uni-sticky-name-link img {
   border-radius: 50%;
   flex-shrink: 0;
   width: 22px;
@@ -926,6 +934,26 @@ body:has(.uni-shell) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Quick stats inline after the product name. Label small + ink-2,
+   value bigger + display family + tnum so the figures align with
+   the rest of the page's number system. */
+.uni-shell .uni-sticky-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--uni-ink-2);
+  font-weight: 500;
+}
+.uni-shell .uni-sticky-stat-label { color: var(--uni-ink-2); }
+.uni-shell .uni-sticky-stat strong {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.005em;
+  color: var(--uni-ink);
 }
 .uni-shell .uni-sticky-right {
   display: inline-flex;
@@ -946,11 +974,15 @@ body:has(.uni-shell) {
    so the bar never overflows the viewport. */
 @media (max-width: 900px) {
   .uni-shell .uni-sticky-inner { gap: 14px; padding: 10px 16px; }
+  .uni-shell .uni-sticky-left { gap: 12px; }
   .uni-shell .uni-sticky-right { gap: 14px; }
   .uni-shell .uni-sticky-right a { font-size: 13px; }
   .uni-shell .uni-sticky-right a[href="#ecosystem"],
   .uni-shell .uni-sticky-right a[href="#details"],
   .uni-shell .uni-sticky-right a[href="#about"] { display: none; }
+}
+@media (max-width: 700px) {
+  .uni-shell .uni-sticky-stat { display: none; }
 }
 @media (max-width: 540px) {
   .uni-shell .uni-sticky-right a[href="#benchmark"] { display: none; }
@@ -1627,6 +1659,9 @@ body:has(.uni-shell) {
 }
 .uni-shell .eco-chart-baseline {
   border-top: 2px dashed var(--uni-gold);
+  /* Surface above the bars so the badge isn't ever hidden by a
+     tall column on hover. */
+  z-index: 5;
 }
 .uni-shell .eco-chart-baseline-label {
   background: var(--uni-gold);
@@ -1635,6 +1670,7 @@ body:has(.uni-shell) {
   padding: 2px 8px;
   border-radius: 6px;
   letter-spacing: 0.02em;
+  z-index: 6;
 }
 .uni-shell .eco-legend-head {
   border-bottom: 2px solid var(--uni-gold);
@@ -1779,6 +1815,22 @@ body:has(.uni-shell) {
   background: rgba(255, 185, 54, 0.04);
 }
 .uni-shell .eco-legend-row.you .eco-legend-name { color: var(--uni-ink); font-weight: 700; }
+/* Inline-flex container so the You pill sits perfectly aligned
+   with the product name on a single baseline-centered line, with
+   a real gap (the global .here-pill margin-left collapses inside
+   our shell). */
+.uni-shell .eco-legend-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.uni-shell .eco-legend-name .here-pill {
+  margin-left: 0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
 .uni-shell .eco-legend-rank { color: var(--uni-ink-2); font-weight: 600; }
 .uni-shell .eco-legend-apy {
   color: var(--uni-ink);

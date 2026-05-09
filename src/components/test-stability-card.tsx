@@ -114,7 +114,7 @@ export function TestStabilityCard({
               {s.label}
             </div>
             <div className="uni-stability-sublabel">
-              Based on {s.dataPoints} daily observations over the last 30 days
+              Last 30 days · {s.dataPoints} {s.dataPoints === 1 ? "reading" : "readings"} indexed
             </div>
           </div>
         </div>

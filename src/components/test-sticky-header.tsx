@@ -13,6 +13,8 @@ import { AssetIcon } from "./token-icons";
 interface Props {
   productName: string;
   asset: string;
+  apyLabel: string;
+  tvlLabel: string;
 }
 
 // Full set of section anchors mirroring the jump-nav. The CSS hides
@@ -27,7 +29,7 @@ const QUICK_LINKS: { href: string; label: string }[] = [
   { href: "#faq", label: "FAQ" },
 ];
 
-export function TestStickyHeader({ productName, asset }: Props) {
+export function TestStickyHeader({ productName, asset, apyLabel, tvlLabel }: Props) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -56,10 +58,20 @@ export function TestStickyHeader({ productName, asset }: Props) {
       aria-hidden={!show}
     >
       <div className="uni-sticky-inner">
-        <a href="#performance" className="uni-sticky-left">
-          <AssetIcon asset={asset} size={20} />
-          <span className="uni-sticky-name">{productName}</span>
-        </a>
+        <div className="uni-sticky-left">
+          <a href="#performance" className="uni-sticky-name-link">
+            <AssetIcon asset={asset} size={20} />
+            <span className="uni-sticky-name">{productName}</span>
+          </a>
+          <span className="uni-sticky-stat">
+            <span className="uni-sticky-stat-label">APY</span>
+            <strong>{apyLabel}</strong>
+          </span>
+          <span className="uni-sticky-stat">
+            <span className="uni-sticky-stat-label">TVL</span>
+            <strong>{tvlLabel}</strong>
+          </span>
+        </div>
         <nav className="uni-sticky-right" aria-label="Jump to section">
           {QUICK_LINKS.map((l) => (
             <a key={l.href} href={l.href}>{l.label}</a>

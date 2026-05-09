@@ -133,7 +133,12 @@ export default async function TestPage() {
     <div className="uni-shell">
       {/* Mobile-only sticky sub-header that appears once user scrolls
           past the jump nav. */}
-      <TestStickyHeader productName={vault.productName} asset={vault.asset} />
+      <TestStickyHeader
+        productName={vault.productName}
+        asset={vault.asset}
+        apyLabel={formatAPY(vault.apy24h)}
+        tvlLabel={formatTVL(vault.tvl)}
+      />
 
       {/* Breadcrumb: Home › {Asset} Yield Ranking › {Product} */}
       <div className="uni-crumbs">
