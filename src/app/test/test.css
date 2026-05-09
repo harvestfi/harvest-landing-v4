@@ -2007,12 +2007,35 @@ body:has(.uni-shell) {
   .uni-shell .uni-chart { min-height: 220px; padding: 12px 0; }
   .uni-shell .uni-chart-bars { min-height: 180px; }
   .uni-shell .uni-bignum-value { font-size: 26px; }
-  .uni-shell .uni-bignum-meta { font-size: 14px; gap: 8px; }
 
-  /* Chart header on mobile: bignum + metric selector stack with
-     reasonable wrapping so neither overflows. Controls bar (time
-     pills + chart style) stays horizontal but tightens. */
-  .uni-shell .uni-chart-header { gap: 12px; align-items: center; }
+  /* Chart header on mobile: keep bignum on left and the metric
+     selector pinned to the top right in a single row at all times.
+     The bignum-meta caption shrinks so the selector stops wrapping
+     under the headline number when the date appends on hover.
+     min-width:0 + nowrap + ellipsis on the meta line cap the
+     overflow gracefully if the date string is unusually long. */
+  .uni-shell .uni-chart-header {
+    flex-wrap: nowrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .uni-shell .uni-bignum {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .uni-shell .uni-bignum-meta {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .uni-shell .uni-bignum-label,
+  .uni-shell .uni-bignum-date {
+    font-size: 12px;
+  }
   .uni-shell .uni-chart-controls { gap: 12px; }
   .uni-shell .uni-tab-pills { padding: 3px; }
   .uni-shell .uni-pill-btn { padding: 5px 11px; font-size: 12px; }
