@@ -18,7 +18,7 @@ import { AssetIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
 import { MarketBenchmark, EcosystemContext } from "@/components/market-sections";
-import { TestTvlChart } from "@/components/test-tvl-chart";
+import { TestChart, type ChartSeries } from "@/components/test-chart";
 import "./test.css";
 
 const TEST_SLUG = "usdc-40-acres-base";
@@ -61,23 +61,20 @@ export default async function TestPage() {
     );
   }
 
-  // 30-day TVL history for the hero bar chart
-  const nowSec = Math.floor(Date.now() / 1000);
-  const cutoff = nowSec - 30 * 86400;
-  const tvlSeries = history.tvlHistory
-    .filter((p) => p.timestamp >= cutoff)
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .map((p) => ({ t: p.timestamp, v: p.value }));
+  // Full per-metric series. Filtering by time range happens client-side
+  // inside <TestChart /> so the time pills can drive a live re-render.
+  const chartSeries: ChartSeries = {
+    tvl: history.tvlHistory.map((p) => ({ t: p.timestamp, v: p.value })),
+    apy: history.apyHistory
+      .filter((p) => p.apy >= 0)
+      .map((p) => ({ t: p.timestamp, v: p.apy })),
+    sharePrice: history.sharePriceHistory.map((p) => ({ t: p.timestamp, v: p.sharePrice })),
+  };
 
   const protocolName = stripChainSuffix(vault.category, vault.chain);
 
   return (
     <div className="uni-shell">
-      <div className="uni-banner">
-        <span className="uni-banner-dot" />
-        Test page · /test · {vault.productName} in Uniswap visual language
-      </div>
-
       {/* Breadcrumb */}
       <div className="uni-crumbs">
         <Link href={`/${chainToSlug(vault.chain)}`}>{vault.chain}</Link>
@@ -108,27 +105,7 @@ export default async function TestPage() {
       {/* Main grid: chart + sidebar stats */}
       <div className="uni-detail-grid">
         <div className="uni-detail-main">
-          <div className="uni-bignum">
-            <div className="uni-bignum-value">{formatTVL(vault.tvl)}</div>
-            <div className="uni-bignum-meta">Total deposits</div>
-          </div>
-
-          <TestTvlChart series={tvlSeries} />
-
-          <div className="uni-chart-controls">
-            <div className="uni-tab-pills">
-              <button className="uni-pill-btn">1D</button>
-              <button className="uni-pill-btn active">1M</button>
-              <button className="uni-pill-btn">3M</button>
-              <button className="uni-pill-btn">1Y</button>
-              <button className="uni-pill-btn">ALL</button>
-            </div>
-            <div className="uni-tab-text">
-              <span className="active">TVL</span>
-              <span>APY</span>
-              <span>Share price</span>
-            </div>
-          </div>
+          <TestChart series={chartSeries} />
         </div>
 
         <aside className="uni-detail-side">
