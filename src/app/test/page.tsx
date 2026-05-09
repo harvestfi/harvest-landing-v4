@@ -15,6 +15,7 @@ import {
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { productPageCrumbs } from "@/lib/seo";
 import { SITE_URL } from "@/lib/constants";
+import { harvestAppUrl } from "@/lib/harvest-app";
 import { AssetIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
@@ -122,6 +123,30 @@ export default async function TestPage() {
         </div>
 
         <aside className="uni-detail-side">
+          <a
+            href={harvestAppUrl(vault.chain, vault.contractAddress)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="uni-cta"
+          >
+            View Strategy
+            <svg
+              className="uni-cta-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M7 17 17 7" />
+              <path d="M8 7h9v9" />
+            </svg>
+          </a>
+
           <div className="uni-side-card">
             <div className="uni-side-headline-block">
               <div className="uni-side-label">Total APY</div>
@@ -129,8 +154,6 @@ export default async function TestPage() {
             </div>
 
             <div className="uni-side-card-divider" aria-hidden="true" />
-
-            <div className="uni-side-card-title">Stats</div>
 
             <div className="uni-side-stat">
               <div className="uni-side-label">Holders</div>

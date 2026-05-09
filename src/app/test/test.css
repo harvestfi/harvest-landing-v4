@@ -169,6 +169,20 @@ body:has(.uni-shell) {
   font-size: 15px;
   color: var(--uni-ink-2);
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.uni-shell .uni-bignum-dot {
+  color: var(--uni-ink-3);
+  font-weight: 700;
+  line-height: 0.6;
+}
+.uni-shell .uni-bignum-date {
+  font-family: var(--mono);
+  color: var(--uni-ink-2);
+  font-feature-settings: "tnum";
+  font-size: 14px;
 }
 
 /* Bar chart - flex:1 pushes uni-chart-controls to the bottom of the
@@ -207,9 +221,13 @@ body:has(.uni-shell) {
   min-height: 2px;
   background: var(--uni-gold);
   border-radius: 2px 2px 0 0;
-  transition: filter 0.12s ease;
+  transition: filter 0.12s ease, background-color 0.12s ease;
+  cursor: crosshair;
 }
-.uni-shell .uni-chart-bar:hover { filter: brightness(0.92); }
+.uni-shell .uni-chart-bar:hover,
+.uni-shell .uni-chart-bar.active {
+  filter: brightness(0.78) saturate(1.1);
+}
 .uni-shell .uni-chart-axis {
   display: flex;
   justify-content: space-between;
@@ -280,9 +298,42 @@ body:has(.uni-shell) {
 .uni-shell .uni-detail-side {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   position: sticky;
   top: 24px;
+}
+
+/* Primary CTA. Sunflower Gold pill with Onyx ink. Sits above the
+   stats card so the deposit path is the first thing the eye lands
+   on after the headline number. Subtle lift on hover, no shadow at
+   rest so it doesn't compete with the soft card surface below. */
+.uni-shell .uni-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  border-radius: var(--uni-radius);
+  text-decoration: none;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
+}
+.uni-shell .uni-cta:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px rgba(255, 185, 54, 0.55);
+}
+.uni-shell .uni-cta-icon {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+.uni-shell .uni-cta:hover .uni-cta-icon {
+  transform: translate(1px, -1px);
 }
 .uni-shell .uni-side-card {
   background: var(--uni-card);

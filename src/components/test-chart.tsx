@@ -76,6 +76,10 @@ function fmtDate(t: number): string {
 export function TestChart({ series }: Props) {
   const [metric, setMetric] = useState<Metric>("tvl");
   const [range, setRange] = useState<Range>("ALL");
+  // Index of the bar currently under the cursor; null means "no hover,
+  // show the latest point". Resets to null whenever the metric or range
+  // changes so we don't carry a stale index across point arrays.
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   const all = series[metric] ?? [];
   const sorted = [...all].sort((a, b) => a.t - b.t);
@@ -89,7 +93,12 @@ export function TestChart({ series }: Props) {
   }
   const points = downsample(raw);
 
-  const latest = points.length > 0 ? points[points.length - 1].v : 0;
+  const activeIdx =
+    hoverIdx !== null && hoverIdx >= 0 && hoverIdx < points.length
+      ? hoverIdx
+      : points.length - 1;
+  const activePoint = points[activeIdx];
+  const latest = activePoint ? activePoint.v : 0;
 
   // Min-max scaling so changes are legible even for slow-moving series
   // like share price (typically 1.00 → 1.09, ~9% absolute movement).
@@ -109,21 +118,32 @@ export function TestChart({ series }: Props) {
     <div className="uni-chart-wrap">
       <div className="uni-bignum">
         <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
-        <div className="uni-bignum-meta">{metricLabel(metric)}</div>
+        <div className="uni-bignum-meta">
+          {metricLabel(metric)}
+          {activePoint && (
+            <>
+              <span className="uni-bignum-dot" aria-hidden="true">·</span>
+              <span className="uni-bignum-date">{fmtDate(activePoint.t)}</span>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="uni-chart">
+      <div
+        className="uni-chart"
+        onMouseLeave={() => setHoverIdx(null)}
+      >
         {points.length === 0 ? (
           <div className="uni-chart-empty">No data for this range.</div>
         ) : (
           <>
             <div className="uni-chart-bars">
-              {points.map((p) => (
+              {points.map((p, i) => (
                 <span
                   key={p.t}
-                  className="uni-chart-bar"
+                  className={`uni-chart-bar${i === activeIdx ? " active" : ""}`}
                   style={{ height: `${heightFor(p.v)}%` }}
-                  title={`${fmtDate(p.t)} · ${formatValue(metric, p.v)}`}
+                  onMouseEnter={() => setHoverIdx(i)}
                 />
               ))}
             </div>
@@ -142,7 +162,7 @@ export function TestChart({ series }: Props) {
               key={r}
               type="button"
               className={`uni-pill-btn${range === r ? " active" : ""}`}
-              onClick={() => setRange(r)}
+              onClick={() => { setRange(r); setHoverIdx(null); }}
               aria-pressed={range === r}
             >
               {r}
@@ -155,7 +175,7 @@ export function TestChart({ series }: Props) {
               key={m}
               type="button"
               className={`uni-tab-btn${metric === m ? " active" : ""}`}
-              onClick={() => setMetric(m)}
+              onClick={() => { setMetric(m); setHoverIdx(null); }}
               aria-pressed={metric === m}
             >
               {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
