@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getLiveVaults, getVaultBySlug, getAllSlugs, getVaultHistory, isBrokenLowTvlVault } from "@/lib/data";
+import { getLiveVaults, getVaultBySlug, getAllSlugs, getVaultHistory, getHoldersMap, isBrokenLowTvlVault } from "@/lib/data";
 import { isCanonicalSlug } from "@/lib/canonical-vaults";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { AssetBadge } from "@/components/asset-badge";
@@ -313,6 +313,8 @@ export default async function ProductPage({
   const peakTvl = computePeakTvl(history);
   const sharePriceGrowth = computeSharePriceGrowth(history);
   const explorerUrl = getExplorerUrl(vault.chain, vault.contractAddress);
+  const holdersMap = await getHoldersMap();
+  const holderCount = holdersMap[vault.contractAddress.toLowerCase()] ?? null;
 
   const validApyForTracked = history.apyHistory.filter((p) => p.apy >= 0);
   let trackedDays = 0;
@@ -474,6 +476,12 @@ export default async function ProductPage({
                   <div className="cd-row">
                     <span className="cd-label">Tracked for</span>
                     <span className="cd-val">{trackedDays} days</span>
+                  </div>
+                )}
+                {holderCount !== null && (
+                  <div className="cd-row">
+                    <span className="cd-label">Holders</span>
+                    <span className="cd-val">{holderCount.toLocaleString("en-US")}</span>
                   </div>
                 )}
                 <div className="cd-row cd-row-full">

@@ -11,6 +11,7 @@ import { join } from "path";
 
 const VAULTS_FILE = join(process.cwd(), "data", "vaults.json");
 const HISTORY_FILE = join(process.cwd(), "data", "history.json");
+const HOLDERS_FILE = join(process.cwd(), "data", "holders.json");
 
 const FALLBACK_VAULT: YieldVault = {
   id: "fallback",
@@ -274,6 +275,28 @@ export async function getAllSparklines(): Promise<Record<string, number[]>> {
   }
 
   return result;
+}
+
+// Holder counts, keyed by lowercased contract address. Sourced from
+// scripts/fetch-holders.mjs (Blockscout v2). Missing chains/contracts
+// (e.g. HyperEVM) simply don't appear in the map; the page renders the
+// row only when a count exists.
+let _holdersCache: Record<string, number> | null | undefined;
+
+export async function getHoldersMap(): Promise<Record<string, number>> {
+  if (_holdersCache !== undefined) return _holdersCache ?? {};
+  try {
+    if (!existsSync(HOLDERS_FILE)) {
+      _holdersCache = null;
+      return {};
+    }
+    const raw = readFileSync(HOLDERS_FILE, "utf-8");
+    _holdersCache = JSON.parse(raw) as Record<string, number>;
+    return _holdersCache;
+  } catch {
+    _holdersCache = null;
+    return {};
+  }
 }
 
 // Lifetime tracked-days per vault, derived from the earliest valid APY
