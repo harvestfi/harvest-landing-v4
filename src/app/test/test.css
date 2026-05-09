@@ -1226,9 +1226,12 @@ body:has(.uni-shell) {
   transform-origin: bottom center;
   animation: uni-stab-rise 0.45s cubic-bezier(0.2, 0.65, 0.35, 1.05) backwards;
 }
+/* Per-tick background is set inline by the component (color zone
+   ramp). The glow is dropped since gold-tinted shadows looked off
+   on red/green ticks; the height ramp + color shift carry enough
+   visual weight on their own. */
 .uni-shell .uni-stab-tick.on {
   background: var(--uni-gold);
-  box-shadow: 0 0 6px -1px rgba(255, 185, 54, 0.45);
 }
 @keyframes uni-stab-rise {
   from {
@@ -1280,17 +1283,26 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-stability-source-chip {
   display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 6px 11px;
-  background: var(--uni-gold-bg);
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 7px;
+  background: #ffffff;
+  border: 1px solid var(--uni-line);
   border-radius: var(--uni-radius-pill);
   font-size: 14px;
 }
-.uni-shell .uni-stability-source-name { font-weight: 600; color: var(--uni-ink); }
-.uni-shell .uni-stability-source-apy {
-  font-family: var(--mono);
-  font-feature-settings: "tnum";
+.uni-shell .uni-stability-source-chip img {
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+.uni-shell .uni-stability-source-ticker {
+  font-weight: 700;
+  color: var(--uni-ink);
+  font-family: var(--display);
+  letter-spacing: -0.005em;
+}
+.uni-shell .uni-stability-source-name {
   font-weight: 500;
   color: var(--uni-ink-2);
 }

@@ -356,12 +356,7 @@ export default async function TestPage() {
             products have one source, leaving a lonely bar); the
             stability card collapses both into a single horizontal
             block: score gauge, key stats rail, source chips. */}
-        <TestStabilityCard
-          history={history}
-          asset={vault.asset}
-          apyBreakdown={vault.apyBreakdown}
-          boostedApy={vault.boostedApy}
-        />
+        <TestStabilityCard history={history} asset={vault.asset} />
 
         <HistoricalNarrative history={history} asset={vault.asset} />
 

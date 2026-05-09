@@ -7,18 +7,28 @@
 
 import type { FullVaultHistory } from "@/lib/history-api";
 import { formatAPY } from "@/lib/format";
-
-interface ApySource {
-  source: string;
-  apy: number;
-}
+import { AssetIcon } from "./token-icons";
 
 interface Props {
   history: FullVaultHistory;
   asset: string;
-  apyBreakdown: ApySource[];
-  boostedApy: number | null;
 }
+
+// Underlying asset full names. Used by the Yield Output chip on the
+// stability card (technical reasons mean the apyBreakdown source list
+// is unreliable for all vaults; the underlying asset is always
+// authoritative).
+const ASSET_FULL_NAMES: Record<string, string> = {
+  USDC: "USD Coin",
+  USDT: "Tether USD",
+  USDT0: "Tether USD",
+  ETH: "Ethereum",
+  WETH: "Wrapped ETH",
+  BTC: "Bitcoin",
+  WBTC: "Wrapped BTC",
+  cbBTC: "Coinbase BTC",
+  EURC: "Euro Coin",
+};
 
 const DAY = 24 * 60 * 60;
 
@@ -69,19 +79,9 @@ function computeStability(history: FullVaultHistory) {
   };
 }
 
-export function TestStabilityCard({
-  history,
-  asset,
-  apyBreakdown,
-  boostedApy,
-}: Props) {
+export function TestStabilityCard({ history, asset }: Props) {
   const s = computeStability(history);
-
-  const sources: ApySource[] = [...apyBreakdown];
-  if (boostedApy && boostedApy > 0) {
-    sources.push({ source: "Compounding boost", apy: boostedApy });
-  }
-  const positiveSources = sources.filter((src) => src.apy > 0);
+  const assetFullName = ASSET_FULL_NAMES[asset] ?? asset;
 
   if (!s) {
     return (
@@ -139,6 +139,15 @@ export function TestStabilityCard({
             const isFilled = tickScore <= s.score;
             // Height ramps from 38% (leftmost) to 100% (rightmost)
             const heightPct = 38 + (i / 19) * 62;
+            // Color zones: 0-25 red, 25-50 orange, 50-75 gold,
+            // 75-100 green. Visualises stability tier directly on
+            // the gauge instead of a flat gold fill across the
+            // whole strip.
+            const tickColor =
+              i < 5 ? "#e5484d"
+              : i < 10 ? "#f4801a"
+              : i < 15 ? "#ffb936"
+              : "#27a567";
             return (
               <span
                 key={i}
@@ -146,6 +155,7 @@ export function TestStabilityCard({
                 style={{
                   height: `${heightPct}%`,
                   animationDelay: `${i * 22}ms`,
+                  ...(isFilled ? { background: tickColor } : {}),
                 }}
               />
             );
@@ -186,21 +196,16 @@ export function TestStabilityCard({
           <div className="uni-stability-stat">
             <div
               className="uni-stability-stat-label"
-              data-tooltip="Where this strategy's yield comes from. Multiple sources are listed with their individual APY contribution."
+              data-tooltip="The underlying asset this strategy emits yield in. Deposits + accrued returns are denominated in this token."
             >
-              Yield from
+              Yield Output
             </div>
             <div className="uni-stability-sources">
-              {positiveSources.length === 0 ? (
-                <span className="uni-stability-stat-value">{asset}</span>
-              ) : (
-                positiveSources.map((src) => (
-                  <span key={src.source} className="uni-stability-source-chip">
-                    <span className="uni-stability-source-name">{src.source}</span>
-                    <span className="uni-stability-source-apy">{src.apy.toFixed(2)}%</span>
-                  </span>
-                ))
-              )}
+              <span className="uni-stability-source-chip">
+                <AssetIcon asset={asset} size={16} />
+                <span className="uni-stability-source-ticker">{asset}</span>
+                <span className="uni-stability-source-name">{assetFullName}</span>
+              </span>
             </div>
           </div>
         </div>
