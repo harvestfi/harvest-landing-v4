@@ -508,10 +508,11 @@ body:has(.uni-shell) {
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
-  transition: opacity 0.12s ease 0.20s, transform 0.12s ease 0.20s;
+  /* No delay - tooltip pops immediately on hover so scrubbing
+     between adjacent labels feels live, not laggy. */
+  transition: opacity 0.08s ease, transform 0.08s ease;
   white-space: normal;
 }
-/* Tiny arrow pointing down to the label */
 .uni-shell [data-tooltip]::before {
   content: "";
   position: absolute;
@@ -524,7 +525,7 @@ body:has(.uni-shell) {
   transform: rotate(45deg) translateY(0);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease 0.20s;
+  transition: opacity 0.08s ease;
 }
 .uni-shell [data-tooltip]:hover::after,
 .uni-shell [data-tooltip]:hover::before {
@@ -661,40 +662,56 @@ body:has(.uni-shell) {
   padding: 6px 0;
 }
 
-/* Embedded component overrides. Below-hero copy bumped ~20%
-   (15px → 18px) for legibility, headings to 26px, table values to
-   17-18px, label captions to 13px so the whole below-the-fold scale
-   reads comfortably. */
+/* Below-hero copy: 19px paragraphs / 28px headings / extra rhythm
+   between sections so adjacent narrative + sub-table headings (e.g.
+   the historical narrative paragraph followed by 'APY') don't
+   collide. */
+.uni-shell .uni-below {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
 .uni-shell .pp-section { margin: 0; }
 .uni-shell .pp-section h2 {
   font-family: var(--display);
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.012em;
   color: var(--uni-ink);
   border: 0;
   padding: 0;
-  margin: 0 0 16px;
+  margin: 0 0 18px;
 }
 .uni-shell .pp-section p {
-  font-size: 18px;
+  font-size: 19px;
   color: var(--uni-ink-2);
-  line-height: 1.6;
+  line-height: 1.65;
   font-weight: 400;
 }
+.uni-shell .pp-section p + p { margin-top: 14px; }
 .uni-shell .pp-section p strong {
   color: var(--uni-ink);
   font-weight: 600;
 }
-.uni-shell .about-prose p {
-  font-size: 18px;
-  color: var(--uni-ink-2);
-  line-height: 1.6;
+.uni-shell .about-prose {
+  /* Inline marginBottom: 16 in HistoricalStats narrative needs to be
+     beaten so the gap to the 'APY' / 'TVL' subheadings reads as a
+     real section break. */
+  margin-bottom: 32px !important;
 }
+.uni-shell .about-prose p {
+  font-size: 19px;
+  color: var(--uni-ink-2);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+.uni-shell .about-prose p:last-child { margin-bottom: 0; }
 .uni-shell .about-prose strong {
   color: var(--uni-ink);
   font-weight: 600;
 }
+.uni-shell .pp-section a { color: var(--uni-ink); border-bottom: 1px solid var(--uni-line); }
+.uni-shell .pp-section a:hover { color: var(--uni-ink); border-color: var(--uni-gold); }
 
 /* === Embedded primitives, re-skinned ===
 
@@ -806,10 +823,14 @@ body:has(.uni-shell) {
   background-position: 0 100%;
 }
 .uni-shell .eco-bar {
-  border-radius: 5px 5px 0 0 !important;
+  border-radius: 6px 6px 0 0 !important;
   box-shadow: none !important;
   transition: filter 0.12s ease;
 }
+/* Bring the hero bars to the same 6px cap so the two charts share
+   the same silhouette. */
+.uni-shell .uni-chart-bar { border-radius: 6px 6px 0 0; }
+.uni-shell .uni-bar-col.active::before { border-radius: 6px 6px 0 0; }
 .uni-shell .eco-bar-col:hover .eco-bar {
   filter: brightness(0.85);
   transform: none;
@@ -839,6 +860,48 @@ body:has(.uni-shell) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.uni-shell .eco-legend-head-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.uni-shell .eco-legend-head-title img {
+  border-radius: 50%;
+  display: block;
+}
+
+/* Network CTA at the bottom of the legend column - small but
+   actionable, gold underline grows on hover. */
+.uni-shell .eco-network-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: var(--uni-gold-bg);
+  color: var(--uni-ink);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--uni-radius-pill);
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+  align-self: flex-start;
+}
+.uni-shell .eco-network-cta:hover {
+  background: var(--uni-gold);
+  transform: translateX(2px);
+}
+.uni-shell .eco-network-cta img { border-radius: 50%; display: block; }
+.uni-shell .eco-network-cta span { transition: transform 0.15s ease; }
+.uni-shell .eco-network-cta:hover span { transform: translateX(2px); }
+
+/* Strategy details Network row: chain icon next to the name. */
+.uni-shell .cd-network {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.uni-shell .cd-network img { border-radius: 50%; display: block; }
 .uni-shell .eco-legend-row {
   font-size: 17px;
   color: var(--uni-ink);

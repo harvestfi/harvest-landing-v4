@@ -3,6 +3,7 @@ import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL } from "@/lib/format";
 import { depositRef, apyToMonthly, fmtEarnings, tvlPercentileLabel, benchmarkQualifier } from "@/lib/contextualize";
 import { chainToSlug } from "@/lib/networks";
+import { ChainIcon } from "./token-icons";
 
 interface Props {
   vault: YieldVault;
@@ -197,9 +198,18 @@ export function EcosystemContext({ vault, allVaults }: Props) {
   const maxApy = sameChain[0]?.apy24h || 1;
   const vsNetAvg = networkAvg > 0 ? ((vault.apy24h - networkAvg) / networkAvg) * 100 : 0;
 
+  // The chart shows the top 10 strategies so users can see deeper
+  // into the cohort; the legend stays at the top 6 so the right
+  // column doesn't sprawl. If the user's vault isn't already in the
+  // visible slice, it gets force-included as the last entry.
+  const top10 = sameChain.slice(0, 10);
+  const currentInChart = top10.some((v) => v.id === vault.id);
+  if (!currentInChart && rank > 0) {
+    top10[top10.length - 1] = vault;
+  }
   const top6 = sameChain.slice(0, 6);
-  const currentInTop = top6.some((v) => v.id === vault.id);
-  if (!currentInTop && rank > 0) {
+  const currentInLegend = top6.some((v) => v.id === vault.id);
+  if (!currentInLegend && rank > 0) {
     top6[top6.length - 1] = vault;
   }
 
@@ -210,7 +220,8 @@ export function EcosystemContext({ vault, allVaults }: Props) {
 
       <EcosystemChart
         vault={vault}
-        rows={top6}
+        chartRows={top10}
+        legendRows={top6}
         sameChainAll={sameChain}
         networkAvg={networkAvg}
         maxApy={maxApy}
@@ -236,13 +247,15 @@ const ECO_PALETTE = [
 
 function EcosystemChart({
   vault,
-  rows,
+  chartRows,
+  legendRows,
   sameChainAll,
   networkAvg,
   maxApy,
 }: {
   vault: YieldVault;
-  rows: YieldVault[];
+  chartRows: YieldVault[];
+  legendRows: YieldVault[];
   sameChainAll: YieldVault[];
   networkAvg: number;
   maxApy: number;
@@ -264,7 +277,7 @@ function EcosystemChart({
               Network avg {formatAPY(networkAvg)}
             </span>
           </span>
-          {rows.map((v, i) => {
+          {chartRows.map((v, i) => {
             const isYou = v.id === vault.id;
             const heightPct = (v.apy24h / ceil) * 100;
             return (
@@ -279,7 +292,7 @@ function EcosystemChart({
           })}
         </div>
         <div className="eco-chart-axis">
-          {rows.map((v) => {
+          {chartRows.map((v) => {
             const displayRank = sameChainAll.findIndex((s) => s.id === v.id) + 1;
             return (
               <span key={v.id} className="mono">#{displayRank}</span>
@@ -290,10 +303,13 @@ function EcosystemChart({
 
       <div className="eco-legend">
         <div className="eco-legend-head">
-          <span>{vault.asset} on {vault.chain}</span>
+          <span className="eco-legend-head-title">
+            <ChainIcon chain={vault.chain} size={14} />
+            {vault.asset} on {vault.chain}
+          </span>
           <span className="mono dim">#{sameChainAll.findIndex((s) => s.id === vault.id) + 1} of {sameChainAll.length}</span>
         </div>
-        {rows.map((v, i) => {
+        {legendRows.map((v, i) => {
           const isYou = v.id === vault.id;
           const displayRank = sameChainAll.findIndex((s) => s.id === v.id) + 1;
           return (
@@ -318,6 +334,11 @@ function EcosystemChart({
           <span className="eco-legend-name">Network average</span>
           <span className="eco-legend-apy mono">{formatAPY(networkAvg)}</span>
         </div>
+        <Link href={`/${chainToSlug(vault.chain)}`} className="eco-network-cta">
+          <ChainIcon chain={vault.chain} size={14} />
+          See all {sameChainAll.length} {vault.asset} strategies on {vault.chain}
+          <span aria-hidden="true">→</span>
+        </Link>
       </div>
     </div>
   );

@@ -336,7 +336,10 @@ export default async function TestPage() {
             </div>
             <div className="cd-row">
               <span className="cd-label">Network</span>
-              <span className="cd-val">{vault.chain}</span>
+              <span className="cd-val cd-network">
+                <ChainIcon chain={vault.chain} size={16} />
+                {vault.chain}
+              </span>
             </div>
             <div className="cd-row">
               <span className="cd-label">Type</span>

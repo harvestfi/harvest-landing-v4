@@ -683,6 +683,10 @@ button { font-family: inherit; cursor: pointer; }
   margin-top: 48px;
   border-top: 1px solid var(--line);
   padding: 36px 0 28px;
+  /* Pure white background globally so the footer reads as a clean
+     close to the page instead of inheriting the slightly cream
+     body bg (#fafaf9). */
+  background: #ffffff;
 }
 .foot-inner {
   max-width: var(--shell-max);
@@ -3483,16 +3487,13 @@ button { font-family: inherit; cursor: pointer; }
   width: 5px;
   height: 5px;
   border-radius: 1px;
-  background: var(--up);
+  /* Brand pip is now Sunflower Gold (was --up green) so the wordmark
+     carries the new flagship accent without affecting the up/positive
+     indicator semantics elsewhere on the site. */
+  background: #ffb936;
   display: inline-block;
   position: relative;
-  /* sits flush on the baseline at rest */
   top: 0;
-  /* Springy cubic-bezier applied via transition so the pip bounces on
-     the way UP (hover-in) AND on the way DOWN (hover-out) instead of
-     using a hover-only keyframe that snapped back instantly. The curve
-     overshoots both ends, giving the landing a small rebound either
-     direction. Color cross-fades on a calmer ease. */
   transition: transform 0.5s cubic-bezier(0.5, 1.75, 0.5, 1),
     background 0.18s ease;
 }

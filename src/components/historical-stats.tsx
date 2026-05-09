@@ -198,7 +198,7 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
       <div className="hist-grid">
         {apyStats && (
           <div className="hist-block">
-            <h3>Historical APY statistics</h3>
+            <h3>APY</h3>
             <table className="hist-table">
               <tbody>
                 {apyRows.slice(0, apyHalf).map((r) => (
@@ -228,7 +228,7 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
         )}
         {tvlStats && (
           <div className="hist-block">
-            <h3>Historical TVL statistics</h3>
+            <h3>TVL</h3>
             <table className="hist-table">
               <tbody>
                 {tvlRows.slice(0, tvlHalf).map((r) => (
