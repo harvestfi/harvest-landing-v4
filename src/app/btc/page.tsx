@@ -50,7 +50,7 @@ export default async function BtcPage() {
   const hubUrl = `${SITE_URL}/btc`;
 
   return (
-    <main className="page">
+    <main className="page uni-hub">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

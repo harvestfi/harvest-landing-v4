@@ -47,7 +47,7 @@ export default async function UsdcPage() {
   const hubUrl = `${SITE_URL}/usdc`;
 
   return (
-    <main className="page">
+    <main className="page uni-hub">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

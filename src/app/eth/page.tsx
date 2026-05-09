@@ -50,7 +50,7 @@ export default async function EthPage() {
   const hubUrl = `${SITE_URL}/eth`;
 
   return (
-    <main className="page">
+    <main className="page uni-hub">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

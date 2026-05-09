@@ -92,7 +92,7 @@ export function NetworkHub({
     : [];
 
   return (
-    <main className="page">
+    <main className="page uni-hub">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

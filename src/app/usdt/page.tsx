@@ -47,7 +47,7 @@ export default async function UsdtPage() {
   const hubUrl = `${SITE_URL}/usdt`;
 
   return (
-    <main className="page">
+    <main className="page uni-hub">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

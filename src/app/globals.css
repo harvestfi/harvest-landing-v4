@@ -678,6 +678,108 @@ button { font-family: inherit; cursor: pointer; }
 }
 .row-cta:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
+/* === Hub-page theme: brings asset + network hub pages into the
+   same Uniswap-alike visual language as /test. Wraps under
+   .uni-hub so it only affects pages that opt in. Hubs keep their
+   own list/table layouts, but breadcrumb, hero, stat tiles,
+   section headings and indicator color (--up green → gold) all
+   match the rest of the redesigned product page. */
+.uni-hub {
+  --up: #ffb936;
+  --up-bg: #fff5d9;
+  font-family: var(--sans);
+}
+
+/* Breadcrumb: clean sans with gold hover, matches /test */
+.uni-hub .pp-crumbs {
+  font-size: 14px;
+  color: #32312b;
+  gap: 8px;
+}
+.uni-hub .pp-crumbs a { color: #32312b; font-weight: 500; }
+.uni-hub .pp-crumbs a:hover { color: #ffb936; }
+.uni-hub .pp-crumbs .sep { color: #98a1c0; font-weight: 400; }
+.uni-hub .pp-crumbs .current { color: #191717; font-weight: 600; }
+
+/* Hero headline: display font, fluid scale, dim subline matches
+   the editorial body voice from /test. */
+.uni-hub .hero h1 {
+  font-family: var(--display);
+  font-size: clamp(30px, 4.4vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #191717;
+  line-height: 1.1;
+}
+.uni-hub .hero h1 .dim {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 400;
+  color: #32312b;
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+.uni-hub .hero-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #32312b;
+}
+.uni-hub .pulse { background: #ffb936; }
+
+/* Stat tiles: White Smoke surface, display value, sans label.
+   Soft hover lift to read as interactive cards. */
+.uni-hub .stat-tile {
+  background: #f1f5f4;
+  border: 0 !important;
+  border-radius: 14px;
+  padding: 18px 20px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-hub .stat-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -10px rgba(25, 23, 23, 0.12);
+}
+.uni-hub .stat-label {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: #32312b;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-bottom: 6px;
+}
+.uni-hub .stat-val {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: #191717;
+}
+
+/* Section heading rail: display font, no uppercase smallcaps. */
+.uni-hub .section-title-bar h2 {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: #191717;
+}
+.uni-hub .section-title-bar .mono.dim {
+  font-family: var(--mono);
+  color: #6e6c66;
+}
+
+/* Cards inside hubs (e.g. BrowseByNetwork) get the same soft
+   shadow lift on hover so the page reads as one system. */
+.uni-hub .card {
+  border: 0 !important;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(25, 23, 23, 0.05);
+  border-radius: 16px;
+}
+
 /* === footer === */
 .foot {
   margin-top: 48px;
