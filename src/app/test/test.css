@@ -212,15 +212,15 @@ body:has(.uni-shell) {
   flex: 1;
 }
 
-/* Left cluster of the chart controls bar: timeframe pills next to
-   the minimal chart-style icon switcher. Right cluster: metric
-   tabs (TVL / APY / Share price). The style switcher is intention-
-   ally the least-dominant control in the area - bare icon buttons,
-   no rail, no fill, gold tint on active. */
-.uni-shell .uni-controls-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
+/* Chart header: bignum on left, metric selector (TVL / APY / Share
+   price) on the top right. The selector is a bordered group with
+   no fill at rest; active tab is filled gold. */
+.uni-shell .uni-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
 }
 .uni-shell .uni-style-mini {
   display: inline-flex;
@@ -251,9 +251,6 @@ body:has(.uni-shell) {
 
 /* Mobile: drop the metric tabs gap and shrink the style switcher
    so all controls fit on a tight row. */
-@media (max-width: 540px) {
-  .uni-shell .uni-controls-right { gap: 14px; }
-}
 
 .uni-shell .uni-bignum-value {
   font-family: var(--display);
@@ -444,44 +441,37 @@ body:has(.uni-shell) {
   color: var(--uni-ink);
   box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
 }
+/* Metric selector: bordered pill group, no fill at rest. Active
+   tab fills Sunflower Gold (matches the time-range pill rail). */
 .uni-shell .uni-tab-text {
   display: inline-flex;
-  gap: 22px;
-  font-size: 14px;
   align-items: center;
+  border: 1px solid var(--uni-line);
+  border-radius: var(--uni-radius-pill);
+  padding: 4px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 .uni-shell .uni-tab-btn {
-  position: relative;
   border: 0;
   background: transparent;
-  padding: 6px 0 8px;
+  padding: 6px 14px;
   margin: 0;
+  border-radius: var(--uni-radius-pill);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--uni-ink-3);
+  color: var(--uni-ink-2);
   cursor: pointer;
-  transition: color 0.12s ease;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
-.uni-shell .uni-tab-btn:hover { color: var(--uni-ink-2); }
-/* Active metric tab: keep the text Onyx (bold) so it reads against
-   white, but plant a 2px gold underline so the selection is
-   colour-coded the same way as the time pill. The pseudo-element
-   sits flush with the bottom of the button rather than below text
-   to avoid descender clipping. */
+.uni-shell .uni-tab-btn:hover { color: var(--uni-ink); }
 .uni-shell .uni-tab-btn.active {
+  background: var(--uni-gold);
   color: var(--uni-ink);
   font-weight: 600;
-}
-.uni-shell .uni-tab-btn.active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background: var(--uni-gold);
-  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
 }
 
 /* Sidebar stack */
@@ -977,6 +967,28 @@ body:has(.uni-shell) {
   border-radius: 1px;
 }
 
+/* Sticky CTA: small filled gold pill pinned to the far right of the
+   sub-bar after the jump links. Hidden on mobile so the sub-bar
+   doesn't overflow. */
+.uni-shell .uni-sticky-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  border-radius: var(--uni-radius-pill);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: filter 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+.uni-shell .uni-sticky-cta:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
 /* Tighter spacing + drop the longer link labels on narrower screens
    so the bar never overflows the viewport. */
 @media (max-width: 900px) {
@@ -987,6 +999,7 @@ body:has(.uni-shell) {
   .uni-shell .uni-sticky-right a[href="#ecosystem"],
   .uni-shell .uni-sticky-right a[href="#details"],
   .uni-shell .uni-sticky-right a[href="#about"] { display: none; }
+  .uni-shell .uni-sticky-cta { display: none; }
 }
 @media (max-width: 700px) {
   .uni-shell .uni-sticky-stat { display: none; }
@@ -1979,22 +1992,14 @@ body:has(.uni-shell) {
   .uni-shell .uni-bignum-value { font-size: 26px; }
   .uni-shell .uni-bignum-meta { font-size: 14px; gap: 8px; }
 
-  /* Chart controls stack into two clean rows on mobile so 1M-ALL,
-     style icons, and TVL/APY/Share price each get a full-width
-     row instead of competing on the same line. */
-  .uni-shell .uni-chart-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  .uni-shell .uni-controls-left {
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  .uni-shell .uni-tab-text { gap: 18px; flex-wrap: wrap; }
+  /* Chart header on mobile: bignum + metric selector stack with
+     reasonable wrapping so neither overflows. Controls bar (time
+     pills + chart style) stays horizontal but tightens. */
+  .uni-shell .uni-chart-header { gap: 12px; align-items: center; }
+  .uni-shell .uni-chart-controls { gap: 12px; }
   .uni-shell .uni-tab-pills { padding: 3px; }
   .uni-shell .uni-pill-btn { padding: 5px 11px; font-size: 12px; }
+  .uni-shell .uni-tab-btn { padding: 5px 11px; font-size: 12px; }
 
   /* Side card and other cards: trim padding for narrow phones. */
   .uni-shell .uni-side-card { padding: 18px 20px; }
@@ -2012,13 +2017,75 @@ body:has(.uni-shell) {
   .uni-shell .hist-table td { font-size: 16px; }
 
   /* Section gap + card padding compacted for phones. */
-  .uni-shell .uni-below { gap: 36px; }
+  .uni-shell .uni-below { gap: 32px; }
   .uni-shell .uni-stability-card { padding: 20px 18px; }
   .uni-shell .bench-stats { padding: 18px 20px; gap: 14px; }
-  .uni-shell .uni-similar-card { padding: 18px 20px; }
   .uni-shell .eco-chart-wrap { padding: 4px 0 12px; }
 
   /* Stability card stack: 2x2 stats row tightens further on phones */
   .uni-shell .uni-stability-stats { gap: 16px; }
   .uni-shell .uni-stability-score { font-size: 42px; }
+
+  /* Performance Overview numbered list: scale body text down so the
+     four narrative bullets don't read as paragraph headings. */
+  .uni-shell .pp-numbered-item { gap: 12px; padding: 14px 0; }
+  .uni-shell .pp-num-badge { width: 28px; height: 28px; font-size: 11px; border-radius: 8px; }
+  .uni-shell .pp-num-text { font-size: 14.5px; line-height: 1.55; }
+
+  /* Long-term performance arrows: same downscale. */
+  .uni-shell .about-prose-list { gap: 10px; }
+  .uni-shell .about-prose-item {
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 10px;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  .uni-shell .about-prose-icon { font-size: 14px; }
+
+  /* Bench-table on phones: 'You are here' pill was breaking the
+     row layout. Drop the chain column (already hidden), let the
+     product cell wrap, and shorten the pill text. */
+  .uni-shell .bench-table { overflow: visible; }
+  .uni-shell .bt-head, .uni-shell .bt-row {
+    grid-template-columns: 32px minmax(0, 2fr) 1fr 1fr;
+    gap: 8px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+  }
+  .uni-shell .bt-head span:nth-child(3),
+  .uni-shell .bt-row span:nth-child(3) { display: none; }
+  .uni-shell .bt-product-cell { flex-wrap: wrap; gap: 8px; }
+  .uni-shell .bt-product { gap: 8px; }
+  .uni-shell .bt-product img { width: 18px !important; height: 18px !important; }
+  .uni-shell .bt-row .here-pill {
+    font-size: 9.5px;
+    padding: 1px 6px;
+    margin-left: 0;
+    white-space: nowrap;
+  }
+
+  /* Strategy details: tighter row rhythm and value scaling. */
+  .uni-shell .cd-row { padding: 12px 0; gap: 12px; grid-template-columns: 1fr; }
+  .uni-shell .cd-label { font-size: 12px; }
+  .uni-shell .cd-val { font-size: 15px; }
+  .uni-shell .cd-row-full { grid-template-columns: 1fr; }
+  .uni-shell .cd-addr { font-size: 12.5px; word-break: break-all; }
+
+  /* Similar opportunities: phones get a compact horizontal row card
+     instead of the desktop hero card. Half the vertical footprint. */
+  .uni-shell .uni-similar-grid { gap: 10px; }
+  .uni-shell .uni-similar-card {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  .uni-shell .uni-similar-card-head { gap: 10px; }
+  .uni-shell .uni-similar-icon img { width: 24px !important; height: 24px !important; }
+  .uni-shell .uni-similar-name { font-size: 14px; }
+  .uni-shell .uni-similar-meta { font-size: 11.5px; }
+  .uni-shell .uni-similar-stats {
+    padding-top: 10px;
+    gap: 10px;
+  }
+  .uni-shell .uni-similar-stat-label { font-size: 11px; margin-bottom: 2px; }
+  .uni-shell .uni-similar-stat-value { font-size: 17px; }
 }

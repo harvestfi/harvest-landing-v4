@@ -15,6 +15,7 @@ interface Props {
   asset: string;
   apyLabel: string;
   tvlLabel: string;
+  ctaHref: string;
 }
 
 // Full set of section anchors mirroring the jump-nav. The CSS hides
@@ -28,7 +29,13 @@ const QUICK_LINKS: { href: string; label: string }[] = [
   { href: "#faq", label: "FAQ" },
 ];
 
-export function TestStickyHeader({ productName, asset, apyLabel, tvlLabel }: Props) {
+export function TestStickyHeader({
+  productName,
+  asset,
+  apyLabel,
+  tvlLabel,
+  ctaHref,
+}: Props) {
   const [show, setShow] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -108,6 +115,15 @@ export function TestStickyHeader({ productName, asset, apyLabel, tvlLabel }: Pro
             );
           })}
         </nav>
+        <a
+          href={ctaHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="uni-sticky-cta"
+        >
+          View Strategy
+          <span aria-hidden="true">↗</span>
+        </a>
       </div>
     </div>
   );

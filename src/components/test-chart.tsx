@@ -324,21 +324,36 @@ export function TestChart({ series }: Props) {
 
   return (
     <div className={`uni-chart-wrap uni-chart--${style}`}>
-      <div className="uni-bignum" id="performance">
-        <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
-        <div className="uni-bignum-meta">
-          <span
-            className="uni-bignum-label"
-            data-tooltip={metricTooltip(metric, latestRawByMetric.sharePrice || null)}
-          >
-            {metricLabel(metric, isHovering)}
-          </span>
-          {isHovering && activePoint && (
-            <>
-              <span className="uni-bignum-dot" aria-hidden="true">·</span>
-              <span className="uni-bignum-date">{fmtDate(activePoint.t)}</span>
-            </>
-          )}
+      <div className="uni-chart-header">
+        <div className="uni-bignum" id="performance">
+          <div className="uni-bignum-value">{formatValue(metric, latest)}</div>
+          <div className="uni-bignum-meta">
+            <span
+              className="uni-bignum-label"
+              data-tooltip={metricTooltip(metric, latestRawByMetric.sharePrice || null)}
+            >
+              {metricLabel(metric, isHovering)}
+            </span>
+            {isHovering && activePoint && (
+              <>
+                <span className="uni-bignum-dot" aria-hidden="true">·</span>
+                <span className="uni-bignum-date">{fmtDate(activePoint.t)}</span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="uni-tab-text" role="tablist" aria-label="Metric">
+          {(["tvl", "apy", "sharePrice"] as Metric[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`uni-tab-btn${metric === m ? " active" : ""}`}
+              onClick={() => onMetric(m)}
+              aria-pressed={metric === m}
+            >
+              {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -420,70 +435,55 @@ export function TestChart({ series }: Props) {
       </div>
 
       <div className="uni-chart-controls">
-        <div className="uni-controls-left">
-          <div className="uni-tab-pills" role="tablist" aria-label="Time range">
-            {RANGES.map((r) => (
-              <button
-                key={r}
-                type="button"
-                className={`uni-pill-btn${range === r ? " active" : ""}`}
-                onClick={() => onRange(r)}
-                aria-pressed={range === r}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-          <div className="uni-style-mini" role="tablist" aria-label="Chart style">
+        <div className="uni-tab-pills" role="tablist" aria-label="Time range">
+          {RANGES.map((r) => (
             <button
+              key={r}
               type="button"
-              className={`uni-style-mini-btn${style === "bars" ? " active" : ""}`}
-              onClick={() => setStyle("bars")}
-              aria-pressed={style === "bars"}
-              aria-label="Bar chart"
+              className={`uni-pill-btn${range === r ? " active" : ""}`}
+              onClick={() => onRange(r)}
+              aria-pressed={range === r}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="4" y="13" width="3.5" height="8" rx="1" />
-                <rect x="10.25" y="8" width="3.5" height="13" rx="1" />
-                <rect x="16.5" y="11" width="3.5" height="10" rx="1" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className={`uni-style-mini-btn${style === "line" ? " active" : ""}`}
-              onClick={() => setStyle("line")}
-              aria-pressed={style === "line"}
-              aria-label="Line chart"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 17l6-6 4 4 8-8" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className={`uni-style-mini-btn${style === "step" ? " active" : ""}`}
-              onClick={() => setStyle("step")}
-              aria-pressed={style === "step"}
-              aria-label="Step chart"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
-                <path d="M3 17 H8 V12 H13 V8 H18 V14 H21" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div className="uni-tab-text" role="tablist" aria-label="Metric">
-          {(["tvl", "apy", "sharePrice"] as Metric[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              className={`uni-tab-btn${metric === m ? " active" : ""}`}
-              onClick={() => onMetric(m)}
-              aria-pressed={metric === m}
-            >
-              {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
+              {r}
             </button>
           ))}
+        </div>
+        <div className="uni-style-mini" role="tablist" aria-label="Chart style">
+          <button
+            type="button"
+            className={`uni-style-mini-btn${style === "bars" ? " active" : ""}`}
+            onClick={() => setStyle("bars")}
+            aria-pressed={style === "bars"}
+            aria-label="Bar chart"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="13" width="3.5" height="8" rx="1" />
+              <rect x="10.25" y="8" width="3.5" height="13" rx="1" />
+              <rect x="16.5" y="11" width="3.5" height="10" rx="1" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`uni-style-mini-btn${style === "line" ? " active" : ""}`}
+            onClick={() => setStyle("line")}
+            aria-pressed={style === "line"}
+            aria-label="Line chart"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M3 17l6-6 4 4 8-8" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`uni-style-mini-btn${style === "step" ? " active" : ""}`}
+            onClick={() => setStyle("step")}
+            aria-pressed={style === "step"}
+            aria-label="Step chart"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+              <path d="M3 17 H8 V12 H13 V8 H18 V14 H21" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

@@ -155,6 +155,7 @@ export default async function TestPage() {
         asset={vault.asset}
         apyLabel={formatAPY(vault.apy24h)}
         tvlLabel={formatTVL(vault.tvl)}
+        ctaHref={harvestAppUrl(vault.chain, vault.contractAddress)}
       />
 
       {/* Breadcrumb: Home › {Asset} Yield Ranking › {Product} */}

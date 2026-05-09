@@ -14,22 +14,6 @@ interface Props {
   asset: string;
 }
 
-// Underlying asset full names. Used by the Yield Output chip on the
-// stability card (technical reasons mean the apyBreakdown source list
-// is unreliable for all vaults; the underlying asset is always
-// authoritative).
-const ASSET_FULL_NAMES: Record<string, string> = {
-  USDC: "USD Coin",
-  USDT: "Tether USD",
-  USDT0: "Tether USD",
-  ETH: "Ethereum",
-  WETH: "Wrapped ETH",
-  BTC: "Bitcoin",
-  WBTC: "Wrapped BTC",
-  cbBTC: "Coinbase BTC",
-  EURC: "Euro Coin",
-};
-
 const DAY = 24 * 60 * 60;
 
 function computeStability(history: FullVaultHistory) {
@@ -92,7 +76,6 @@ function labelColorForScore(score: number): string {
 
 export function TestStabilityCard({ history, asset }: Props) {
   const s = computeStability(history);
-  const assetFullName = ASSET_FULL_NAMES[asset] ?? asset;
 
   if (!s) {
     return (
@@ -216,7 +199,6 @@ export function TestStabilityCard({ history, asset }: Props) {
               <span className="uni-stability-source-chip">
                 <AssetIcon asset={asset} size={16} />
                 <span className="uni-stability-source-ticker">{asset}</span>
-                <span className="uni-stability-source-name">{assetFullName}</span>
               </span>
             </div>
           </div>
