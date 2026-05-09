@@ -7,7 +7,7 @@
 // cursor by x-position so hovering between gaps OR over empty space
 // above a bar still selects the right column in either mode.
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 
 type Metric = "tvl" | "apy" | "sharePrice";
 type Range = "1M" | "3M" | "1Y" | "ALL";
@@ -122,24 +122,63 @@ export function TestChart({ series }: Props) {
   const [range, setRange] = useState<Range>("ALL");
   const [style, setStyle] = useState<ChartStyle>("bars");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [, startTransition] = useTransition();
 
-  const all = series[metric] ?? [];
-  const sorted = [...all].sort((a, b) => a.t - b.t);
+  // Heavy computation memoized on (series, metric, range) only - so
+  // mouse-move (which fires hoverIdx updates ~60×/s) and chart-style
+  // toggles do NOT re-run sort + filter + downsample + path build.
+  // This was the root cause of the perceived "lag" when switching
+  // between timeframes: every prior click was followed by a stream
+  // of mouse-moves each triggering the whole computation again.
+  const { points, heightFor, linePath, areaPath } = useMemo(() => {
+    const all = series[metric] ?? [];
+    const sorted = [...all].sort((a, b) => a.t - b.t);
 
-  let raw: Point[] = sorted;
-  if (range !== "ALL" && sorted.length > 0) {
-    const last = sorted[sorted.length - 1].t;
-    const cutoff = last - RANGE_SECONDS[range];
-    raw = sorted.filter((p) => p.t >= cutoff);
-    if (raw.length === 0) raw = sorted;
-  }
-  const points = downsample(raw);
+    let raw: Point[] = sorted;
+    if (range !== "ALL" && sorted.length > 0) {
+      const last = sorted[sorted.length - 1].t;
+      const cutoff = last - RANGE_SECONDS[range];
+      raw = sorted.filter((p) => p.t >= cutoff);
+      if (raw.length === 0) raw = sorted;
+    }
+    const downs = downsample(raw);
+
+    // Manual min/max loop is faster than Math.min(...values) for
+    // arrays larger than a few hundred entries (no spread overhead).
+    let minV = Infinity;
+    let maxV = -Infinity;
+    for (const p of downs) {
+      if (p.v < minV) minV = p.v;
+      if (p.v > maxV) maxV = p.v;
+    }
+    if (!Number.isFinite(minV)) minV = 0;
+    if (!Number.isFinite(maxV)) maxV = 0;
+    const span = maxV - minV;
+    const heightFor = (v: number): number => {
+      if (span <= 0) return 60;
+      return ((v - minV) / span) * 92 + 8;
+    };
+
+    const ys = downs.map((p) => 100 - heightFor(p.v));
+    const { line, area } = buildSmoothPaths(ys);
+
+    return {
+      points: downs,
+      heightFor,
+      linePath: line,
+      areaPath: area,
+    };
+  }, [series, metric, range]);
 
   const isHovering =
     hoverIdx !== null && hoverIdx >= 0 && hoverIdx < points.length;
   const activeIdx = isHovering ? hoverIdx! : points.length - 1;
   const activePoint = points[activeIdx];
   const latest = activePoint ? activePoint.v : 0;
+
+  const activeX =
+    points.length > 1 ? (activeIdx / (points.length - 1)) * 100 : 50;
+  const activeYpct = activePoint ? heightFor(activePoint.v) : 0;
 
   const barsRef = useRef<HTMLDivElement | null>(null);
   const onBarsMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -153,23 +192,19 @@ export function TestChart({ series }: Props) {
     if (idx !== hoverIdx) setHoverIdx(idx);
   };
 
-  const values = points.map((p) => p.v);
-  const minV = values.length > 0 ? Math.min(...values) : 0;
-  const maxV = values.length > 0 ? Math.max(...values) : 0;
-  const span = maxV - minV;
-  const heightFor = (v: number): number => {
-    if (span <= 0) return 60;
-    return ((v - minV) / span) * 92 + 8;
+  // Range + metric clicks are wrapped in startTransition so React can
+  // keep the button feedback snappy and yield to the browser before
+  // committing the heavy chart re-render. Hover state is reset
+  // synchronously so the headline number snaps to the latest point
+  // immediately on click.
+  const onRange = (r: Range) => {
+    setHoverIdx(null);
+    startTransition(() => setRange(r));
   };
-
-  // SVG in y-down coordinates for the line: convert heightFor% → y
-  // by inverting (100 - h) so larger values plot higher on the chart.
-  const ys = points.map((p) => 100 - heightFor(p.v));
-  const { line: linePath, area: areaPath } = buildSmoothPaths(ys);
-  const activeX = points.length > 1
-    ? (activeIdx / (points.length - 1)) * 100
-    : 50;
-  const activeYpct = activePoint ? heightFor(activePoint.v) : 0;
+  const onMetric = (m: Metric) => {
+    setHoverIdx(null);
+    startTransition(() => setMetric(m));
+  };
 
   return (
     <div className={`uni-chart-wrap uni-chart--${style}`}>
@@ -291,7 +326,7 @@ export function TestChart({ series }: Props) {
               key={r}
               type="button"
               className={`uni-pill-btn${range === r ? " active" : ""}`}
-              onClick={() => { setRange(r); setHoverIdx(null); }}
+              onClick={() => onRange(r)}
               aria-pressed={range === r}
             >
               {r}
@@ -304,7 +339,7 @@ export function TestChart({ series }: Props) {
               key={m}
               type="button"
               className={`uni-tab-btn${metric === m ? " active" : ""}`}
-              onClick={() => { setMetric(m); setHoverIdx(null); }}
+              onClick={() => onMetric(m)}
               aria-pressed={metric === m}
             >
               {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
