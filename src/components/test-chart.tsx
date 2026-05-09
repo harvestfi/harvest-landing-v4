@@ -9,7 +9,7 @@
 import { useState } from "react";
 
 type Metric = "tvl" | "apy" | "sharePrice";
-type Range = "1W" | "1M" | "3M" | "1Y" | "ALL";
+type Range = "1M" | "3M" | "1Y" | "ALL";
 
 interface Point { t: number; v: number }
 
@@ -23,12 +23,34 @@ interface Props {
   series: ChartSeries;
 }
 
+const RANGES: Range[] = ["1M", "3M", "1Y", "ALL"];
+
 const RANGE_SECONDS: Record<Exclude<Range, "ALL">, number> = {
-  "1W": 7 * 86400,
   "1M": 30 * 86400,
   "3M": 90 * 86400,
   "1Y": 365 * 86400,
 };
+
+// Cap the number of bars so 1Y/ALL views (300+ daily points) don't
+// overflow the chart container. Average values within fixed-size
+// buckets so visual density stays clean while still showing trend.
+const MAX_BARS = 90;
+
+function downsample(points: Point[]): Point[] {
+  if (points.length <= MAX_BARS) return points;
+  const bucketSize = points.length / MAX_BARS;
+  const out: Point[] = [];
+  for (let i = 0; i < MAX_BARS; i++) {
+    const start = Math.floor(i * bucketSize);
+    const end = Math.min(points.length, Math.floor((i + 1) * bucketSize));
+    if (start >= end) continue;
+    const slice = points.slice(start, end);
+    const avgV = slice.reduce((s, p) => s + p.v, 0) / slice.length;
+    const midT = slice[Math.floor(slice.length / 2)].t;
+    out.push({ t: midT, v: avgV });
+  }
+  return out;
+}
 
 function metricLabel(m: Metric): string {
   if (m === "tvl") return "Total deposits";
@@ -53,18 +75,19 @@ function fmtDate(t: number): string {
 
 export function TestChart({ series }: Props) {
   const [metric, setMetric] = useState<Metric>("tvl");
-  const [range, setRange] = useState<Range>("1M");
+  const [range, setRange] = useState<Range>("ALL");
 
   const all = series[metric] ?? [];
   const sorted = [...all].sort((a, b) => a.t - b.t);
 
-  let points: Point[] = sorted;
+  let raw: Point[] = sorted;
   if (range !== "ALL" && sorted.length > 0) {
     const last = sorted[sorted.length - 1].t;
     const cutoff = last - RANGE_SECONDS[range];
-    points = sorted.filter((p) => p.t >= cutoff);
-    if (points.length === 0) points = sorted;
+    raw = sorted.filter((p) => p.t >= cutoff);
+    if (raw.length === 0) raw = sorted;
   }
+  const points = downsample(raw);
 
   const latest = points.length > 0 ? points[points.length - 1].v : 0;
 
@@ -114,7 +137,7 @@ export function TestChart({ series }: Props) {
 
       <div className="uni-chart-controls">
         <div className="uni-tab-pills" role="tablist" aria-label="Time range">
-          {(["1W", "1M", "3M", "1Y", "ALL"] as Range[]).map((r) => (
+          {RANGES.map((r) => (
             <button
               key={r}
               type="button"

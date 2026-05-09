@@ -41,11 +41,17 @@ body:has(.uni-shell) {
 /* Breadcrumbs */
 .uni-shell .uni-crumbs {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
   font-size: 14px;
   color: var(--uni-ink-2);
+}
+.uni-shell .uni-crumbs-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .uni-shell .uni-crumbs a {
   color: var(--uni-ink-2);
@@ -55,25 +61,29 @@ body:has(.uni-shell) {
 .uni-shell .uni-crumbs-sep { color: var(--uni-ink-3); font-weight: 400; }
 .uni-shell .uni-crumbs-current { color: var(--uni-ink); font-weight: 600; }
 
-/* Title row */
+/* Title row: 2-row grid. Icon spans both rows so the title line
+   (h1 + pills) is visually centered against the icon, with the
+   address sub-line tucked underneath in column 2. No wrapper otoczka
+   around the icon - the asset PNG is rendered raw at 48px. */
 .uni-shell .uni-title-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 4px;
   align-items: center;
-  gap: 18px;
   padding: 6px 0 18px;
 }
 .uni-shell .uni-title-icon {
-  width: 56px;
-  height: 56px;
-  display: flex;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #FFFFFF;
-  border: 1px solid var(--uni-line);
-  border-radius: 50%;
-  flex-shrink: 0;
 }
-.uni-shell .uni-title-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.uni-shell .uni-title-icon img {
+  display: block;
+  border-radius: 50%;
+}
 .uni-shell .uni-title-line {
   display: flex;
   align-items: center;
@@ -187,10 +197,13 @@ body:has(.uni-shell) {
   display: flex;
   align-items: flex-end;
   gap: 3px;
+  overflow: hidden; /* defensive: bars are downsampled to MAX_BARS but
+                        clamp here too so a future edge case can't
+                        spill bars into the sidebar. */
 }
 .uni-shell .uni-chart-bar {
   flex: 1;
-  min-width: 4px;
+  min-width: 0;
   min-height: 2px;
   background: var(--uni-gold);
   border-radius: 2px 2px 0 0;

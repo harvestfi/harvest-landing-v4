@@ -13,7 +13,8 @@ import {
   getHoldersMap,
 } from "@/lib/data";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
-import { chainToSlug } from "@/lib/networks";
+import { productPageCrumbs } from "@/lib/seo";
+import { SITE_URL } from "@/lib/constants";
 import { AssetIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
@@ -72,31 +73,43 @@ export default async function TestPage() {
   };
 
   const protocolName = stripChainSuffix(vault.category, vault.chain);
+  const crumbs = productPageCrumbs(vault);
 
   return (
     <div className="uni-shell">
-      {/* Breadcrumb */}
+      {/* Breadcrumb: Home › {Asset} Yield › {Product} */}
       <div className="uni-crumbs">
-        <Link href={`/${chainToSlug(vault.chain)}`}>{vault.chain}</Link>
-        <span className="uni-crumbs-sep">›</span>
-        <span className="uni-crumbs-current">{vault.productName}</span>
+        {crumbs.map((c, i) => {
+          const isLast = i === crumbs.length - 1;
+          const href = c.url ? c.url.replace(SITE_URL, "") || "/" : null;
+          return (
+            <span key={i} className="uni-crumbs-item">
+              {!isLast && href ? (
+                <Link href={href}>{c.name}</Link>
+              ) : (
+                <span className="uni-crumbs-current">{c.name}</span>
+              )}
+              {!isLast && <span className="uni-crumbs-sep">›</span>}
+            </span>
+          );
+        })}
       </div>
 
-      {/* Title row */}
+      {/* Title row: bare icon + title line + sub-address row. The icon
+          spans both rows so the title line is visually centered against
+          the icon, not floating above the address. */}
       <header className="uni-title-row">
-        <div className="uni-title-icon" aria-hidden="true">
-          <AssetIcon asset={vault.asset} size={44} />
+        <span className="uni-title-icon" aria-hidden="true">
+          <AssetIcon asset={vault.asset} size={48} />
+        </span>
+        <div className="uni-title-line">
+          <h1 className="uni-title">{vault.productName}</h1>
+          <span className="uni-pill uni-pill-version">{protocolName}</span>
+          <span className="uni-pill uni-pill-fee">{vault.chain}</span>
         </div>
-        <div className="uni-title-main">
-          <div className="uni-title-line">
-            <h1 className="uni-title">{vault.productName}</h1>
-            <span className="uni-pill uni-pill-version">{protocolName}</span>
-            <span className="uni-pill uni-pill-fee">{vault.chain}</span>
-          </div>
-          <div className="uni-title-sub">
-            <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
-            <CopyAddressButton address={vault.contractAddress} compact />
-          </div>
+        <div className="uni-title-sub">
+          <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
+          <CopyAddressButton address={vault.contractAddress} compact />
         </div>
       </header>
 
