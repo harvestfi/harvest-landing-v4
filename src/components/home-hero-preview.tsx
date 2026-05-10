@@ -58,11 +58,17 @@ export function HomeHeroPreview() {
           ))}
         </div>
 
-        {/* Tabs row */}
-        <div className="prevcard-tabs" aria-hidden="true">
-          <span className="prevcard-tab active">TVL</span>
-          <span className="prevcard-tab">APY</span>
-          <span className="prevcard-tab">Share price</span>
+        {/* Tabs row + View CTA */}
+        <div className="prevcard-foot">
+          <div className="prevcard-tabs" aria-hidden="true">
+            <span className="prevcard-tab active">TVL</span>
+            <span className="prevcard-tab">APY</span>
+            <span className="prevcard-tab">Share price</span>
+          </div>
+          <span className="prevcard-cta" aria-hidden="true">
+            View
+            <span className="prevcard-cta-arrow">↗</span>
+          </span>
         </div>
       </div>
     </aside>

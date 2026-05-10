@@ -239,7 +239,6 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
                       data-tooltip={operatorTooltip}
                     >
                       {operatorName}
-                      <span className="uni-byline-brand-dot" aria-hidden="true" />
                     </span>
                   </>
                 )}

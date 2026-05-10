@@ -574,29 +574,12 @@ button { font-family: inherit; cursor: pointer; }
   flex-direction: column;
   gap: 36px;
 }
-.foot-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  color: inherit;
-  width: fit-content;
-}
-.foot-brand-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 1.5px;
-  background: #ffb936;
-  display: inline-block;
-  position: relative;
-  top: 0;
-  transition: transform 0.5s cubic-bezier(0.5, 1.75, 0.5, 1),
-    background 0.18s ease;
-}
-.foot-brand:hover .foot-brand-dot {
-  transform: translateY(-9px);
-  background: var(--ink);
-}
+/* Footer brand reuses the same .brand / .brand-name / .brand-dot
+   classes as the topnav so the wordmark + dot reads identically in
+   both places (same size, same hop animation on hover). The footer
+   column just provides extra spacing context. */
+.foot-col-brand .brand { padding: 0; }
+.foot-col-brand .brand:hover { background: transparent; }
 .foot-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr 1fr;
@@ -610,13 +593,6 @@ button { font-family: inherit; cursor: pointer; }
   min-width: 0;
 }
 .foot-col-brand { gap: 14px; max-width: 380px; }
-.foot-brand-name {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
 .foot-tagline {
   font-size: 14px;
   color: var(--ink-2);
@@ -2604,12 +2580,16 @@ button { font-family: inherit; cursor: pointer; }
    product page: Sunflower Gold accent, bigger type, yellow-highlight
    links, generous line-height. Two-column layout preserved (192px
    sticky TOC sidebar on the left, content on the right). */
+body:has(.methodology-page) {
+  background: #ffffff !important;
+}
 .methodology-page {
   max-width: 1320px;
   margin: 0 auto;
   padding: 0 var(--shell-pad) 96px;
   color: #191717;
   font-family: var(--sans);
+  background: #ffffff;
 }
 
 /* Header --------------------------------------------------------- */
@@ -2757,7 +2737,8 @@ button { font-family: inherit; cursor: pointer; }
 /* Article body --------------------------------------------------- */
 .meth-body {
   min-width: 0;
-  max-width: 78ch;
+  max-width: none;
+  width: 100%;
 }
 
 .meth-section {
@@ -3785,7 +3766,7 @@ button { font-family: inherit; cursor: pointer; }
 .hub-thead,
 .hub-row {
   display: grid;
-  grid-template-columns: 56px minmax(180px, 2.2fr) 110px 110px 1fr 1fr 130px;
+  grid-template-columns: 56px minmax(180px, 2.2fr) 110px 110px 56px 1fr 130px;
   align-items: center;
   gap: 16px;
 }
@@ -3873,12 +3854,8 @@ button { font-family: inherit; cursor: pointer; }
 .hub-network {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--hub-ink);
-  text-align: right;
-  justify-self: end;
+  justify-content: center;
+  justify-self: center;
 }
 .hub-network img { border-radius: 50%; flex-shrink: 0; display: block; }
 .hub-strategy {
@@ -3894,6 +3871,10 @@ button { font-family: inherit; cursor: pointer; }
   text-align: right;
   justify-self: end;
 }
+.hub-th-center {
+  text-align: center;
+  justify-self: center;
+}
 .hub-num {
   text-align: right;
   font-family: var(--display);
@@ -3905,11 +3886,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 .hub-apy {
   color: var(--hub-ink);
-  font-weight: 600;
+  font-weight: 700;
 }
 .hub-tvl {
   color: var(--hub-ink);
-  font-weight: 700;
+  font-weight: 600;
 }
 .hub-num-secondary { color: var(--hub-ink-2); font-weight: 500; }
 .hub-spark { display: inline-flex; justify-content: flex-end; }
@@ -4025,7 +4006,7 @@ button { font-family: inherit; cursor: pointer; }
 @media (max-width: 1100px) {
   .hub-thead,
   .hub-row {
-    grid-template-columns: 40px minmax(140px, 2fr) 100px 100px 1fr 110px;
+    grid-template-columns: 40px minmax(140px, 2fr) 100px 100px 48px 110px;
   }
   .hub-thead .hub-th:nth-child(6),
   .hub-row .hub-cell:nth-child(6) { display: none; }

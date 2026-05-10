@@ -39,7 +39,7 @@ const COPY: Record<string, AssetCopy> = {
     lede:
       "Native BTC earns nothing on its own. To put it to work, you wrap it (WBTC, cbBTC, tBTC) and route the wrapped token through a lending market, an autocompounder, or a basis trade. Every row below is one of those routes, picked from the strategies we currently track.",
     heroSub:
-      "Live ranking of {N} wrapped-BTC strategies across {WRAPPERS} on {C} {C_WORD}.",
+      "Live ranking of {N} wrapped-BTC strategies on {C} {C_WORD}.",
     about: [
       {
         h3: "What \"Bitcoin yield\" actually means",

@@ -664,10 +664,10 @@ body:has(.uni-shell) {
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 50;
+  left: 50%;
+  z-index: 9999;
   width: max-content;
-  max-width: min(320px, 90vw);
+  max-width: min(280px, 80vw);
   padding: 10px 12px;
   background: var(--uni-ink);
   color: #ffffff;
@@ -682,19 +682,22 @@ body:has(.uni-shell) {
   box-shadow: 0 12px 28px -12px rgba(25, 23, 23, 0.45),
               0 2px 6px -2px rgba(25, 23, 23, 0.20);
   opacity: 0;
-  transform: translateY(4px);
+  /* Center the bubble horizontally on the chip and offset vertically
+     so the entrance reads as a small upward pop. */
+  transform: translateX(-50%) translateY(4px);
   pointer-events: none;
   /* No delay - tooltip pops immediately on hover so scrubbing
      between adjacent labels feels live, not laggy. */
   transition: opacity 0.08s ease, transform 0.08s ease;
   white-space: normal;
 }
-/* Right-align the popup for chips near the right edge so the bubble
-   stays inside the viewport. Authors opt-in by adding
+/* Right-align the bubble on chips near the right edge of the page so
+   it stays inside the viewport. Authors opt in via
    data-tooltip-align="end" on the chip. */
 .uni-shell [data-tooltip][data-tooltip-align="end"]::after {
   left: auto;
   right: 0;
+  transform: translateX(0) translateY(4px);
 }
 .uni-shell [data-tooltip][data-tooltip-align="end"]::before {
   left: auto;
@@ -704,8 +707,9 @@ body:has(.uni-shell) {
   content: "";
   position: absolute;
   bottom: calc(100% + 2px);
-  left: 14px;
-  z-index: 51;
+  left: 50%;
+  margin-left: -4px;
+  z-index: 10000;
   width: 8px;
   height: 8px;
   background: var(--uni-ink);
@@ -719,7 +723,10 @@ body:has(.uni-shell) {
   opacity: 1;
 }
 .uni-shell [data-tooltip]:hover::after {
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
+}
+.uni-shell [data-tooltip][data-tooltip-align="end"]:hover::after {
+  transform: translateX(0) translateY(0);
 }
 
 /* Jump-to nav: very soft pill rail with refined lucide-style icons.
@@ -765,14 +772,19 @@ body:has(.uni-shell) {
   height: 24px;
   flex-shrink: 0;
   color: var(--uni-ink-2);
-  transition: color 0.15s ease;
+  transition: color 0.18s ease, transform 0.25s cubic-bezier(0.4, 1.4, 0.5, 1);
 }
 .uni-shell .uni-jump-icon {
   width: 24px;
   height: 24px;
+  transition: transform 0.25s cubic-bezier(0.4, 1.4, 0.5, 1);
 }
 .uni-shell .uni-jump-item:hover .uni-jump-icon-wrap {
   color: var(--uni-gold);
+  transform: translateY(-1px) scale(1.08);
+}
+.uni-shell .uni-jump-item:active .uni-jump-icon-wrap {
+  transform: translateY(0) scale(0.96);
 }
 .uni-shell .uni-jump-label { line-height: 1; }
 
