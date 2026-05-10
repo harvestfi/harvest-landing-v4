@@ -219,6 +219,9 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             const operatorTooltip = isAutocompounder
               ? `${operatorName}, the autocompounding platform that auto-claims native yield and reward emissions and routes them back into the underlying strategy.`
               : `${operatorName}, the platform running this vault on top of the underlying protocol.`;
+            const typeTooltip = isAutocompounder
+              ? "Autocompounder: converts earned yield and reward emissions into more units of the underlying strategy token, simplifying the claim flow on behalf of the user and socialising the gas cost across deposits."
+              : `Type: ${vault.vaultType.toLowerCase()}. How the vault converts deposits into yield.`;
             const showOperator =
               !!operatorName &&
               operatorName.toLowerCase() !== protocolName.toLowerCase();
@@ -252,7 +255,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
                 <span className="uni-byline-sep" aria-hidden="true">·</span>
                 <span
                   className="uni-byline-chip"
-                  data-tooltip="Type: how the vault converts deposits into yield (autocompounder, lending wrapper, etc.)."
+                  data-tooltip={typeTooltip}
                   data-tooltip-align="end"
                 >
                   {vault.vaultType}

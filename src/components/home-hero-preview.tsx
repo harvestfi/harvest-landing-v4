@@ -11,10 +11,11 @@ import { AssetIcon, ChainIcon } from "./token-icons";
 
 // Random-looking but deterministic bar heights so the chart looks
 // alive without re-shuffling on every render. Indexed 0..23 to match
-// a 1-month daily view.
+// a 1-month daily view. Last bar gets a noticeable bump so the rate
+// reads as "trending up to today".
 const BAR_HEIGHTS = [
   62, 71, 58, 84, 76, 90, 88, 95, 82, 78, 70, 92, 86, 81, 74, 88,
-  79, 84, 90, 76, 83, 87, 75, 81,
+  79, 84, 90, 76, 83, 87, 84, 100,
 ];
 
 export function HomeHeroPreview() {
@@ -33,7 +34,7 @@ export function HomeHeroPreview() {
             <AssetIcon asset="USDC" size={36} />
           </span>
           <div className="prevcard-id">
-            <h3 className="prevcard-name">USDC 40 Acres</h3>
+            <h3 className="prevcard-name">USDC Alpha V2</h3>
             <p className="prevcard-byline">
               <span className="prevcard-byline-chain">
                 <ChainIcon chain="Base" size={11} />
@@ -64,11 +65,47 @@ export function HomeHeroPreview() {
           ))}
         </div>
 
-        {/* Tabs row */}
-        <div className="prevcard-tabs" aria-hidden="true">
-          <span className="prevcard-tab active">TVL</span>
-          <span className="prevcard-tab">APY</span>
-          <span className="prevcard-tab">Share price</span>
+        {/* Tabs row + chart-style selector */}
+        <div className="prevcard-foot" aria-hidden="true">
+          <div className="prevcard-tabs">
+            <span className="prevcard-tab active">TVL</span>
+            <span className="prevcard-tab">APY</span>
+            <span className="prevcard-tab">Share price</span>
+          </div>
+          <div className="prevcard-style">
+            {/* Bars (active) */}
+            <span className="prevcard-style-btn active" aria-label="Bars">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="2" y="7" width="2" height="5" rx="0.5" fill="currentColor" />
+                <rect x="6" y="4" width="2" height="8" rx="0.5" fill="currentColor" />
+                <rect x="10" y="6" width="2" height="6" rx="0.5" fill="currentColor" />
+              </svg>
+            </span>
+            {/* Line */}
+            <span className="prevcard-style-btn" aria-label="Line">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M2 10 5 6 8 8 12 3"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            {/* Step */}
+            <span className="prevcard-style-btn" aria-label="Step">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M2 10 5 10 5 6 8 6 8 8 12 8"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </div>
         </div>
       </div>
     </aside>

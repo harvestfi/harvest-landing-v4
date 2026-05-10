@@ -3767,11 +3767,12 @@ body:has(.methodology-page) {
 .hub-row {
   display: grid;
   /* # | Vault | 24h APY | TVL | Strategy | Network | 30d trend
-     vault and strategy share equal flex so the row breathes; APY +
-     TVL are fixed numeric tracks, network is a small icon column,
-     trend pulls the right edge. Gap bumped 16 -> 24 for more even
-     visual spacing across the row. */
-  grid-template-columns: 50px minmax(180px, 1.4fr) 110px 110px minmax(140px, 1fr) 60px 130px;
+     The middle quartet (APY, TVL, Strategy, Network) all use the
+     same fr unit so the row reads as four evenly distributed
+     columns once the fixed rank/trend tracks are subtracted. Vault
+     stays widest with 1.6fr; Network is half a track because it's
+     an icon. */
+  grid-template-columns: 50px minmax(180px, 1.6fr) 1fr 1fr 1fr 0.5fr 130px;
   align-items: center;
   gap: 24px;
 }

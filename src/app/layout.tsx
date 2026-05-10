@@ -95,7 +95,9 @@ const ORGANIZATION_JSONLD = {
   description: SITE_DESCRIPTION,
   sameAs: [
     "https://twitter.com/harvest_finance",
-    "https://github.com/harvest-finance",
+    "https://medium.com/harvest-finance",
+    "https://discord.gg/xHXe3tYjPY",
+    "https://github.com/harvestfi",
   ],
 };
 
