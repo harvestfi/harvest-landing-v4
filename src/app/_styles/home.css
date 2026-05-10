@@ -85,6 +85,153 @@ body:has(.uni-home-test) {
   opacity: 0.78;
 }
 
+/* === Hero right-side preview card =================================
+   Decorative mock of a single-product-page hero anchored to the
+   bottom-right of the gold box. Reads as a tilted screenshot rising
+   from the floor of the hero so the empty right side has a visual
+   anchor that signals "this is what a vault page looks like". Hidden
+   below 900px so the headline reclaims the full width on phones. */
+.uni-home-test .uni-home-hero-preview {
+  position: absolute;
+  right: 32px;
+  bottom: 0;
+  width: 44%;
+  max-width: 440px;
+  z-index: 2;
+  pointer-events: none;
+  transform: translateY(40px) rotate(-2.5deg);
+  transform-origin: bottom right;
+}
+.uni-home-test .uni-home-hero-inner {
+  position: relative;
+  z-index: 3;
+  max-width: 60%;
+}
+.uni-home-test .uni-home-hero-preview-card {
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  padding: 22px 24px 26px;
+  box-shadow:
+    0 -6px 18px -10px rgba(25, 23, 23, 0.18),
+    0 18px 32px -16px rgba(25, 23, 23, 0.32),
+    0 1px 0 rgba(25, 23, 23, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: var(--sans);
+}
+.uni-home-test .prevcard-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.uni-home-test .prevcard-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.uni-home-test .prevcard-icon img {
+  border-radius: 50%;
+  display: block;
+}
+.uni-home-test .prevcard-id {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.uni-home-test .prevcard-name {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--uni-ink);
+  margin: 0;
+  line-height: 1.1;
+}
+.uni-home-test .prevcard-byline {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.uni-home-test .prevcard-byline-chain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.uni-home-test .prevcard-byline-chain img {
+  border-radius: 50%;
+  display: block;
+}
+.uni-home-test .prevcard-bignum {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.uni-home-test .prevcard-bignum-value {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: var(--uni-ink);
+  line-height: 1;
+  font-feature-settings: "tnum";
+}
+.uni-home-test .prevcard-bignum-label {
+  font-size: 13px;
+  color: var(--uni-ink-3);
+  font-weight: 500;
+}
+.uni-home-test .prevcard-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 76px;
+  padding: 6px 0 4px;
+}
+.uni-home-test .prevcard-bar {
+  flex: 1 1 0;
+  background: var(--uni-gold);
+  border-radius: 2px 2px 0 0;
+  min-width: 4px;
+}
+.uni-home-test .prevcard-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(25, 23, 23, 0.04);
+  border-radius: 999px;
+  width: fit-content;
+}
+.uni-home-test .prevcard-tab {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--uni-ink-3);
+}
+.uni-home-test .prevcard-tab.active {
+  background: var(--uni-ink);
+  color: #ffffff;
+}
+
+@media (max-width: 1100px) {
+  .uni-home-test .uni-home-hero-preview {
+    width: 38%;
+    right: 20px;
+  }
+  .uni-home-test .uni-home-hero-inner { max-width: 62%; }
+}
+@media (max-width: 900px) {
+  .uni-home-test .uni-home-hero-preview { display: none; }
+  .uni-home-test .uni-home-hero-inner { max-width: 100%; }
+}
+
 .uni-home-test .uni-home-hero-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

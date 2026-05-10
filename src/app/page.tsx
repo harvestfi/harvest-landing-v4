@@ -9,6 +9,7 @@ import { formatAPY, formatTVL } from "@/lib/format";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/constants";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { HubTable } from "@/components/hub-table";
+import { HomeHeroPreview } from "@/components/home-hero-preview";
 import "./_styles/home.css";
 
 export const metadata: Metadata = {
@@ -60,6 +61,7 @@ export default async function HomePage() {
   return (
     <div className="uni-home-test">
       <section className="uni-home-hero">
+        <HomeHeroPreview />
         <div className="uni-home-hero-inner">
           <h1 className="uni-home-h1">
             Best USDC, USDT, ETH,
