@@ -34,13 +34,10 @@
 }
 
 body:has(.uni-hub-test) {
-  background-color: var(--uni-bg, #ffffff);
   background-image:
-    linear-gradient(180deg, #ffffff 0, #ffffff 60px, rgba(255, 255, 255, 0) 140px),
-    radial-gradient(circle, rgba(25, 23, 23, 0.085) 1px, transparent 1.3px) !important;
-  background-size: auto, 11px 11px;
-  background-repeat: no-repeat, repeat;
-  background-position: 0 0, 0 0;
+    radial-gradient(circle, rgba(25, 23, 23, 0.045) 1px, transparent 1.3px) !important;
+  background-size: 13px 13px;
+  background-repeat: repeat;
   overflow-x: clip;
 }
 
@@ -296,29 +293,66 @@ body:has(.uni-hub-test) {
 }
 
 /* === SEO content section ============================================
-   Plain narrative under the ranking table. Editorial body voice,
-   ~70ch reading width, gold underline on links so the only
-   inline-link option matches the brand accent. */
+   Full width inside the page box. Lede paragraph runs the page width;
+   below it, sub-topics live in a 2-column grid on desktop and stack
+   on mobile, so each card stays in a comfortable reading column. */
 .uni-hub-test .uni-hub-content {
-  max-width: 70ch;
-  margin: 56px auto 0;
-  padding: 0 2px;
+  margin: 56px 0 0;
+  padding: 0;
 }
+.uni-hub-test .uni-hub-content-head { margin: 0 0 28px; }
 .uni-hub-test .uni-hub-content h2 {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.014em;
   color: var(--uni-ink);
-  margin: 0 0 14px;
+  margin: 0 0 12px;
 }
-.uni-hub-test .uni-hub-content p {
-  font-size: 16px;
+.uni-hub-test .uni-hub-content-lede {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+  margin: 0;
+  max-width: 80ch;
+}
+.uni-hub-test .uni-hub-content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px 56px;
+}
+.uni-hub-test .uni-hub-content-grid article { break-inside: avoid; }
+.uni-hub-test .uni-hub-content-grid h3 {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+  margin: 0 0 8px;
+}
+.uni-hub-test .uni-hub-content-grid p {
+  font-size: 15px;
   line-height: 1.65;
   color: var(--uni-ink-2);
-  margin: 0 0 14px;
+  margin: 0;
 }
-.uni-hub-test .uni-hub-content p:last-child { margin-bottom: 0; }
+.uni-hub-test .uni-hub-faq {
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+.uni-hub-test .uni-hub-faq dt {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  margin: 0 0 4px;
+}
+.uni-hub-test .uni-hub-faq dd {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+  margin: 0;
+}
 .uni-hub-test .uni-hub-content a {
   color: var(--uni-ink);
   border-bottom: 1px solid var(--uni-line);
@@ -326,6 +360,14 @@ body:has(.uni-hub-test) {
   transition: border-color 0.15s ease;
 }
 .uni-hub-test .uni-hub-content a:hover { border-color: var(--uni-gold); }
+@media (max-width: 800px) {
+  .uni-hub-test .uni-hub-content-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .uni-hub-test .uni-hub-content h2 { font-size: 24px; }
+  .uni-hub-test .uni-hub-content-lede { font-size: 15.5px; }
+}
 
 /* === Bottom CTA rail (network shortcuts) =========================== */
 .uni-hub-test .uni-hub-cta-row {
