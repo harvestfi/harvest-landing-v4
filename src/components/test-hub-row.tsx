@@ -59,7 +59,10 @@ export function TestHubRow({ rank, vault, sparkline }: Props) {
       <span className="uni-hub-cell uni-hub-num uni-hub-num-secondary">
         {formatAPY(vault.apy30d)}
       </span>
-      <span className="uni-hub-cell uni-hub-spark" aria-hidden="true">
+      <span
+        className={`uni-hub-cell uni-hub-spark${trendUp ? " up" : " down"}`}
+        aria-hidden="true"
+      >
         {sparkPath ? (
           <svg
             viewBox="0 0 100 100"
@@ -70,7 +73,7 @@ export function TestHubRow({ rank, vault, sparkline }: Props) {
             <path
               d={sparkPath}
               fill="none"
-              stroke={trendUp ? "#ffb936" : "#6e6c66"}
+              stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
