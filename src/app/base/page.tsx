@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { getLiveVaults, getAllSparklines } from "@/lib/data";
+import { getLiveVaults } from "@/lib/data";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { networkHubTitle, networkHubDescription } from "@/lib/seo";
-import { NetworkHub } from "@/components/network-hub";
+import { NetworkHubBody } from "@/components/network-hub-body";
+import "../_styles/asset-hub.css";
 
 const NETWORK_SLUG = "base";
 const NETWORK_DISPLAY = "Base";
@@ -23,16 +24,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BaseNetworkPage() {
-  const allVaults = await getLiveVaults();
-  const sparklines = await getAllSparklines();
-  const vaults = allVaults.filter((v) => v.chain === CHAIN);
   return (
-    <NetworkHub
+    <NetworkHubBody
       networkSlug={NETWORK_SLUG}
       networkDisplay={NETWORK_DISPLAY}
-      vaults={vaults}
-      sparklines={sparklines}
-      allVaults={allVaults}
+      chain={CHAIN}
     />
   );
 }
