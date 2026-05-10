@@ -51,15 +51,15 @@ export default async function HomeTestPage() {
       <section className="uni-home-hero">
         <div className="uni-home-hero-inner">
           <h1 className="uni-home-h1">
-            Best DeFi yields,
+            Best USDC, USDT, ETH, Bitcoin yields, and more.
             <br />
-            ranked, indexed, and live.
+            Discover and compare.
           </h1>
           <p className="uni-home-sub">
-            Compare 100+ yield strategies we currently track across{" "}
-            {chainCount} {chainCount !== 1 ? "networks" : "network"}, ranked
-            by APY, with daily-resolution history and risk classifications
-            on every product.
+            One ranking for every yield strategy we currently track,
+            across {chainCount} {chainCount !== 1 ? "networks" : "network"},
+            sorted by APY, with daily-resolution history and risk
+            classifications on every product.
           </p>
 
           <div className="uni-home-hero-actions">

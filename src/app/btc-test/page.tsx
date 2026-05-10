@@ -8,7 +8,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getLiveVaults, getAllSparklines } from "@/lib/data";
 import { AssetIcon } from "@/components/token-icons";
-import { formatAPY } from "@/lib/format";
+import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import {
   assetHubTitle,
@@ -53,6 +53,56 @@ export default async function BtcTestPage() {
       : 0;
   const chainCount = new Set(vaults.map((v) => v.chain)).size;
   const subAssets = [...new Set(vaults.map((v) => getSubAsset(v)))].sort();
+
+  // Data-driven insights for the SEO content section. All scoped to
+  // the vaults we currently index, never the wider market.
+  const sortedApys = [...vaults].map((v) => v.apy24h).sort((a, b) => a - b);
+  const medianApy =
+    sortedApys.length > 0
+      ? sortedApys[Math.floor(sortedApys.length / 2)]
+      : 0;
+  const minApy = sortedApys.length > 0 ? sortedApys[0] : 0;
+  const totalTvl = vaults.reduce((s, v) => s + v.tvl, 0);
+
+  const wrapperStats: { wrapper: string; count: number; tvl: number }[] =
+    Object.values(
+      vaults.reduce<Record<string, { wrapper: string; count: number; tvl: number }>>(
+        (acc, v) => {
+          const w = getSubAsset(v);
+          const cur = acc[w] ?? { wrapper: w, count: 0, tvl: 0 };
+          cur.count += 1;
+          cur.tvl += v.tvl;
+          acc[w] = cur;
+          return acc;
+        },
+        {},
+      ),
+    ).sort((a, b) => b.count - a.count);
+
+  const networkStats: { chain: string; count: number; bestApy: number }[] =
+    Object.values(
+      vaults.reduce<Record<string, { chain: string; count: number; bestApy: number }>>(
+        (acc, v) => {
+          const cur = acc[v.chain] ?? { chain: v.chain, count: 0, bestApy: 0 };
+          cur.count += 1;
+          if (v.apy24h > cur.bestApy) cur.bestApy = v.apy24h;
+          acc[v.chain] = cur;
+          return acc;
+        },
+        {},
+      ),
+    ).sort((a, b) => b.count - a.count);
+
+  const protocolStats: { protocol: string; count: number }[] = Object.values(
+    vaults.reduce<Record<string, { protocol: string; count: number }>>((acc, v) => {
+      const p = stripChainSuffix(v.category, v.chain);
+      const cur = acc[p] ?? { protocol: p, count: 0 };
+      cur.count += 1;
+      acc[p] = cur;
+      return acc;
+    }, {}),
+  ).sort((a, b) => b.count - a.count);
+  const topProtocols = protocolStats.slice(0, 5);
 
   const crumbs = assetHubCrumbs(ASSET);
   const hubUrl = `${SITE_URL}/btc-test`;
@@ -144,7 +194,7 @@ export default async function BtcTestPage() {
         )}
       </section>
 
-      {/* SEO content section: long-form, full-width inside the page box */}
+      {/* SEO content section: thematic breakdown with data-driven insights */}
       <section className="uni-hub-content" aria-labelledby="about-bitcoin">
         <header className="uni-hub-content-head">
           <h2 id="about-bitcoin">About Bitcoin yield</h2>
@@ -155,60 +205,123 @@ export default async function BtcTestPage() {
             autocompounding vaults, or basis trades against
             perpetuals. Every strategy on this page follows that
             pattern: a wrapped BTC token, on a specific chain,
-            running through a specific underlying protocol that we
-            currently index.
+            running through a specific underlying protocol. The
+            sections below break down what we currently track in our
+            index and how to read it.
           </p>
         </header>
 
         <div className="uni-hub-content-grid">
           <article>
-            <h3>What does "Bitcoin yield" actually mean?</h3>
+            <h3>What "Bitcoin yield" actually means</h3>
             <p>
               Native BTC sitting in a self-custody wallet earns
               nothing. Yield enters the picture once the asset is
-              represented on a smart-contract chain, where it can be
+              represented on a smart-contract chain where it can be
               lent, supplied as collateral, or routed through an
               automated strategy. On Ethereum that representation is
               usually WBTC; on Coinbase chains it is cbBTC; on
               networks integrating Threshold Network it is tBTC. The
-              numbers on this ranking are the live APYs those
-              wrapped representations are earning across the
-              strategies we monitor.
+              numbers on this ranking are the live APYs those wrapped
+              representations are earning, and the population is
+              limited to strategies we currently index.
             </p>
           </article>
 
           <article>
-            <h3>WBTC, cbBTC, tBTC: how the wrappers differ</h3>
+            <h3>The cohort, in numbers</h3>
             <p>
-              WBTC is custodied by BitGo and minted against held
-              BTC. cbBTC is issued by Coinbase, redeemable 1:1
-              against custodied BTC inside their reserves. tBTC is
-              issued by the Threshold Network's decentralised signer
-              set. Each wrapper carries a different combination of
-              custody, oracle, and bridge risk, and that risk
-              follows the token into every strategy it touches.
-              Treat the wrapper choice as part of the position, not
-              a wrapper detail.
+              Right now this page tracks {vaults.length}{" "}
+              {vaults.length !== 1 ? "wrapped-BTC strategies" : "wrapped-BTC strategy"}
+              {" "}across {chainCount}{" "}
+              {chainCount !== 1 ? "networks" : "network"}, holding{" "}
+              {formatTVL(totalTvl)} of deposits in aggregate. Inside
+              that set, 24-hour APYs span from {formatAPY(minApy)} at
+              the low end to {formatAPY(bestApy)} at the top, with a
+              median reading near {formatAPY(medianApy)} and a simple
+              mean of {formatAPY(avgApy)}. These are not
+              market-wide statistics, only what we currently follow.
             </p>
           </article>
 
           <article>
-            <h3>Lending vs. autocompounding vs. basis</h3>
+            <h3>Wrappers we currently follow</h3>
+            <p>
+              Across the strategies we monitor, the wrappers in
+              circulation are{" "}
+              {wrapperStats.map((w, i) => (
+                <span key={w.wrapper}>
+                  {i > 0 ? (i === wrapperStats.length - 1 ? ", and " : ", ") : ""}
+                  <strong>{w.wrapper}</strong> ({w.count}{" "}
+                  {w.count === 1 ? "vault" : "vaults"},{" "}
+                  {formatTVL(w.tvl)} tracked)
+                </span>
+              ))}. WBTC is custodied by BitGo and minted against
+              held BTC; cbBTC is issued by Coinbase, redeemable 1:1
+              against their reserves; tBTC is issued by the Threshold
+              Network's decentralised signer set. Each wrapper carries
+              a different combination of custody, oracle, and bridge
+              risk, and that risk follows the token into every
+              strategy it touches.
+            </p>
+          </article>
+
+          <article>
+            <h3>Where the yield lives, by network</h3>
+            <p>
+              Coverage in our index breaks down as{" "}
+              {networkStats.map((n, i) => (
+                <span key={n.chain}>
+                  {i > 0 ? (i === networkStats.length - 1 ? ", and " : ", ") : ""}
+                  <strong>{n.chain}</strong> ({n.count}{" "}
+                  {n.count === 1 ? "vault" : "vaults"}, top APY{" "}
+                  {formatAPY(n.bestApy)})
+                </span>
+              ))}. Ethereum mainnet and the EVM rollups with
+              meaningful wrapped-BTC liquidity dominate that mix; we
+              add networks as deployments ship and remove them as
+              they retire upstream. Use the network shortcuts at the
+              bottom of this page to scope the ranking to a single
+              chain.
+            </p>
+          </article>
+
+          <article>
+            <h3>Protocol families on the leaderboard</h3>
+            <p>
+              The strategies we follow run on a handful of underlying
+              protocol families. The most common right now are{" "}
+              {topProtocols.map((p, i) => (
+                <span key={p.protocol}>
+                  {i > 0 ? (i === topProtocols.length - 1 ? ", and " : ", ") : ""}
+                  <strong>{p.protocol}</strong> ({p.count})
+                </span>
+              ))}. Each one has its own composition: some are
+              single-asset money markets, some are autocompounding
+              vaults wrapping those markets, and a small minority are
+              structured strategies on top. Open any vault for the
+              specific protocol, contract address, and integration
+              path.
+            </p>
+          </article>
+
+          <article>
+            <h3>Lending, autocompounding, basis</h3>
             <p>
               The simplest BTC yield is a single-side supply on a
               money market like Aave or Morpho: deposit wrapped
               Bitcoin, earn the supply APY borrowers pay. An
               autocompounder layers on top of that, harvesting and
-              re-investing reward emissions on a schedule. Basis
-              strategies, less common in our index, hold spot
-              wrapped BTC against a short perp leg to capture
-              funding. Each profile trades a different mix of
-              complexity, gas, and reward composition.
+              re-investing reward emissions on a schedule.{" "}
+              Basis strategies, less common in the cohort we monitor,
+              hold spot wrapped BTC against a short perp leg to
+              capture funding. Each profile trades a different mix of
+              complexity, gas overhead, and reward composition.
             </p>
           </article>
 
           <article>
-            <h3>How to read the APY columns</h3>
+            <h3>Reading the APY columns</h3>
             <p>
               The 24-hour APY is the latest annualised return our
               hosted indexer pulled from the underlying protocol,
@@ -223,16 +336,19 @@ export default async function BtcTestPage() {
           </article>
 
           <article>
-            <h3>What about TVL?</h3>
+            <h3>Reading the TVL column</h3>
             <p>
               TVL is the dollar value of wrapped BTC currently
-              deposited in the strategy. A higher TVL usually means
-              the strategy has been live longer and has absorbed
-              more capital without breaking; a low TVL might be a
-              new launch, a niche pair, or a strategy whose APY no
-              longer compensates for its risk. TVL alone is not a
-              quality signal, but it is useful context next to
-              APY when comparing two strategies on the same wrapper.
+              deposited in the strategy. The {vaults.length}{" "}
+              {vaults.length !== 1 ? "vaults" : "vault"} we follow
+              add up to roughly {formatTVL(totalTvl)} in tracked
+              deposits. A higher TVL usually means a strategy has
+              been live longer and has absorbed more capital without
+              breaking; a low TVL might be a new launch, a niche
+              pair, or a strategy whose APY no longer compensates for
+              its risk. TVL alone is not a quality signal, but it is
+              useful context next to APY when comparing two
+              strategies on the same wrapper.
             </p>
           </article>
 
@@ -251,16 +367,18 @@ export default async function BtcTestPage() {
           </article>
 
           <article>
-            <h3>Which networks host Bitcoin yield in our index?</h3>
+            <h3>What this page is, and what it is not</h3>
             <p>
-              Coverage spans Ethereum mainnet plus the rollups and
-              chains where wrapped BTC has meaningful liquidity and
-              an established lending or vault footprint. Use the
-              network shortcuts at the bottom of this page to scope
-              the ranking to a single chain, or open a vault to see
-              its specific protocol, asset, and chain context.
-              Networks come and go from this list as deployments
-              ship or get retired upstream.
+              This is a curated index, not an exhaustive map of
+              Bitcoin yield in DeFi. Coverage today is limited to the
+              {" "}{vaults.length} wrapped-BTC{" "}
+              {vaults.length !== 1 ? "strategies" : "strategy"} we
+              actively monitor, and the universe of BTC yield far
+              exceeds that set. We add strategies as we vet and
+              integrate them; we remove them when upstream products
+              are retired or fall outside our risk framework. Treat
+              every comparison on this page as comparison within our
+              cohort, not against the wider market.
             </p>
           </article>
 
@@ -288,6 +406,14 @@ export default async function BtcTestPage() {
                 includes active reward emissions. The strategy
                 detail page on each vault shows the breakdown
                 where it is published upstream.
+              </dd>
+              <dt>Are there BTC yield strategies not listed here?</dt>
+              <dd>
+                Plenty. The set on this page is what we have indexed
+                and verified against our risk framework. New
+                strategies join as we add them; the list is not
+                meant to mirror every wrapped-BTC vault that exists
+                on chain today.
               </dd>
             </dl>
           </article>
