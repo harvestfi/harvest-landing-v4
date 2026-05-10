@@ -31,7 +31,6 @@ export default async function HomeTestPage() {
   const vaults = await getLiveVaults();
   const sparklines = await getAllSparklines();
 
-  const totalTvl = vaults.reduce((s, v) => s + v.tvl, 0);
   const avgApy =
     vaults.length > 0
       ? vaults.reduce((s, v) => s + v.apy24h, 0) / vaults.length
@@ -78,21 +77,13 @@ export default async function HomeTestPage() {
           <div className="uni-home-hero-stats">
             <div className="uni-home-hero-stat">
               <span className="uni-home-hero-stat-label">Strategies</span>
-              <span className="uni-home-hero-stat-value">{vaults.length}</span>
-            </div>
-            <div className="uni-home-hero-stat">
-              <span className="uni-home-hero-stat-label">Tracked TVL</span>
-              <span className="uni-home-hero-stat-value">{formatTVL(totalTvl)}</span>
+              <span className="uni-home-hero-stat-value">100+</span>
             </div>
             <div className="uni-home-hero-stat">
               <span className="uni-home-hero-stat-label">Avg APY</span>
               <span className="uni-home-hero-stat-value">
                 {avgApy > 0 ? formatAPY(avgApy) : "-"}
               </span>
-            </div>
-            <div className="uni-home-hero-stat">
-              <span className="uni-home-hero-stat-label">Networks</span>
-              <span className="uni-home-hero-stat-value">{chainCount}</span>
             </div>
           </div>
 
