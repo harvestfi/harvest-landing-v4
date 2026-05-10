@@ -128,6 +128,17 @@ export default async function RootLayout({
       lang="en"
       className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable}`}
     >
+      <head>
+        {/* Pre-paint theme resolver. Runs synchronously before the body
+            paints so users on dark mode never see a flash of the light
+            theme. Reads the explicit user choice from localStorage and
+            falls back to the OS prefers-color-scheme. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('harvest-theme');var t=s==='dark'||s==='light'?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body>
         <script
           type="application/ld+json"

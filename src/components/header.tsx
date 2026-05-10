@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getLiveVaults } from "@/lib/data";
 import { SearchBox, type SearchItem } from "./search-box";
 import { AssetIcon } from "./token-icons";
+import { ThemeToggle } from "./theme-toggle";
 
 export async function Header() {
   const navItems = [
@@ -40,6 +41,7 @@ export async function Header() {
         </nav>
         <div className="nav-right">
           <SearchBox items={items} />
+          <ThemeToggle />
         </div>
       </div>
     </header>

@@ -43,6 +43,33 @@
   --display: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
 }
 
+/* Dark theme. Warm graphite vibe to match the paper-feel of the
+   light palette: bg/panel are warm near-blacks (slight red-bias)
+   rather than pure neutral, so the gold accent reads as part of
+   the same family and doesn't go cold-blue under it. Every layer
+   that the light theme used a variable for is overridden here -
+   any hardcoded hex elsewhere needs to be migrated to use these. */
+:root[data-theme="dark"] {
+  --bg: #1a1917;
+  --bg-2: #232220;
+  --panel: #232220;
+  --line: #2f2e2a;
+  --line-2: #3a3833;
+  --ink: #f4f4f1;
+  --ink-2: #d4d2cc;
+  --ink-3: #9a9892;
+  --ink-4: #6a6862;
+
+  --up: oklch(0.72 0.16 155);
+  --up-bg: oklch(0.32 0.08 155);
+  --down: oklch(0.72 0.18 25);
+  --down-bg: oklch(0.32 0.10 25);
+  --neutral: #8a8a85;
+
+  --accent: oklch(0.78 0.16 85);
+  --accent-ink: #1a1917;
+}
+
 /* Responsive shell padding — every layout reads --shell-pad so
    reducing it here cascades to nav, footer, hero, product page etc. */
 @media (max-width: 768px) { :root { --shell-pad: 20px; } }
@@ -141,6 +168,30 @@ button { font-family: inherit; cursor: pointer; }
 .navlinks a.active { color: var(--ink); font-weight: 600; background: var(--bg-2); }
 
 .nav-right { display: flex; align-items: center; gap: 8px; }
+
+/* Theme toggle: matches the search-box height + radius so they sit
+   as a pair in the nav-right column. The icon swaps between sun
+   (active when in dark mode, click to go light) and moon (active
+   in light mode, click to go dark). */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+.theme-toggle svg { display: block; }
 .search-box {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 6px 10px;

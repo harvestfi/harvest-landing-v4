@@ -36,6 +36,33 @@ body:has(.uni-home-test) {
   overscroll-behavior-y: contain;
 }
 
+/* Dark theme overrides for the homepage. The hero stays gold in
+   both themes (the sunflower accent is the brand anchor); only the
+   surrounding surfaces, card fills, and ink ramps flip below it.
+   The hero is a "light island" so we re-set --uni-ink* back to
+   their light values inside .uni-home-hero - that way the preview
+   card, tab pills, and stat boxes keep reading dark-text-on-gold. */
+:root[data-theme="dark"] .uni-home-test {
+  --uni-bg:    #1a1917;
+  --uni-card:  #232220;
+  --uni-card-2: #2a2825;
+  --uni-ink:   #f4f4f1;
+  --uni-ink-2: #d4d2cc;
+  --uni-ink-3: #9a9892;
+  --uni-line:  #2f2e2a;
+}
+:root[data-theme="dark"] .uni-home-test .uni-home-hero {
+  --uni-ink:   #191717;
+  --uni-ink-2: #32312b;
+  --uni-ink-3: #6e6c66;
+  --uni-line:  #dddee0;
+  --uni-card:  #f1f5f4;
+  --uni-card-2: #ffffff;
+}
+:root[data-theme="dark"] body:has(.uni-home-test) {
+  background: var(--bg) !important;
+}
+
 /* === Boxed Sunflower Gold hero card ================================
    Three layered backgrounds: a soft orange-ish radial glow in the
    top-right (drives the "warm sunrise" feel without competing with
