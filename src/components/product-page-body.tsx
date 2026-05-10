@@ -288,20 +288,23 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
           <div className="about-prose">
             <p>
               <strong>{vault.productName}</strong> is a{" "}
-              {vault.vaultType.toLowerCase()} vault on{" "}
-              <strong>{vault.chain}</strong> that accepts {vault.asset} deposits
-              and routes them into the {protocolName} strategy.{" "}
+              {vault.vaultType.toLowerCase()} on{" "}
+              <strong>{vault.chain}</strong>. Deposit {vault.asset};
+              the vault routes capital into the {protocolName} strategy{" "}
               {vault.vaultType === "Autocompounder"
-                ? `The vault automatically harvests rewards, swaps them back into ${vault.asset} and redeposits, compounding returns over time.`
-                : `It allocates ${vault.asset} deposits across optimized yield strategies.`}
+                ? `and harvests rewards back into ${vault.asset} on a schedule, compounding without manual steps.`
+                : `with allocations the operator updates as conditions change.`}
             </p>
             {vault.tvl > 0 && vault.apy24h > 0 && (
               <p>
-                The vault currently holds <strong>{formatTVL(vault.tvl)}</strong>{" "}
-                in deposits and is generating{" "}
-                <strong>{formatAPY(vault.apy24h)} APY</strong> over the last 24
-                hours. The 30-day average APY sits at{" "}
-                <strong>{formatAPY(vault.apy30d)}</strong>.
+                <strong>{formatTVL(vault.tvl)}</strong> in deposits
+                right now. Paying{" "}
+                <strong>{formatAPY(vault.apy24h)}</strong> over the
+                last 24 hours,{" "}
+                <strong>{formatAPY(vault.apy30d)}</strong> across the
+                trailing 30 days. Both move with utilisation, reward
+                emissions, and onchain demand for the underlying
+                protocol.
               </p>
             )}
           </div>

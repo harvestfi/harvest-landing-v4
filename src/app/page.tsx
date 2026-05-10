@@ -193,28 +193,27 @@ export default async function HomePage() {
         <section className="uni-home-content" aria-labelledby="about-title">
           <h2 id="about-title">About the Harvest yield index</h2>
           <p>
-            Harvest is an onchain yield index. The site exists to make
-            comparing live yield products in DeFi as quick as comparing
-            tokens on a public price feed. Every product on this page is
-            actively running on chain; we read its APY and TVL from a
-            hosted indexer and surface them in a single ranking, with
-            daily-resolution history attached to each strategy.
+            Harvest is a live yield index. Every product on this page
+            is running on chain right now. We read APY and TVL straight
+            off the source contracts, refresh hourly, and rank the lot
+            in one table. Each row links to a daily-resolution history
+            of how that strategy has performed.
           </p>
           <p>
-            APY is a moving target. The 24-hour figure is the latest
-            annualised return reported upstream; the 30-day figure is
-            the simple mean of daily readings across the cohort we
-            monitor. Past APY is not a guarantee of future returns, and
-            outliers compound for a reason. The history view on every
-            product page makes that volatility visible up front.
+            Two APY columns. 24-hour APY is the rate the strategy is
+            paying right now, annualised. 30-day APY is the trailing
+            mean across the last month of daily readings. Both move
+            every day. The sparkline on each row shows the trajectory
+            at a glance; the product page draws the full series.
           </p>
           <p>
-            Risk surfaces on every yield strategy. Smart-contract risk on
-            both the vault and the underlying protocol applies; oracle,
-            bridge, liquidity and governance risks vary by product. The
-            full framework, including how each strategy is tiered and
-            what we deliberately leave out, lives on the{" "}
-            <Link href="/risk-framework">risk framework page</Link>.
+            Yield is not free. Every strategy carries smart-contract
+            risk on the vault and the protocol underneath. Add oracle,
+            bridge, liquidity, depeg, and governance, depending on the
+            product. The{" "}
+            <Link href="/risk-framework">risk framework page</Link>{" "}
+            explains how we tier each one and which categories we
+            deliberately leave out.
           </p>
         </section>
       </main>
