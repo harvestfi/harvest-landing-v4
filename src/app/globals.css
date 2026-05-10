@@ -3818,3 +3818,301 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--accent-ink);
   border-color: var(--ink);
 }
+
+/* === Interactive HubTable ============================================
+   Shared by /home-test and /btc-test. Lives at the global scope so
+   page-scoped CSS can layer on top via .uni-home-test or .uni-hub-test
+   without re-declaring base layout. */
+.hub-table-wrap {
+  --hub-ink:    #191717;
+  --hub-ink-2:  #32312b;
+  --hub-ink-3:  #6e6c66;
+  --hub-line:   #dddee0;
+  --hub-line-2: #ebebe7;
+  --hub-card:   #f1f5f4;
+  --hub-bg:     #ffffff;
+  --hub-gold:   #ffb936;
+  display: block;
+  font-family: var(--sans);
+}
+
+/* Filter bar: minimal, sits flush above the ranking table */
+.hub-filterbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 0 14px;
+  border-bottom: 1px dashed var(--hub-line);
+  margin-bottom: 0;
+}
+.hub-filter-set {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hub-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--hub-ink-2);
+}
+.hub-filter-label {
+  color: var(--hub-ink-3);
+  font-weight: 500;
+}
+.hub-filter select {
+  appearance: none;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-line);
+  border-radius: 8px;
+  padding: 7px 28px 7px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hub-ink);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2332312b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 9px 6px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.hub-filter select:hover { border-color: var(--hub-ink-3); }
+.hub-filter select:focus-visible {
+  outline: none;
+  border-color: var(--hub-ink);
+}
+.hub-filter-reset {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--hub-ink-3);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.hub-filter-reset:hover { color: var(--hub-ink); background: var(--hub-card); }
+.hub-filter-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--hub-ink-3);
+  letter-spacing: 0.02em;
+}
+
+/* Table */
+.hub-table {
+  background: transparent;
+  border-radius: var(--uni-radius, 20px);
+  overflow: visible;
+  margin-top: 8px;
+}
+.hub-thead,
+.hub-row {
+  display: grid;
+  grid-template-columns: 56px minmax(180px, 2.2fr) 1fr 1fr 110px 110px 110px 130px;
+  align-items: center;
+  gap: 16px;
+}
+.hub-thead {
+  position: sticky;
+  top: 52px;
+  z-index: 5;
+  padding: 12px 22px 11px;
+  background: var(--hub-bg);
+  border-bottom: 1px solid var(--hub-line);
+  border-top: 1px solid var(--hub-line);
+  backdrop-filter: blur(6px);
+}
+.hub-th {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hub-ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+}
+.hub-th-num { text-align: right; justify-self: end; }
+.hub-th-rank { text-align: left; }
+.hub-th-sort {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hub-ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.12s ease;
+}
+.hub-th-sort:hover { color: var(--hub-ink); }
+.hub-th-sort.active { color: var(--hub-ink); font-weight: 600; }
+.hub-sort-ind {
+  font-size: 9px;
+  line-height: 1;
+  color: var(--hub-ink-3);
+  font-feature-settings: "tnum";
+}
+.hub-th-sort.active .hub-sort-ind { color: var(--hub-gold); }
+
+.hub-tbody { display: flex; flex-direction: column; }
+.hub-row {
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(25, 23, 23, 0.05);
+  text-decoration: none;
+  color: var(--hub-ink);
+  transition: background-color 0.12s ease;
+}
+.hub-row:hover { background: rgba(255, 185, 54, 0.06); }
+.hub-row:last-child { border-bottom: 0; }
+
+.hub-cell { min-width: 0; }
+.hub-rank {
+  font-family: var(--display);
+  font-size: 14.5px;
+  color: var(--hub-ink-3);
+  font-weight: 500;
+  font-feature-settings: "tnum";
+}
+.hub-vault {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.hub-vault img { border-radius: 50%; flex-shrink: 0; display: block; }
+.hub-vault-name {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--hub-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hub-network {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--hub-ink);
+}
+.hub-network img { border-radius: 50%; flex-shrink: 0; display: block; }
+.hub-strategy {
+  font-size: 14px;
+  color: var(--hub-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hub-num {
+  text-align: right;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-feature-settings: "tnum";
+  justify-self: end;
+}
+.hub-apy { color: var(--hub-gold); }
+.hub-num-secondary { color: var(--hub-ink-2); font-weight: 500; }
+.hub-spark { display: inline-flex; justify-content: flex-end; }
+.hub-spark svg { display: block; }
+.hub-spark-empty { color: var(--hub-ink-3); font-size: 14px; }
+
+.hub-empty {
+  padding: 32px 22px;
+  text-align: center;
+  color: var(--hub-ink-3);
+  font-size: 14px;
+}
+
+/* Pagination */
+.hub-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 4px 4px;
+  border-top: 1px solid var(--hub-line);
+  margin-top: 4px;
+}
+.hub-pager-btn {
+  appearance: none;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-line);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hub-ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.hub-pager-btn:hover:not(:disabled) {
+  border-color: var(--hub-ink-3);
+  background: var(--hub-card);
+}
+.hub-pager-btn:disabled {
+  color: var(--hub-ink-3);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.hub-pager-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--hub-ink-3);
+}
+
+/* Responsive: collapse columns to keep the table readable on narrow
+   screens. We hide Strategy first, then Network, then 30d APY before
+   touching the core ranking columns. */
+@media (max-width: 1100px) {
+  .hub-thead,
+  .hub-row {
+    grid-template-columns: 40px minmax(140px, 2fr) 1fr 100px 100px 110px;
+  }
+  .hub-thead .hub-th:nth-child(4),
+  .hub-row .hub-cell:nth-child(4) { display: none; }
+}
+@media (max-width: 800px) {
+  .hub-thead,
+  .hub-row {
+    grid-template-columns: 32px minmax(120px, 2fr) 90px 90px 90px;
+    padding-left: 16px;
+    padding-right: 16px;
+    gap: 10px;
+  }
+  .hub-thead .hub-th:nth-child(3),
+  .hub-row .hub-cell:nth-child(3) { display: none; }
+  .hub-filterbar { padding: 8px 0 10px; }
+  .hub-filter select { padding: 6px 24px 6px 10px; font-size: 12.5px; }
+}
+@media (max-width: 540px) {
+  .hub-thead,
+  .hub-row {
+    grid-template-columns: 28px minmax(110px, 2fr) 80px 90px;
+    gap: 8px;
+  }
+  .hub-thead .hub-th:nth-child(5),
+  .hub-row .hub-cell:nth-child(5) { display: none; }
+  .hub-thead .hub-th:nth-child(8),
+  .hub-row .hub-cell:nth-child(8) { display: none; }
+  .hub-vault-name { font-size: 14px; }
+  .hub-num { font-size: 14px; }
+}

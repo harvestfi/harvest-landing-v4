@@ -18,7 +18,7 @@ import {
 } from "@/lib/seo";
 import { breadcrumbSchema, itemListSchema } from "@/lib/jsonld";
 import { getSubAsset } from "@/lib/sub-asset";
-import { TestHubRow } from "@/components/test-hub-row";
+import { HubTable } from "@/components/hub-table";
 import "./btc-test.css";
 
 const ASSET = "BTC" as const;
@@ -136,28 +136,11 @@ export default async function BtcTestPage() {
         {vaults.length === 0 ? (
           <div className="uni-hub-empty">No Bitcoin strategies indexed yet.</div>
         ) : (
-          <div className="uni-hub-table" role="table" aria-label="Bitcoin strategies ranked by APY">
-            <div className="uni-hub-thead" role="row">
-              <span className="uni-hub-th uni-hub-rank">#</span>
-              <span className="uni-hub-th">Vault</span>
-              <span className="uni-hub-th">Network</span>
-              <span className="uni-hub-th">Strategy</span>
-              <span className="uni-hub-th uni-hub-th-num">TVL</span>
-              <span className="uni-hub-th uni-hub-th-num">24h APY</span>
-              <span className="uni-hub-th uni-hub-th-num">30d APY</span>
-              <span className="uni-hub-th uni-hub-th-num">30d trend</span>
-            </div>
-            <div className="uni-hub-tbody" role="rowgroup">
-              {vaults.map((v, i) => (
-                <TestHubRow
-                  key={v.id}
-                  rank={i + 1}
-                  vault={v}
-                  sparkline={sparklines[v.contractAddress.toLowerCase()] ?? sparklines[v.contractAddress]}
-                />
-              ))}
-            </div>
-          </div>
+          <HubTable
+            vaults={vaults}
+            sparklines={sparklines}
+            scopeLabel="Bitcoin strategies"
+          />
         )}
       </section>
 

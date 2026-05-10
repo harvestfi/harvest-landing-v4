@@ -9,7 +9,7 @@ import { getLiveVaults, getAllSparklines } from "@/lib/data";
 import { formatAPY, formatTVL } from "@/lib/format";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/constants";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
-import { TestHubRow } from "@/components/test-hub-row";
+import { HubTable } from "@/components/hub-table";
 import "./home-test.css";
 
 export const metadata: Metadata = {
@@ -32,10 +32,6 @@ export default async function HomeTestPage() {
   const sparklines = await getAllSparklines();
 
   const chainCount = new Set(vaults.map((v) => v.chain)).size;
-
-  // Sorted by 24h APY for the headline ranking; top 10 is plenty
-  // for a homepage teaser, with a "See all" link to the full hubs.
-  const topByApy = [...vaults].sort((a, b) => b.apy24h - a.apy24h).slice(0, 10);
 
   // Best per asset for the featured asset cards.
   const bestByAsset: Record<string, { apy: number; tvl: number; count: number }> = {};
@@ -103,28 +99,13 @@ export default async function HomeTestPage() {
             </Link>
           </header>
 
-          <div className="uni-home-table" role="table" aria-label="Top yields ranked by APY">
-            <div className="uni-home-thead" role="row">
-              <span className="uni-home-th uni-home-rank-h">#</span>
-              <span className="uni-home-th">Vault</span>
-              <span className="uni-home-th">Network</span>
-              <span className="uni-home-th">Strategy</span>
-              <span className="uni-home-th uni-home-th-num">TVL</span>
-              <span className="uni-home-th uni-home-th-num">24h APY</span>
-              <span className="uni-home-th uni-home-th-num">30d APY</span>
-              <span className="uni-home-th uni-home-th-num">30d trend</span>
-            </div>
-            <div className="uni-home-tbody" role="rowgroup">
-              {topByApy.map((v, i) => (
-                <TestHubRow
-                  key={v.id}
-                  rank={i + 1}
-                  vault={v}
-                  sparkline={sparklines[v.contractAddress.toLowerCase()] ?? sparklines[v.contractAddress]}
-                />
-              ))}
-            </div>
-          </div>
+          <HubTable
+            vaults={vaults}
+            sparklines={sparklines}
+            pageSize={50}
+            showAssetFilter
+            scopeLabel="strategies"
+          />
         </section>
 
         {/* Featured asset tiles */}
