@@ -127,7 +127,10 @@ export async function Footer() {
         <div className="foot-grid">
           {/* Column 1: Brand */}
           <div className="foot-col foot-col-brand">
-            <span className="foot-brand-name">Harvest</span>
+            <Link href="/" className="foot-brand" aria-label="Harvest, go to homepage">
+              <span className="foot-brand-name">Harvest</span>
+              <span className="foot-brand-dot" aria-hidden="true" />
+            </Link>
             <span className="foot-tagline">
               Independent onchain yield index
             </span>

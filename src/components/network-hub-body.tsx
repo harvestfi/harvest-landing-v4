@@ -174,10 +174,6 @@ export async function NetworkHubBody({
           <h2 id="ranking-title" className="uni-hub-section-title">
             Top {networkDisplay} yields
           </h2>
-          <span className="uni-hub-section-meta">
-            Tracking {vaults.length} {vaults.length !== 1 ? "vaults" : "vault"}
-            {assetStats.length > 0 ? `, ${assetStats.length} ${assetStats.length !== 1 ? "assets" : "asset"}` : ""}
-          </span>
         </header>
 
         {vaults.length === 0 ? (

@@ -361,10 +361,6 @@ export async function AssetHubBody({ asset }: Props) {
           <h2 id="ranking-title" className="uni-hub-section-title">
             Top {copy.longName} yields
           </h2>
-          <span className="uni-hub-section-meta">
-            Tracking {vaults.length} {vaults.length !== 1 ? "vaults" : "vault"}
-            {chainCount > 0 ? `, ${chainCount} ${chainWord}` : ""}
-          </span>
         </header>
 
         {vaults.length === 0 ? (

@@ -62,7 +62,9 @@ export default async function HomePage() {
       <section className="uni-home-hero">
         <div className="uni-home-hero-inner">
           <h1 className="uni-home-h1">
-            Best USDC, USDT, ETH, Bitcoin yields, and more.
+            Best USDC, USDT, ETH,
+            <br />
+            Bitcoin yields, and more.
           </h1>
           <p className="uni-home-sub">
             Discover and compare every yield strategy we currently

@@ -413,31 +413,36 @@ body:has(.uni-home-test) {
 
 /* === SEO content section ========================================== */
 .uni-home-test .uni-home-content {
-  max-width: 70ch;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
 }
 .uni-home-test .uni-home-content h2 {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.014em;
   color: var(--uni-ink);
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 .uni-home-test .uni-home-content p {
   font-size: 16px;
   line-height: 1.65;
   color: var(--uni-ink-2);
   margin: 0 0 14px;
+  max-width: 80ch;
 }
 .uni-home-test .uni-home-content p:last-child { margin-bottom: 0; }
 .uni-home-test .uni-home-content a {
   color: var(--uni-ink);
-  border-bottom: 1px solid var(--uni-line);
+  font-weight: 600;
+  background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.45) 70%);
+  padding: 0 1px;
   text-decoration: none;
-  transition: border-color 0.15s ease;
+  transition: background 0.15s ease;
 }
-.uni-home-test .uni-home-content a:hover { border-color: var(--uni-gold); }
+.uni-home-test .uni-home-content a:hover {
+  background: linear-gradient(transparent 0, rgba(255, 185, 54, 0.55) 0);
+}
 
 /* === Responsive ===================================================== */
 @media (max-width: 1100px) {

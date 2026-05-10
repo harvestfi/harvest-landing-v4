@@ -6,7 +6,7 @@ import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { AssetIcon, ChainIcon } from "./token-icons";
 
-type SortKey = "apy24h" | "apy30d" | "tvl";
+type SortKey = "apy24h" | "tvl";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -162,14 +162,6 @@ export function HubTable({
         <div className="hub-thead" role="row">
           <span className="hub-th hub-th-rank">#</span>
           <span className="hub-th">Vault</span>
-          <span className="hub-th">Network</span>
-          <span className="hub-th">Strategy</span>
-          <SortHeader
-            label="TVL"
-            active={sortKey === "tvl"}
-            dir={sortDir}
-            onClick={() => clickSort("tvl")}
-          />
           <SortHeader
             label="24h APY"
             active={sortKey === "apy24h"}
@@ -177,12 +169,14 @@ export function HubTable({
             onClick={() => clickSort("apy24h")}
           />
           <SortHeader
-            label="30d APY"
-            active={sortKey === "apy30d"}
+            label="TVL"
+            active={sortKey === "tvl"}
             dir={sortDir}
-            onClick={() => clickSort("apy30d")}
+            onClick={() => clickSort("tvl")}
           />
-          <span className="hub-th hub-th-num">30d trend</span>
+          <span className="hub-th">Network</span>
+          <span className="hub-th">Strategy</span>
+          <span className="hub-th hub-th-num">30d APY trend</span>
         </div>
         <div className="hub-tbody" role="rowgroup">
           {visible.length === 0 ? (
@@ -286,16 +280,13 @@ function Row({
         <AssetIcon asset={vault.asset} size={28} />
         <span className="hub-vault-name">{vault.productName}</span>
       </span>
+      <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
+      <span className="hub-cell hub-num">{formatTVL(vault.tvl)}</span>
       <span className="hub-cell hub-network">
         <ChainIcon chain={vault.chain} size={14} />
         <span>{vault.chain}</span>
       </span>
       <span className="hub-cell hub-strategy">{protocolName}</span>
-      <span className="hub-cell hub-num">{formatTVL(vault.tvl)}</span>
-      <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
-      <span className="hub-cell hub-num hub-num-secondary">
-        {formatAPY(vault.apy30d)}
-      </span>
       <span className="hub-cell hub-spark" aria-hidden="true">
         {sparkPath ? (
           <svg
