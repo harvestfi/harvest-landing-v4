@@ -31,10 +31,6 @@ export default async function HomeTestPage() {
   const vaults = await getLiveVaults();
   const sparklines = await getAllSparklines();
 
-  const avgApy =
-    vaults.length > 0
-      ? vaults.reduce((s, v) => s + v.apy24h, 0) / vaults.length
-      : 0;
   const chainCount = new Set(vaults.map((v) => v.chain)).size;
 
   // Sorted by 24h APY for the headline ranking; top 10 is plenty
@@ -73,19 +69,6 @@ export default async function HomeTestPage() {
             by APY, with daily-resolution history and risk classifications
             on every product.
           </p>
-
-          <div className="uni-home-hero-stats">
-            <div className="uni-home-hero-stat">
-              <span className="uni-home-hero-stat-label">Strategies</span>
-              <span className="uni-home-hero-stat-value">100+</span>
-            </div>
-            <div className="uni-home-hero-stat">
-              <span className="uni-home-hero-stat-label">Avg APY</span>
-              <span className="uni-home-hero-stat-value">
-                {avgApy > 0 ? formatAPY(avgApy) : "-"}
-              </span>
-            </div>
-          </div>
 
           <div className="uni-home-hero-actions">
             <a
