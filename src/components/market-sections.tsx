@@ -75,11 +75,11 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
         <div className="bt-head">
           <span>#</span><span>Product</span><span>Chain</span><span className="r">APY</span><span className="r">TVL</span>
         </div>
-        {top6.map((v, i) => {
+        {top6.map((v) => {
           const isYou = v.id === vault.id;
           const displayRank = sameAsset.findIndex((s) => s.id === v.id) + 1;
-          return (
-            <div key={v.id} className={`bt-row${isYou ? " you" : ""}`}>
+          const cells = (
+            <>
               <span className="mono dim">#{displayRank}</span>
               <span className="bt-product-cell">
                 <span className="bt-product">
@@ -96,7 +96,18 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
               </span>
               <span className="r mono"><strong className="up">{formatAPY(v.apy24h)}</strong></span>
               <span className="r mono">{formatTVL(v.tvl)}</span>
-            </div>
+            </>
+          );
+          // The current vault stays a static row (no point linking to
+          // self); every other row becomes a Link so users can pivot
+          // straight into the comparison vault.
+          if (isYou) {
+            return <div key={v.id} className="bt-row you">{cells}</div>;
+          }
+          return (
+            <Link key={v.id} href={`/${v.slug}`} className="bt-row bt-row-link">
+              {cells}
+            </Link>
           );
         })}
         <div className="bt-row avg">
@@ -320,8 +331,8 @@ function EcosystemChart({
         {legendRows.map((v, i) => {
           const isYou = v.id === vault.id;
           const displayRank = sameChainAll.findIndex((s) => s.id === v.id) + 1;
-          return (
-            <div key={v.id} className={`eco-legend-row${isYou ? " you" : ""}`}>
+          const cells = (
+            <>
               <span
                 className="eco-legend-swatch"
                 style={{ background: ECO_PALETTE[i % ECO_PALETTE.length] }}
@@ -333,7 +344,19 @@ function EcosystemChart({
                 {isYou && <span className="here-pill">You</span>}
               </span>
               <span className="eco-legend-apy mono">{formatAPY(v.apy24h)}</span>
-            </div>
+            </>
+          );
+          if (isYou) {
+            return <div key={v.id} className="eco-legend-row you">{cells}</div>;
+          }
+          return (
+            <Link
+              key={v.id}
+              href={`/${v.slug}`}
+              className="eco-legend-row eco-legend-row-link"
+            >
+              {cells}
+            </Link>
           );
         })}
         <div className="eco-legend-row baseline">

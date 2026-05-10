@@ -670,32 +670,29 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 
-/* Trust strip: thin double-row of brand names ("Available on",
-   "Audited by"). Reads as a logo wall in placeholder text form;
-   each name uses the display font so the row keeps a consistent
-   wordmark feel until the actual logos drop in. */
+/* Trust strip: stacked label-over-names rows. Small uppercase
+   caption sits above the brand wordmark row so the hierarchy reads
+   "AVAILABLE ON" -> [Binance · Coinbase · ...]. Names render in the
+   display font as a placeholder logo wall until SVGs drop in. */
 .foot-trust {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding-top: 28px;
+  gap: 28px;
+  padding-top: 32px;
   border-top: 1px solid var(--line);
 }
 .foot-trust-row {
   display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
 }
 .foot-trust-label {
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
   font-weight: 600;
   font-family: var(--sans);
-  flex-shrink: 0;
-  min-width: 110px;
 }
 .foot-trust-list {
   list-style: none;
@@ -756,6 +753,13 @@ button { font-family: inherit; cursor: pointer; }
      the blob wrap freely instead of clamping to two lines. */
   .foot-legal { grid-template-columns: 1fr; gap: 10px; }
   .foot-legal-line { display: block; -webkit-line-clamp: unset; }
+  /* Tighten the whole footer rhythm on phones: less bottom padding
+     and a smaller inter-row gap so the sitemap/robots row doesn't
+     leave a tall whitespace tail above the home indicator. */
+  .foot { padding: 32px 0 16px; margin-top: 36px; }
+  .foot-inner { gap: 24px; }
+  .foot-trust { padding-top: 22px; gap: 20px; }
+  .foot-legal { padding-top: 16px; }
 }
 .foot-copy {
   font-size: 11.5px;
@@ -1924,7 +1928,13 @@ button { font-family: inherit; cursor: pointer; }
 }
 .bt-row { border-bottom: 1px dotted var(--line-2); transition: background-color 0.12s ease; }
 .bt-row:last-child { border-bottom: 0; }
-.bt-row:hover:not(.you):not(.avg) { background: rgba(10, 10, 10, 0.025); }
+.bt-row:hover:not(.you):not(.avg) { background: rgba(255, 185, 54, 0.06); }
+.bt-row-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.bt-row-link:hover strong { color: var(--ink); }
 .bt-row.you {
   background: oklch(0.96 0.04 155 / 0.6);
   position: relative;
@@ -2066,8 +2076,21 @@ button { font-family: inherit; cursor: pointer; }
   padding: 11px 0;
   border-bottom: 1px dotted var(--line-2);
   font-size: 13px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.12s ease;
 }
 .eco-legend-row:last-child { border-bottom: 0; }
+.eco-legend-row-link {
+  cursor: pointer;
+  margin: 0 -8px;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 6px;
+}
+.eco-legend-row-link:hover {
+  background: rgba(255, 185, 54, 0.08);
+}
 .eco-legend-swatch {
   width: 14px;
   height: 14px;
@@ -2183,9 +2206,31 @@ button { font-family: inherit; cursor: pointer; }
   .eco-chart { min-height: 200px; }
 }
 @media (max-width: 700px) {
-  /* Bench table: hide chain col, compress */
-  .bt-head, .bt-row { grid-template-columns: 40px 1.6fr 1fr 1fr; gap: 8px; font-size: 12px; padding: 12px 14px; }
+  /* Bench table on mobile: collapse to # / Product / APY / TVL,
+     hide chain column. Match HubTable's mobile cadence so a user
+     bouncing between the ranking pages and product-page benchmarks
+     doesn't notice a layout discontinuity. */
+  .bt-head, .bt-row {
+    grid-template-columns: 22px minmax(0, 1fr) 60px 60px;
+    gap: 10px;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
   .bt-row span:nth-child(3), .bt-head span:nth-child(3) { display: none; }
+  .bt-product img { width: 18px !important; height: 18px !important; }
+  .bt-product strong {
+    font-size: 12px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 100%;
+  }
+  .bt-product { gap: 6px; min-width: 0; max-width: 100%; }
+  .bt-product-cell { min-width: 0; }
+  .bt-row .r.mono { font-size: 12px; }
+  .bench-table { padding: 4px 6px; border-radius: 14px; }
   /* PP section headings */
   .pp-section h2 { font-size: 18px; }
   /* Consistency block: stack vertically */
@@ -3820,12 +3865,12 @@ body:has(.methodology-page) {
 .hub-row {
   display: grid;
   /* # | Vault | 24h APY | TVL | Strategy | Network | 30d trend
-     The middle quartet (APY, TVL, Strategy, Network) all use the
-     same fr unit so the row reads as four evenly distributed
-     columns once the fixed rank/trend tracks are subtracted. Vault
-     stays widest with 1.6fr; Network is half a track because it's
-     an icon. */
-  grid-template-columns: 50px minmax(180px, 1.6fr) 1fr 1fr 1fr 0.5fr 130px;
+     Vault track gets a wider min-width (220px) and a heavier flex
+     factor (2fr) so longer product names like "USDC Convex tricrypto
+     LP" stay fully visible before they would truncate. The middle
+     trio (APY/TVL/Strategy) shares one fr unit so they read as
+     equally sized; Network is half-track because it's a glyph. */
+  grid-template-columns: 50px minmax(220px, 2fr) 1fr 1fr 1fr 0.5fr 130px;
   align-items: center;
   gap: 24px;
 }

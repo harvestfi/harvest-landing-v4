@@ -281,7 +281,32 @@ body:has(.uni-home-test) {
 }
 @media (max-width: 900px) {
   .uni-home-test .uni-home-hero-preview { display: none; }
-  .uni-home-test .uni-home-hero-inner { max-width: 100%; }
+  .uni-home-test .uni-home-hero-inner {
+    max-width: 100%;
+    text-align: center;
+  }
+  .uni-home-test .uni-home-h1 {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .uni-home-test .uni-home-sub {
+    font-size: 15px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .uni-home-test .uni-home-hero-actions {
+    justify-content: center;
+  }
+}
+@media (max-width: 540px) {
+  .uni-home-test .uni-home-h1 {
+    font-size: clamp(22px, 7.5vw, 30px);
+  }
+  .uni-home-test .uni-home-sub {
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 38ch;
+  }
 }
 
 .uni-home-test .uni-home-hero-stats {

@@ -313,7 +313,7 @@ body:has(.uni-hub-test) {
   line-height: 1.6;
   color: var(--uni-ink-2);
   margin: 0;
-  max-width: 80ch;
+  max-width: none;
 }
 .uni-hub-test .uni-hub-content-grid {
   display: grid;
@@ -354,11 +354,15 @@ body:has(.uni-hub-test) {
 }
 .uni-hub-test .uni-hub-content a {
   color: var(--uni-ink);
-  border-bottom: 1px solid var(--uni-line);
+  font-weight: 500;
+  background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.45) 70%);
+  padding: 0 1px;
   text-decoration: none;
-  transition: border-color 0.15s ease;
+  transition: background 0.15s ease;
 }
-.uni-hub-test .uni-hub-content a:hover { border-color: var(--uni-gold); }
+.uni-hub-test .uni-hub-content a:hover {
+  background: linear-gradient(transparent 0, rgba(255, 185, 54, 0.55) 0);
+}
 @media (max-width: 800px) {
   .uni-hub-test .uni-hub-content-grid {
     grid-template-columns: 1fr;
@@ -394,7 +398,8 @@ body:has(.uni-hub-test) {
 .uni-hub-test .uni-hub-cta-pill {
   display: inline-flex;
   align-items: center;
-  padding: 7px 14px;
+  gap: 8px;
+  padding: 8px 14px;
   background: #ffffff;
   color: var(--uni-ink);
   font-size: 13.5px;
@@ -403,6 +408,11 @@ body:has(.uni-hub-test) {
   border-radius: var(--uni-radius-pill);
   border: 1px solid rgba(25, 23, 23, 0.1);
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.uni-hub-test .uni-hub-cta-pill img,
+.uni-hub-test .uni-hub-cta-pill svg {
+  flex-shrink: 0;
+  display: block;
 }
 .uni-hub-test .uni-hub-cta-pill:hover {
   background: var(--uni-gold-bg);

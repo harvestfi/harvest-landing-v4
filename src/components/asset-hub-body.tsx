@@ -79,7 +79,7 @@ const COPY: Record<string, AssetCopy> = {
       },
       {
         h3: "What this page is, and what it is not",
-        body: "A curated index. Not a market census. We add strategies as we vet and integrate them; we drop them when the upstream product retires or fails our risk framework. Every comparison here is within our set. Plenty of wrapped-BTC yield exists outside it.",
+        body: "A curated index. Not a market census. We add strategies as we vet and integrate them; we drop them when the upstream product retires or fails our risk framework. Every comparison here is within our set, and the rules behind that set live on the {METHOD_LINK}. Plenty of wrapped-BTC yield exists outside it.",
       },
     ],
     faq: [
@@ -106,7 +106,7 @@ const COPY: Record<string, AssetCopy> = {
       { h3: "Reading the APY columns", body: "24-hour APY: today's annualised rate. 30-day APY: trailing mean across the last month. Stablecoin yields move less than wrapped-asset yields, but they still move every day with utilisation cycles and reward gauges. Past APY does not promise future APY." },
       { h3: "Reading the TVL column", body: "TVL is the USD value of USDC sitting in the vault contract. The {N} vaults on this page hold {TOTAL_TVL} between them. Higher TVL usually means the strategy has been live longer and absorbed more capital without breaking. Lower TVL is either young, niche, or compensating poorly for its risk." },
       { h3: "Risk surfaces on every USDC strategy", body: "Smart-contract risk on the vault and the protocol underneath. Oracle risk on the price feeds. Depeg risk on USDC itself in tail scenarios. Governance risk on every parameter operators can change. Tiers and what we leave out, on the {RISK_LINK}." },
-      { h3: "What this page is, and what it is not", body: "A curated USDC index. Not the entire USDC yield market. We add strategies as we vet and integrate them; we drop them when products retire or fail our framework. Every comparison here is within our set." },
+      { h3: "What this page is, and what it is not", body: "A curated USDC index. Not the entire USDC yield market. We add strategies as we vet and integrate them; we drop them when products retire or fail our framework. Every comparison here is within our set; the rules behind that set are on the {METHOD_LINK}." },
     ],
     faq: [
       { q: "Why is USDC yield variable?", a: "Lending APY follows borrower demand and utilisation. Reward APY follows incentive programs that turn on and off. Both move daily." },
@@ -130,7 +130,7 @@ const COPY: Record<string, AssetCopy> = {
       { h3: "Lending vs. autocompounding", body: "Lending: deposit USDT, earn the supply rate. Autocompounding: same plus a contract that re-invests reward emissions on a schedule. The autocompounder smooths the yield curve in exchange for additional smart-contract surface." },
       { h3: "Reading the APY and TVL columns", body: "24-hour APY: today's annualised rate. 30-day APY: trailing mean of daily readings. TVL: the USD value of USDT in the vault contract. The {N} vaults on this page add up to {TOTAL_TVL}." },
       { h3: "Risk surfaces on every USDT strategy", body: "Smart-contract risk on the vault and protocol. Oracle risk. Issuer and attestation risk on USDT itself. Governance risk on every parameter operators can change. Tiers and what we leave out, on the {RISK_LINK}." },
-      { h3: "What this page is, and what it is not", body: "A curated USDT index. Not the entire USDT yield market. Treat every comparison here as within our cohort." },
+      { h3: "What this page is, and what it is not", body: "A curated USDT index. Not the entire USDT yield market. Treat every comparison here as within our cohort; the inclusion rules live on the {METHOD_LINK}." },
     ],
     faq: [
       { q: "Is USDT yield more variable than USDC yield?", a: "In aggregate the two curves track. On a given chain they drift based on which stablecoin lenders prefer at that moment. Watch utilisation rates, not just APY." },
@@ -154,7 +154,7 @@ const COPY: Record<string, AssetCopy> = {
       { h3: "Reading the APY columns", body: "24-hour APY: today's annualised rate. 30-day APY: trailing mean across the last month. ETH-denominated yield is the rate on the ETH balance, before any price move on ETH itself. Headline numbers look smaller than stablecoin yields for that reason." },
       { h3: "Reading the TVL column", body: "TVL is the USD value of ETH sitting in the vault contract. The {N} vaults on this page add up to {TOTAL_TVL}. ETH TVL moves with both deposits and ETH price; TVL alone is not a quality signal." },
       { h3: "Risk surfaces on every ETH strategy", body: "Smart-contract risk on the vault and protocol. Slashing risk on validator-backed strategies. Oracle risk. Depeg risk on LSTs and LRTs. Governance risk on every parameter operators can change. Tiers and what we leave out, on the {RISK_LINK}." },
-      { h3: "What this page is, and what it is not", body: "A curated index. Not a complete map of ETH yield. Solo validators and many institutional venues are out of scope by design. Treat every comparison here as within our set." },
+      { h3: "What this page is, and what it is not", body: "A curated index. Not a complete map of ETH yield. Solo validators and many institutional venues are out of scope by design. Treat every comparison here as within our set; the rules behind that set live on the {METHOD_LINK}." },
     ],
     faq: [
       { q: "Is the APY here paid in ETH or in dollars?", a: "ETH. The rate is on your ETH balance, not on a dollar position. The price action of ETH itself is separate." },
@@ -277,14 +277,41 @@ export async function AssetHubBody({ asset }: Props) {
   }
 
   function renderArticleBody(text: string) {
-    // Special-case the {RISK_LINK} so it renders as an actual <Link>.
+    // Special-case {RISK_LINK} and {METHOD_LINK} so they render as
+    // real <Link>s rather than raw token strings. Each placeholder is
+    // expected to appear at most once per article body.
+    const splitOn = (src: string, token: string, label: string, href: string) => {
+      const [before, after] = src.split(token);
+      return [interpolate(before), <Link key={token} href={href}>{label}</Link>, after];
+    };
+
     if (text.includes("{RISK_LINK}")) {
-      const [before, after] = text.split("{RISK_LINK}");
+      const [before, link, after] = splitOn(
+        text,
+        "{RISK_LINK}",
+        "risk framework page",
+        "/risk-framework",
+      );
       return (
         <p>
-          {interpolate(before)}
-          <Link href="/risk-framework">risk framework page</Link>
-          {interpolate(after)}
+          {before}
+          {link}
+          {interpolate(after as string)}
+        </p>
+      );
+    }
+    if (text.includes("{METHOD_LINK}")) {
+      const [before, link, after] = splitOn(
+        text,
+        "{METHOD_LINK}",
+        "methodology page",
+        "/methodology",
+      );
+      return (
+        <p>
+          {before}
+          {link}
+          {interpolate(after as string)}
         </p>
       );
     }
