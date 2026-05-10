@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HomeCrumb } from "@/components/home-crumb";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { breadcrumbSchema, articleSchema } from "@/lib/jsonld";
 import { RISK_FRAMEWORK_VERSION, RISK_FRAMEWORK_CHANGELOG, RISK_FRAMEWORK_URL } from "@/lib/risk-framework";
@@ -77,7 +78,7 @@ export default function RiskFrameworkPage() {
         {/* ── Header ─────────────────────────────────────────── */}
         <div className="meth-header">
           <nav className="meth-crumbs mono dim">
-            <Link href="/">Home</Link>
+            <HomeCrumb />
             <span>›</span>
             <span>Risk Framework</span>
           </nav>

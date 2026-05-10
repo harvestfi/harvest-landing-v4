@@ -31,7 +31,11 @@
 
   /* Shared content shell, used by topnav, page, hero, tabs, footer
      so every section's left/right edge lines up vertically. */
-  --shell-max: 1480px;
+  /* Shared horizontal shell. 1320px matches the .uni-home-test /
+     .uni-shell / .uni-hub-test / .methodology-page content boxes,
+     so topnav, footer and page content all sit on the same vertical
+     rails at every viewport width. */
+  --shell-max: 1320px;
   --shell-pad: 32px;
 
   --mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -55,6 +59,24 @@ html, body {
 }
 
 a { color: inherit; text-decoration: none; }
+
+/* Breadcrumb home icon — shared by all pages, sits as the first
+   crumb in place of the literal "Home" text. */
+.crumb-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: inherit;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+.crumb-home:hover {
+  color: #ffb936;
+  background: rgba(255, 185, 54, 0.1);
+}
+.crumb-home svg { display: block; }
 button { font-family: inherit; cursor: pointer; }
 .mono { font-family: var(--mono); font-feature-settings: "tnum"; }
 .dim  { color: var(--ink-3); }
@@ -809,8 +831,12 @@ button { font-family: inherit; cursor: pointer; }
   .feat-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
-  /* Nav: compress search so brand stays visible */
+  /* Nav: compress search so brand stays visible. Push the
+     .nav-right column flush against the right shell-pad so the
+     search box hugs the right margin instead of floating with
+     extra whitespace beside it. */
   .topnav-inner { gap: 12px; }
+  .nav-right { margin-left: auto; }
   .search-box { min-width: 140px; }
   .search-box kbd { display: none; }
 
@@ -2231,6 +2257,32 @@ button { font-family: inherit; cursor: pointer; }
   .bt-product-cell { min-width: 0; }
   .bt-row .r.mono { font-size: 12px; }
   .bench-table { padding: 4px 6px; border-radius: 14px; }
+
+  /* Ecosystem legend rows mirror the HubTable mobile cadence so
+     all rankings on the site read the same on phone: # / name /
+     APY, swatch column dropped, tight padding, 12px font. */
+  .eco-legend-row {
+    grid-template-columns: 22px minmax(0, 1fr) 60px;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(25, 23, 23, 0.05);
+  }
+  .eco-legend-row .eco-legend-swatch { display: none; }
+  .eco-legend-row .eco-legend-rank { font-size: 11px; color: var(--ink-3); }
+  .eco-legend-row .eco-legend-name {
+    font-size: 12px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .eco-legend-row .eco-legend-apy { font-size: 12px; font-weight: 600; }
+  .eco-legend-row .here-pill { font-size: 9.5px; padding: 1px 5px; }
+  .eco-legend-row-link {
+    margin: 0;
+    border-radius: 0;
+  }
   /* PP section headings */
   .pp-section h2 { font-size: 18px; }
   /* Consistency block: stack vertically */
@@ -2249,7 +2301,6 @@ button { font-family: inherit; cursor: pointer; }
   /* Eco chart: drop bar gap and shrink axis labels */
   .eco-chart { gap: 6px; }
   .eco-chart-axis { gap: 6px; }
-  .eco-legend-row { grid-template-columns: 12px 26px 1fr auto; gap: 10px; }
   /* Yield sources: stack the name above the bar+value row so long
      source names (eg. "Compound Reward") never overrun the progress
      bar on narrow screens. */

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HomeCrumb } from "@/components/home-crumb";
 import { getLiveVaults, getVaults } from "@/lib/data";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { stripChainSuffix } from "@/lib/format";
@@ -135,7 +136,7 @@ export default async function MethodologyPage() {
         {/* ── Header ─────────────────────────────────────────── */}
         <div className="meth-header">
           <nav className="meth-crumbs mono dim">
-            <Link href="/">Home</Link>
+            <HomeCrumb />
             <span>›</span>
             <span>Methodology</span>
           </nav>

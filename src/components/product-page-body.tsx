@@ -27,6 +27,7 @@ import { TestJumpNav } from "@/components/test-jumpnav";
 import { TestStabilityCard } from "@/components/test-stability-card";
 import { TestStickyHeader } from "@/components/test-sticky-header";
 import { TestSimilar } from "@/components/test-similar";
+import { HomeCrumb } from "@/components/home-crumb";
 import type { YieldVault } from "@/lib/types";
 
 const CHAIN_EXPLORERS: Record<string, string> = {
@@ -182,14 +183,17 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         ctaHref={harvestAppUrl(vault.chain, vault.contractAddress)}
       />
 
-      {/* Breadcrumb */}
+      {/* Breadcrumb: home icon -> {Ticker} Ranking -> {product name} */}
       <div className="uni-crumbs">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
+          const isFirst = i === 0;
           const href = c.url ? c.url.replace(SITE_URL, "") || "/" : null;
           return (
             <span key={i} className="uni-crumbs-item">
-              {!isLast && href ? (
+              {isFirst ? (
+                <HomeCrumb />
+              ) : !isLast && href ? (
                 <Link href={href}>{c.name}</Link>
               ) : (
                 <span className="uni-crumbs-current">{c.name}</span>

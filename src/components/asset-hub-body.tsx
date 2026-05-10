@@ -15,6 +15,7 @@ import {
 import { breadcrumbSchema, itemListSchema } from "@/lib/jsonld";
 import { getSubAsset } from "@/lib/sub-asset";
 import { HubTable } from "@/components/hub-table";
+import { HomeCrumb } from "@/components/home-crumb";
 
 interface AssetCopy {
   // Short label used in breadcrumb (e.g. "Bitcoin", "USDC", "USDT", "ETH")
@@ -335,9 +336,9 @@ export async function AssetHubBody({ asset }: Props) {
 
       {/* Breadcrumb */}
       <nav className="uni-hub-crumbs" aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <HomeCrumb />
         <span className="uni-hub-crumbs-sep" aria-hidden="true">›</span>
-        <span className="uni-hub-crumbs-current">{copy.crumbLabel} Yield Ranking</span>
+        <span className="uni-hub-crumbs-current">{asset.toUpperCase()} Ranking</span>
       </nav>
 
       {/* Hero */}

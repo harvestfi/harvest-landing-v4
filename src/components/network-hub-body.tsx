@@ -11,6 +11,7 @@ import { networkHubH1, networkHubCrumbs } from "@/lib/seo";
 import { breadcrumbSchema, itemListSchema } from "@/lib/jsonld";
 import { NETWORK_BLURBS, NETWORKS } from "@/lib/networks";
 import { HubTable } from "@/components/hub-table";
+import { HomeCrumb } from "@/components/home-crumb";
 
 interface Props {
   networkSlug: string;
@@ -121,9 +122,9 @@ export async function NetworkHubBody({
 
       {/* Breadcrumb */}
       <nav className="uni-hub-crumbs" aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <HomeCrumb />
         <span className="uni-hub-crumbs-sep" aria-hidden="true">›</span>
-        <span className="uni-hub-crumbs-current">{networkDisplay} Yields</span>
+        <span className="uni-hub-crumbs-current">{networkDisplay} Ranking</span>
       </nav>
 
       {/* Hero */}

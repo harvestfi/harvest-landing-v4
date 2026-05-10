@@ -1087,9 +1087,9 @@ body:has(.uni-shell) {
     font-size: 12.5px;
     gap: 4px;
   }
-  /* Keep the live APY + TVL chips visible alongside the name. */
-  .uni-shell .uni-sticky-stat { font-size: 12.5px; gap: 4px; }
-  .uni-shell .uni-sticky-stat strong { font-size: 13px; }
+  /* Mobile: drop the APY + TVL chips. The sub-bar stays compact
+     with just the asset icon, product name, and the View CTA. */
+  .uni-shell .uni-sticky-stat { display: none; }
 }
 @media (max-width: 540px) {
   .uni-shell .uni-sticky-right a[href="#benchmark"] { display: none; }

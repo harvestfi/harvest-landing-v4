@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HomeCrumb } from "@/components/home-crumb";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/jsonld";
 
@@ -50,7 +51,7 @@ export default function PrivacyPage() {
 
       <div className="meth-header">
         <nav className="meth-crumbs mono dim">
-          <Link href="/">Home</Link>
+          <HomeCrumb />
           <span className="sep">›</span>
           <span>Privacy Policy</span>
         </nav>

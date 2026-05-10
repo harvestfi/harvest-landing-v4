@@ -176,31 +176,36 @@ export interface Crumb {
   url?: string;
 }
 
+// Breadcrumb labels follow a single rule globally:
+//   Home > {Ticker} Ranking > {Product name (only on product pages)}
+// Where Ticker is the asset symbol (BTC / ETH / USDC / USDT) for
+// asset hubs, and the network display name (Ethereum / Base / etc.)
+// for network hubs. The visible breadcrumbs emit a home icon for the
+// first crumb in the renderer; the schema keeps "Home" as the name
+// so structured data stays accessible to crawlers.
 export function productPageCrumbs(vault: YieldVault): Crumb[] {
-  const isUmbrella = isUmbrellaAsset(vault.asset);
-  const familyLabel = isUmbrella
-    ? `${getSubAssetFamilyName(vault.asset)} Yield Ranking`
-    : `${vault.asset} Yield Ranking`;
+  const ticker = isUmbrellaAsset(vault.asset)
+    ? vault.asset.toUpperCase()
+    : vault.asset;
   const hubPath = `${SITE_URL}/${vault.asset.toLowerCase()}`;
-
   return [
     { name: "Home", url: SITE_URL },
-    { name: familyLabel, url: hubPath },
+    { name: `${ticker} Ranking`, url: hubPath },
     { name: vault.productName },
   ];
 }
 
 export function assetHubCrumbs(asset: string): Crumb[] {
-  const isUmbrella = isUmbrellaAsset(asset);
-  const label = isUmbrella
-    ? `${getSubAssetFamilyName(asset)} Yield Ranking`
-    : `${asset} Yield Ranking`;
-  return [{ name: "Home", url: SITE_URL }, { name: label }];
+  const ticker = isUmbrellaAsset(asset) ? asset.toUpperCase() : asset;
+  return [
+    { name: "Home", url: SITE_URL },
+    { name: `${ticker} Ranking` },
+  ];
 }
 
 export function networkHubCrumbs(networkDisplay: string): Crumb[] {
   return [
     { name: "Home", url: SITE_URL },
-    { name: `${networkDisplay} Yields` },
+    { name: `${networkDisplay} Ranking` },
   ];
 }
