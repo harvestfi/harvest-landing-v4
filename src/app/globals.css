@@ -585,13 +585,17 @@ button { font-family: inherit; cursor: pointer; }
 .foot-brand-dot {
   width: 7px;
   height: 7px;
-  border-radius: 2px;
+  border-radius: 1.5px;
   background: #ffb936;
   display: inline-block;
+  position: relative;
+  top: 0;
+  transition: transform 0.5s cubic-bezier(0.5, 1.75, 0.5, 1),
+    background 0.18s ease;
 }
 .foot-brand:hover .foot-brand-dot {
-  transform: rotate(45deg);
-  transition: transform 0.18s ease;
+  transform: translateY(-9px);
+  background: var(--ink);
 }
 .foot-grid {
   display: grid;
@@ -633,7 +637,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .foot-blurb a {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
   background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.45) 70%);
   padding: 0 1px;
   text-decoration: none;
@@ -3837,9 +3841,12 @@ button { font-family: inherit; cursor: pointer; }
 .hub-network {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   font-size: 14px;
   color: var(--hub-ink);
+  text-align: right;
+  justify-self: end;
 }
 .hub-network img { border-radius: 50%; flex-shrink: 0; display: block; }
 .hub-strategy {
@@ -3848,6 +3855,12 @@ button { font-family: inherit; cursor: pointer; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: right;
+  justify-self: end;
+}
+.hub-th-right {
+  text-align: right;
+  justify-self: end;
 }
 .hub-num {
   text-align: right;
@@ -3859,6 +3872,10 @@ button { font-family: inherit; cursor: pointer; }
   justify-self: end;
 }
 .hub-apy {
+  color: var(--hub-ink);
+  font-weight: 600;
+}
+.hub-tvl {
   color: var(--hub-ink);
   font-weight: 700;
 }
@@ -3874,15 +3891,18 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 14px;
 }
 
-/* Pagination */
+/* Pagination — numeric buttons flanked by left/right arrow buttons.
+   Active page reads as a filled gold square; siblings stay subtle so
+   the active one is the obvious anchor. */
 .hub-pager {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  gap: 6px;
   padding: 18px 4px 4px;
   border-top: 1px solid var(--hub-line);
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 .hub-pager-btn {
   appearance: none;
@@ -3900,6 +3920,11 @@ button { font-family: inherit; cursor: pointer; }
   gap: 6px;
   transition: border-color 0.12s ease, background-color 0.12s ease;
 }
+.hub-pager-arrow {
+  padding: 8px 12px;
+  min-width: 36px;
+  justify-content: center;
+}
 .hub-pager-btn:hover:not(:disabled) {
   border-color: var(--hub-ink-3);
   background: var(--hub-card);
@@ -3908,6 +3933,50 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--hub-ink-3);
   cursor: not-allowed;
   opacity: 0.5;
+}
+.hub-pager-pages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.hub-pager-num {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hub-ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-feature-settings: "tnum";
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+.hub-pager-num:hover {
+  color: var(--hub-ink);
+  background: var(--hub-card);
+}
+.hub-pager-num.active {
+  background: var(--hub-gold);
+  border-color: var(--hub-gold);
+  color: var(--hub-ink);
+  font-weight: 700;
+  cursor: default;
+}
+.hub-pager-gap {
+  color: var(--hub-ink-3);
+  padding: 0 4px;
+  font-size: 13px;
+  user-select: none;
 }
 .hub-pager-meta {
   font-family: var(--mono);

@@ -36,12 +36,23 @@ body:has(.uni-home-test) {
   overscroll-behavior-y: contain;
 }
 
-/* === Boxed Sunflower Gold hero card ================================ */
+/* === Boxed Sunflower Gold hero card ================================
+   Three layered backgrounds: a soft orange-ish radial glow in the
+   top-right (drives the "warm sunrise" feel without competing with
+   text), the dotted ink raster (now ~halved opacity for subtlety),
+   and the flat gold base. */
 .uni-home-test .uni-home-hero {
   background-color: var(--uni-gold);
-  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.13) 1px, transparent 1.3px);
-  background-size: 12px 12px;
-  background-position: 0 0;
+  background-image:
+    radial-gradient(
+      circle at 88% 18%,
+      rgba(255, 145, 30, 0.42) 0%,
+      rgba(255, 185, 54, 0) 55%
+    ),
+    radial-gradient(circle, rgba(25, 23, 23, 0.07) 1px, transparent 1.3px);
+  background-size: auto, 12px 12px;
+  background-position: 0 0, 0 0;
+  background-repeat: no-repeat, repeat;
   color: var(--uni-ink);
   border-radius: var(--uni-radius);
   padding: 56px 48px 60px;
@@ -414,7 +425,9 @@ body:has(.uni-home-test) {
 /* === SEO content section ========================================== */
 .uni-home-test .uni-home-content {
   max-width: 100%;
+  width: 100%;
   margin: 0;
+  display: block;
 }
 .uni-home-test .uni-home-content h2 {
   font-family: var(--display);
@@ -429,12 +442,12 @@ body:has(.uni-home-test) {
   line-height: 1.65;
   color: var(--uni-ink-2);
   margin: 0 0 14px;
-  max-width: 80ch;
+  max-width: none;
 }
 .uni-home-test .uni-home-content p:last-child { margin-bottom: 0; }
 .uni-home-test .uni-home-content a {
   color: var(--uni-ink);
-  font-weight: 600;
+  font-weight: 500;
   background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.45) 70%);
   padding: 0 1px;
   text-decoration: none;

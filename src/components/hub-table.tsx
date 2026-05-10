@@ -38,6 +38,24 @@ function sparklineFor(v: YieldVault, sparklines: Record<string, number[]>): numb
   );
 }
 
+// Build the page-number list shown in the pager. Always include the
+// first and last page; show a sliding window of three around the
+// current page; collapse the rest into "…" gaps. Returns 0-based
+// indices interleaved with the literal string "…".
+function pageNumbers(current: number, total: number): (number | "…")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i);
+  }
+  const out: (number | "…")[] = [0];
+  const start = Math.max(1, current - 1);
+  const end = Math.min(total - 2, current + 1);
+  if (start > 1) out.push("…");
+  for (let i = start; i <= end; i++) out.push(i);
+  if (end < total - 2) out.push("…");
+  out.push(total - 1);
+  return out;
+}
+
 export function HubTable({
   vaults,
   sparklines,
@@ -174,8 +192,8 @@ export function HubTable({
             dir={sortDir}
             onClick={() => clickSort("tvl")}
           />
-          <span className="hub-th">Network</span>
-          <span className="hub-th">Strategy</span>
+          <span className="hub-th hub-th-right">Network</span>
+          <span className="hub-th hub-th-right">Strategy</span>
           <span className="hub-th hub-th-num">30d APY trend</span>
         </div>
         <div className="hub-tbody" role="rowgroup">
@@ -198,22 +216,42 @@ export function HubTable({
         <nav className="hub-pager" aria-label="Pagination">
           <button
             type="button"
-            className="hub-pager-btn"
+            className="hub-pager-btn hub-pager-arrow"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={safePage === 0}
+            aria-label="Previous page"
           >
-            <span aria-hidden="true">←</span> Prev
+            <span aria-hidden="true">←</span>
           </button>
-          <span className="hub-pager-meta">
-            Page {safePage + 1} of {totalPages}
-          </span>
+          <ol className="hub-pager-pages">
+            {pageNumbers(safePage, totalPages).map((p, i) =>
+              p === "…" ? (
+                <li key={`gap-${i}`} className="hub-pager-gap" aria-hidden="true">
+                  …
+                </li>
+              ) : (
+                <li key={p}>
+                  <button
+                    type="button"
+                    className={`hub-pager-num${p === safePage ? " active" : ""}`}
+                    onClick={() => setPage(p)}
+                    aria-label={`Go to page ${p + 1}`}
+                    aria-current={p === safePage ? "page" : undefined}
+                  >
+                    {p + 1}
+                  </button>
+                </li>
+              ),
+            )}
+          </ol>
           <button
             type="button"
-            className="hub-pager-btn"
+            className="hub-pager-btn hub-pager-arrow"
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={safePage >= totalPages - 1}
+            aria-label="Next page"
           >
-            Next <span aria-hidden="true">→</span>
+            <span aria-hidden="true">→</span>
           </button>
         </nav>
       )}
@@ -281,7 +319,7 @@ function Row({
         <span className="hub-vault-name">{vault.productName}</span>
       </span>
       <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
-      <span className="hub-cell hub-num">{formatTVL(vault.tvl)}</span>
+      <span className="hub-cell hub-num hub-tvl">{formatTVL(vault.tvl)}</span>
       <span className="hub-cell hub-network">
         <ChainIcon chain={vault.chain} size={14} />
         <span>{vault.chain}</span>
