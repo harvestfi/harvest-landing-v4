@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/jsonld";
 
-const TITLE = "Risk Disclosures | Harvest";
+const TITLE = "Disclosures: Operator Status & Conflicts | Harvest";
 const DESCRIPTION =
-  "Risk Disclosures statement covering operational, blockchain, third-party, market, and regulatory risks associated with the Harvest website and app.";
+  "Harvest Finance operator disclosures, conflict of interest statement, monetization model, and editorial discretion policy.";
 const URL = `${SITE_URL}/disclosures`;
 const LAST_UPDATED = "May 3, 2026";
 
@@ -55,10 +55,10 @@ export default function DisclosuresPage() {
           <span className="sep">›</span>
           <span>Risk Disclosures</span>
         </nav>
-        <h1 className="meth-title">Risk Disclosures</h1>
+        <h1 className="meth-title">Disclosures</h1>
         <p className="meth-subtitle">
-          Risks associated with using the Harvest website, the app, and the
-          underlying smart-contract systems they reference.
+          Operator status, monetization model, conflicts of interest,
+          and editorial discretion policy.
         </p>
         <p className="meth-version mono dim">Last updated: {LAST_UPDATED}</p>
       </div>

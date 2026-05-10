@@ -2599,6 +2599,124 @@ button { font-family: inherit; cursor: pointer; }
   .vh-crumbs { font-size: 10px; gap: 6px; padding-bottom: 14px; }
 }
 
+/* === Admin shell ===================================================
+   Restyles the /admin panel to match the public site language: same
+   topnav with brand wordmark + gold dot, same body bg and link
+   treatment. Tailwind utility classes used inside the admin pages
+   (bg-gray-50, border-gray-200, text-gray-500, etc.) are remapped
+   to brand tokens via .admin-shell scope so the existing markup
+   doesn't need to be rewritten class-for-class. */
+body:has(.admin-shell) {
+  background: #ffffff !important;
+}
+.admin-shell {
+  min-height: 100vh;
+  background: #ffffff;
+  font-family: var(--sans);
+  color: var(--ink);
+}
+.admin-nav {
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(6px);
+}
+.admin-nav-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 var(--shell-pad);
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  height: 56px;
+}
+.admin-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.admin-brand-tag {
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.admin-nav-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 18px;
+}
+.admin-nav-link {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+.admin-nav-link:hover {
+  color: var(--ink);
+  background: var(--bg-2);
+}
+.admin-nav-back {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+.admin-nav-back:hover { color: #ffb936; }
+
+/* Map common Tailwind utility classes to brand tokens inside the
+   admin scope so the existing JSX renders on-brand without rewriting
+   each className. Only colour and surface utilities are remapped;
+   layout utilities (flex, grid, padding) keep Tailwind defaults. */
+.admin-shell .bg-gray-50 { background-color: #ffffff !important; }
+.admin-shell .bg-white { background-color: #ffffff !important; }
+.admin-shell .border-gray-200 { border-color: var(--line) !important; }
+.admin-shell .border-gray-300 { border-color: var(--line) !important; }
+.admin-shell .text-gray-300 { color: var(--ink-4) !important; }
+.admin-shell .text-gray-400 { color: var(--ink-4) !important; }
+.admin-shell .text-gray-500 { color: var(--ink-3) !important; }
+.admin-shell .text-gray-600 { color: var(--ink-3) !important; }
+.admin-shell .text-gray-700 { color: var(--ink-2) !important; }
+.admin-shell .text-gray-900 { color: var(--ink) !important; }
+.admin-shell .placeholder-gray-400::placeholder { color: var(--ink-4) !important; }
+.admin-shell .hover\:text-gray-700:hover { color: var(--ink-2) !important; }
+.admin-shell .hover\:text-gray-900:hover { color: var(--ink) !important; }
+.admin-shell .focus\:border-gray-500:focus { border-color: var(--ink-2) !important; }
+.admin-shell .focus\:ring-gray-500:focus { box-shadow: 0 0 0 1px var(--ink-2) !important; }
+.admin-shell .text-red-600 { color: #c0322a !important; }
+/* Headlines inside admin pick up the display font for consistency */
+.admin-shell h1, .admin-shell h2 {
+  font-family: var(--display);
+  letter-spacing: -0.018em;
+}
+.admin-shell h1 { font-weight: 600; }
+/* Inputs and table cells get our brand line on focus rather than
+   Tailwind's default ring grey. */
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea {
+  font-family: var(--sans);
+}
+/* Anchor links in admin tables go gold on hover instead of the
+   tailwind default. */
+.admin-shell a:not(.brand):not(.admin-nav-link):not(.admin-nav-back):hover {
+  color: #ffb936;
+}
+
 /* === Admin Products === */
 .adm-header { margin-bottom: 20px; }
 .adm-header h1 { font-size: 22px; font-weight: 600; color: var(--ink); }

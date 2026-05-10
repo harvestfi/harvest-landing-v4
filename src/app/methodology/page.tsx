@@ -8,7 +8,7 @@ import { METHODOLOGY_VERSION, METHODOLOGY_CHANGELOG, METHODOLOGY_URL } from "@/l
 
 const TITLE = "Methodology: How Harvest Tracks DeFi Yields | Harvest";
 const DESCRIPTION =
-  "How Harvest tracks DeFi yield sources: APY calculations, data sources, ranking methodology, share price, and update cadence.";
+  "How Harvest Finance tracks 150+ DeFi yield strategies. APY calculations, data sources, ranking methodology, and update cadence.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

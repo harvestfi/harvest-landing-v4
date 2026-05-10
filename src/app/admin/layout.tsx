@@ -12,46 +12,35 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link
-                href="/"
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                &larr; Back to site
-              </Link>
-              <div className="hidden h-5 w-px bg-gray-200 sm:block" />
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/admin"
-                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  SEO Overview
-                </Link>
-                <Link
-                  href="/admin/products"
-                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Products
-                </Link>
-                <Link
-                  href="/admin/ranking-rules"
-                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Ranking Rules
-                </Link>
-                <Link
-                  href="/admin/changelog"
-                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Changelog
-                </Link>
-              </div>
-            </div>
+    <div className="admin-shell">
+      <nav className="admin-nav">
+        <div className="admin-nav-inner">
+          <Link
+            href="/"
+            className="brand admin-brand"
+            aria-label="Harvest, go to homepage"
+          >
+            <span className="brand-name">Harvest</span>
+            <span className="brand-dot" aria-hidden="true" />
+            <span className="admin-brand-tag">Admin</span>
+          </Link>
+          <div className="admin-nav-links">
+            <Link href="/admin" className="admin-nav-link">
+              SEO Overview
+            </Link>
+            <Link href="/admin/products" className="admin-nav-link">
+              Products
+            </Link>
+            <Link href="/admin/ranking-rules" className="admin-nav-link">
+              Ranking Rules
+            </Link>
+            <Link href="/admin/changelog" className="admin-nav-link">
+              Changelog
+            </Link>
           </div>
+          <Link href="/" className="admin-nav-back">
+            ← Back to site
+          </Link>
         </div>
       </nav>
       {children}

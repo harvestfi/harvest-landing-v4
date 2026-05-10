@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/jsonld";
 
-const TITLE = "Security & Audits | Harvest";
+const TITLE = "Security & Audits: Smart Contract Reports | Harvest";
 const DESCRIPTION =
-  "Independent security audits of the Harvest smart-contract system, vulnerability disclosure, and how to report issues.";
+  "Independent audits of Harvest smart contracts by Haechi, PeckShield, CertiK, Least Authority, and Halborn. Reports published in full on GitHub.";
 const URL = `${SITE_URL}/security`;
 
 export const metadata: Metadata = {
@@ -84,8 +84,8 @@ export default function SecurityPage() {
         </nav>
         <h1 className="meth-title">Security &amp; Audits</h1>
         <p className="meth-subtitle">
-          Independent reviews of the Harvest smart-contract system, plus
-          how to report a security issue.
+          Smart-contract audits, ongoing security practices, and
+          responsible disclosure.
         </p>
       </div>
 
