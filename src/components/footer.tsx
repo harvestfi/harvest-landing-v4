@@ -226,6 +226,43 @@ export async function Footer() {
           </div>
         </div>
 
+        {/* === Trust strip: distribution + audits ================
+            Two rows of brand names. Logos will replace the text
+            once the assets are uploaded. Sits between the link
+            grid and the legal line so it reads as the bridge
+            between "what we are" and "what backs us". */}
+        <section className="foot-trust" aria-label="Distribution and audits">
+          <div className="foot-trust-row">
+            <span className="foot-trust-label">Available on</span>
+            <ul className="foot-trust-list">
+              {[
+                "Binance",
+                "Coinbase",
+                "crypto.com",
+                "Kraken",
+                "Uniswap",
+                "Camelot",
+              ].map((name) => (
+                <li key={name} className="foot-trust-item">
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="foot-trust-row">
+            <span className="foot-trust-label">Audited by</span>
+            <ul className="foot-trust-list">
+              {["Least Authority", "Haechi Audit", "PeckShield", "Certik"].map(
+                (name) => (
+                  <li key={name} className="foot-trust-item">
+                    {name}
+                  </li>
+                ),
+              )}
+            </ul>
+          </div>
+        </section>
+
         {/* === Legal compliance === */}
         <div className="foot-legal">
           <div className="foot-legal-line">
