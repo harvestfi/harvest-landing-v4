@@ -98,7 +98,6 @@ body:has(.uni-home-test) {
   width: 44%;
   max-width: 440px;
   z-index: 2;
-  pointer-events: none;
   /* Anchor the card flat on the hero floor and pull it up enough that
      the bottom tabs row stays fully visible inside the gold box. A
      small 8px tail still clips into the edge for the "rising from
@@ -191,18 +190,67 @@ body:has(.uni-home-test) {
   color: var(--uni-ink-3);
   font-weight: 500;
 }
+.uni-home-test .prevcard-ranges {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(25, 23, 23, 0.04);
+  border-radius: 999px;
+  width: fit-content;
+}
+.uni-home-test .prevcard-range {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--uni-ink-3);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+.uni-home-test .prevcard-range:hover { color: var(--uni-ink); }
+.uni-home-test .prevcard-range.active {
+  background: var(--uni-ink);
+  color: var(--uni-gold);
+}
 .uni-home-test .prevcard-chart {
+  height: 76px;
+  padding: 6px 0 4px;
+  position: relative;
+}
+.uni-home-test .prevcard-bars {
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  height: 76px;
-  padding: 6px 0 4px;
+  height: 100%;
 }
 .uni-home-test .prevcard-bar {
+  appearance: none;
+  border: 0;
   flex: 1 1 0;
   background: var(--uni-gold);
   border-radius: 2px 2px 0 0;
   min-width: 4px;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.1s ease, transform 0.1s ease;
+}
+.uni-home-test .prevcard-bar:hover,
+.uni-home-test .prevcard-bar.hover {
+  background: #ec9b1c;
+}
+.uni-home-test .prevcard-bar.hover {
+  transform: translateY(-1px);
+}
+.uni-home-test .prevcard-line {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .uni-home-test .prevcard-foot {
   display: flex;

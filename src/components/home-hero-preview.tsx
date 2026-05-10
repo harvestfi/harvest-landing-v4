@@ -1,29 +1,96 @@
-// Decorative preview card on the right half of the homepage hero.
+"use client";
+
+// Interactive preview card on the right half of the homepage hero.
 // Reads as a tilted screenshot of a single-product-page hero rising
 // from the bottom edge of the gold box: gives a visual cue of what a
 // vault page actually looks like, anchors the empty right side of
 // the hero, and reinforces the brand without a marketing image.
 //
-// Pure presentational component, no live data. Numbers and labels
-// are static so the mock renders the same on every build.
+// Interactive: metric (TVL / APY / Share price), timeframe (1M /
+// 3M / 1Y / ALL) and chart style (bars / line / step) all toggle
+// against deterministic dummy data so the card behaves like the
+// real chart on /[slug] without a live data dependency.
 
+import { useState } from "react";
 import { AssetIcon, ChainIcon } from "./token-icons";
 
-// Random-looking but deterministic bar heights so the chart looks
-// alive without re-shuffling on every render. Indexed 0..23 to match
-// a 1-month daily view. Last bar gets a noticeable bump so the rate
-// reads as "trending up to today".
-const BAR_HEIGHTS = [
-  62, 71, 58, 84, 76, 90, 88, 95, 82, 78, 70, 92, 86, 81, 74, 88,
-  79, 84, 90, 76, 83, 87, 84, 100,
-];
+type Metric = "apy" | "tvl" | "sharePrice";
+type Range = "1M" | "3M" | "1Y" | "ALL";
+type Style = "bars" | "line" | "step";
+
+// Deterministic dummy series per metric x range. Values are
+// percentages of the chart-area height (0..100). Lengths are tuned
+// per range so the chart density feels right without dropping below
+// 16 bars on the longest window.
+const SERIES: Record<Metric, Record<Range, number[]>> = {
+  apy: {
+    "1M": [62, 71, 58, 84, 76, 90, 88, 95, 82, 78, 70, 92, 86, 81, 74, 88, 79, 84, 90, 76, 83, 87, 84, 100],
+    "3M": [48, 55, 60, 52, 64, 70, 65, 72, 78, 74, 80, 82, 76, 84, 88, 82, 86, 90, 86, 92, 88, 94, 90, 100],
+    "1Y": [40, 44, 48, 52, 50, 56, 60, 58, 62, 66, 70, 68, 74, 78, 76, 82, 80, 86, 88, 84, 92, 90, 95, 100],
+    ALL: [22, 30, 28, 36, 42, 38, 46, 52, 50, 58, 62, 60, 66, 70, 68, 74, 80, 78, 84, 88, 90, 94, 96, 100],
+  },
+  tvl: {
+    "1M": [50, 54, 58, 62, 60, 66, 64, 68, 72, 70, 74, 78, 76, 80, 82, 84, 82, 86, 88, 90, 88, 92, 94, 100],
+    "3M": [38, 42, 46, 50, 54, 58, 56, 60, 64, 62, 66, 70, 68, 72, 76, 74, 78, 82, 80, 84, 88, 90, 92, 100],
+    "1Y": [28, 32, 36, 40, 44, 42, 48, 52, 50, 56, 60, 58, 64, 68, 66, 72, 76, 74, 80, 84, 86, 90, 94, 100],
+    ALL: [12, 18, 24, 30, 36, 32, 40, 46, 42, 50, 56, 52, 60, 66, 62, 70, 76, 72, 80, 86, 88, 92, 96, 100],
+  },
+  sharePrice: {
+    "1M": [86, 87, 87, 88, 88, 89, 89, 90, 91, 91, 92, 92, 93, 93, 94, 94, 95, 95, 96, 96, 97, 98, 98, 100],
+    "3M": [78, 80, 81, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 92, 93, 94, 95, 96, 96, 97, 98, 98, 99, 100],
+    "1Y": [60, 64, 66, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 91, 92, 94, 95, 96, 97, 98, 99, 99, 100],
+    ALL: [40, 46, 50, 54, 58, 62, 66, 70, 73, 76, 79, 82, 84, 86, 88, 90, 92, 94, 96, 97, 98, 99, 99, 100],
+  },
+};
+
+const HEADLINE: Record<Metric, { value: string; label: string }> = {
+  apy: { value: "12.93%", label: "24h APY" },
+  tvl: { value: "$2.0M", label: "Total value locked" },
+  sharePrice: { value: "1.0481", label: "Share price" },
+};
+
+const RANGES: Range[] = ["1M", "3M", "1Y", "ALL"];
 
 export function HomeHeroPreview() {
+  const [metric, setMetric] = useState<Metric>("apy");
+  const [range, setRange] = useState<Range>("1M");
+  const [style, setStyle] = useState<Style>("bars");
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  const series = SERIES[metric][range];
+  const headline = HEADLINE[metric];
+
+  // Build SVG paths for line + step modes once per (series).
+  // viewBox is 0..100 wide and 0..100 tall (top), so we invert y.
+  const linePath = series
+    .map((v, i) => {
+      const x = (i / Math.max(1, series.length - 1)) * 100;
+      const y = 100 - v;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+  const stepPath = series
+    .map((v, i) => {
+      const x = (i / Math.max(1, series.length - 1)) * 100;
+      const y = 100 - v;
+      if (i === 0) return `M${x.toFixed(2)},${y.toFixed(2)}`;
+      const prevY = 100 - series[i - 1];
+      return `L${x.toFixed(2)},${prevY.toFixed(2)} L${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+
+  // When hovering a bar, the headline shows that bar's value
+  // remapped from 0..100 percentage back to a metric-shaped string.
+  const display =
+    hoverIdx === null
+      ? headline
+      : { value: synthesizeValue(metric, series[hoverIdx]), label: headline.label };
+
   return (
     <aside className="uni-home-hero-preview" aria-hidden="true">
       <div className="uni-home-hero-preview-card">
         {/* Floating View CTA in the top-right corner */}
-        <span className="prevcard-cta" aria-hidden="true">
+        <span className="prevcard-cta">
           View
           <span className="prevcard-cta-arrow">↗</span>
         </span>
@@ -48,41 +115,106 @@ export function HomeHeroPreview() {
           </div>
         </header>
 
-        {/* Big number + sub */}
+        {/* Big number */}
         <div className="prevcard-bignum">
-          <span className="prevcard-bignum-value">12.93%</span>
-          <span className="prevcard-bignum-label">24h APY</span>
+          <span className="prevcard-bignum-value">{display.value}</span>
+          <span className="prevcard-bignum-label">{display.label}</span>
         </div>
 
-        {/* Mini bar chart */}
-        <div className="prevcard-chart" aria-hidden="true">
-          {BAR_HEIGHTS.map((h, i) => (
-            <span
-              key={i}
-              className="prevcard-bar"
-              style={{ height: `${h}%` }}
-            />
+        {/* Range pills */}
+        <div className="prevcard-ranges" role="tablist" aria-label="Range">
+          {RANGES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              role="tab"
+              aria-selected={r === range}
+              className={`prevcard-range${r === range ? " active" : ""}`}
+              onClick={() => setRange(r)}
+            >
+              {r}
+            </button>
           ))}
         </div>
 
-        {/* Tabs row + chart-style selector */}
-        <div className="prevcard-foot" aria-hidden="true">
-          <div className="prevcard-tabs">
-            <span className="prevcard-tab active">TVL</span>
-            <span className="prevcard-tab">APY</span>
-            <span className="prevcard-tab">Share price</span>
+        {/* Chart */}
+        <div
+          className="prevcard-chart"
+          onMouseLeave={() => setHoverIdx(null)}
+        >
+          {style === "bars" ? (
+            <div className="prevcard-bars">
+              {series.map((h, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Bar ${i + 1}`}
+                  className={`prevcard-bar${hoverIdx === i ? " hover" : ""}`}
+                  style={{ height: `${h}%` }}
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onFocus={() => setHoverIdx(i)}
+                  onBlur={() => setHoverIdx(null)}
+                />
+              ))}
+            </div>
+          ) : (
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="prevcard-line"
+            >
+              <path
+                d={style === "line" ? linePath : stepPath}
+                fill="none"
+                stroke="#ffb936"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+          )}
+        </div>
+
+        {/* Tabs row + style selector */}
+        <div className="prevcard-foot">
+          <div className="prevcard-tabs" role="tablist" aria-label="Metric">
+            {(["tvl", "apy", "sharePrice"] as Metric[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={m === metric}
+                className={`prevcard-tab${m === metric ? " active" : ""}`}
+                onClick={() => setMetric(m)}
+              >
+                {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
+              </button>
+            ))}
           </div>
-          <div className="prevcard-style">
-            {/* Bars (active) */}
-            <span className="prevcard-style-btn active" aria-label="Bars">
+          <div className="prevcard-style" role="tablist" aria-label="Chart style">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={style === "bars"}
+              aria-label="Bars"
+              className={`prevcard-style-btn${style === "bars" ? " active" : ""}`}
+              onClick={() => setStyle("bars")}
+            >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <rect x="2" y="7" width="2" height="5" rx="0.5" fill="currentColor" />
                 <rect x="6" y="4" width="2" height="8" rx="0.5" fill="currentColor" />
                 <rect x="10" y="6" width="2" height="6" rx="0.5" fill="currentColor" />
               </svg>
-            </span>
-            {/* Line */}
-            <span className="prevcard-style-btn" aria-label="Line">
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={style === "line"}
+              aria-label="Line"
+              className={`prevcard-style-btn${style === "line" ? " active" : ""}`}
+              onClick={() => setStyle("line")}
+            >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path
                   d="M2 10 5 6 8 8 12 3"
@@ -92,9 +224,15 @@ export function HomeHeroPreview() {
                   strokeLinejoin="round"
                 />
               </svg>
-            </span>
-            {/* Step */}
-            <span className="prevcard-style-btn" aria-label="Step">
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={style === "step"}
+              aria-label="Step"
+              className={`prevcard-style-btn${style === "step" ? " active" : ""}`}
+              onClick={() => setStyle("step")}
+            >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path
                   d="M2 10 5 10 5 6 8 6 8 8 12 8"
@@ -104,10 +242,34 @@ export function HomeHeroPreview() {
                   strokeLinejoin="round"
                 />
               </svg>
-            </span>
+            </button>
           </div>
         </div>
       </div>
     </aside>
   );
+}
+
+// Map a 0..100 percentage back to a metric-shaped display string so
+// the bignum updates plausibly when a bar is hovered. Pure cosmetic;
+// the absolute values aren't backed by anything.
+function synthesizeValue(metric: Metric, pct: number): string {
+  switch (metric) {
+    case "apy": {
+      // Range roughly 0.50% .. 13.5%
+      const v = 0.5 + (pct / 100) * 13;
+      return `${v.toFixed(2)}%`;
+    }
+    case "tvl": {
+      // Range roughly $200K .. $2.1M
+      const v = 200_000 + (pct / 100) * 1_900_000;
+      if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+      return `$${Math.round(v / 1000)}K`;
+    }
+    case "sharePrice": {
+      // Range 1.000 .. 1.050
+      const v = 1 + (pct / 100) * 0.05;
+      return v.toFixed(4);
+    }
+  }
 }
