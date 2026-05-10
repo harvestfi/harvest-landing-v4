@@ -217,7 +217,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
               .trim() || "Harvest";
             const isAutocompounder = vault.vaultType === "Autocompounder";
             const operatorTooltip = isAutocompounder
-              ? `${operatorName}, the autocompounding platform that auto-claims native yield and reward emissions and re-invests them into the underlying strategy.`
+              ? `${operatorName}, the autocompounding platform that auto-claims native yield and reward emissions and routes them back into the underlying strategy.`
               : `${operatorName}, the platform running this vault on top of the underlying protocol.`;
             const showOperator =
               !!operatorName &&

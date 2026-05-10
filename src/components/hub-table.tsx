@@ -192,8 +192,8 @@ export function HubTable({
             dir={sortDir}
             onClick={() => clickSort("tvl")}
           />
-          <span className="hub-th hub-th-center">Network</span>
           <span className="hub-th hub-th-right">Strategy</span>
+          <span className="hub-th hub-th-center">Network</span>
           <span className="hub-th hub-th-num">30d APY trend</span>
         </div>
         <div className="hub-tbody" role="rowgroup">
@@ -320,6 +320,7 @@ function Row({
       </span>
       <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
       <span className="hub-cell hub-num hub-tvl">{formatTVL(vault.tvl)}</span>
+      <span className="hub-cell hub-strategy">{protocolName}</span>
       <span
         className="hub-cell hub-network"
         title={vault.chain}
@@ -327,7 +328,6 @@ function Row({
       >
         <ChainIcon chain={vault.chain} size={20} />
       </span>
-      <span className="hub-cell hub-strategy">{protocolName}</span>
       <span className="hub-cell hub-spark" aria-hidden="true">
         {sparkPath ? (
           <svg

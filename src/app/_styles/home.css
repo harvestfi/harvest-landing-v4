@@ -99,9 +99,11 @@ body:has(.uni-home-test) {
   max-width: 440px;
   z-index: 2;
   pointer-events: none;
-  /* Anchor the card flat on the hero floor so a thin band of its
-     bottom edge clips into the gold edge below. No rotation. */
-  transform: translateY(36px);
+  /* Anchor the card flat on the hero floor and pull it up enough that
+     the bottom tabs row stays fully visible inside the gold box. A
+     small 8px tail still clips into the edge for the "rising from
+     below" feel. */
+  transform: translateY(8px);
   transform-origin: bottom right;
 }
 .uni-home-test .uni-home-hero-inner {
@@ -121,6 +123,7 @@ body:has(.uni-home-test) {
   flex-direction: column;
   gap: 18px;
   font-family: var(--sans);
+  position: relative;
 }
 .uni-home-test .prevcard-head {
   display: flex;
@@ -201,12 +204,6 @@ body:has(.uni-home-test) {
   border-radius: 2px 2px 0 0;
   min-width: 4px;
 }
-.uni-home-test .prevcard-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
 .uni-home-test .prevcard-tabs {
   display: inline-flex;
   align-items: center;
@@ -228,6 +225,9 @@ body:has(.uni-home-test) {
   color: #ffffff;
 }
 .uni-home-test .prevcard-cta {
+  position: absolute;
+  top: 18px;
+  right: 18px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -317,7 +317,9 @@ body:has(.uni-home-test) {
   align-items: center;
   gap: 6px;
   padding: 14px 18px;
-  background: transparent;
+  /* Solid Sunflower Gold bg matches the hero so the dotted raster
+     under the hero card no longer shows through this button. */
+  background: var(--uni-gold);
   color: var(--uni-ink);
   border: 1.5px solid rgba(25, 23, 23, 0.18);
   border-radius: var(--uni-radius-pill);
@@ -327,7 +329,7 @@ body:has(.uni-home-test) {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .uni-home-test .uni-home-cta-secondary:hover {
-  background: rgba(25, 23, 23, 0.06);
+  background: var(--uni-gold-soft);
   border-color: rgba(25, 23, 23, 0.32);
 }
 

@@ -21,6 +21,12 @@ export function HomeHeroPreview() {
   return (
     <aside className="uni-home-hero-preview" aria-hidden="true">
       <div className="uni-home-hero-preview-card">
+        {/* Floating View CTA in the top-right corner */}
+        <span className="prevcard-cta" aria-hidden="true">
+          View
+          <span className="prevcard-cta-arrow">↗</span>
+        </span>
+
         {/* Title row: icon + product name + byline */}
         <header className="prevcard-head">
           <span className="prevcard-icon">
@@ -58,17 +64,11 @@ export function HomeHeroPreview() {
           ))}
         </div>
 
-        {/* Tabs row + View CTA */}
-        <div className="prevcard-foot">
-          <div className="prevcard-tabs" aria-hidden="true">
-            <span className="prevcard-tab active">TVL</span>
-            <span className="prevcard-tab">APY</span>
-            <span className="prevcard-tab">Share price</span>
-          </div>
-          <span className="prevcard-cta" aria-hidden="true">
-            View
-            <span className="prevcard-cta-arrow">↗</span>
-          </span>
+        {/* Tabs row */}
+        <div className="prevcard-tabs" aria-hidden="true">
+          <span className="prevcard-tab active">TVL</span>
+          <span className="prevcard-tab">APY</span>
+          <span className="prevcard-tab">Share price</span>
         </div>
       </div>
     </aside>
