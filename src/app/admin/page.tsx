@@ -1,7 +1,7 @@
 import { getVaults } from "@/lib/data";
 import { getCanonicalSlugs } from "@/lib/canonical-vaults";
 import { formatAPY, formatTVL } from "@/lib/format";
-import { SITE_NAME } from "@/lib/constants";
+import { productPageTitle, productPageDescription } from "@/lib/seo";
 import { SeoTable } from "@/components/seo-table";
 import { existsSync, statSync } from "fs";
 import { join } from "path";
@@ -10,18 +10,31 @@ export default async function AdminPage() {
   const vaults = await getVaults();
   const canonical = await getCanonicalSlugs();
 
-  // Generate the same title/description that [slug]/page.tsx uses
-  const rows = vaults.map((vault) => ({
-    slug: vault.slug,
-    title: `${vault.productName} by ${vault.protocol.name}: ${formatAPY(vault.apy24h)} APY | ${SITE_NAME}`,
-    description: `${vault.productName} on ${vault.protocol.name} offers ${formatAPY(vault.apy24h)} APY (24h) with ${formatTVL(vault.tvl)} TVL. ${vault.description}`,
-    chain: vault.chain,
-    apy: formatAPY(vault.apy24h),
-    tvl: formatTVL(vault.tvl),
-    indexed: canonical.has(vault.slug),
-  }));
+  const now = Date.now();
+  // Mirror what /[slug]/page.tsx generateMetadata actually emits so the
+  // admin preview matches production. trackedDays is approximated from
+  // launchDate (we can't fetch full history per vault here without
+  // multiplying build time); the seo helper uses the 30+ day branch
+  // when this is >= 30 and apy30d > 0, falling back to "live since X"
+  // for newly-launched products.
+  const rows = vaults.map((vault) => {
+    const trackedDays = vault.launchDate
+      ? Math.max(
+          0,
+          Math.floor((now - new Date(vault.launchDate).getTime()) / 86_400_000),
+        )
+      : 0;
+    return {
+      slug: vault.slug,
+      title: productPageTitle(vault),
+      description: productPageDescription(vault, trackedDays),
+      chain: vault.chain,
+      apy: formatAPY(vault.apy24h),
+      tvl: formatTVL(vault.tvl),
+      indexed: canonical.has(vault.slug),
+    };
+  });
 
-  // Get last modified time of vaults data file
   let lastUpdated = new Date().toISOString();
   const vaultsFile = join(process.cwd(), "data", "vaults.json");
   if (existsSync(vaultsFile)) {
@@ -30,7 +43,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="adm-page">
       <SeoTable
         rows={rows}
         vaultCount={vaults.length}

@@ -2678,43 +2678,221 @@ body:has(.admin-shell) {
 }
 .admin-nav-back:hover { color: #ffb936; }
 
-/* Map common Tailwind utility classes to brand tokens inside the
-   admin scope so the existing JSX renders on-brand without rewriting
-   each className. Only colour and surface utilities are remapped;
-   layout utilities (flex, grid, padding) keep Tailwind defaults. */
-.admin-shell .bg-gray-50 { background-color: #ffffff !important; }
+/* Tailwind colour utilities used in /admin/ranking-rules and
+   /admin/changelog get a brand re-skin so those sub-pages don't look
+   off-theme. Only colour and surface utilities are remapped; layout
+   utilities (flex/grid/spacing) pass through unchanged. */
+.admin-shell .bg-gray-50,
+.admin-shell .bg-gray-100 { background-color: #fbfbfa !important; }
 .admin-shell .bg-white { background-color: #ffffff !important; }
-.admin-shell .border-gray-200 { border-color: var(--line) !important; }
+.admin-shell .border-gray-200,
 .admin-shell .border-gray-300 { border-color: var(--line) !important; }
-.admin-shell .text-gray-300 { color: var(--ink-4) !important; }
+.admin-shell .text-gray-300,
 .admin-shell .text-gray-400 { color: var(--ink-4) !important; }
-.admin-shell .text-gray-500 { color: var(--ink-3) !important; }
+.admin-shell .text-gray-500,
 .admin-shell .text-gray-600 { color: var(--ink-3) !important; }
 .admin-shell .text-gray-700 { color: var(--ink-2) !important; }
+.admin-shell .text-gray-800,
 .admin-shell .text-gray-900 { color: var(--ink) !important; }
 .admin-shell .placeholder-gray-400::placeholder { color: var(--ink-4) !important; }
-.admin-shell .hover\:text-gray-700:hover { color: var(--ink-2) !important; }
-.admin-shell .hover\:text-gray-900:hover { color: var(--ink) !important; }
-.admin-shell .focus\:border-gray-500:focus { border-color: var(--ink-2) !important; }
-.admin-shell .focus\:ring-gray-500:focus { box-shadow: 0 0 0 1px var(--ink-2) !important; }
-.admin-shell .text-red-600 { color: #c0322a !important; }
-/* Headlines inside admin pick up the display font for consistency */
-.admin-shell h1, .admin-shell h2 {
+.admin-shell .text-blue-600 { color: var(--ink) !important; }
+.admin-shell .text-blue-600:hover { color: #ffb936 !important; }
+.admin-shell .text-green-600 { color: #1f7c4d !important; }
+.admin-shell .text-red-600 { color: #b13129 !important; }
+.admin-shell .bg-green-100 { background-color: rgba(39, 165, 103, 0.12) !important; }
+.admin-shell .bg-red-100 { background-color: rgba(192, 50, 42, 0.1) !important; }
+.admin-shell .text-green-800 { color: #1f7c4d !important; }
+.admin-shell .text-red-800 { color: #b13129 !important; }
+.admin-shell h1, .admin-shell h2, .admin-shell h3 {
   font-family: var(--display);
-  letter-spacing: -0.018em;
+  letter-spacing: -0.014em;
+  color: var(--ink);
 }
-.admin-shell h1 { font-weight: 600; }
-/* Inputs and table cells get our brand line on focus rather than
-   Tailwind's default ring grey. */
-.admin-shell input,
-.admin-shell select,
-.admin-shell textarea {
+
+/* Admin page shell layout */
+.adm-page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px var(--shell-pad) 80px;
+}
+
+/* SEO overview header */
+.adm-seo-head { margin-bottom: 22px; }
+.adm-seo-head h1 {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+.adm-seo-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+/* Search + count */
+.adm-seo-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.adm-input {
+  flex: 1 1 320px;
+  min-width: 0;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.adm-input:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(255, 185, 54, 0.18);
+}
+.adm-input::placeholder { color: var(--ink-4); }
+.adm-seo-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Table */
+.adm-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #ffffff;
+  overflow-x: auto;
+}
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  color: var(--ink);
   font-family: var(--sans);
 }
-/* Anchor links in admin tables go gold on hover instead of the
-   tailwind default. */
-.admin-shell a:not(.brand):not(.admin-nav-link):not(.admin-nav-back):hover {
+.adm-table thead { background: #fbfbfa; }
+.adm-th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.adm-th-rank { width: 48px; }
+.adm-th-right { text-align: right; }
+.adm-th-sort {
+  cursor: pointer;
+  user-select: none;
+  display: table-cell;
+  position: relative;
+}
+.adm-th-sort > span:first-child { display: inline-block; }
+.adm-th-sort .adm-sort-ind {
+  margin-left: 5px;
+  font-size: 9px;
+  color: var(--ink-4);
+  font-feature-settings: "tnum";
+}
+.adm-th-sort.active { color: var(--ink); }
+.adm-th-sort.active .adm-sort-ind { color: #ffb936; }
+.adm-th-sort:hover { color: var(--ink); }
+
+.adm-row { transition: background-color 0.1s ease; }
+.adm-row:not(:last-child) .adm-cell { border-bottom: 1px solid rgba(25, 23, 23, 0.05); }
+.adm-row:hover { background: rgba(255, 185, 54, 0.05); }
+.adm-cell {
+  padding: 12px 14px;
+  vertical-align: top;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.adm-cell-right { text-align: right; }
+.adm-rank {
+  color: var(--ink-4);
+  font-family: var(--mono);
+  font-feature-settings: "tnum";
+  width: 48px;
+}
+.adm-slug { white-space: nowrap; }
+.adm-link {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-decoration: none;
+  border-bottom: 1px dotted var(--line);
+  padding-bottom: 1px;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.adm-link:hover {
   color: #ffb936;
+  border-bottom-color: #ffb936;
+}
+.adm-title {
+  color: var(--ink);
+  font-weight: 500;
+}
+.adm-desc {
+  color: var(--ink-2);
+  display: block;
+  max-width: 520px;
+}
+.adm-num {
+  font-family: var(--mono);
+  font-feature-settings: "tnum";
+  white-space: nowrap;
+}
+
+.adm-char-count {
+  display: inline-block;
+  margin-left: 6px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-4);
+  font-feature-settings: "tnum";
+}
+.adm-char-count.over {
+  color: #c0322a;
+  font-weight: 600;
+}
+
+.adm-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.adm-pill.ok {
+  background: rgba(39, 165, 103, 0.12);
+  color: #1f7c4d;
+}
+.adm-pill.no {
+  background: rgba(192, 50, 42, 0.1);
+  color: #b13129;
+}
+
+@media (max-width: 1100px) {
+  .adm-col-desc { display: none; }
+}
+@media (max-width: 800px) {
+  .adm-col-md { display: none; }
 }
 
 /* === Admin Products === */

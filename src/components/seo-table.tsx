@@ -13,17 +13,24 @@ interface VaultSeoRow {
   indexed: boolean;
 }
 
-type SortKey = "slug" | "title" | "description" | "chain" | "apy" | "tvl" | "indexed";
+type SortKey =
+  | "slug"
+  | "title"
+  | "description"
+  | "chain"
+  | "apy"
+  | "tvl"
+  | "indexed";
 type SortDir = "asc" | "desc";
+
+// Memo limits: 580px / ~58 chars on title, 130-155 on description.
+const TITLE_LIMIT = 58;
+const DESC_LIMIT = 155;
 
 function CharCount({ count, limit }: { count: number; limit: number }) {
   const over = count > limit;
   return (
-    <span
-      className={`ml-1 text-xs tabular-nums ${over ? "font-semibold text-red-600" : "text-gray-400"}`}
-    >
-      ({count})
-    </span>
+    <span className={`adm-char-count${over ? " over" : ""}`}>({count})</span>
   );
 }
 
@@ -45,13 +52,13 @@ function SortHeader({
   const active = currentKey === sortKey;
   return (
     <th
-      className={`cursor-pointer select-none px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-900 ${className ?? ""}`}
+      className={`adm-th adm-th-sort${active ? " active" : ""} ${className ?? ""}`.trim()}
       onClick={() => onClick(sortKey)}
     >
-      {label}
-      {active && (
-        <span className="ml-1">{currentDir === "asc" ? "\u2191" : "\u2193"}</span>
-      )}
+      <span>{label}</span>
+      <span className="adm-sort-ind" aria-hidden="true">
+        {active ? (currentDir === "asc" ? "▲" : "▼") : "↕"}
+      </span>
     </th>
   );
 }
@@ -99,7 +106,6 @@ export function SeoTable({
       }
       let av = a[sortKey] as string;
       let bv = b[sortKey] as string;
-      // For apy and tvl, sort numerically by stripping non-numeric chars
       if (sortKey === "apy" || sortKey === "tvl") {
         const an = parseFloat(av.replace(/[^0-9.\-]/g, "")) || 0;
         const bn = parseFloat(bv.replace(/[^0-9.\-]/g, "")) || 0;
@@ -115,39 +121,32 @@ export function SeoTable({
   }, [filtered, sortKey, sortDir]);
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">SEO Admin Panel</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          {vaultCount} vaults &middot; Last updated: {lastUpdated}
+    <div className="adm-seo">
+      <header className="adm-seo-head">
+        <h1>SEO Overview</h1>
+        <p className="adm-seo-meta">
+          {vaultCount} vaults · last updated {lastUpdated}
         </p>
-      </div>
+      </header>
 
-      {/* Search */}
-      <div className="mb-4">
+      <div className="adm-seo-controls">
         <input
           type="text"
-          placeholder="Filter by slug, title, or chain..."
+          className="adm-input"
+          placeholder="Filter by slug, title, or chain"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
         />
+        <span className="adm-seo-count">
+          Showing {sorted.length} of {rows.length}
+        </span>
       </div>
 
-      {/* Results count */}
-      <p className="mb-2 text-xs text-gray-400">
-        Showing {sorted.length} of {rows.length} vaults
-      </p>
-
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                #
-              </th>
+              <th className="adm-th adm-th-rank">#</th>
               <SortHeader
                 label="Slug"
                 sortKey="slug"
@@ -156,19 +155,19 @@ export function SeoTable({
                 onClick={handleSort}
               />
               <SortHeader
-                label="Meta Title"
+                label="Meta title"
                 sortKey="title"
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
               />
               <SortHeader
-                label="Meta Description"
+                label="Meta description"
                 sortKey="description"
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
-                className="hidden lg:table-cell"
+                className="adm-col-desc"
               />
               <SortHeader
                 label="Chain"
@@ -176,7 +175,7 @@ export function SeoTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
-                className="hidden md:table-cell"
+                className="adm-col-md"
               />
               <SortHeader
                 label="APY"
@@ -184,7 +183,7 @@ export function SeoTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
-                className="hidden md:table-cell"
+                className="adm-col-md adm-th-right"
               />
               <SortHeader
                 label="TVL"
@@ -192,7 +191,7 @@ export function SeoTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
-                className="hidden md:table-cell"
+                className="adm-col-md adm-th-right"
               />
               <SortHeader
                 label="Index"
@@ -203,60 +202,40 @@ export function SeoTable({
               />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {sorted.map((row, i) => {
               const titleLen = row.title.length;
               const descLen = row.description.length;
               const truncatedDesc =
-                row.description.length > 160
-                  ? row.description.slice(0, 160) + "..."
+                row.description.length > 200
+                  ? row.description.slice(0, 200) + "…"
                   : row.description;
               return (
-                <tr key={row.slug} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-3 py-2 text-gray-400">
-                    {i + 1}
-                  </td>
-                  <td className="px-3 py-2">
-                    <Link
-                      href={`/${row.slug}`}
-                      className="text-blue-600 hover:underline break-all"
-                    >
+                <tr key={row.slug} className="adm-row">
+                  <td className="adm-cell adm-rank">{i + 1}</td>
+                  <td className="adm-cell adm-slug">
+                    <Link href={`/${row.slug}`} className="adm-link">
                       {row.slug}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">
-                    <span className="break-words">
-                      <span className="hidden sm:inline">{row.title}</span>
-                      <span className="sm:hidden">
-                        {row.title.length > 40
-                          ? row.title.slice(0, 40) + "..."
-                          : row.title}
-                      </span>
-                    </span>
-                    <CharCount count={titleLen} limit={60} />
+                  <td className="adm-cell">
+                    <span className="adm-title">{row.title}</span>
+                    <CharCount count={titleLen} limit={TITLE_LIMIT} />
                   </td>
-                  <td className="hidden px-3 py-2 lg:table-cell">
-                    <span className="break-words text-gray-600">
-                      {truncatedDesc}
-                    </span>
-                    <CharCount count={descLen} limit={160} />
+                  <td className="adm-cell adm-col-desc">
+                    <span className="adm-desc">{truncatedDesc}</span>
+                    <CharCount count={descLen} limit={DESC_LIMIT} />
                   </td>
-                  <td className="hidden whitespace-nowrap px-3 py-2 md:table-cell">
-                    {row.chain}
-                  </td>
-                  <td className="hidden whitespace-nowrap px-3 py-2 text-green-600 md:table-cell">
+                  <td className="adm-cell adm-col-md">{row.chain}</td>
+                  <td className="adm-cell adm-col-md adm-cell-right adm-num">
                     {row.apy}
                   </td>
-                  <td className="hidden whitespace-nowrap px-3 py-2 md:table-cell">
+                  <td className="adm-cell adm-col-md adm-cell-right adm-num">
                     {row.tvl}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2">
+                  <td className="adm-cell">
                     <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                        row.indexed
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                      className={`adm-pill${row.indexed ? " ok" : " no"}`}
                     >
                       {row.indexed ? "index" : "noindex"}
                     </span>
