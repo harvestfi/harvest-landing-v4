@@ -1,7 +1,8 @@
 /* =====================================================================
-   /home-test - rebuilt homepage. Full-bleed Sunflower Gold hero plus
-   a centered shell for the rest of the content. Tokens shared with
-   /test and /btc-test (Onyx + Graphite + White Smoke + Alabaster).
+   /home-test - rebuilt homepage. Boxed layout matching /test and
+   /btc-test, with a Sunflower Gold hero card sitting inside the page
+   container. A soft dotted texture lives on the body background and
+   fades in below the topnav so it never sits under the header band.
    ===================================================================== */
 .uni-home-test {
   --uni-bg:           #ffffff;
@@ -17,84 +18,52 @@
   --uni-ink-2:        #32312b;
   --uni-ink-3:        #6e6c66;
   --uni-line:         #dddee0;
-  --uni-max:          1380px;
+  --uni-max:          1320px;
 
+  max-width: var(--uni-max);
+  margin: 0 auto;
+  padding: 24px var(--shell-pad) 80px;
   color: var(--uni-ink);
   font-family: var(--sans);
-  background: var(--uni-bg);
+  background: transparent;
   font-size: 15px;
   line-height: 1.55;
+  overflow-x: clip;
 }
 
+/* Soft dotted texture on the body. Two stacked images: a top-edge
+   white wash that covers the band under the sticky topnav so the
+   pattern never bleeds under the header, plus a denser-but-lighter
+   raster of ink dots underneath. */
 body:has(.uni-home-test) {
-  background-image: none !important;
+  background-color: var(--uni-bg, #ffffff);
+  background-image:
+    linear-gradient(180deg, #ffffff 0, #ffffff 60px, rgba(255, 255, 255, 0) 140px),
+    radial-gradient(circle, rgba(25, 23, 23, 0.085) 1px, transparent 1.3px) !important;
+  background-size: auto, 11px 11px;
+  background-repeat: no-repeat, repeat;
+  background-position: 0 0, 0 0;
   overscroll-behavior-y: contain;
 }
 
-/* Topnav adopts the gold hero fill on the home-test page so the header
-   and the hero read as one continuous Sunflower Gold band. The same
-   dotted raster carries through. */
-body:has(.uni-home-test) .topnav {
-  background-color: #ffb936;
-  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.18) 1px, transparent 1.4px);
-  background-size: 16px 16px;
-  border-bottom-color: transparent;
-}
-body:has(.uni-home-test) .topnav .navlinks a { color: #32312b; }
-body:has(.uni-home-test) .topnav .navlinks a:hover,
-body:has(.uni-home-test) .topnav .navlinks a.active {
-  background: rgba(25, 23, 23, 0.08);
-  color: #191717;
-}
-body:has(.uni-home-test) .topnav .brand { color: #191717; }
-body:has(.uni-home-test) .topnav .brand:hover { background: rgba(25, 23, 23, 0.08); }
-body:has(.uni-home-test) .topnav .search-box {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(25, 23, 23, 0.18);
-  color: #32312b;
-}
-body:has(.uni-home-test) .topnav .search-box input { color: #191717; }
-body:has(.uni-home-test) .topnav .search-box kbd {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(25, 23, 23, 0.18);
-  color: #32312b;
-}
-
-/* === Full-bleed Sunflower Gold hero ================================ */
+/* === Boxed Sunflower Gold hero card ================================ */
 .uni-home-test .uni-home-hero {
   background-color: var(--uni-gold);
-  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.18) 1px, transparent 1.4px);
-  background-size: 16px 16px;
+  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.13) 1px, transparent 1.3px);
+  background-size: 12px 12px;
   background-position: 0 0;
   color: var(--uni-ink);
-  padding: 64px 0 72px;
+  border-radius: var(--uni-radius);
+  padding: 56px 48px 60px;
+  margin-bottom: 40px;
   position: relative;
+  overflow: hidden;
 }
 .uni-home-test .uni-home-hero-inner {
-  max-width: var(--uni-max);
-  margin: 0 auto;
-  padding: 0 var(--shell-pad);
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   position: relative;
-}
-.uni-home-test .uni-home-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 10px;
-  background: rgba(25, 23, 23, 0.08);
-  border-radius: var(--uni-radius-pill);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--uni-ink);
-  margin: 0 0 22px;
-}
-.uni-home-test .uni-home-eyebrow-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--uni-ink);
 }
 .uni-home-test .uni-home-h1 {
   font-family: var(--display);
@@ -189,12 +158,9 @@ body:has(.uni-home-test) .topnav .search-box kbd {
   border-color: rgba(25, 23, 23, 0.32);
 }
 
-/* === Centered content shell ======================================== */
+/* === Content shell — page itself is the box, this just spaces sections === */
 .uni-home-test .uni-home-shell {
-  max-width: var(--uni-max);
-  margin: 0 auto;
-  padding: 56px var(--shell-pad) 80px;
-  overflow-x: clip;
+  padding: 0;
 }
 
 .uni-home-test .uni-home-section {
@@ -496,8 +462,7 @@ body:has(.uni-home-test) .topnav .search-box kbd {
   }
 }
 @media (max-width: 800px) {
-  .uni-home-test .uni-home-hero { padding: 48px 0 56px; }
-  .uni-home-test .uni-home-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .uni-home-test .uni-home-hero { padding: 44px 28px 48px; }
   .uni-home-test .uni-home-thead,
   .uni-home-test .uni-home-tbody .uni-hub-row {
     grid-template-columns: 32px minmax(120px, 2fr) 90px 90px 90px;
@@ -511,9 +476,9 @@ body:has(.uni-home-test) .topnav .search-box kbd {
   }
 }
 @media (max-width: 540px) {
-  .uni-home-test .uni-home-hero { padding: 36px 0 44px; }
+  .uni-home-test .uni-home-hero { padding: 36px 22px 40px; margin-bottom: 28px; }
   .uni-home-test .uni-home-asset-grid { grid-template-columns: 1fr; }
-  .uni-home-test .uni-home-shell { padding: 36px 16px 60px; }
+  .uni-home-test .uni-home-shell { padding: 0; }
   .uni-home-test .uni-home-thead,
   .uni-home-test .uni-home-tbody .uni-hub-row {
     grid-template-columns: 28px minmax(110px, 2fr) 80px 90px;

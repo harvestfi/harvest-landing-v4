@@ -54,35 +54,31 @@ export default async function HomeTestPage() {
       {/* Full-bleed Sunflower Gold hero */}
       <section className="uni-home-hero">
         <div className="uni-home-hero-inner">
-          <p className="uni-home-eyebrow">
-            <span className="uni-home-eyebrow-dot" />
-            Onchain yield index · live
-          </p>
           <h1 className="uni-home-h1">
             Best DeFi yields,
             <br />
             ranked, indexed, and live.
           </h1>
           <p className="uni-home-sub">
-            Compare {vaults.length} yield strategies we currently track across{" "}
+            Compare 100+ yield strategies we currently track across{" "}
             {chainCount} {chainCount !== 1 ? "networks" : "network"}, ranked
             by APY, with daily-resolution history and risk classifications
             on every product.
           </p>
 
           <div className="uni-home-hero-actions">
+            <a href="#yields" className="uni-home-cta-primary">
+              Browse top yields
+              <span aria-hidden="true">↓</span>
+            </a>
             <a
               href="https://app.harvest.finance"
               target="_blank"
               rel="noopener noreferrer"
-              className="uni-home-cta-primary"
+              className="uni-home-cta-secondary"
             >
               Open the App
               <span aria-hidden="true">↗</span>
-            </a>
-            <a href="#yields" className="uni-home-cta-secondary">
-              Browse top yields
-              <span aria-hidden="true">↓</span>
             </a>
           </div>
         </div>
