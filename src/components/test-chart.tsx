@@ -7,7 +7,7 @@
 // cursor by x-position so hovering between gaps OR over empty space
 // above a bar still selects the right column in either mode.
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 type Metric = "tvl" | "apy" | "sharePrice";
 type Range = "1M" | "3M" | "1Y" | "ALL";
@@ -231,6 +231,17 @@ export function TestChart({ series }: Props) {
   const [style, setStyle] = useState<ChartStyle>("bars");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [, startTransition] = useTransition();
+
+  // On mobile, default the time range to 3M instead of ALL so the
+  // chart loads with a denser, more readable density. Done in
+  // useEffect so SSR markup matches the desktop default and there's
+  // no hydration mismatch.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 800px)").matches) {
+      setRange("3M");
+    }
+  }, []);
 
   // Heavy computation memoized on (series, metric, range) only - so
   // mouse-move (which fires hoverIdx updates ~60×/s) and chart-style

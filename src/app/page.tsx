@@ -63,14 +63,13 @@ export default async function HomePage() {
         <div className="uni-home-hero-inner">
           <h1 className="uni-home-h1">
             Best USDC, USDT, ETH, Bitcoin yields, and more.
-            <br />
-            Discover and compare.
           </h1>
           <p className="uni-home-sub">
-            One ranking for every yield strategy we currently track,
-            across {chainCount} {chainCount !== 1 ? "networks" : "network"},
-            sorted by APY, with daily-resolution history and risk
-            classifications on every product.
+            Discover and compare every yield strategy we currently
+            track, across {chainCount}{" "}
+            {chainCount !== 1 ? "networks" : "network"}, sorted by APY
+            with daily-resolution history and risk classifications on
+            every product.
           </p>
 
           <div className="uni-home-hero-actions">
@@ -97,10 +96,10 @@ export default async function HomePage() {
           <header className="uni-home-section-head">
             <div>
               <h2 id="yields-title" className="uni-home-section-title">
-                Top yields by APY
+                Top yields
               </h2>
               <p className="uni-home-section-sub">
-                Across every asset and every network we currently index.
+                Live ranking across every asset and network we index.
               </p>
             </div>
             <Link href="/usdc" className="uni-home-section-link">

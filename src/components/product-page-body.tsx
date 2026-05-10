@@ -64,12 +64,33 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
     );
   }
 
+  // Build chart series from indexed history. When upstream history is
+  // empty but the live vault data has values, synthesize a short flat
+  // series at the current value so the chart shows a "live snapshot"
+  // instead of "no data" while the side card reads a real APY.
+  const now = Math.floor(Date.now() / 1000);
+  const dayAgo = now - 86400;
+  function snapshotSeries(value: number): { t: number; v: number }[] {
+    if (!isFinite(value) || value <= 0) return [];
+    return [
+      { t: dayAgo, v: value },
+      { t: now, v: value },
+    ];
+  }
+
+  const apyPoints = history.apyHistory
+    .filter((p) => p.apy >= 0)
+    .map((p) => ({ t: p.timestamp, v: p.apy }));
+  const tvlPoints = history.tvlHistory.map((p) => ({ t: p.timestamp, v: p.value }));
+  const sharePricePoints = history.sharePriceHistory.map((p) => ({
+    t: p.timestamp,
+    v: p.sharePrice,
+  }));
+
   const chartSeries: ChartSeries = {
-    tvl: history.tvlHistory.map((p) => ({ t: p.timestamp, v: p.value })),
-    apy: history.apyHistory
-      .filter((p) => p.apy >= 0)
-      .map((p) => ({ t: p.timestamp, v: p.apy })),
-    sharePrice: history.sharePriceHistory.map((p) => ({ t: p.timestamp, v: p.sharePrice })),
+    tvl: tvlPoints.length > 1 ? tvlPoints : snapshotSeries(vault.tvl),
+    apy: apyPoints.length > 1 ? apyPoints : snapshotSeries(vault.apy24h),
+    sharePrice: sharePricePoints.length > 1 ? sharePricePoints : snapshotSeries(1),
   };
 
   const protocolName = stripChainSuffix(vault.category, vault.chain);

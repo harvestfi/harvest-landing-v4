@@ -172,7 +172,7 @@ export async function NetworkHubBody({
       <section className="uni-hub-section" aria-labelledby="ranking-title">
         <header className="uni-hub-section-head">
           <h2 id="ranking-title" className="uni-hub-section-title">
-            Top {networkDisplay} yields by APY
+            Top {networkDisplay} yields
           </h2>
           <span className="uni-hub-section-meta">
             Tracking {vaults.length} {vaults.length !== 1 ? "vaults" : "vault"}

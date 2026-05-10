@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
@@ -108,41 +108,39 @@ export function HubTable({
       <div className="hub-filterbar" role="group" aria-label="Filter ranking">
         <div className="hub-filter-set">
           {showAssetFilter && (
-            <label className="hub-filter">
-              <span className="hub-filter-label">Asset</span>
-              <select
-                value={asset}
-                onChange={(e) => {
-                  setAsset(e.target.value);
-                  setPage(0);
-                }}
-              >
-                <option value="all">All assets</option>
-                {allAssets.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <label className="hub-filter">
-            <span className="hub-filter-label">Network</span>
-            <select
-              value={chain}
-              onChange={(e) => {
-                setChain(e.target.value);
+            <FilterDropdown
+              label="Asset"
+              value={asset}
+              onChange={(v) => {
+                setAsset(v);
                 setPage(0);
               }}
-            >
-              <option value="all">All networks</option>
-              {allChains.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={[
+                { value: "all", label: "All assets" },
+                ...allAssets.map((a) => ({
+                  value: a,
+                  label: a,
+                  icon: <AssetIcon asset={a} size={16} />,
+                })),
+              ]}
+            />
+          )}
+          <FilterDropdown
+            label="Network"
+            value={chain}
+            onChange={(v) => {
+              setChain(v);
+              setPage(0);
+            }}
+            options={[
+              { value: "all", label: "All networks" },
+              ...allChains.map((c) => ({
+                value: c,
+                label: c,
+                icon: <ChainIcon chain={c} size={16} />,
+              })),
+            ]}
+          />
           {filtersActive && (
             <button
               type="button"
@@ -265,8 +263,17 @@ function Row({
   sparkline: number[] | undefined;
 }) {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
-  const sparkPath =
-    sparkline && sparkline.length > 1 ? buildSparklinePath(sparkline) : "";
+  // If upstream history is missing for this vault but we have a live
+  // 24h APY, fall back to a flat sparkline at that value rather than
+  // hiding the column. Reads as "live snapshot, no history yet"
+  // instead of leaving an empty cell.
+  const effectiveSpark =
+    sparkline && sparkline.length > 1
+      ? sparkline
+      : vault.apy24h > 0
+      ? [vault.apy24h, vault.apy24h]
+      : null;
+  const sparkPath = effectiveSpark ? buildSparklinePath(effectiveSpark) : "";
   const trendUp =
     sparkline && sparkline.length > 1
       ? sparkline[sparkline.length - 1] >= sparkline[0]
@@ -312,5 +319,87 @@ function Row({
         )}
       </span>
     </Link>
+  );
+}
+
+interface DropdownOption {
+  value: string;
+  label: string;
+  icon?: React.ReactNode;
+}
+
+function FilterDropdown({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: DropdownOption[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const current = options.find((o) => o.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(e: Event) {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer, { passive: true });
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="hub-dropdown" ref={wrapRef}>
+      <button
+        type="button"
+        className="hub-dropdown-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="hub-dropdown-btn-label">{label}</span>
+        <span className="hub-dropdown-btn-value">
+          {current?.icon}
+          <span>{current?.label}</span>
+        </span>
+        <span className="hub-dropdown-caret" aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="hub-dropdown-panel" role="listbox" aria-label={label}>
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`hub-dropdown-option${opt.value === value ? " active" : ""}`}
+              role="option"
+              aria-selected={opt.value === value}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+            >
+              {opt.icon}
+              <span className="hub-dropdown-option-text">{opt.label}</span>
+              <span className="hub-dropdown-option-check" aria-hidden="true">
+                ✓
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

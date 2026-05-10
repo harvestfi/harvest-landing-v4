@@ -3561,56 +3561,136 @@ button { font-family: inherit; cursor: pointer; }
   font-family: var(--sans);
 }
 
-/* Filter bar: minimal, sits flush above the ranking table */
+/* Filter bar: minimal, sits flush above the ranking table without
+   its own separator. The thead's bottom border below it is the only
+   line; the filter row blends into the page. */
 .hub-filterbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 10px 0 14px;
-  border-bottom: 1px dashed var(--hub-line);
+  padding: 6px 0 14px;
   margin-bottom: 0;
 }
 .hub-filter-set {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
-.hub-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--hub-ink-2);
-}
-.hub-filter-label {
-  color: var(--hub-ink-3);
-  font-weight: 500;
-}
-.hub-filter select {
+
+/* Custom dropdown trigger button — matches the design language of the
+   sort headers (clean ink + gold accent). The trigger doubles as both
+   the label and the current value: "Network: All". A caret on the
+   right indicates clickability without the heavy native chrome. */
+.hub-dropdown { position: relative; }
+.hub-dropdown-btn {
   appearance: none;
   background: var(--hub-bg);
   border: 1px solid var(--hub-line);
-  border-radius: 8px;
-  padding: 7px 28px 7px 12px;
-  font-family: inherit;
+  border-radius: 10px;
+  padding: 7px 12px 7px 12px;
+  font: inherit;
   font-size: 13px;
   font-weight: 500;
   color: var(--hub-ink);
   cursor: pointer;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2332312b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 9px 6px;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
 }
-.hub-filter select:hover { border-color: var(--hub-ink-3); }
-.hub-filter select:focus-visible {
-  outline: none;
-  border-color: var(--hub-ink);
+.hub-dropdown-btn:hover { border-color: var(--hub-ink-3); }
+.hub-dropdown-btn[aria-expanded="true"] { border-color: var(--hub-ink); }
+.hub-dropdown-btn-label {
+  color: var(--hub-ink-3);
+  font-weight: 500;
 }
+.hub-dropdown-btn-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hub-ink);
+  font-weight: 600;
+}
+.hub-dropdown-btn-value img,
+.hub-dropdown-btn-value svg { flex-shrink: 0; }
+.hub-dropdown-caret {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-right: 1.5px solid var(--hub-ink-2);
+  border-bottom: 1.5px solid var(--hub-ink-2);
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 0.15s ease;
+}
+.hub-dropdown-btn[aria-expanded="true"] .hub-dropdown-caret {
+  transform: rotate(225deg) translateY(-1px);
+}
+
+/* Popover panel: a soft card with comfortable padding and breathing
+   gaps between options so the list doesn't feel cramped. Each option
+   is a button row; selected state is a subtle gold tint + checkmark. */
+.hub-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-line);
+  border-radius: 12px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hub-dropdown-option {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--hub-ink);
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  transition: background-color 0.1s ease;
+}
+.hub-dropdown-option:hover { background: var(--hub-card); }
+.hub-dropdown-option.active {
+  background: rgba(255, 185, 54, 0.12);
+  color: var(--hub-ink);
+}
+.hub-dropdown-option-check {
+  margin-left: auto;
+  color: var(--hub-gold);
+  font-weight: 700;
+  font-size: 13px;
+  visibility: hidden;
+}
+.hub-dropdown-option.active .hub-dropdown-option-check {
+  visibility: visible;
+}
+.hub-dropdown-option-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .hub-filter-reset {
   appearance: none;
   background: transparent;
@@ -3651,7 +3731,6 @@ button { font-family: inherit; cursor: pointer; }
   padding: 12px 22px 11px;
   background: var(--hub-bg);
   border-bottom: 1px solid var(--hub-line);
-  border-top: 1px solid var(--hub-line);
   backdrop-filter: blur(6px);
 }
 .hub-th {
