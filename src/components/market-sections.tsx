@@ -340,7 +340,10 @@ function EcosystemChart({
               />
               <span className="eco-legend-rank mono">#{displayRank}</span>
               <span className="eco-legend-name">
-                {v.productName}
+                <span className="eco-legend-asset" aria-hidden="true">
+                  <AssetIcon asset={v.asset} size={18} />
+                </span>
+                <span className="eco-legend-name-text">{v.productName}</span>
                 {isYou && <span className="here-pill">You</span>}
               </span>
               <span className="eco-legend-apy mono">{formatAPY(v.apy24h)}</span>

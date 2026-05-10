@@ -226,7 +226,10 @@ function buildSmoothPaths(
 }
 
 export function TestChart({ series }: Props) {
-  const [metric, setMetric] = useState<Metric>("sharePrice");
+  // APY is the most relevant default for someone landing on a vault
+  // page; share price reads as a flat 1.x for stable autocompounders
+  // and gives the wrong impression of the strategy at first glance.
+  const [metric, setMetric] = useState<Metric>("apy");
   const [range, setRange] = useState<Range>("ALL");
   const [style, setStyle] = useState<ChartStyle>("bars");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);

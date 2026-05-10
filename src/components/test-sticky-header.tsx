@@ -140,7 +140,7 @@ export function TestStickyHeader({
           rel="noopener noreferrer"
           className="uni-sticky-cta"
         >
-          View Strategy
+          View<span className="uni-sticky-cta-strategy"> Strategy</span>
           <span aria-hidden="true">↗</span>
         </a>
       </div>

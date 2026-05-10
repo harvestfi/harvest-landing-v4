@@ -1087,9 +1087,22 @@ body:has(.uni-shell) {
     font-size: 12.5px;
     gap: 4px;
   }
+  /* Mobile CTA reads as just "View" - the user already sees the
+     product name to the left, so "Strategy" is redundant verbiage
+     that pushes the bar towards overflow on long product names. */
+  .uni-shell .uni-sticky-cta-strategy { display: none; }
   /* Mobile: drop the APY + TVL chips. The sub-bar stays compact
      with just the asset icon, product name, and the View CTA. */
   .uni-shell .uni-sticky-stat { display: none; }
+  /* Mobile: shrink the product name so longer vault names ("Compound
+     III USDC on Polygon" etc.) don't truncate or push the CTA off
+     the right edge. The icon stays at 22px so the visual anchor is
+     still clear; only the text shrinks. */
+  .uni-shell .uni-sticky-name {
+    font-size: 13px;
+    letter-spacing: -0.005em;
+  }
+  .uni-shell .uni-sticky-name-link { font-size: 13px; gap: 8px; }
 }
 @media (max-width: 540px) {
   .uni-shell .uni-sticky-right a[href="#benchmark"] { display: none; }

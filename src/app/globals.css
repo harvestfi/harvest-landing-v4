@@ -60,14 +60,13 @@ html, body {
 
 a { color: inherit; text-decoration: none; }
 
-/* Breadcrumb home icon — shared by all pages, sits as the first
-   crumb in place of the literal "Home" text. */
+/* Breadcrumb root — shared by all pages, sits as the first crumb.
+   Renders the literal "Home" text on desktop where horizontal space
+   is plentiful, and switches to a compact house glyph on mobile. */
 .crumb-home {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
   border-radius: 6px;
   color: inherit;
   transition: color 0.12s ease, background-color 0.12s ease;
@@ -76,7 +75,14 @@ a { color: inherit; text-decoration: none; }
   color: #ffb936;
   background: rgba(255, 185, 54, 0.1);
 }
-.crumb-home svg { display: block; }
+.crumb-home-text { padding: 0 2px; }
+.crumb-home-icon { display: none; }
+.crumb-home-icon svg { display: block; }
+@media (max-width: 640px) {
+  .crumb-home { width: 26px; height: 26px; }
+  .crumb-home-text { display: none; }
+  .crumb-home-icon { display: inline-flex; }
+}
 button { font-family: inherit; cursor: pointer; }
 .mono { font-family: var(--mono); font-feature-settings: "tnum"; }
 .dim  { color: var(--ink-3); }
@@ -112,15 +118,27 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 600; letter-spacing: -0.02em;
   font-size: 15px;
 }
-.navlinks { display: flex; gap: 4px; }
+.navlinks { display: flex; gap: 2px; }
 .navlinks a {
   padding: 6px 10px;
   font-size: 13px;
   color: var(--ink-2);
   border-radius: 6px;
+  font-weight: 500;
 }
-.navlinks a:hover { background: var(--bg-2); }
-.navlinks a.active { color: var(--ink); font-weight: 500; background: var(--bg-2); }
+.navlinks .nav-asset-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+}
+.navlinks .nav-asset-link img,
+.navlinks .nav-asset-link svg {
+  flex-shrink: 0;
+  display: block;
+}
+.navlinks a:hover { background: var(--bg-2); color: var(--ink); }
+.navlinks a.active { color: var(--ink); font-weight: 600; background: var(--bg-2); }
 
 .nav-right { display: flex; align-items: center; gap: 8px; }
 .search-box {
@@ -831,13 +849,22 @@ button { font-family: inherit; cursor: pointer; }
   .feat-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
-  /* Nav: compress search so brand stays visible. Push the
-     .nav-right column flush against the right shell-pad so the
-     search box hugs the right margin instead of floating with
-     extra whitespace beside it. */
+  /* Nav: let the search field claim the entire space between brand
+     and the topnav's right shell-pad so its right edge lines up
+     with the page-content right margin (every page box uses the
+     same --shell-pad). The .nav-right column stretches via
+     justify-self: stretch and the search-box fills it 100% wide. */
   .topnav-inner { gap: 12px; }
-  .nav-right { margin-left: auto; }
-  .search-box { min-width: 140px; }
+  .nav-right {
+    margin-left: auto;
+    justify-self: stretch;
+    width: 100%;
+    min-width: 0;
+  }
+  .search-box {
+    width: 100%;
+    min-width: 0;
+  }
   .search-box kbd { display: none; }
 
   /* Hero */
@@ -852,8 +879,9 @@ button { font-family: inherit; cursor: pointer; }
   .filterbar { flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
-  /* Nav: search box minimum — just icon + placeholder */
-  .search-box { min-width: 100px; padding: 5px 8px; }
+  /* Nav: search box stays full-width so the right edge keeps
+     hugging the page-content right margin even on tiny screens. */
+  .search-box { padding: 5px 8px; }
   .topnav-inner { gap: 8px; }
 
   /* Category grid → 1 col on tiny screens */
@@ -2133,12 +2161,28 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--ink-3);
   font-feature-settings: "tnum";
 }
+.eco-legend-asset {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+.eco-legend-asset img {
+  border-radius: 50%;
+  display: block;
+}
 .eco-legend-name {
   color: var(--ink);
   font-weight: 500;
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+}
+.eco-legend-name-text {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .eco-legend-row.you .eco-legend-name { font-weight: 600; }
 .eco-legend-row.baseline .eco-legend-name { color: var(--ink-3); font-style: italic; }
@@ -2270,9 +2314,16 @@ button { font-family: inherit; cursor: pointer; }
   }
   .eco-legend-row .eco-legend-swatch { display: none; }
   .eco-legend-row .eco-legend-rank { font-size: 11px; color: var(--ink-3); }
+  .eco-legend-row .eco-legend-asset { margin-right: 6px; }
+  .eco-legend-row .eco-legend-asset img {
+    width: 16px !important;
+    height: 16px !important;
+  }
   .eco-legend-row .eco-legend-name {
     font-size: 12px;
     font-weight: 500;
+  }
+  .eco-legend-row .eco-legend-name-text {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
