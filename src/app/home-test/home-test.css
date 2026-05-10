@@ -31,18 +31,8 @@
   overflow-x: clip;
 }
 
-/* Soft dotted texture on the body. Two stacked images: a top-edge
-   white wash that covers the band under the sticky topnav so the
-   pattern never bleeds under the header, plus a denser-but-lighter
-   raster of ink dots underneath. */
 body:has(.uni-home-test) {
-  background-color: var(--uni-bg, #ffffff);
-  background-image:
-    linear-gradient(180deg, #ffffff 0, #ffffff 60px, rgba(255, 255, 255, 0) 140px),
-    radial-gradient(circle, rgba(25, 23, 23, 0.085) 1px, transparent 1.3px) !important;
-  background-size: auto, 11px 11px;
-  background-repeat: no-repeat, repeat;
-  background-position: 0 0, 0 0;
+  background-image: none !important;
   overscroll-behavior-y: contain;
 }
 
