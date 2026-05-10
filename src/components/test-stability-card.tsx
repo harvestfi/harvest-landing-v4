@@ -134,15 +134,13 @@ export function TestStabilityCard({ history, asset }: Props) {
             const isFilled = tickScore <= s.score;
             // Height ramps from 38% (leftmost) to 100% (rightmost)
             const heightPct = 38 + (i / 19) * 62;
-            // Color zones: 0-25 red, 25-50 orange, 50-75 gold,
-            // 75-100 green. Visualises stability tier directly on
-            // the gauge instead of a flat gold fill across the
-            // whole strip.
-            const tickColor =
-              i < 5 ? "#e5484d"
-              : i < 10 ? "#f4801a"
-              : i < 15 ? "#ffb936"
-              : "#27a567";
+            // Every filled tick paints in the current tier colour so
+            // the gauge agrees with the headline word above. A
+            // strategy in the green zone reads as a green dial;
+            // amber/red strategies tint the same way without the
+            // staircase of competing colours that the previous
+            // segmented version produced.
+            const tickColor = labelColorForScore(s.score);
             return (
               <span
                 key={i}

@@ -211,43 +211,56 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
             <CopyAddressButton address={vault.contractAddress} compact />
           </div>
-          <p className="uni-title-byline">
-            <span
-              className="uni-byline-chip uni-byline-chain"
-              data-tooltip="Network: the blockchain this vault is deployed on."
-            >
-              <ChainIcon chain={vault.chain} size={14} />
-              {vault.chain}
-            </span>
-            <span className="uni-byline-sep" aria-hidden="true">·</span>
-            <span
-              className="uni-byline-chip"
-              data-tooltip="Platform: the underlying protocol the strategy supplies into."
-            >
-              {protocolName}
-            </span>
-            {vault.protocol.name &&
-              vault.protocol.name.toLowerCase() !==
-                protocolName.toLowerCase() && (
-                <>
-                  <span className="uni-byline-sep" aria-hidden="true">·</span>
-                  <span
-                    className="uni-byline-chip uni-byline-brand"
-                    data-tooltip="Curator: the team that operates this vault on top of the platform."
-                  >
-                    {vault.protocol.name}
-                    <span className="uni-byline-brand-dot" aria-hidden="true" />
-                  </span>
-                </>
-              )}
-            <span className="uni-byline-sep" aria-hidden="true">·</span>
-            <span
-              className="uni-byline-chip"
-              data-tooltip="Type: how the vault converts deposits into yield (autocompounder, lending wrapper, etc.)."
-            >
-              {vault.vaultType}
-            </span>
-          </p>
+          {(() => {
+            const operatorName = vault.protocol.name
+              .replace(/\s*Finance\s*$/i, "")
+              .trim() || "Harvest";
+            const isAutocompounder = vault.vaultType === "Autocompounder";
+            const operatorTooltip = isAutocompounder
+              ? `${operatorName}, the autocompounding platform that auto-claims native yield and reward emissions and re-invests them into the underlying strategy.`
+              : `${operatorName}, the platform running this vault on top of the underlying protocol.`;
+            const showOperator =
+              !!operatorName &&
+              operatorName.toLowerCase() !== protocolName.toLowerCase();
+            return (
+              <p className="uni-title-byline">
+                <span
+                  className="uni-byline-chip uni-byline-chain"
+                  data-tooltip="Network: the blockchain this vault is deployed on."
+                >
+                  <ChainIcon chain={vault.chain} size={14} />
+                  {vault.chain}
+                </span>
+                {showOperator && (
+                  <>
+                    <span className="uni-byline-sep" aria-hidden="true">·</span>
+                    <span
+                      className="uni-byline-chip uni-byline-brand"
+                      data-tooltip={operatorTooltip}
+                    >
+                      {operatorName}
+                      <span className="uni-byline-brand-dot" aria-hidden="true" />
+                    </span>
+                  </>
+                )}
+                <span className="uni-byline-sep" aria-hidden="true">·</span>
+                <span
+                  className="uni-byline-chip"
+                  data-tooltip="Platform: the underlying protocol the strategy supplies into."
+                >
+                  {protocolName}
+                </span>
+                <span className="uni-byline-sep" aria-hidden="true">·</span>
+                <span
+                  className="uni-byline-chip"
+                  data-tooltip="Type: how the vault converts deposits into yield (autocompounder, lending wrapper, etc.)."
+                  data-tooltip-align="end"
+                >
+                  {vault.vaultType}
+                </span>
+              </p>
+            );
+          })()}
         </div>
       </header>
 
