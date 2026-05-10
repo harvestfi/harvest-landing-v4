@@ -1,14 +1,11 @@
-// Test page: 40 Acres rendered in Uniswap interface visual language.
-// Layout cloned from app.uniswap.org Pool detail (left = title +
-// big number + bar chart + time pills; right sticky stack = Total
-// APY card, Stats card, Links card). Scoped under .uni-shell so the
-// rest of the site is unaffected.
+// Shared body for product pages (single-vault detail). Renders the
+// Sunflower Gold + Onyx + Graphite layout used across /[slug].
+// Heavy lifting (metadata, JSON-LD schemas, FAQ structured data) lives
+// in the route file. This component is purely the visible body.
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   getLiveVaults,
-  getVaultBySlug,
   getVaultHistory,
   getHoldersMap,
 } from "@/lib/data";
@@ -30,9 +27,7 @@ import { TestJumpNav } from "@/components/test-jumpnav";
 import { TestStabilityCard } from "@/components/test-stability-card";
 import { TestStickyHeader } from "@/components/test-sticky-header";
 import { TestSimilar } from "@/components/test-similar";
-import "./test.css";
-
-const TEST_SLUG = "usdc-40-acres-base";
+import type { YieldVault } from "@/lib/types";
 
 const CHAIN_EXPLORERS: Record<string, string> = {
   Ethereum: "https://etherscan.io/address/",
@@ -48,10 +43,7 @@ function shortAddress(a: string): string {
   return `${a.slice(0, 6)}...${a.slice(-4)}`;
 }
 
-export default async function TestPage() {
-  const vault = await getVaultBySlug(TEST_SLUG);
-  if (!vault) notFound();
-
+export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   const [history, allVaults, holdersMap] = await Promise.all([
     getVaultHistory(vault.contractAddress),
     getLiveVaults(),
@@ -72,8 +64,6 @@ export default async function TestPage() {
     );
   }
 
-  // Full per-metric series. Filtering by time range happens client-side
-  // inside <TestChart /> so the time pills can drive a live re-render.
   const chartSeries: ChartSeries = {
     tvl: history.tvlHistory.map((p) => ({ t: p.timestamp, v: p.value })),
     apy: history.apyHistory
@@ -85,11 +75,6 @@ export default async function TestPage() {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   const crumbs = productPageCrumbs(vault);
 
-  // FAQ: short, conversational questions without the product name
-  // jammed into every line. Long substitution names made the
-  // production list read awkwardly ("What is the current APY for
-  // USDC 40 Acres?"); these are plain questions that the answers
-  // contextualize.
   const faqItems = [
     {
       question: "What's the current APY?",
@@ -148,8 +133,6 @@ export default async function TestPage() {
 
   return (
     <div className="uni-shell">
-      {/* Mobile-only sticky sub-header that appears once user scrolls
-          past the jump nav. */}
       <TestStickyHeader
         productName={vault.productName}
         asset={vault.asset}
@@ -158,7 +141,7 @@ export default async function TestPage() {
         ctaHref={harvestAppUrl(vault.chain, vault.contractAddress)}
       />
 
-      {/* Breadcrumb: Home › {Asset} Yield Ranking › {Product} */}
+      {/* Breadcrumb */}
       <div className="uni-crumbs">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
@@ -176,9 +159,7 @@ export default async function TestPage() {
         })}
       </div>
 
-      {/* Title row: icon + title on the left; address + copy + byline
-          stacked on the right. Address+copy hidden on mobile (it's
-          surfaced again under Strategy details below). */}
+      {/* Title row */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
           <AssetIcon asset={vault.asset} size={54} />
@@ -298,14 +279,8 @@ export default async function TestPage() {
         </aside>
       </div>
 
-      {/* Jump-to menu between hero and the rest. Anchors point to the
-          ids that the embedded sections render (#history, #benchmark,
-          #ecosystem); #hero is set on the chart bignum. */}
       <TestJumpNav />
 
-      {/* Below the fold: every production section, in the same
-          reading order as the slug page. Components render their own
-          .pp-section h2 and pick up the .uni-shell theme overrides. */}
       <div className="uni-below">
         {/* About */}
         <section className="pp-section" id="about">
@@ -350,11 +325,6 @@ export default async function TestPage() {
           asset={vault.asset}
         />
 
-        {/* Combined stability + sources card. ConsistencyScore +
-            YieldBreakdown each looked sparse on their own (most
-            products have one source, leaving a lonely bar); the
-            stability card collapses both into a single horizontal
-            block: score gauge, key stats rail, source chips. */}
         <TestStabilityCard history={history} asset={vault.asset} />
 
         <HistoricalNarrative history={history} asset={vault.asset} />
@@ -363,8 +333,7 @@ export default async function TestPage() {
 
         <VaultHistoryTable history={history} />
 
-        {/* Strategy details: full production set including rewards,
-            strategy contract and underlying token. */}
+        {/* Strategy details */}
         <section className="pp-section" id="details">
           <h2>Strategy details</h2>
           <div className="contract-details-grid">
@@ -493,15 +462,10 @@ export default async function TestPage() {
         <TestSimilar vault={vault} allVaults={allVaults} />
       </div>
 
-      {/* Links pinned to the very bottom of the page. */}
+      {/* Bottom links */}
       <section className="uni-bottom-links">
         <h2 className="uni-bottom-links-title">Links</h2>
         <div className="uni-bottom-links-row">
-          <Link href={`/${vault.slug}`} className="uni-side-link">
-            <span className="uni-side-link-dot" />
-            Production page
-            <span className="uni-side-link-arrow">↗</span>
-          </Link>
           {explorerUrl && (
             <a
               href={explorerUrl}
@@ -514,6 +478,16 @@ export default async function TestPage() {
               <span className="uni-side-link-arrow">↗</span>
             </a>
           )}
+          <a
+            href={harvestAppUrl(vault.chain, vault.contractAddress)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="uni-side-link"
+          >
+            <span className="uni-side-link-dot" />
+            Open in Harvest app
+            <span className="uni-side-link-arrow">↗</span>
+          </a>
         </div>
       </section>
     </div>
