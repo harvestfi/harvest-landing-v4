@@ -3,7 +3,10 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 
-interface VaultSeoRow {
+type RowType = "Home" | "Asset hub" | "Network hub" | "Product";
+
+interface SeoRow {
+  type: RowType;
   slug: string;
   title: string;
   description: string;
@@ -14,6 +17,8 @@ interface VaultSeoRow {
 }
 
 type SortKey =
+  | "natural"
+  | "type"
   | "slug"
   | "title"
   | "description"
@@ -26,6 +31,13 @@ type SortDir = "asc" | "desc";
 // Memo limits: 580px / ~58 chars on title, 130-155 on description.
 const TITLE_LIMIT = 58;
 const DESC_LIMIT = 155;
+
+const TYPE_ORDER: Record<RowType, number> = {
+  Home: 0,
+  "Asset hub": 1,
+  "Network hub": 2,
+  Product: 3,
+};
 
 function CharCount({ count, limit }: { count: number; limit: number }) {
   const over = count > limit;
@@ -68,12 +80,16 @@ export function SeoTable({
   vaultCount,
   lastUpdated,
 }: {
-  rows: VaultSeoRow[];
+  rows: SeoRow[];
   vaultCount: number;
+  siteOrigin?: string;
   lastUpdated: string;
 }) {
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("slug");
+  // Default sort is "natural" — preserves the order rows arrive in
+  // (home -> asset hubs -> network hubs -> products) which matches
+  // how a user navigates the site.
+  const [sortKey, setSortKey] = useState<SortKey>("natural");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   function handleSort(key: SortKey) {
@@ -92,17 +108,25 @@ export function SeoTable({
       (r) =>
         r.slug.toLowerCase().includes(q) ||
         r.title.toLowerCase().includes(q) ||
-        r.chain.toLowerCase().includes(q),
+        r.chain.toLowerCase().includes(q) ||
+        r.type.toLowerCase().includes(q),
     );
   }, [rows, search]);
 
   const sorted = useMemo(() => {
+    if (sortKey === "natural") return filtered;
     const copy = [...filtered];
     copy.sort((a, b) => {
       if (sortKey === "indexed") {
         const an = a.indexed ? 1 : 0;
         const bn = b.indexed ? 1 : 0;
         return sortDir === "asc" ? an - bn : bn - an;
+      }
+      if (sortKey === "type") {
+        const an = TYPE_ORDER[a.type];
+        const bn = TYPE_ORDER[b.type];
+        const cmp = an - bn;
+        return sortDir === "asc" ? cmp : -cmp;
       }
       let av = a[sortKey] as string;
       let bv = b[sortKey] as string;
@@ -120,12 +144,28 @@ export function SeoTable({
     return copy;
   }, [filtered, sortKey, sortDir]);
 
+  const typeCounts = useMemo(() => {
+    const out: Record<RowType, number> = {
+      Home: 0,
+      "Asset hub": 0,
+      "Network hub": 0,
+      Product: 0,
+    };
+    for (const r of rows) out[r.type] += 1;
+    return out;
+  }, [rows]);
+
   return (
     <div className="adm-seo">
       <header className="adm-seo-head">
         <h1>SEO Overview</h1>
         <p className="adm-seo-meta">
-          {vaultCount} vaults · last updated {lastUpdated}
+          {rows.length} pages · {vaultCount} vaults · last updated {lastUpdated}
+        </p>
+        <p className="adm-seo-tally">
+          {typeCounts.Home} home · {typeCounts["Asset hub"]} asset hubs ·{" "}
+          {typeCounts["Network hub"]} network hubs · {typeCounts.Product} product
+          pages
         </p>
       </header>
 
@@ -133,7 +173,7 @@ export function SeoTable({
         <input
           type="text"
           className="adm-input"
-          placeholder="Filter by slug, title, or chain"
+          placeholder="Filter by slug, title, type, or chain"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -147,6 +187,13 @@ export function SeoTable({
           <thead>
             <tr>
               <th className="adm-th adm-th-rank">#</th>
+              <SortHeader
+                label="Type"
+                sortKey="type"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onClick={handleSort}
+              />
               <SortHeader
                 label="Slug"
                 sortKey="slug"
@@ -207,14 +254,22 @@ export function SeoTable({
               const titleLen = row.title.length;
               const descLen = row.description.length;
               const truncatedDesc =
-                row.description.length > 200
-                  ? row.description.slice(0, 200) + "…"
+                row.description.length > 220
+                  ? row.description.slice(0, 220) + "…"
                   : row.description;
+              const typeClass = row.type
+                .toLowerCase()
+                .replace(/\s+/g, "-");
               return (
-                <tr key={row.slug} className="adm-row">
+                <tr key={`${row.type}-${row.slug}`} className="adm-row">
                   <td className="adm-cell adm-rank">{i + 1}</td>
+                  <td className="adm-cell">
+                    <span className={`adm-type-pill adm-type-${typeClass}`}>
+                      {row.type}
+                    </span>
+                  </td>
                   <td className="adm-cell adm-slug">
-                    <Link href={`/${row.slug}`} className="adm-link">
+                    <Link href={row.slug} className="adm-link">
                       {row.slug}
                     </Link>
                   </td>

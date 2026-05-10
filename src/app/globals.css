@@ -2733,6 +2733,44 @@ body:has(.admin-shell) {
   font-family: var(--mono);
   letter-spacing: 0.02em;
 }
+.adm-seo-tally {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--ink-4);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+/* Type pill: tiny coloured chip in the leftmost column so the
+   pages-by-type ordering is readable at a glance. Each row type
+   gets its own subtle tint instead of the green/red OK/NO scheme
+   used by the index pill. */
+.adm-type-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.adm-type-home {
+  background: rgba(255, 185, 54, 0.18);
+  color: #946208;
+}
+.adm-type-asset-hub {
+  background: rgba(31, 124, 77, 0.12);
+  color: #1f7c4d;
+}
+.adm-type-network-hub {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4a4eb5;
+}
+.adm-type-product {
+  background: rgba(25, 23, 23, 0.06);
+  color: var(--ink-2);
+}
 
 /* Search + count */
 .adm-seo-controls {
