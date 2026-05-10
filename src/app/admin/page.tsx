@@ -1,7 +1,11 @@
 import { getVaults } from "@/lib/data";
 import { getCanonicalSlugs } from "@/lib/canonical-vaults";
 import { formatAPY, formatTVL } from "@/lib/format";
-import { productPageTitle, productPageDescription } from "@/lib/seo";
+import {
+  productPageTitle,
+  productPageDescription,
+  comboKey,
+} from "@/lib/seo";
 import { SeoTable } from "@/components/seo-table";
 import { existsSync, statSync } from "fs";
 import { join } from "path";
@@ -11,12 +15,16 @@ export default async function AdminPage() {
   const canonical = await getCanonicalSlugs();
 
   const now = Date.now();
-  // Mirror what /[slug]/page.tsx generateMetadata actually emits so the
-  // admin preview matches production. trackedDays is approximated from
-  // launchDate (we can't fetch full history per vault here without
-  // multiplying build time); the seo helper uses the 30+ day branch
-  // when this is >= 30 and apy30d > 0, falling back to "live since X"
-  // for newly-launched products.
+
+  // Tally asset+protocol+network combos so the SEO preview matches
+  // what /[slug]/page.tsx renders: drop the disambiguator slot only
+  // when the combo is unique across the full index.
+  const comboTally = new Map<string, number>();
+  for (const v of vaults) {
+    const k = comboKey(v);
+    comboTally.set(k, (comboTally.get(k) ?? 0) + 1);
+  }
+
   const rows = vaults.map((vault) => {
     const trackedDays = vault.launchDate
       ? Math.max(
@@ -24,9 +32,10 @@ export default async function AdminPage() {
           Math.floor((now - new Date(vault.launchDate).getTime()) / 86_400_000),
         )
       : 0;
+    const isUniqueCombo = (comboTally.get(comboKey(vault)) ?? 0) === 1;
     return {
       slug: vault.slug,
-      title: productPageTitle(vault),
+      title: productPageTitle(vault, isUniqueCombo),
       description: productPageDescription(vault, trackedDays),
       chain: vault.chain,
       apy: formatAPY(vault.apy24h),

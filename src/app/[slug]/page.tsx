@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
   getVaultBySlug,
+  getVaults,
   getAllSlugs,
   getVaultHistory,
   isBrokenLowTvlVault,
@@ -9,7 +10,7 @@ import {
 import { isCanonicalSlug } from "@/lib/canonical-vaults";
 import { formatAPY, formatTVL } from "@/lib/format";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
-import { productPageTitle, productPageDescription, productPageCrumbs } from "@/lib/seo";
+import { productPageTitle, productPageDescription, productPageCrumbs, comboKey } from "@/lib/seo";
 import { financialProductSchema, breadcrumbSchema, datasetSchema } from "@/lib/jsonld";
 import type { YieldVault } from "@/lib/types";
 import type { FullVaultHistory } from "@/lib/history-api";
@@ -40,7 +41,19 @@ export async function generateMetadata({
     );
   }
 
-  const title = productPageTitle(vault);
+  // The asset+protocol+network combo decides whether the vault-name
+  // disambiguator stays in the title. Counted across the full vault
+  // index so two vaults that share asset+protocol+network keep their
+  // distinct names instead of rendering identical titles.
+  const allVaults = await getVaults();
+  const myKey = comboKey(vault);
+  let comboCount = 0;
+  for (const v of allVaults) {
+    if (comboKey(v) === myKey) comboCount += 1;
+  }
+  const isUniqueCombo = comboCount === 1;
+
+  const title = productPageTitle(vault, isUniqueCombo);
   const description = productPageDescription(vault, trackedDays);
 
   const canonical = await isCanonicalSlug(slug);

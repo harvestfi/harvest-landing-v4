@@ -70,18 +70,64 @@ export function networkHubDescription(
 
 // ─── Product page ─────────────────────────────────────────────────────────────
 
-// Returns the FULL title including "| Harvest" (or without if over 58 chars).
-// Uses { absolute: ... } in generateMetadata to bypass the layout template.
-export function productPageTitle(vault: YieldVault): string {
-  const subAsset = getSubAsset(vault);
-  const protocol = getProtocolLabel(vault); // e.g. "Aerodrome", "Morpho", "Aave V3"
-  const afterToken = vault.productName.slice(subAsset.length).trim();
-  const isRedundant =
-    !afterToken || afterToken.toLowerCase() === protocol.toLowerCase();
+// Pull the disambiguator slot ("vault name") from the productName,
+// stripping any leading asset and protocol mentions so it never reads
+// as "cbBTC Aave on Aave: cbBTC Aave Yield" (the redundant tokens
+// problem). Returns the cleaned distinct portion of the name, or an
+// empty string when no distinct portion remains after stripping.
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
-  const core = isRedundant
-    ? `${subAsset} on ${protocol}: Yield, APY & TVL`
-    : `${subAsset} on ${protocol}: ${afterToken} Yield, APY & TVL`;
+export function vaultDisambiguator(vault: YieldVault): string {
+  const subAsset = getSubAsset(vault);
+  const protocol = getProtocolLabel(vault);
+  let name = vault.productName.trim();
+
+  // Strip the asset symbol when it appears at the start (e.g.
+  // "cbBTC Aave" -> "Aave"). Tolerates leading/trailing whitespace.
+  name = name.replace(new RegExp(`^${escapeRegex(subAsset)}\\b\\s*`, "i"), "");
+
+  // Strip every standalone occurrence of the protocol name so
+  // "cbBTC Aave Plus" -> "Plus" rather than "Aave Plus" once the
+  // title prefix already says "on Aave".
+  name = name.replace(new RegExp(`\\b${escapeRegex(protocol)}\\b\\s*`, "gi"), "");
+
+  // Drop common filler tokens that don't actually disambiguate.
+  name = name.replace(/^v\d+\s*/i, "").trim();
+  name = name.replace(/\s+/g, " ").trim();
+  return name;
+}
+
+// Build the asset|protocol|chain key used for product-title slot-3
+// uniqueness. Lower-cased so casing differences in the source data
+// don't fragment the count.
+export function comboKey(vault: YieldVault): string {
+  return `${vault.asset.toLowerCase()}|${getProtocolLabel(vault).toLowerCase()}|${vault.chain.toLowerCase()}`;
+}
+
+// Returns the FULL title including "| Harvest" (or without if over
+// 58 chars). The disambiguator slot is dropped only when
+// asset+protocol+network is already unique across the index — pass
+// isUniqueCombo=true in that case. When the slot is dropped, the
+// title appends "Stats" so two-word strategies still produce a
+// distinct, descriptive title.
+export function productPageTitle(
+  vault: YieldVault,
+  isUniqueCombo: boolean = false,
+): string {
+  const subAsset = getSubAsset(vault);
+  const protocol = getProtocolLabel(vault);
+  const disambig = vaultDisambiguator(vault);
+
+  // Slot 3 stays unless: (a) combo is unique AND (b) there's no
+  // distinct vault name to surface. If the disambiguator is empty,
+  // we have no slot 3 to render anyway.
+  const dropSlot3 = !disambig || isUniqueCombo;
+
+  const core = dropSlot3
+    ? `${subAsset} on ${protocol}: Yield, APY & TVL Stats`
+    : `${subAsset} on ${protocol}: ${disambig} Yield, APY & TVL`;
 
   return clampTitle(`${core} | ${SITE_NAME}`);
 }
@@ -99,17 +145,28 @@ export function productPageDescription(
   const network = vault.chain;
 
   if (trackedDays >= 30 && vault.apy30d > 0) {
-    return `${vault.productName} on ${protocol} (${network}) - ${subAsset} yield averaging ${vault.apy30d.toFixed(1)}% APY over 30 days. Track TVL, performance and risk benchmarks.`;
+    return `${vault.productName} on ${protocol} (${network}). ${subAsset} yield averaging ${vault.apy30d.toFixed(1)}% APY over 30 days. Track TVL, performance and risk benchmarks.`;
   }
 
-  const since = vault.launchDate
-    ? new Date(vault.launchDate).toLocaleDateString("en-US", {
+  // Resolve "live since {month year}" only when the vault has a
+  // valid launchDate. Anything else falls back to a generic "in our
+  // index" line that doesn't promise a date the data can't back up.
+  let since: string | null = null;
+  if (vault.launchDate) {
+    const d = new Date(vault.launchDate);
+    if (!Number.isNaN(d.getTime())) {
+      since = d.toLocaleDateString("en-US", {
         month: "long",
         year: "numeric",
-      })
-    : "recently";
+      });
+    }
+  }
 
-  return `${vault.productName} on ${protocol} (${network}) - new ${subAsset} yield strategy live since ${since}. Track APY, TVL and performance history.`;
+  if (since) {
+    return `${vault.productName} on ${protocol} (${network}). New ${subAsset} yield strategy live since ${since}. Track APY, TVL and performance history.`;
+  }
+
+  return `${vault.productName} on ${protocol} (${network}). ${subAsset} yield strategy indexed by Harvest. Track APY, TVL and performance history.`;
 }
 
 // ─── Breadcrumb data helpers ──────────────────────────────────────────────────
