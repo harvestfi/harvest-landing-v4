@@ -317,7 +317,7 @@ export async function AssetHubBody({ asset }: Props) {
       <header className="uni-hub-hero">
         <div className="uni-hub-hero-headline">
           <span className="uni-hub-hero-icon" aria-hidden="true">
-            <AssetIcon asset={asset} size={54} />
+            <AssetIcon asset={asset} size={54} priority />
           </span>
           <div>
             <h1 className="uni-hub-h1">{assetHubH1(asset)}</h1>

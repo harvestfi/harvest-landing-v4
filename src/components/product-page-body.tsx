@@ -162,7 +162,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
       {/* Title row */}
       <header className="uni-title-row">
         <span className="uni-title-icon" aria-hidden="true">
-          <AssetIcon asset={vault.asset} size={54} />
+          <AssetIcon asset={vault.asset} size={54} priority />
         </span>
         <h1 className="uni-title">{vault.productName}</h1>
         <div className="uni-title-meta">

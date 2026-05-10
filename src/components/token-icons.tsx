@@ -38,7 +38,19 @@ const CHAIN_ICONS: Record<string, { src: string }> = {
   Sonic: sonicIcon,
 };
 
-export function AssetIcon({ asset, size = 22 }: { asset: string; size?: number }) {
+interface IconProps {
+  size?: number;
+  // Set when the icon is the LCP candidate (hero asset on a page above
+  // the fold). Switches to eager loading + high fetchpriority so the
+  // browser pulls the file alongside the HTML rather than after layout.
+  priority?: boolean;
+}
+
+export function AssetIcon({
+  asset,
+  size = 22,
+  priority = false,
+}: { asset: string } & IconProps) {
   const icon = ASSET_ICONS[asset];
   if (icon) {
     return (
@@ -47,6 +59,9 @@ export function AssetIcon({ asset, size = 22 }: { asset: string; size?: number }
         alt={asset}
         width={size}
         height={size}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={priority ? "high" : "auto"}
         style={{ width: size, height: size, borderRadius: "50%" }}
       />
     );
@@ -61,7 +76,11 @@ export function AssetIcon({ asset, size = 22 }: { asset: string; size?: number }
   );
 }
 
-export function ChainIcon({ chain, size = 18 }: { chain: string; size?: number }) {
+export function ChainIcon({
+  chain,
+  size = 18,
+  priority = false,
+}: { chain: string } & IconProps) {
   const icon = CHAIN_ICONS[chain];
   if (icon) {
     return (
@@ -70,6 +89,9 @@ export function ChainIcon({ chain, size = 18 }: { chain: string; size?: number }
         alt={chain}
         width={size}
         height={size}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={priority ? "high" : "auto"}
         style={{ width: size, height: size, borderRadius: "50%" }}
       />
     );
