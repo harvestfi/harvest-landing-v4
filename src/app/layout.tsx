@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -27,16 +27,92 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const DEFAULT_TITLE = "Best DeFi Yields: Compare Top APY Rankings | Harvest";
+const OG_IMAGE = `${SITE_URL}/icon.png`;
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#ffb936",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Best DeFi Yields: Compare Top APY Rankings | Harvest",
+    default: DEFAULT_TITLE,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  robots: {
-    index: true,
-    follow: true,
+  applicationName: SITE_NAME,
+  keywords: [
+    "DeFi yield",
+    "best APY",
+    "USDC yield",
+    "USDT yield",
+    "ETH yield",
+    "Bitcoin yield",
+    "stablecoin yield",
+    "yield farming",
+    "Harvest Finance",
+    "onchain yield index",
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  robots: { index: true, follow: true },
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_US",
+    url: SITE_URL,
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: `${SITE_NAME} - DeFi yield index`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@harvest_finance",
+    creator: "@harvest_finance",
+    images: [OG_IMAGE],
+  },
+};
+
+const ORGANIZATION_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon.png`,
+  description: SITE_DESCRIPTION,
+  sameAs: [
+    "https://twitter.com/harvest_finance",
+    "https://github.com/harvest-finance",
+  ],
+};
+
+const WEBSITE_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
   },
 };
 
@@ -51,6 +127,14 @@ export default async function RootLayout({
       className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable}`}
     >
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSONLD) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
+        />
         <Header />
         {children}
         <Footer />
