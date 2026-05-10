@@ -154,9 +154,19 @@ body:has(.uni-shell) {
   font-weight: 700;
   line-height: 0.6;
 }
-.uni-shell .uni-byline-chain {
+.uni-shell .uni-byline-chip {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
+  border-bottom: 1px dotted var(--uni-ink-3);
+  cursor: help;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.uni-shell .uni-byline-chip:hover {
+  color: var(--uni-ink);
+  border-bottom-color: var(--uni-gold);
+}
+.uni-shell .uni-byline-chain {
   gap: 6px;
 }
 .uni-shell .uni-byline-chain img {
@@ -708,9 +718,9 @@ body:has(.uni-shell) {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 2px;
-  margin: 64px 0 36px;
-  padding: 6px;
+  gap: 4px;
+  margin: 64px 0 40px;
+  padding: 8px;
   background: rgba(25, 23, 23, 0.025);
   border-radius: var(--uni-radius-pill);
 }
@@ -720,35 +730,38 @@ body:has(.uni-shell) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 12px 18px;
+  gap: 11px;
+  padding: 14px 22px;
   border-radius: var(--uni-radius-pill);
   background: transparent;
   color: var(--uni-ink-2);
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 500;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 .uni-shell .uni-jump-item:hover {
-  background: transparent;
-  color: var(--uni-gold);
+  background: rgba(255, 185, 54, 0.08);
+  color: var(--uni-ink);
   box-shadow: none;
 }
 .uni-shell .uni-jump-icon-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
+  color: var(--uni-ink-2);
+  transition: color 0.15s ease;
 }
 .uni-shell .uni-jump-icon {
-  width: 18px;
-  height: 18px;
-  transition: stroke 0.15s ease;
+  width: 24px;
+  height: 24px;
 }
-.uni-shell .uni-jump-item:hover .uni-jump-icon { stroke: var(--uni-gold); }
+.uni-shell .uni-jump-item:hover .uni-jump-icon-wrap {
+  color: var(--uni-gold);
+}
 .uni-shell .uni-jump-label { line-height: 1; }
 
 /* === Similar {asset} opportunities ================================
@@ -790,17 +803,18 @@ body:has(.uni-shell) {
 .uni-shell .uni-similar-card {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 22px 24px;
-  background: var(--uni-card);
+  gap: 18px;
+  padding: 18px 20px;
+  background: transparent;
+  border: 1px solid var(--uni-line);
   border-radius: var(--uni-radius);
   text-decoration: none;
   color: var(--uni-ink);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 .uni-shell .uni-similar-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px -16px rgba(25, 23, 23, 0.18);
+  background: rgba(255, 185, 54, 0.05);
+  border-color: var(--uni-gold);
 }
 .uni-shell .uni-similar-card-head {
   display: flex;

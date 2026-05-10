@@ -1,7 +1,9 @@
-// Jump-to nav for /test. Anchors to the major sections below the
-// hero in a soft pill rail with refined Lucide-style icons. Hover
-// flips the icon to Sunflower Gold and the label to Onyx; nothing
-// else (no bg flip, no shadow, no transform).
+// Jump-to nav for product pages. Anchors to the major sections below
+// the hero in a soft pill rail. Icons designed in a single visual
+// language: 24x24 viewBox, 1.5 stroke, rounded joins, with a subtle
+// filled accent shape so each glyph carries weight without feeling
+// busy. Container is a 32x32 rounded square so each icon gets
+// breathing room and stays readable at desktop and mobile sizes.
 
 // Plain <a> for in-page hash anchors. Next.js <Link> on hash-only
 // hrefs occasionally appended the new fragment to the existing one
@@ -18,9 +20,15 @@ interface Item {
 const stroke = {
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: "1.75",
+  strokeWidth: 1.5,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
+};
+
+const accent = {
+  fill: "currentColor",
+  fillOpacity: 0.12,
+  stroke: "none",
 };
 
 const ITEMS: Item[] = [
@@ -29,9 +37,11 @@ const ITEMS: Item[] = [
     label: "Overview",
     key: "about",
     icon: (
-      // Activity / pulse line
-      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      // Compass: filled needle on a stroked dial
+      <svg viewBox="0 0 24 24" className="uni-jump-icon" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" {...stroke} />
+        <path d="M14.5 9.5 13 13l-3.5 1.5L11 11Z" {...accent} />
+        <path d="M14.5 9.5 13 13l-3.5 1.5L11 11Z" {...stroke} />
       </svg>
     ),
   },
@@ -40,11 +50,14 @@ const ITEMS: Item[] = [
     label: "Benchmarks",
     key: "benchmark",
     icon: (
-      // Sorted bars (rounded rectangles)
-      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
-        <rect x="3" y="13" width="4" height="8" rx="1" />
-        <rect x="10" y="8" width="4" height="13" rx="1" />
-        <rect x="17" y="11" width="4" height="10" rx="1" />
+      // Three sorted bars with a baseline + arrow climbing right
+      <svg viewBox="0 0 24 24" className="uni-jump-icon" aria-hidden="true">
+        <rect x="4" y="14" width="4" height="6" rx="1.2" {...accent} />
+        <rect x="10" y="10" width="4" height="10" rx="1.2" {...accent} />
+        <rect x="16" y="6" width="4" height="14" rx="1.2" {...accent} />
+        <rect x="4" y="14" width="4" height="6" rx="1.2" {...stroke} />
+        <rect x="10" y="10" width="4" height="10" rx="1.2" {...stroke} />
+        <rect x="16" y="6" width="4" height="14" rx="1.2" {...stroke} />
       </svg>
     ),
   },
@@ -53,13 +66,16 @@ const ITEMS: Item[] = [
     label: "Ecosystem",
     key: "ecosystem",
     icon: (
-      // Three connected nodes (network graph)
-      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
-        <circle cx="18" cy="5" r="2.5" />
-        <circle cx="6" cy="12" r="2.5" />
-        <circle cx="18" cy="19" r="2.5" />
-        <line x1="8.3" y1="13.4" x2="15.7" y2="17.6" />
-        <line x1="15.7" y1="6.4" x2="8.3" y2="10.6" />
+      // Three connected nodes with filled centres
+      <svg viewBox="0 0 24 24" className="uni-jump-icon" aria-hidden="true">
+        <line x1="6" y1="12" x2="17" y2="6" {...stroke} />
+        <line x1="6" y1="12" x2="17" y2="18" {...stroke} />
+        <circle cx="6" cy="12" r="2.5" {...accent} />
+        <circle cx="17" cy="6" r="2.5" {...accent} />
+        <circle cx="17" cy="18" r="2.5" {...accent} />
+        <circle cx="6" cy="12" r="2.5" {...stroke} />
+        <circle cx="17" cy="6" r="2.5" {...stroke} />
+        <circle cx="17" cy="18" r="2.5" {...stroke} />
       </svg>
     ),
   },
@@ -68,11 +84,11 @@ const ITEMS: Item[] = [
     label: "History",
     key: "history",
     icon: (
-      // Counter-clockwise rotate (history / undo motion)
-      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
-        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-        <path d="M3 3v5h5" />
-        <path d="M12 7v5l3 2" />
+      // Clock face with filled dial + hands
+      <svg viewBox="0 0 24 24" className="uni-jump-icon" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" {...accent} />
+        <circle cx="12" cy="12" r="9" {...stroke} />
+        <path d="M12 7.5V12l3 2" {...stroke} />
       </svg>
     ),
   },
@@ -81,12 +97,13 @@ const ITEMS: Item[] = [
     label: "Details",
     key: "details",
     icon: (
-      // Document with text lines (file-text)
-      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6" />
-        <line x1="9" y1="13" x2="15" y2="13" />
-        <line x1="9" y1="17" x2="15" y2="17" />
+      // Document with folded corner + text rows
+      <svg viewBox="0 0 24 24" className="uni-jump-icon" aria-hidden="true">
+        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" {...accent} />
+        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" {...stroke} />
+        <path d="M14 3v5h5" {...stroke} />
+        <line x1="9" y1="13" x2="15" y2="13" {...stroke} />
+        <line x1="9" y1="17" x2="13" y2="17" {...stroke} />
       </svg>
     ),
   },
@@ -95,9 +112,12 @@ const ITEMS: Item[] = [
     label: "FAQ",
     key: "faq",
     icon: (
-      // Chat bubble (message-square)
-      <svg viewBox="0 0 24 24" {...stroke} className="uni-jump-icon" aria-hidden="true">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      // Question mark in a rounded square
+      <svg viewBox="0 0 24 24" className="uni-jump-icon" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="4" {...accent} />
+        <rect x="3" y="3" width="18" height="18" rx="4" {...stroke} />
+        <path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5" {...stroke} />
+        <circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none" />
       </svg>
     ),
   },

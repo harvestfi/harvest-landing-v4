@@ -14,8 +14,17 @@ interface Props {
 }
 
 export function TestSimilar({ vault, allVaults }: Props) {
+  // Filter out vaults with no live numbers — empty TVL or no APY makes
+  // them dead links from a yield-comparison standpoint and they
+  // pollute the cross-sell rail.
   const similar = allVaults
-    .filter((v) => v.asset === vault.asset && v.id !== vault.id)
+    .filter(
+      (v) =>
+        v.asset === vault.asset &&
+        v.id !== vault.id &&
+        v.tvl > 0 &&
+        v.apy24h > 0,
+    )
     .sort((a, b) => b.apy24h - a.apy24h)
     .slice(0, 6);
 

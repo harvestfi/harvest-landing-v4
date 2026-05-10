@@ -212,16 +212,40 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             <CopyAddressButton address={vault.contractAddress} compact />
           </div>
           <p className="uni-title-byline">
-            <span>{vault.vaultType}</span>
-            <span className="uni-byline-sep" aria-hidden="true">·</span>
-            <span className="uni-byline-chain">
+            <span
+              className="uni-byline-chip uni-byline-chain"
+              data-tooltip="Network: the blockchain this vault is deployed on."
+            >
               <ChainIcon chain={vault.chain} size={14} />
               {vault.chain}
             </span>
             <span className="uni-byline-sep" aria-hidden="true">·</span>
-            <span className="uni-byline-brand">
-              Harvest
-              <span className="uni-byline-brand-dot" aria-hidden="true" />
+            <span
+              className="uni-byline-chip"
+              data-tooltip="Platform: the underlying protocol the strategy supplies into."
+            >
+              {protocolName}
+            </span>
+            {vault.protocol.name &&
+              vault.protocol.name.toLowerCase() !==
+                protocolName.toLowerCase() && (
+                <>
+                  <span className="uni-byline-sep" aria-hidden="true">·</span>
+                  <span
+                    className="uni-byline-chip uni-byline-brand"
+                    data-tooltip="Curator: the team that operates this vault on top of the platform."
+                  >
+                    {vault.protocol.name}
+                    <span className="uni-byline-brand-dot" aria-hidden="true" />
+                  </span>
+                </>
+              )}
+            <span className="uni-byline-sep" aria-hidden="true">·</span>
+            <span
+              className="uni-byline-chip"
+              data-tooltip="Type: how the vault converts deposits into yield (autocompounder, lending wrapper, etc.)."
+            >
+              {vault.vaultType}
             </span>
           </p>
         </div>
