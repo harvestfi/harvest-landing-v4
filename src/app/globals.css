@@ -2600,114 +2600,132 @@ button { font-family: inherit; cursor: pointer; }
    /methodology page
    ================================================================ */
 
+/* Methodology + legal pages share this namespace. Voice matches the
+   product page: Sunflower Gold accent, bigger type, yellow-highlight
+   links, generous line-height. Two-column layout preserved (192px
+   sticky TOC sidebar on the left, content on the right). */
 .methodology-page {
-  max-width: var(--shell-max);
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 var(--shell-pad) 96px;
+  color: #191717;
+  font-family: var(--sans);
 }
 
 /* Header --------------------------------------------------------- */
 .meth-header {
-  padding: 48px 0 44px;
-  border-bottom: 1px solid var(--line);
-  max-width: 600px;
+  padding: 48px 0 36px;
+  border-bottom: 1px solid #dddee0;
+  max-width: 720px;
 }
 
 .meth-crumbs {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--ink-3);
+  gap: 8px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: #32312b;
   margin-bottom: 20px;
 }
-.meth-crumbs a:hover { color: var(--ink); }
+.meth-crumbs a {
+  color: #32312b;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.meth-crumbs a:hover { color: #ffb936; }
+.meth-crumbs .sep { color: #6e6c66; }
 
 .meth-title {
   font-family: var(--display);
-  font-size: clamp(28px, 5vw, 44px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  color: var(--ink);
-  margin: 0 0 10px;
+  font-size: clamp(26px, 3.8vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+  color: #191717;
+  margin: 0 0 12px;
 }
 
 .meth-subtitle {
-  font-size: 15px;
-  color: var(--ink-3);
-  margin: 0 0 10px;
-  line-height: 1.5;
+  font-size: 17px;
+  color: #32312b;
+  margin: 0 0 14px;
+  line-height: 1.55;
+  max-width: 64ch;
 }
 
 .meth-version {
-  font-size: 11px;
-  color: var(--ink-4);
+  font-size: 12px;
+  color: #6e6c66;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
   margin: 0 0 28px;
 }
 
 /* Stats strip ---------------------------------------------------- */
 .meth-stats {
   display: flex;
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
+  gap: 10px;
   width: fit-content;
+  flex-wrap: wrap;
 }
 
 .meth-stat {
-  background: var(--panel);
-  padding: 14px 22px;
+  background: #f1f5f4;
+  border-radius: 14px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 80px;
+  gap: 4px;
+  min-width: 96px;
 }
 
 .meth-stat-val {
   font-family: var(--display);
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--ink);
-  line-height: 1;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  color: #191717;
+  line-height: 1.2;
+  font-feature-settings: "tnum";
 }
 
 .meth-stat-lbl {
-  font-size: 10px;
-  color: var(--ink-3);
-  font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  color: #6e6c66;
+  font-family: var(--sans);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   white-space: nowrap;
 }
 
-.meth-stat--dim { background: var(--bg-2); }
-.meth-stat--dim .meth-stat-val { color: var(--ink-3); }
+.meth-stat--dim .meth-stat-val { color: #6e6c66; }
 
 /* Two-column layout ---------------------------------------------- */
 .meth-layout {
   display: grid;
-  grid-template-columns: 192px 1fr;
+  grid-template-columns: 220px 1fr;
   gap: 64px;
-  padding-top: 52px;
+  padding-top: 44px;
   align-items: start;
 }
 
 /* Sidebar TOC ---------------------------------------------------- */
 .meth-toc {
   position: sticky;
-  top: 68px;
+  top: 76px;
 }
 
 .meth-toc-label {
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--ink-4);
-  margin: 0 0 10px;
+  color: #6e6c66;
+  font-weight: 600;
+  font-family: var(--sans);
+  margin: 0 0 14px;
 }
 
 .meth-toc-list {
@@ -2716,131 +2734,139 @@ button { font-family: inherit; cursor: pointer; }
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .meth-toc-link {
   display: block;
-  font-size: 12px;
-  color: var(--ink-3);
-  padding: 5px 9px;
-  border-radius: 5px;
-  line-height: 1.35;
-  transition: background 0.1s, color 0.1s;
+  font-size: 13.5px;
+  color: #32312b;
+  font-weight: 500;
+  padding: 7px 12px;
+  border-radius: 8px;
+  line-height: 1.4;
+  border-left: 2px solid transparent;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 .meth-toc-link:hover {
-  background: var(--bg-2);
-  color: var(--ink);
+  background: rgba(255, 185, 54, 0.08);
+  color: #191717;
+  border-left-color: #ffb936;
 }
 
 /* Article body --------------------------------------------------- */
 .meth-body {
   min-width: 0;
+  max-width: 78ch;
 }
 
 .meth-section {
   padding: 40px 0;
-  border-bottom: 1px solid var(--line);
-  scroll-margin-top: 72px;
+  border-bottom: 1px solid #dddee0;
+  scroll-margin-top: 80px;
 }
+.meth-section:first-of-type { padding-top: 0; }
 .meth-section:last-child { border-bottom: none; }
 
 .meth-h2 {
   font-family: var(--display);
-  font-size: 17px;
+  font-size: 24px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  margin: 0 0 18px;
-  padding-left: 12px;
-  border-left: 2px solid var(--accent);
-  line-height: 1.3;
+  letter-spacing: -0.014em;
+  color: #191717;
+  margin: 0 0 16px;
+  padding-left: 0;
+  border-left: 0;
+  line-height: 1.2;
 }
 .meth-h3 {
   font-family: var(--display);
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
-  color: var(--ink-2);
-  margin: 24px 0 10px;
-  letter-spacing: -0.01em;
+  color: #191717;
+  margin: 28px 0 10px;
+  letter-spacing: -0.008em;
 }
-.meth-defs { margin: 0 0 16px; }
+.meth-defs { margin: 0 0 18px; }
 .meth-defs dt {
   font-weight: 600;
-  color: var(--ink);
-  margin-top: 14px;
-  font-size: 13.5px;
+  color: #191717;
+  margin-top: 16px;
+  font-size: 15px;
 }
 .meth-defs dt:first-child { margin-top: 0; }
 .meth-defs dd {
   margin: 4px 0 0;
-  color: var(--ink-2);
-  font-size: 13.5px;
+  color: #32312b;
+  font-size: 15px;
   line-height: 1.7;
 }
 .meth-list-alpha { padding-left: 24px; }
 .meth-list-alpha li {
-  margin: 6px 0;
-  color: var(--ink-2);
-  font-size: 13.5px;
+  margin: 8px 0;
+  color: #32312b;
+  font-size: 15px;
   line-height: 1.7;
 }
 
-.meth-h3 {
-  font-family: var(--display);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink);
-  margin: 24px 0 10px;
-  letter-spacing: -0.01em;
-}
-
 .meth-callout {
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  margin: 0 0 18px;
-  font-size: 13px;
-  color: var(--ink-2);
+  background: rgba(255, 185, 54, 0.08);
+  border: 1px solid rgba(255, 185, 54, 0.3);
+  border-left: 3px solid #ffb936;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: #32312b;
   line-height: 1.65;
 }
 
-.meth-callout a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-2); }
-.meth-callout a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+.meth-callout a {
+  color: #191717;
+  font-weight: 500;
+  background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.55) 70%);
+  padding: 0 1px;
+  text-decoration: none;
+}
+.meth-callout a:hover {
+  background: linear-gradient(transparent 0, rgba(255, 185, 54, 0.65) 0);
+}
 
 .meth-link {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--line-2);
-  text-underline-offset: 2px;
+  color: #191717;
+  font-weight: 500;
+  background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.45) 70%);
+  padding: 0 1px;
+  text-decoration: none;
+  transition: background 0.15s ease;
 }
-.meth-link:hover { color: var(--accent); text-decoration-color: var(--accent); }
+.meth-link:hover {
+  background: linear-gradient(transparent 0, rgba(255, 185, 54, 0.55) 0);
+}
 
 .meth-body p {
-  font-size: 13.5px;
-  color: var(--ink-2);
-  line-height: 1.75;
-  margin: 0 0 14px;
+  font-size: 16px;
+  color: #32312b;
+  line-height: 1.7;
+  margin: 0 0 16px;
 }
 .meth-body p:last-child { margin-bottom: 0; }
 
 .meth-body code {
   font-family: var(--mono);
-  font-size: 11.5px;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 1px 5px;
-  color: var(--ink);
+  font-size: 13px;
+  background: #f1f5f4;
+  border: 1px solid #ebebe7;
+  border-radius: 6px;
+  padding: 1.5px 6px;
+  color: #191717;
 }
 
 /* Table ---------------------------------------------------------- */
 .meth-table-wrap {
   margin: 20px 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 1px solid #dddee0;
+  border-radius: 14px;
   overflow: hidden;
 }
 
@@ -2855,25 +2881,26 @@ button { font-family: inherit; cursor: pointer; }
 .meth-table th {
   padding: 10px 14px;
   text-align: left;
-  font-family: var(--mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #6e6c66;
   font-weight: 500;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid #dddee0;
   white-space: nowrap;
 }
 
 .meth-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--line);
-  color: var(--ink-2);
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(25, 23, 23, 0.05);
+  color: #32312b;
   vertical-align: middle;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-size: 14.5px;
 }
 .meth-table tbody tr:last-child td { border-bottom: none; }
-.meth-table tbody tr:hover { background: var(--bg-2); }
+.meth-table tbody tr:hover { background: rgba(255, 185, 54, 0.05); }
 
 /* Risk list ------------------------------------------------------ */
 .meth-risk-list {
@@ -2882,31 +2909,31 @@ button { font-family: inherit; cursor: pointer; }
   margin: 20px 0 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .meth-risk-item {
   display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 16px;
+  grid-template-columns: 160px 1fr;
+  gap: 18px;
   align-items: baseline;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
+  padding: 14px 16px;
+  border: 1px solid #dddee0;
+  border-radius: 12px;
+  background: #ffffff;
 }
 
 .meth-risk-name {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  color: #191717;
   white-space: nowrap;
 }
 
 .meth-risk-desc {
-  font-size: 13px;
-  color: var(--ink-2);
-  line-height: 1.6;
+  font-size: 15px;
+  color: #32312b;
+  line-height: 1.65;
 }
 
 /* Limitations card list ------------------------------------------ */
@@ -2916,26 +2943,28 @@ button { font-family: inherit; cursor: pointer; }
   margin: 20px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .meth-limit-item {
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 14px;
+  grid-template-columns: 32px 1fr;
+  gap: 16px;
   align-items: start;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
+  padding: 16px 18px;
+  border: 1px solid #dddee0;
+  border-radius: 12px;
+  background: #ffffff;
 }
 
 .meth-limit-num {
-  font-size: 10px;
-  color: var(--ink-4);
-  padding-top: 2px;
+  font-size: 13px;
+  color: #ffb936;
+  font-weight: 700;
+  padding-top: 1px;
   line-height: 1.4;
   text-align: right;
+  font-family: var(--display);
 }
 
 .meth-limit-body {
@@ -2945,30 +2974,30 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .meth-limit-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--ink);
+  color: #191717;
   line-height: 1.4;
 }
 
 .meth-limit-desc {
-  font-size: 13px;
-  color: var(--ink-2);
+  font-size: 14.5px;
+  color: #32312b;
   line-height: 1.65;
 }
 
 /* Disclosure box ------------------------------------------------- */
 .meth-disclosure {
-  background: oklch(0.985 0.008 85);
-  border: 1px solid oklch(0.91 0.025 85);
-  border-radius: var(--radius);
+  background: #f1f5f4;
+  border: 0;
+  border-radius: 16px;
   padding: 22px 24px;
   margin-top: 4px;
 }
 
 .meth-disclosure p {
-  font-size: 13px;
-  color: var(--ink-2);
+  font-size: 14.5px;
+  color: #32312b;
   line-height: 1.7;
   margin: 0 0 12px;
   max-width: none;
@@ -3015,17 +3044,18 @@ button { font-family: inherit; cursor: pointer; }
   }
 
   .meth-header {
-    padding: 28px 0 32px;
+    padding: 28px 0 28px;
   }
 
-  .meth-title { font-size: clamp(22px, 7vw, 34px); }
+  .meth-title { font-size: clamp(22px, 7vw, 32px); }
+  .meth-subtitle { font-size: 15.5px; }
 
   /* Stats strip: wrap to 2 cols instead of one long row */
   .meth-stats {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1px;
+    gap: 8px;
   }
 
   .meth-stat {
@@ -3033,31 +3063,33 @@ button { font-family: inherit; cursor: pointer; }
     min-width: 0;
   }
 
-  .meth-stat-val { font-size: 22px; }
+  .meth-stat-val { font-size: 20px; }
 
-  .meth-section { padding: 24px 0; }
+  .meth-section { padding: 28px 0; }
 
-  .meth-h2 { font-size: 15px; }
+  .meth-h2 { font-size: 20px; }
+  .meth-h3 { font-size: 15.5px; }
+  .meth-body p { font-size: 15.5px; }
 
   .meth-risk-item {
     grid-template-columns: 1fr;
-    gap: 4px;
+    gap: 6px;
   }
 
   .meth-limit-item {
-    grid-template-columns: 24px 1fr;
-    gap: 10px;
-    padding: 12px 14px;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    padding: 14px 16px;
   }
 
   /* Table: allow horizontal scroll rather than squish */
   .meth-table-wrap { overflow-x: auto; }
   .meth-table { min-width: 480px; }
   .meth-table th,
-  .meth-table td { padding: 8px 10px; font-size: 12px; }
+  .meth-table td { padding: 9px 10px; font-size: 13px; }
 
   .meth-disclosure { padding: 16px 18px; }
-  .meth-callout { padding: 12px 14px; font-size: 12.5px; }
+  .meth-callout { padding: 14px 16px; font-size: 14px; }
 }
 
 @media (max-width: 400px) {
