@@ -1,6 +1,10 @@
 import { getVaults } from "@/lib/data";
 import { loadHistoryFile, type FullVaultHistory } from "@/lib/data";
 import { StudioClient, type StudioVault } from "@/components/admin/studio-client";
+// The studio reuses HomeHeroPreview, whose .uni-home-test .prevcard-*
+// styling lives in the homepage stylesheet. Pulling it in here gives
+// the studio page the same card chrome without copying CSS.
+import "@/app/_styles/home.css";
 
 // Studio: lets us compose product-card images at Twitter 16:9 ratio
 // using the same yellow + dotted hero treatment from the homepage.
