@@ -28,7 +28,7 @@ export type StudioVault = {
   tvlSpark: number[];
 };
 
-type Corner = "tl" | "bl" | "br" | "none";
+type Corner = "tl" | "tr" | "none";
 type Ratio = { id: string; w: number; h: number; label: string };
 
 const RATIOS: Ratio[] = [
@@ -42,7 +42,7 @@ const RATIOS: Ratio[] = [
 export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   const [ratioId, setRatioId] = useState<string>(RATIOS[0].id);
   const [slug, setSlug] = useState(vaults[0]?.slug ?? "");
-  const [corner, setCorner] = useState<Corner>("br");
+  const [corner, setCorner] = useState<Corner>("tr");
   const [downloading, setDownloading] = useState(false);
 
   const ratio = RATIOS.find((r) => r.id === ratioId) ?? RATIOS[0];
@@ -138,8 +138,7 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
             {(
               [
                 ["tl", "Top L"],
-                ["bl", "Bot L"],
-                ["br", "Bot R"],
+                ["tr", "Top R"],
                 ["none", "Off"],
               ] as [Corner, string][]
             ).map(([k, label]) => (

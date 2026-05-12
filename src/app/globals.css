@@ -4300,8 +4300,10 @@ body:has(.methodology-page) {
 }
 
 /* The studio card: same yellow + radial glow + ink-dotted texture
-   as .uni-home-hero on the homepage, but full-bleed and centered
-   instead of padded with text on the left. The dotted texture is
+   as .uni-home-hero on the homepage, but full-bleed. The preview
+   card inside kisses the bottom edge (same anchor as the homepage
+   hero) and is zoomed up to "social-media weight" so the headline
+   numbers read at thumbnail-friendly sizes. The dotted texture is
    50% denser (12px tile) than the homepage so the bigger export
    surface still reads as textured. */
 .studio-card {
@@ -4319,47 +4321,54 @@ body:has(.methodology-page) {
   background-position: 0 0, 0 0;
   background-repeat: no-repeat, repeat;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 64px;
+  padding: 0;
 }
 
-/* Neutralize .uni-home-test's own styling on the wrapper so the
-   1320px max-width + 24px/80px padding from home.css don't shrink
-   the studio canvas. display: contents makes the wrapper a no-op
-   for layout while keeping the .uni-home-test class in the DOM
-   so descendant .prevcard-* selectors from home.css still
-   resolve. Three classes deep so this beats the home.css rule
-   on the equal-specificity last-in-cascade tie. */
+/* Neutralize .uni-home-test's own styling (1320px max-width,
+   24px/80px padding, transparent bg) and zoom the wrapper up so
+   the preview card reads at social-media size without per-element
+   font overrides. zoom scales both the layout box and visual
+   rendering, which is what we want here - flex centering uses the
+   scaled dimensions. Three classes deep so this beats home.css's
+   .uni-home-test rule on the equal-specificity tie. */
 .studio-card .studio-card-inner.uni-home-test {
-  display: contents;
+  display: block;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+  font-size: 15px;
+  line-height: 1.55;
+  zoom: 2.2;
 }
+
+/* The preview wrapper kisses the bottom edge. Same translateY(8px)
+   lip dip the homepage uses to feel like the card is "rising from
+   below" the hero floor; top corners stay rounded, bottom corners
+   are already flat in home.css. */
 .studio-card .uni-home-test .uni-home-hero-preview {
   position: static;
   width: auto;
-  max-width: 720px;
+  max-width: 440px;
   right: auto;
   bottom: auto;
-  transform: none;
+  transform: translateY(8px);
+  transform-origin: bottom center;
   display: block;
   margin: 0;
 }
 
-/* Square + portrait ratios have more vertical room; let the card
-   breathe a little wider so it doesn't look stranded. */
-.studio-card--1x1 .uni-home-test .uni-home-hero-preview,
-.studio-card--4x5 .uni-home-test .uni-home-hero-preview {
-  max-width: 760px;
-}
-.studio-card--9x16 .uni-home-test .uni-home-hero-preview {
-  max-width: 820px;
-}
-.studio-card--3x1 {
-  padding: 32px;
-}
-.studio-card--3x1 .uni-home-test .uni-home-hero-preview {
-  max-width: 640px;
-}
+/* Per-ratio zoom tuning so the card fills the canvas
+   proportionally. Square + portrait get a chunkier zoom; the wide
+   banner gets a smaller one because its canvas height is short. */
+.studio-card--16x9 .studio-card-inner.uni-home-test { zoom: 1.8; }
+.studio-card--1x1 .studio-card-inner.uni-home-test  { zoom: 2.2; }
+.studio-card--4x5 .studio-card-inner.uni-home-test  { zoom: 2.3; }
+.studio-card--9x16 .studio-card-inner.uni-home-test { zoom: 2.5; }
+.studio-card--3x1 .studio-card-inner.uni-home-test  { zoom: 1.0; }
 
 /* Harvest wordmark in a chosen corner of the yellow canvas.
    Mirrors the topnav .brand structure (display font + orange
@@ -4386,9 +4395,8 @@ body:has(.methodology-page) {
   align-self: center;
   transform: translateY(1px);
 }
-.studio-card-mark-tl { top: 32px; left: 36px; }
-.studio-card-mark-bl { bottom: 32px; left: 36px; }
-.studio-card-mark-br { bottom: 32px; right: 36px; }
+.studio-card-mark-tl { top: 36px; left: 40px; }
+.studio-card-mark-tr { top: 36px; right: 40px; }
 
 @media (max-width: 900px) {
   .studio { grid-template-columns: 1fr; }
