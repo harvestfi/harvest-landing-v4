@@ -266,7 +266,7 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
                 fixed max-width that would nuke the studio canvas. */}
             <div className="studio-card-inner uni-home-test">
               <HomeHeroPreview
-                vault={vault}
+                vault={vaultForCard(vault)}
                 variant="studio"
                 headlineValueOverride={valueOverride}
                 headlineLabelOverride={labelOverride}
@@ -296,4 +296,15 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
 function defaultHeadlineValue(vault: StudioVault | undefined): string {
   if (!vault) return "";
   return formatAPY(vault.apy24h);
+}
+
+// Tweak the vault data shown on the studio card. The protocol
+// field carries "Harvest Finance" from the upstream API, but the
+// studio card byline reads cleaner as just "Harvest" - shorter
+// and matches the wordmark in the topbar. Other fields untouched.
+function vaultForCard(v: StudioVault): StudioVault {
+  return {
+    ...v,
+    protocol: v.protocol === "Harvest Finance" ? "Harvest" : v.protocol,
+  };
 }
