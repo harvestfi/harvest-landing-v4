@@ -76,6 +76,13 @@ function bucketByTime(sorted: Point[], range: Range): Point[] {
   const bucketSec = spanSec / targetBars;
 
   const firstAtOrAfter = sorted.findIndex((p) => p.t >= startTs);
+  // Last real data timestamp - we won't forward-fill past this. A
+  // vault whose indexer stopped emitting after, say, Sep 15 should
+  // show 8 days of bars cleanly truncated there, not 8 days of
+  // bars + 9 months of the same value forward-filled into every
+  // empty bucket. The latter visually lies about how fresh the
+  // data is.
+  const lastDataTs = sorted[sorted.length - 1].t;
   let prevValue: number | null = null;
   if (firstAtOrAfter > 0) {
     prevValue = sorted[firstAtOrAfter - 1].v;
@@ -92,6 +99,12 @@ function bucketByTime(sorted: Point[], range: Range): Point[] {
   for (let i = 0; i < targetBars; i++) {
     const bStart = startTs + i * bucketSec;
     const bEnd = bStart + bucketSec;
+    // Stop emitting bars once the bucket sits entirely past the last
+    // real data point. Without this, sparse vaults (a few days of
+    // recent indexer activity) get padded out to fill the whole
+    // timeframe by repeating the latest value, which reads as "APY
+    // stable for a year" when really we have ~a week of data.
+    if (bStart > lastDataTs) break;
     let sum = 0;
     let count = 0;
     while (cursor < sorted.length && sorted[cursor].t < bEnd) {
