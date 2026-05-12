@@ -31,7 +31,15 @@ async function queryGraphQL(
     });
 
     if (!res.ok) {
-      log(`[history] chain=${chainId} failed: ${res.status}`);
+      // Read body so we surface the schema error ("Cannot query
+      // field X on type Y") rather than just the status code.
+      let body = "";
+      try {
+        body = (await res.text()).slice(0, 400).replace(/\s+/g, " ");
+      } catch {
+        body = "(body unreadable)";
+      }
+      log(`[history] chain=${chainId} failed: ${res.status} body=${body}`);
       return null;
     }
 
@@ -202,7 +210,7 @@ async function fetchPlasmaVaultHistory(
     sharePriceHistory: [],
     apyHistory: [],
   };
-  const query = `{
+  const richQuery = `{
     plasmaVaultHistories(
       where: { vault: "${addr}" }
       orderBy: timestamp
@@ -214,7 +222,29 @@ async function fetchPlasmaVaultHistory(
       sharePrice
     }
   }`;
-  const data = await queryGraphQL(chainId, query);
+  let data = await queryGraphQL(chainId, richQuery);
+
+  if (!data) {
+    log(`[plasma] retrying with minimal query for vault=${addr}`);
+    const bareQuery = `{
+      plasmaVaultHistories(first: 1000) {
+        timestamp
+        tvl
+        sharePrice
+        vault
+      }
+    }`;
+    const bare = await queryGraphQL(chainId, bareQuery);
+    if (bare) {
+      const all = ((bare.plasmaVaultHistories as { vault?: string }[]) || []);
+      const filtered = all.filter(
+        (r) => (r.vault || "").toLowerCase() === addr,
+      );
+      data = { plasmaVaultHistories: filtered };
+      log(`[plasma] bare query: total=${all.length} matched=${filtered.length}`);
+    }
+  }
+
   if (!data) return empty;
   const raw = ((data.plasmaVaultHistories as { timestamp: string; tvl: string; sharePrice: string }[]) || []).map(
     (r) => ({

@@ -369,7 +369,17 @@ async function queryGraphQL(chainId, query) {
     });
 
     if (!res.ok) {
-      log(`[history] chain=${chainId} failed: ${res.status}`);
+      // Read the body so we get the actual GraphQL schema error
+      // ("Cannot query field X on type Y") instead of just the
+      // status code. Truncated to 400 chars so the log stays
+      // scannable when this fires for many vaults in a row.
+      let body = "";
+      try {
+        body = (await res.text()).slice(0, 400).replace(/\s+/g, " ");
+      } catch {
+        body = "(body unreadable)";
+      }
+      log(`[history] chain=${chainId} failed: ${res.status} body=${body}`);
       return null;
     }
 
@@ -463,7 +473,8 @@ function deduplicateByDay(points) {
 async function fetchPlasmaVaultHistory(chainId, addr) {
   const empty = { tvlHistory: [], sharePriceHistory: [], apyHistory: [] };
 
-  const query = `{
+  // Primary query: filtered + sorted, what we want long-term.
+  const richQuery = `{
     plasmaVaultHistories(
       where: { vault: "${addr}" }
       orderBy: timestamp
@@ -476,7 +487,34 @@ async function fetchPlasmaVaultHistory(chainId, addr) {
     }
   }`;
 
-  const data = await queryGraphQL(chainId, query);
+  let data = await queryGraphQL(chainId, richQuery);
+
+  // Fallback: bare-bones query that matches exactly what the
+  // indexer team showed us. If the entity exists but rejects our
+  // where/orderBy fields, this still pulls the records and we
+  // filter client-side. Keeps logging both attempts so we can see
+  // which schema assumption is wrong.
+  if (!data) {
+    log(`[plasma] retrying with minimal query for vault=${addr}`);
+    const bareQuery = `{
+      plasmaVaultHistories(first: 1000) {
+        timestamp
+        tvl
+        sharePrice
+        vault
+      }
+    }`;
+    data = await queryGraphQL(chainId, bareQuery);
+    if (data) {
+      const all = data.plasmaVaultHistories || [];
+      const filtered = all.filter(
+        (r) => (r.vault || "").toLowerCase() === addr,
+      );
+      data = { plasmaVaultHistories: filtered };
+      log(`[plasma] bare query: total=${all.length} matched=${filtered.length}`);
+    }
+  }
+
   if (!data) return empty;
 
   const raw = (data.plasmaVaultHistories || []).map((r) => ({
