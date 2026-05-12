@@ -317,9 +317,19 @@ async function fetchHarvestVaults() {
         asset: group.asset,
         productName,
         protocol: { name: "Harvest Finance", slug: "harvest-finance" },
-        vaultType: v.tags?.some((t) => t.toLowerCase().includes("pilot"))
-          ? "Autopilot"
-          : "Autocompounder",
+        // Detect Autopilot from any of the three places it shows up
+        // upstream: the explicit "pilot" tag (when set), the product
+        // name (e.g. "WETH Autopilot"), or the category/protocol
+        // label (e.g. "Autopilot - Base"). Belt-and-braces because
+        // the tags array has been empty for these vaults in
+        // production, leaving them mislabeled as Autocompounder and
+        // skipping the plasma history fetch.
+        vaultType:
+          v.tags?.some((t) => t.toLowerCase().includes("pilot")) ||
+          productName.toLowerCase().includes("autopilot") ||
+          (protocol ?? "").toLowerCase().includes("autopilot")
+            ? "Autopilot"
+            : "Autocompounder",
         apy24h: history?.apy24h ?? currentApy,
         apy30d: history?.apy30d ?? currentApy,
         tvl,
