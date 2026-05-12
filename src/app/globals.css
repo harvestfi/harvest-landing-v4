@@ -3172,15 +3172,15 @@ body:has(.methodology-page) {
   max-width: 1320px;
   margin: 0 auto;
   padding: 0 var(--shell-pad) 96px;
-  color: #191717;
+  color: var(--ink);
   font-family: var(--sans);
-  background: #ffffff;
+  background: var(--panel);
 }
 
 /* Header --------------------------------------------------------- */
 .meth-header {
   padding: 48px 0 36px;
-  border-bottom: 1px solid #dddee0;
+  border-bottom: 1px solid var(--line);
   max-width: 720px;
 }
 
@@ -3190,17 +3190,17 @@ body:has(.methodology-page) {
   gap: 8px;
   font-size: 14px;
   font-family: var(--sans);
-  color: #32312b;
+  color: var(--ink-2);
   margin-bottom: 20px;
 }
 .meth-crumbs a {
-  color: #32312b;
+  color: var(--ink-2);
   font-weight: 500;
   text-decoration: none;
   transition: color 0.15s ease;
 }
 .meth-crumbs a:hover { color: #ffb936; }
-.meth-crumbs .sep { color: #6e6c66; }
+.meth-crumbs .sep { color: var(--ink-3); }
 
 .meth-title {
   font-family: var(--display);
@@ -3208,13 +3208,13 @@ body:has(.methodology-page) {
   font-weight: 600;
   letter-spacing: -0.022em;
   line-height: 1.08;
-  color: #191717;
+  color: var(--ink);
   margin: 0 0 12px;
 }
 
 .meth-subtitle {
   font-size: 17px;
-  color: #32312b;
+  color: var(--ink-2);
   margin: 0 0 14px;
   line-height: 1.55;
   max-width: 64ch;
@@ -3222,7 +3222,7 @@ body:has(.methodology-page) {
 
 .meth-version {
   font-size: 12px;
-  color: #6e6c66;
+  color: var(--ink-3);
   font-family: var(--mono);
   letter-spacing: 0.04em;
   margin: 0 0 28px;
@@ -3237,7 +3237,7 @@ body:has(.methodology-page) {
 }
 
 .meth-stat {
-  background: #f1f5f4;
+  background: var(--bg-2);
   border-radius: 14px;
   padding: 14px 18px;
   display: flex;
@@ -3251,14 +3251,14 @@ body:has(.methodology-page) {
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.014em;
-  color: #191717;
+  color: var(--ink);
   line-height: 1.2;
   font-feature-settings: "tnum";
 }
 
 .meth-stat-lbl {
   font-size: 12px;
-  color: #6e6c66;
+  color: var(--ink-3);
   font-family: var(--sans);
   font-weight: 500;
   letter-spacing: 0;
@@ -3266,7 +3266,7 @@ body:has(.methodology-page) {
   white-space: nowrap;
 }
 
-.meth-stat--dim .meth-stat-val { color: #6e6c66; }
+.meth-stat--dim .meth-stat-val { color: var(--ink-3); }
 
 /* Two-column layout ---------------------------------------------- */
 .meth-layout {
@@ -3287,7 +3287,7 @@ body:has(.methodology-page) {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6e6c66;
+  color: var(--ink-3);
   font-weight: 600;
   font-family: var(--sans);
   margin: 0 0 14px;
@@ -3305,7 +3305,7 @@ body:has(.methodology-page) {
 .meth-toc-link {
   display: block;
   font-size: 13.5px;
-  color: #32312b;
+  color: var(--ink-2);
   font-weight: 500;
   padding: 7px 12px;
   border-radius: 8px;
@@ -3315,7 +3315,7 @@ body:has(.methodology-page) {
 }
 .meth-toc-link:hover {
   background: rgba(255, 185, 54, 0.08);
-  color: #191717;
+  color: var(--ink);
   border-left-color: #ffb936;
 }
 
@@ -3328,7 +3328,7 @@ body:has(.methodology-page) {
 
 .meth-section {
   padding: 40px 0;
-  border-bottom: 1px solid #dddee0;
+  border-bottom: 1px solid var(--line);
   scroll-margin-top: 80px;
 }
 .meth-section:first-of-type { padding-top: 0; }
@@ -3339,7 +3339,7 @@ body:has(.methodology-page) {
   font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.014em;
-  color: #191717;
+  color: var(--ink);
   margin: 0 0 16px;
   padding-left: 0;
   border-left: 0;
@@ -3349,28 +3349,28 @@ body:has(.methodology-page) {
   font-family: var(--display);
   font-size: 17px;
   font-weight: 600;
-  color: #191717;
+  color: var(--ink);
   margin: 28px 0 10px;
   letter-spacing: -0.008em;
 }
 .meth-defs { margin: 0 0 18px; }
 .meth-defs dt {
   font-weight: 600;
-  color: #191717;
+  color: var(--ink);
   margin-top: 16px;
   font-size: 15px;
 }
 .meth-defs dt:first-child { margin-top: 0; }
 .meth-defs dd {
   margin: 4px 0 0;
-  color: #32312b;
+  color: var(--ink-2);
   font-size: 15px;
   line-height: 1.7;
 }
 .meth-list-alpha { padding-left: 24px; }
 .meth-list-alpha li {
   margin: 8px 0;
-  color: #32312b;
+  color: var(--ink-2);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -3383,12 +3383,12 @@ body:has(.methodology-page) {
   padding: 16px 18px;
   margin: 0 0 20px;
   font-size: 15px;
-  color: #32312b;
+  color: var(--ink-2);
   line-height: 1.65;
 }
 
 .meth-callout a {
-  color: #191717;
+  color: var(--ink);
   font-weight: 500;
   background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.55) 70%);
   padding: 0 1px;
@@ -3399,7 +3399,7 @@ body:has(.methodology-page) {
 }
 
 .meth-link {
-  color: #191717;
+  color: var(--ink);
   font-weight: 500;
   background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.45) 70%);
   padding: 0 1px;
@@ -3412,7 +3412,7 @@ body:has(.methodology-page) {
 
 .meth-body p {
   font-size: 16px;
-  color: #32312b;
+  color: var(--ink-2);
   line-height: 1.7;
   margin: 0 0 16px;
 }
@@ -3421,17 +3421,17 @@ body:has(.methodology-page) {
 .meth-body code {
   font-family: var(--mono);
   font-size: 13px;
-  background: #f1f5f4;
-  border: 1px solid #ebebe7;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
   border-radius: 6px;
   padding: 1.5px 6px;
-  color: #191717;
+  color: var(--ink);
 }
 
 /* Table ---------------------------------------------------------- */
 .meth-table-wrap {
   margin: 20px 0;
-  border: 1px solid #dddee0;
+  border: 1px solid var(--line);
   border-radius: 14px;
   overflow: hidden;
 }
@@ -3451,16 +3451,16 @@ body:has(.methodology-page) {
   font-size: 12px;
   text-transform: none;
   letter-spacing: 0;
-  color: #6e6c66;
+  color: var(--ink-3);
   font-weight: 500;
-  border-bottom: 1px solid #dddee0;
+  border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
 
 .meth-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(25, 23, 23, 0.05);
-  color: #32312b;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
   vertical-align: middle;
   line-height: 1.6;
   font-size: 14.5px;
@@ -3484,21 +3484,21 @@ body:has(.methodology-page) {
   gap: 18px;
   align-items: baseline;
   padding: 14px 16px;
-  border: 1px solid #dddee0;
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--panel);
 }
 
 .meth-risk-name {
   font-size: 14px;
   font-weight: 600;
-  color: #191717;
+  color: var(--ink);
   white-space: nowrap;
 }
 
 .meth-risk-desc {
   font-size: 15px;
-  color: #32312b;
+  color: var(--ink-2);
   line-height: 1.65;
 }
 
@@ -3518,9 +3518,9 @@ body:has(.methodology-page) {
   gap: 16px;
   align-items: start;
   padding: 16px 18px;
-  border: 1px solid #dddee0;
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--panel);
 }
 
 .meth-limit-num {
@@ -3542,19 +3542,19 @@ body:has(.methodology-page) {
 .meth-limit-title {
   font-size: 15px;
   font-weight: 600;
-  color: #191717;
+  color: var(--ink);
   line-height: 1.4;
 }
 
 .meth-limit-desc {
   font-size: 14.5px;
-  color: #32312b;
+  color: var(--ink-2);
   line-height: 1.65;
 }
 
 /* Disclosure box ------------------------------------------------- */
 .meth-disclosure {
-  background: #f1f5f4;
+  background: var(--bg-2);
   border: 0;
   border-radius: 16px;
   padding: 22px 24px;
@@ -3563,7 +3563,7 @@ body:has(.methodology-page) {
 
 .meth-disclosure p {
   font-size: 14.5px;
-  color: #32312b;
+  color: var(--ink-2);
   line-height: 1.7;
   margin: 0 0 12px;
   max-width: none;
