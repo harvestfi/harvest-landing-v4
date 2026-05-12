@@ -326,10 +326,36 @@ body:has(.uni-home-test) {
   background: var(--uni-ink);
   color: #ffffff;
 }
+/* Topbar row: Harvest wordmark on the left, gold View pill on the
+   right. Sits above the title row so the product name has the full
+   card width and never gets clipped by the View CTA. */
+.uni-home-test .prevcard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+.uni-home-test .prevcard-mark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--uni-ink);
+}
+.uni-home-test .prevcard-mark-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--uni-gold);
+  display: inline-block;
+  align-self: center;
+  transform: translateY(1px);
+}
 .uni-home-test .prevcard-cta {
-  position: absolute;
-  top: 18px;
-  right: 18px;
   display: inline-flex;
   align-items: center;
   gap: 6px;

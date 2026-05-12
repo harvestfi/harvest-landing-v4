@@ -167,11 +167,18 @@ export function HomeHeroPreview({ vault }: { vault?: HeroPreviewVault } = {}) {
   return (
     <aside className="uni-home-hero-preview" aria-hidden="true">
       <div className="uni-home-hero-preview-card">
-        {/* Floating View CTA in the top-right corner */}
-        <span className="prevcard-cta">
-          View
-          <span className="prevcard-cta-arrow">↗</span>
-        </span>
+        {/* Topbar: Harvest wordmark on the left, View CTA on the
+            right. Frees the title row below for full-width text. */}
+        <header className="prevcard-topbar">
+          <span className="prevcard-mark">
+            <span>Harvest</span>
+            <span className="prevcard-mark-dot" aria-hidden="true" />
+          </span>
+          <span className="prevcard-cta">
+            View
+            <span className="prevcard-cta-arrow">↗</span>
+          </span>
+        </header>
 
         {/* Title row: icon + product name + byline */}
         <header className="prevcard-head">

@@ -28,7 +28,6 @@ export type StudioVault = {
   tvlSpark: number[];
 };
 
-type Corner = "tl" | "tr" | "none";
 type Ratio = { id: string; w: number; h: number; label: string };
 
 const RATIOS: Ratio[] = [
@@ -42,7 +41,6 @@ const RATIOS: Ratio[] = [
 export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   const [ratioId, setRatioId] = useState<string>(RATIOS[0].id);
   const [slug, setSlug] = useState(vaults[0]?.slug ?? "");
-  const [corner, setCorner] = useState<Corner>("tr");
   const [downloading, setDownloading] = useState(false);
 
   const ratio = RATIOS.find((r) => r.id === ratioId) ?? RATIOS[0];
@@ -132,28 +130,6 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
           </select>
         </div>
 
-        <div className="studio-field">
-          <span className="studio-label">Harvest logo on canvas</span>
-          <div className="studio-corners">
-            {(
-              [
-                ["tl", "Top L"],
-                ["tr", "Top R"],
-                ["none", "Off"],
-              ] as [Corner, string][]
-            ).map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                className={`studio-segment-btn${corner === k ? " active" : ""}`}
-                onClick={() => setCorner(k)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <button
           type="button"
           className="studio-download"
@@ -203,12 +179,6 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
             <div className="studio-card-inner uni-home-test">
               <HomeHeroPreview vault={vault} />
             </div>
-            {corner !== "none" ? (
-              <span className={`studio-card-mark studio-card-mark-${corner}`}>
-                <span>Harvest</span>
-                <span className="studio-card-mark-dot" aria-hidden="true" />
-              </span>
-            ) : null}
           </article>
         </div>
       </section>

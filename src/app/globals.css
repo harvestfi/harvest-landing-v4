@@ -4370,34 +4370,6 @@ body:has(.methodology-page) {
 .studio-card--9x16 .studio-card-inner.uni-home-test { zoom: 2.5; }
 .studio-card--3x1 .studio-card-inner.uni-home-test  { zoom: 1.0; }
 
-/* Harvest wordmark in a chosen corner of the yellow canvas.
-   Mirrors the topnav .brand structure (display font + orange
-   dot). Top right is intentionally not offered because the
-   preview card's "View ↗" pill sits roughly there. */
-.studio-card-mark {
-  position: absolute;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  font-family: var(--display);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.022em;
-  color: #191717;
-  z-index: 2;
-}
-.studio-card-mark-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #ec9b1c;
-  display: inline-block;
-  align-self: center;
-  transform: translateY(1px);
-}
-.studio-card-mark-tl { top: 36px; left: 40px; }
-.studio-card-mark-tr { top: 36px; right: 40px; }
-
 @media (max-width: 900px) {
   .studio { grid-template-columns: 1fr; }
   .studio-controls { position: static; max-height: none; }
