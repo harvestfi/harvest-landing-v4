@@ -190,13 +190,20 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         <div className="studio-stage" style={{ transform: `scale(${scale})` }}>
           <article
             ref={cardRef}
-            className={`studio-card uni-home-test studio-card--${ratio.id}`}
+            className={`studio-card studio-card--${ratio.id}`}
             style={{
               width: ratio.w,
               height: ratio.h,
             }}
           >
-            <HomeHeroPreview vault={vault} />
+            {/* .uni-home-test only wraps the inner preview so the
+                .uni-home-test .prevcard-* selectors from home.css
+                resolve. The class is NOT on the article because
+                .uni-home-test sets background: transparent and a
+                fixed max-width that would nuke the studio canvas. */}
+            <div className="studio-card-inner uni-home-test">
+              <HomeHeroPreview vault={vault} />
+            </div>
             {corner !== "none" ? (
               <span className={`studio-card-mark studio-card-mark-${corner}`}>
                 <span>Harvest</span>

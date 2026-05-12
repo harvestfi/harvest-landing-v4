@@ -4324,12 +4324,17 @@ body:has(.methodology-page) {
   padding: 64px;
 }
 
-/* Neutralize the homepage-specific absolute positioning on the
-   preview-card wrapper so it sits in the flex center instead of
-   pinned to the hero corner. The inner .uni-home-hero-preview-card
-   (which holds all the .prevcard-* visual styling) keeps its own
-   rules from home.css. */
-.studio-card .uni-home-hero-preview {
+/* Neutralize .uni-home-test's own styling on the wrapper so the
+   1320px max-width + 24px/80px padding from home.css don't shrink
+   the studio canvas. display: contents makes the wrapper a no-op
+   for layout while keeping the .uni-home-test class in the DOM
+   so descendant .prevcard-* selectors from home.css still
+   resolve. Three classes deep so this beats the home.css rule
+   on the equal-specificity last-in-cascade tie. */
+.studio-card .studio-card-inner.uni-home-test {
+  display: contents;
+}
+.studio-card .uni-home-test .uni-home-hero-preview {
   position: static;
   width: auto;
   max-width: 720px;
@@ -4337,21 +4342,22 @@ body:has(.methodology-page) {
   bottom: auto;
   transform: none;
   display: block;
+  margin: 0;
 }
 
 /* Square + portrait ratios have more vertical room; let the card
    breathe a little wider so it doesn't look stranded. */
-.studio-card--1x1 .uni-home-hero-preview,
-.studio-card--4x5 .uni-home-hero-preview {
+.studio-card--1x1 .uni-home-test .uni-home-hero-preview,
+.studio-card--4x5 .uni-home-test .uni-home-hero-preview {
   max-width: 760px;
 }
-.studio-card--9x16 .uni-home-hero-preview {
+.studio-card--9x16 .uni-home-test .uni-home-hero-preview {
   max-width: 820px;
 }
 .studio-card--3x1 {
   padding: 32px;
 }
-.studio-card--3x1 .uni-home-hero-preview {
+.studio-card--3x1 .uni-home-test .uni-home-hero-preview {
   max-width: 640px;
 }
 
