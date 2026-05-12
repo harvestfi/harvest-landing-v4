@@ -4175,6 +4175,260 @@ body:has(.methodology-page) {
   border-color: var(--ink);
 }
 
+/* === Admin Studio ====================================================
+   /admin/studio composes Twitter-ratio product cards using the same
+   yellow + dotted hero treatment from the homepage. The card itself
+   renders at its full export resolution (1600x900) inside a scaled
+   stage, so a screenshot of the stage gives a pixel-perfect PNG. */
+.studio {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.studio-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  position: sticky;
+  top: 24px;
+}
+.studio-field { display: flex; flex-direction: column; gap: 8px; }
+.studio-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.studio-select {
+  appearance: none;
+  width: 100%;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.studio-segment,
+.studio-corners {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.studio-segment-btn {
+  appearance: none;
+  padding: 7px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.studio-segment-btn.active {
+  background: var(--ink);
+  color: var(--accent-ink);
+  border-color: var(--ink);
+}
+.studio-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.studio-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.studio-meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.studio-meta-val { color: var(--ink-2); font-family: var(--mono); }
+.studio-tip {
+  margin: 8px 0 0;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* Preview stage: container shrinks the 1600x900 card to fit the
+   available column while the card itself keeps its full pixel
+   dimensions, so screenshots stay sharp at 100% zoom. */
+.studio-preview-wrap {
+  position: relative;
+  width: 100%;
+  /* Reserve space for the scaled card: aspect-ratio matches 16:9 so
+     the layout doesn't jump while React mounts. */
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+.studio-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  transform-origin: top left;
+  /* JS-free auto-fit: scale via container query units. The card is
+     1600px wide so dividing by 1600px gives the exact ratio needed
+     to fit the parent's width. We rely on width:100% + the parent's
+     aspect-ratio enforcing a matching height. */
+}
+@container (min-width: 0) {
+  /* Placeholder for future container queries if we offer ratio
+     toggles. The transform below handles the current 16:9 case. */
+}
+.studio-stage > .studio-card {
+  transform: scale(calc(100cqw / 1600));
+  transform-origin: top left;
+}
+.studio-preview-wrap { container-type: inline-size; }
+
+/* The card itself: yellow + dotted + radial sunrise glow, same
+   recipe as .uni-home-hero on the homepage but tuned for the 16:9
+   crop. All sizes are in px so it exports identically regardless
+   of viewport. */
+.studio-card {
+  position: relative;
+  overflow: hidden;
+  color: #191717;
+  font-family: var(--sans);
+  padding: 96px 104px 88px;
+  background-color: #ffb936;
+  background-image:
+    radial-gradient(
+      circle at 92% 14%,
+      rgba(255, 145, 30, 0.45) 0%,
+      rgba(255, 185, 54, 0) 58%
+    ),
+    radial-gradient(circle, rgba(25, 23, 23, 0.08) 1.4px, transparent 1.8px);
+  background-size: auto, 18px 18px;
+  background-position: 0 0, 0 0;
+  background-repeat: no-repeat, repeat;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.studio-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 28px;
+  font-weight: 500;
+  color: #2b2826;
+  opacity: 0.86;
+  letter-spacing: -0.005em;
+}
+.studio-card-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.studio-card-meta-chip img { border-radius: 50%; display: block; }
+.studio-card-meta-sep { opacity: 0.5; }
+.studio-card-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  margin-top: 8px;
+}
+.studio-card-asset img { border-radius: 50%; display: block; }
+.studio-card-name {
+  font-family: var(--display);
+  font-size: 116px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.02;
+  margin: 0;
+  color: #191717;
+  max-width: 18ch;
+}
+.studio-card-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.studio-card-value {
+  font-family: var(--display);
+  font-size: 224px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 0.94;
+  color: #191717;
+  font-feature-settings: "tnum";
+}
+.studio-card-label {
+  font-size: 28px;
+  font-weight: 500;
+  color: #2b2826;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.studio-card-spark {
+  position: absolute;
+  right: 96px;
+  bottom: 110px;
+  width: 480px;
+  height: 200px;
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+/* Harvest wordmark overlay: same recipe as the topnav .brand but
+   sized for the card. Lives in a corner; absolute position picks
+   the offset side. */
+.studio-card-mark {
+  position: absolute;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--display);
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: #191717;
+}
+.studio-card-mark-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ec9b1c;
+  display: inline-block;
+  align-self: center;
+  transform: translateY(2px);
+}
+.studio-card-mark-tl { top: 56px; left: 64px; }
+.studio-card-mark-tr { top: 56px; right: 64px; }
+.studio-card-mark-bl { bottom: 56px; left: 64px; }
+.studio-card-mark-br { bottom: 56px; right: 64px; }
+
+@media (max-width: 900px) {
+  .studio { grid-template-columns: 1fr; }
+  .studio-controls { position: static; }
+}
+
 /* === Interactive HubTable ============================================
    Shared by /home-test and /btc-test. Lives at the global scope so
    page-scoped CSS can layer on top via .uni-home-test or .uni-hub-test

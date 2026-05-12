@@ -58,6 +58,15 @@ function loadHistoryFromFile(): Record<string, FullVaultHistory> | null {
   }
 }
 
+// Public alias for callers (like /admin/studio) that need the raw
+// keyed history map without going through getVaultHistory's
+// per-address lookup.
+export function loadHistoryFile(): Record<string, FullVaultHistory> | null {
+  if (!_historyCache) _historyCache = loadHistoryFromFile();
+  return _historyCache;
+}
+export type { FullVaultHistory };
+
 export async function getVaults(): Promise<YieldVault[]> {
   if (_vaultCache) return _vaultCache;
 
