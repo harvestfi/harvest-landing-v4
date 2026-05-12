@@ -289,8 +289,17 @@ body:has(.uni-home-test) {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  /* No chip surround - the three icon buttons read on their own
-     and the active one stands out via its own ink/gold pill. */
+  padding: 2px;
+  background: rgba(25, 23, 23, 0.04);
+  border-radius: 8px;
+}
+/* Studio variant drops the chip surround so the three icon
+   buttons stand on their own next to the TVL/APY/Share-price
+   tabs. */
+.studio-card .uni-home-test .prevcard-style {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
 }
 .uni-home-test .prevcard-style-btn {
   display: inline-flex;
@@ -354,6 +363,9 @@ body:has(.uni-home-test) {
   align-self: center;
 }
 .uni-home-test .prevcard-cta {
+  position: absolute;
+  top: 18px;
+  right: 18px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -365,6 +377,13 @@ body:has(.uni-home-test) {
   font-weight: 600;
   letter-spacing: -0.005em;
   white-space: nowrap;
+}
+/* Studio variant: CTA lives inline inside .prevcard-topbar, so
+   the absolute positioning has to be unset. */
+.uni-home-test .prevcard-topbar .prevcard-cta {
+  position: static;
+  top: auto;
+  right: auto;
 }
 .uni-home-test .prevcard-cta-arrow {
   font-size: 12px;

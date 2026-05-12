@@ -217,6 +217,7 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
             <div className="studio-card-inner uni-home-test">
               <HomeHeroPreview
                 vault={vault}
+                variant="studio"
                 headlineValueOverride={valueOverride}
                 headlineLabelOverride={labelOverride}
               />

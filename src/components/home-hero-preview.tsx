@@ -112,6 +112,7 @@ export function HomeHeroPreview({
   vault,
   headlineValueOverride,
   headlineLabelOverride,
+  variant = "home",
 }: {
   vault?: HeroPreviewVault;
   // Studio override: when a non-empty string is supplied, replace
@@ -119,6 +120,13 @@ export function HomeHeroPreview({
   // undefined falls back to the vault-driven default.
   headlineValueOverride?: string;
   headlineLabelOverride?: string;
+  // "home" (default): original layout used on the landing page -
+  //   View CTA floats absolute in the top-right corner, no
+  //   Harvest mark inside the card.
+  // "studio": extra topbar row with Harvest mark on the left and
+  //   View pill on the right, so the title row below has the full
+  //   card width for long product names.
+  variant?: "home" | "studio";
 } = {}) {
   const [metric, setMetric] = useState<Metric>("apy");
   const [range, setRange] = useState<Range>("1M");
@@ -182,18 +190,29 @@ export function HomeHeroPreview({
   return (
     <aside className="uni-home-hero-preview" aria-hidden="true">
       <div className="uni-home-hero-preview-card">
-        {/* Topbar: Harvest wordmark on the left, View CTA on the
-            right. Frees the title row below for full-width text. */}
-        <header className="prevcard-topbar">
-          <span className="prevcard-mark">
-            <span>Harvest</span>
-            <span className="prevcard-mark-dot" aria-hidden="true" />
-          </span>
+        {variant === "studio" ? (
+          // Studio variant: dedicated topbar row with Harvest mark
+          // on the left and View pill on the right. Frees the title
+          // row below for full-width text so long product names
+          // don't get clipped by the absolute-positioned CTA.
+          <header className="prevcard-topbar">
+            <span className="prevcard-mark">
+              <span>Harvest</span>
+              <span className="prevcard-mark-dot" aria-hidden="true" />
+            </span>
+            <span className="prevcard-cta">
+              View
+              <span className="prevcard-cta-arrow">↗</span>
+            </span>
+          </header>
+        ) : (
+          // Homepage default: View CTA floats absolute in the
+          // top-right corner of the card, no Harvest mark.
           <span className="prevcard-cta">
             View
             <span className="prevcard-cta-arrow">↗</span>
           </span>
-        </header>
+        )}
 
         {/* Title row: icon + product name + byline */}
         <header className="prevcard-head">
