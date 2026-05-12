@@ -51,14 +51,92 @@ const HEADLINE: Record<Metric, { value: string; label: string }> = {
 
 const RANGES: Range[] = ["1M", "3M", "1Y", "ALL"];
 
-export function HomeHeroPreview() {
+// Optional vault override: when supplied (e.g. from /admin/studio),
+// the card renders real production data instead of the dummy
+// landing-page series. Range pills + chart-style toggles still
+// work as visual states, they just don't change the underlying
+// snapshot series.
+export type HeroPreviewVault = {
+  productName: string;
+  asset: string;
+  chain: string;
+  protocol: string;
+  vaultType?: string;
+  apy24h: number;
+  apy30d: number;
+  tvl: number;
+  apySpark: number[];
+  tvlSpark: number[];
+};
+
+function formatAPY(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return `${value.toFixed(2)}%`;
+}
+function formatTVL(value: number): string {
+  if (!Number.isFinite(value) || value < 0) return "—";
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `$${Math.round(value / 1000)}K`;
+  return `$${value.toFixed(0)}`;
+}
+
+// Normalize a real spark series to 0-100 bar heights, padding to
+// the same 24-bar grid the dummy series uses so visual density
+// matches across vaults regardless of how many records we have.
+function normalizeSeries(values: number[], target: number = 24): number[] {
+  if (!values || values.length === 0) {
+    return Array.from({ length: target }, () => 50);
+  }
+  let sampled: number[];
+  if (values.length >= target) {
+    const step = (values.length - 1) / (target - 1);
+    sampled = Array.from(
+      { length: target },
+      (_, i) => values[Math.round(i * step)],
+    );
+  } else {
+    sampled = [
+      ...Array.from({ length: target - values.length }, () => values[0]),
+      ...values,
+    ];
+  }
+  const max = Math.max(...sampled);
+  const min = Math.min(...sampled);
+  const span = max - min;
+  if (span === 0) return sampled.map(() => 60);
+  return sampled.map((v) => ((v - min) / span) * 100);
+}
+
+export function HomeHeroPreview({ vault }: { vault?: HeroPreviewVault } = {}) {
   const [metric, setMetric] = useState<Metric>("apy");
   const [range, setRange] = useState<Range>("1M");
   const [style, setStyle] = useState<Style>("bars");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
-  const series = SERIES[metric][range];
-  const headline = HEADLINE[metric];
+  // When a real vault is supplied, the underlying series + headline
+  // override the dummy data. Range toggles still flip the visual
+  // active pill but reuse the same snapshot series (we only have
+  // one daily-aggregated set, not per-range bucketing).
+  const series = vault
+    ? normalizeSeries(metric === "tvl" ? vault.tvlSpark : vault.apySpark)
+    : SERIES[metric][range];
+  const headline = vault
+    ? {
+        value:
+          metric === "tvl"
+            ? formatTVL(vault.tvl)
+            : metric === "apy"
+              ? formatAPY(vault.apy24h)
+              : "1.0000",
+        label:
+          metric === "tvl"
+            ? "Total value locked"
+            : metric === "apy"
+              ? "24h APY"
+              : "Share price",
+      }
+    : HEADLINE[metric];
 
   // Build SVG paths for line + step modes once per (series).
   // viewBox is 0..100 wide and 0..100 tall (top), so we invert y.
@@ -98,19 +176,21 @@ export function HomeHeroPreview() {
         {/* Title row: icon + product name + byline */}
         <header className="prevcard-head">
           <span className="prevcard-icon">
-            <AssetIcon asset="USDC" size={36} />
+            <AssetIcon asset={vault?.asset ?? "USDC"} size={36} />
           </span>
           <div className="prevcard-id">
-            <h3 className="prevcard-name">USDC Alpha V2</h3>
+            <h3 className="prevcard-name">
+              {vault?.productName ?? "USDC Alpha V2"}
+            </h3>
             <p className="prevcard-byline">
               <span className="prevcard-byline-chain">
-                <ChainIcon chain="Base" size={11} />
-                Base
+                <ChainIcon chain={vault?.chain ?? "Base"} size={11} />
+                {vault?.chain ?? "Base"}
               </span>
               <span aria-hidden="true">·</span>
-              <span>Harvest</span>
+              <span>{vault?.protocol ?? "Harvest"}</span>
               <span aria-hidden="true">·</span>
-              <span>Morpho</span>
+              <span>{vault?.vaultType || "Morpho"}</span>
             </p>
           </div>
         </header>

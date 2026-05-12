@@ -4176,13 +4176,14 @@ body:has(.methodology-page) {
 }
 
 /* === Admin Studio ====================================================
-   /admin/studio composes social-media product cards at five preset
-   ratios (Twitter 16:9, Instagram 1:1 and 4:5, Stories 9:16, Twitter
-   banner 3:1). The outer canvas keeps the homepage hero treatment
-   (yellow base, warm radial glow, dense ink dots); the centerpiece
-   is the same product-preview card we render on the homepage hero,
-   populated with real vault data. html-to-image captures the card
-   at 1:1 px regardless of the on-screen scale. */
+   /admin/studio composes social-media product cards by literally
+   reusing the homepage hero treatment. The outer canvas is sized to
+   the chosen ratio and reuses the .uni-home-hero recipe (yellow +
+   warm radial glow + ink dots); the centerpiece is the live
+   .uni-home-hero-preview-card rendered by HomeHeroPreview, wired
+   to real vault data via its vault prop. No custom card markup -
+   everything reads the existing .prevcard-* styles under the
+   .uni-home-test scope. */
 .studio {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
@@ -4282,8 +4283,8 @@ body:has(.methodology-page) {
 }
 .studio-meta-val { color: var(--ink-2); font-family: var(--mono); }
 
-/* Preview stage: parent enforces the current ratio's aspect, child
-   stage scales the full-resolution card via JS transform. */
+/* Preview stage: parent enforces the chosen ratio, child stage
+   JS-scales the full-resolution card to fit. */
 .studio-preview-wrap {
   position: relative;
   width: 100%;
@@ -4298,16 +4299,14 @@ body:has(.methodology-page) {
   transform-origin: top left;
 }
 
-/* The outer canvas: yellow + dotted + radial sunrise glow. Dot
-   tile is 50% denser than the homepage hero (12px instead of 18px)
-   so the texture still reads at the larger export resolution. The
-   inner product card is centered with flex. */
+/* The studio card: same yellow + radial glow + ink-dotted texture
+   as .uni-home-hero on the homepage, but full-bleed and centered
+   instead of padded with text on the left. The dotted texture is
+   50% denser (12px tile) than the homepage so the bigger export
+   surface still reads as textured. */
 .studio-card {
-  --u: calc(var(--card-h) / 900);
   position: relative;
   overflow: hidden;
-  color: #191717;
-  font-family: var(--sans);
   background-color: #ffb936;
   background-image:
     radial-gradient(
@@ -4316,258 +4315,74 @@ body:has(.methodology-page) {
       rgba(255, 185, 54, 0) 58%
     ),
     radial-gradient(circle, rgba(25, 23, 23, 0.1) 1.4px, transparent 1.8px);
-  background-size: auto, calc(12px * var(--u)) calc(12px * var(--u));
+  background-size: auto, 12px 12px;
   background-position: 0 0, 0 0;
   background-repeat: no-repeat, repeat;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(72px * var(--u));
+  padding: 64px;
 }
 
-/* The product highlight card: identical visual language to the
-   homepage hero preview card (.prevcard-* family) but standalone.
-   Width caps at min(900px scaled, 76% of canvas) so it sits with
-   breathing room in every ratio; the 3:1 banner gets an explicit
-   width override below. */
-.studio-prevcard {
-  --pu: var(--u);
-  width: min(calc(900px * var(--pu)), 76%);
-  background: #ffffff;
-  border-radius: calc(20px * var(--pu));
-  padding: calc(28px * var(--pu)) calc(32px * var(--pu)) calc(32px * var(--pu));
-  box-shadow:
-    0 calc(-6px * var(--pu)) calc(18px * var(--pu)) calc(-10px * var(--pu)) rgba(25, 23, 23, 0.18),
-    0 calc(24px * var(--pu)) calc(44px * var(--pu)) calc(-20px * var(--pu)) rgba(25, 23, 23, 0.32),
-    0 calc(1px * var(--pu)) 0 rgba(25, 23, 23, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: calc(22px * var(--pu));
-  position: relative;
-}
-.studio-prevcard-cta {
-  position: absolute;
-  top: calc(22px * var(--pu));
-  right: calc(22px * var(--pu));
-  display: inline-flex;
-  align-items: center;
-  gap: calc(6px * var(--pu));
-  padding: calc(8px * var(--pu)) calc(16px * var(--pu));
-  background: #ffb936;
-  color: #191717;
-  border-radius: 999px;
-  font-size: calc(15px * var(--pu));
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  white-space: nowrap;
-}
-.studio-prevcard-cta-arrow { font-size: calc(14px * var(--pu)); line-height: 1; }
-
-.studio-prevcard-head {
-  display: flex;
-  align-items: center;
-  gap: calc(14px * var(--pu));
-}
-.studio-prevcard-icon img {
-  border-radius: 50%;
+/* Neutralize the homepage-specific absolute positioning on the
+   preview-card wrapper so it sits in the flex center instead of
+   pinned to the hero corner. The inner .uni-home-hero-preview-card
+   (which holds all the .prevcard-* visual styling) keeps its own
+   rules from home.css. */
+.studio-card .uni-home-hero-preview {
+  position: static;
+  width: auto;
+  max-width: 720px;
+  right: auto;
+  bottom: auto;
+  transform: none;
   display: block;
-  width: calc(44px * var(--pu));
-  height: calc(44px * var(--pu));
-}
-.studio-prevcard-id {
-  display: flex;
-  flex-direction: column;
-  gap: calc(4px * var(--pu));
-  min-width: 0;
-}
-.studio-prevcard-name {
-  font-family: var(--display);
-  font-size: calc(26px * var(--pu));
-  font-weight: 600;
-  letter-spacing: -0.018em;
-  color: #191717;
-  margin: 0;
-  line-height: 1.1;
-}
-.studio-prevcard-byline {
-  margin: 0;
-  font-size: calc(14px * var(--pu));
-  color: #32312b;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: calc(7px * var(--pu));
-  flex-wrap: wrap;
-}
-.studio-prevcard-byline-chain {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(6px * var(--pu));
-}
-.studio-prevcard-byline-chain img {
-  border-radius: 50%;
-  display: block;
-  width: calc(14px * var(--pu));
-  height: calc(14px * var(--pu));
 }
 
-.studio-prevcard-bignum {
-  display: flex;
-  align-items: baseline;
-  gap: calc(10px * var(--pu));
+/* Square + portrait ratios have more vertical room; let the card
+   breathe a little wider so it doesn't look stranded. */
+.studio-card--1x1 .uni-home-hero-preview,
+.studio-card--4x5 .uni-home-hero-preview {
+  max-width: 760px;
 }
-.studio-prevcard-bignum-value {
-  font-family: var(--display);
-  font-size: calc(44px * var(--pu));
-  font-weight: 600;
-  letter-spacing: -0.022em;
-  color: #191717;
-  line-height: 1;
-  font-feature-settings: "tnum";
+.studio-card--9x16 .uni-home-hero-preview {
+  max-width: 820px;
 }
-.studio-prevcard-bignum-label {
-  font-size: calc(15px * var(--pu));
-  color: #6e6c66;
-  font-weight: 500;
+.studio-card--3x1 {
+  padding: 32px;
+}
+.studio-card--3x1 .uni-home-hero-preview {
+  max-width: 640px;
 }
 
-.studio-prevcard-ranges {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(2px * var(--pu));
-  padding: calc(3px * var(--pu));
-  background: rgba(25, 23, 23, 0.05);
-  border-radius: 999px;
-  width: fit-content;
-}
-.studio-prevcard-range {
-  padding: calc(5px * var(--pu)) calc(13px * var(--pu));
-  border-radius: 999px;
-  font-family: var(--mono);
-  font-size: calc(12px * var(--pu));
-  font-weight: 500;
-  color: #6e6c66;
-  letter-spacing: 0.04em;
-}
-.studio-prevcard-range.active {
-  background: #191717;
-  color: #ffb936;
-}
-
-.studio-prevcard-chart {
-  height: calc(100px * var(--pu));
-  padding: calc(6px * var(--pu)) 0 calc(4px * var(--pu));
-}
-.studio-prevcard-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: calc(4px * var(--pu));
-  height: 100%;
-}
-.studio-prevcard-bar {
-  flex: 1 1 0;
-  background: #ffb936;
-  border-radius: calc(2px * var(--pu)) calc(2px * var(--pu)) 0 0;
-  min-width: calc(4px * var(--pu));
-}
-
-.studio-prevcard-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(12px * var(--pu));
-}
-.studio-prevcard-tabs {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(4px * var(--pu));
-  padding: calc(4px * var(--pu));
-  background: rgba(25, 23, 23, 0.05);
-  border-radius: 999px;
-}
-.studio-prevcard-tab {
-  padding: calc(6px * var(--pu)) calc(13px * var(--pu));
-  border-radius: 999px;
-  font-size: calc(13px * var(--pu));
-  font-weight: 500;
-  color: #6e6c66;
-}
-.studio-prevcard-tab.active {
-  background: #191717;
-  color: #ffffff;
-}
-.studio-prevcard-style {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(2px * var(--pu));
-  padding: calc(3px * var(--pu));
-  background: rgba(25, 23, 23, 0.05);
-  border-radius: calc(9px * var(--pu));
-}
-.studio-prevcard-style-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(28px * var(--pu));
-  height: calc(28px * var(--pu));
-  border-radius: calc(7px * var(--pu));
-  color: #6e6c66;
-}
-.studio-prevcard-style-btn svg {
-  width: calc(15px * var(--pu));
-  height: calc(15px * var(--pu));
-}
-.studio-prevcard-style-btn.active {
-  background: #191717;
-  color: #ffb936;
-}
-
-/* Harvest wordmark on the inner card. Lives in one of three
-   corners (top-right is reserved for the View pill). */
-.studio-prevcard-mark {
+/* Harvest wordmark in a chosen corner of the yellow canvas.
+   Mirrors the topnav .brand structure (display font + orange
+   dot). Top right is intentionally not offered because the
+   preview card's "View ↗" pill sits roughly there. */
+.studio-card-mark {
   position: absolute;
   display: inline-flex;
   align-items: baseline;
-  gap: calc(5px * var(--pu));
+  gap: 8px;
   font-family: var(--display);
-  font-size: calc(18px * var(--pu));
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.022em;
   color: #191717;
-  opacity: 0.85;
+  z-index: 2;
 }
-.studio-prevcard-mark-dot {
-  width: calc(7px * var(--pu));
-  height: calc(7px * var(--pu));
+.studio-card-mark-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #ec9b1c;
   display: inline-block;
   align-self: center;
-  transform: translateY(calc(1px * var(--pu)));
+  transform: translateY(1px);
 }
-.studio-prevcard-mark-tl { top: calc(22px * var(--pu)); left: calc(24px * var(--pu)); }
-.studio-prevcard-mark-bl { bottom: calc(22px * var(--pu)); left: calc(24px * var(--pu)); }
-.studio-prevcard-mark-br { bottom: calc(22px * var(--pu)); right: calc(24px * var(--pu)); }
-
-/* Banner ratio (3:1, 1500x500): the inner card is too tall for the
-   short canvas at the default scale, so cap by height and let the
-   width follow. Padding also shrinks. */
-.studio-card--3x1 {
-  padding: calc(40px * var(--u));
-}
-.studio-card--3x1 .studio-prevcard {
-  width: auto;
-  max-width: 92%;
-  max-height: 100%;
-}
-
-/* Vertical ratios (4:5, 9:16): the inner card can use more vertical
-   room without dominating - bump max-height so it doesn't look lost
-   in a sea of yellow. */
-.studio-card--4x5 .studio-prevcard,
-.studio-card--9x16 .studio-prevcard {
-  width: min(calc(900px * var(--u)), 84%);
-}
+.studio-card-mark-tl { top: 32px; left: 36px; }
+.studio-card-mark-bl { bottom: 32px; left: 36px; }
+.studio-card-mark-br { bottom: 32px; right: 36px; }
 
 @media (max-width: 900px) {
   .studio { grid-template-columns: 1fr; }
