@@ -4176,10 +4176,12 @@ body:has(.methodology-page) {
 }
 
 /* === Admin Studio ====================================================
-   /admin/studio composes Twitter-ratio product cards using the same
-   yellow + dotted hero treatment from the homepage. The card itself
-   renders at its full export resolution (1600x900) inside a scaled
-   stage, so a screenshot of the stage gives a pixel-perfect PNG. */
+   /admin/studio composes social-media product cards at five preset
+   ratios (Twitter 16:9, Instagram 1:1 and 4:5, Stories 9:16, Twitter
+   banner 3:1) using the same yellow + dotted hero treatment as the
+   homepage. The card itself renders at its full export resolution
+   inside a JS-scaled stage; html-to-image captures it at 1:1 px so
+   the on-screen scale doesn't degrade the PNG. */
 .studio {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
@@ -4196,6 +4198,8 @@ body:has(.methodology-page) {
   border-radius: 12px;
   position: sticky;
   top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
 }
 .studio-field { display: flex; flex-direction: column; gap: 8px; }
 .studio-label {
@@ -4247,6 +4251,60 @@ body:has(.methodology-page) {
   color: var(--ink-2);
   cursor: pointer;
 }
+
+/* Scrollable multi-select for compare mode. Hugs the controls width
+   so the long product names ellipsize instead of pushing the panel
+   wider. */
+.studio-vault-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.studio-vault-item {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.studio-vault-item input { margin: 0; }
+.studio-vault-item:hover { background: rgba(255, 185, 54, 0.08); }
+.studio-vault-item.active { background: rgba(255, 185, 54, 0.16); color: var(--ink); }
+.studio-vault-item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.studio-vault-item-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.studio-download {
+  appearance: none;
+  padding: 11px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+.studio-download:hover { opacity: 0.88; }
+.studio-download:disabled { opacity: 0.5; cursor: progress; }
+
 .studio-meta {
   display: flex;
   flex-direction: column;
@@ -4262,21 +4320,13 @@ body:has(.methodology-page) {
   gap: 12px;
 }
 .studio-meta-val { color: var(--ink-2); font-family: var(--mono); }
-.studio-tip {
-  margin: 8px 0 0;
-  line-height: 1.5;
-  color: var(--ink-3);
-}
 
-/* Preview stage: container shrinks the 1600x900 card to fit the
-   available column while the card itself keeps its full pixel
-   dimensions, so screenshots stay sharp at 100% zoom. */
+/* Preview stage: parent enforces the current ratio's aspect, child
+   stage scales the full-resolution card down to fit via inline
+   transform (driven by ResizeObserver in JS). */
 .studio-preview-wrap {
   position: relative;
   width: 100%;
-  /* Reserve space for the scaled card: aspect-ratio matches 16:9 so
-     the layout doesn't jump while React mounts. */
-  aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
   background: var(--bg-2);
@@ -4285,35 +4335,22 @@ body:has(.methodology-page) {
 .studio-stage {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  transform-origin: top left;
-  /* JS-free auto-fit: scale via container query units. The card is
-     1600px wide so dividing by 1600px gives the exact ratio needed
-     to fit the parent's width. We rely on width:100% + the parent's
-     aspect-ratio enforcing a matching height. */
-}
-@container (min-width: 0) {
-  /* Placeholder for future container queries if we offer ratio
-     toggles. The transform below handles the current 16:9 case. */
-}
-.studio-stage > .studio-card {
-  transform: scale(calc(100cqw / 1600));
   transform-origin: top left;
 }
-.studio-preview-wrap { container-type: inline-size; }
 
 /* The card itself: yellow + dotted + radial sunrise glow, same
-   recipe as .uni-home-hero on the homepage but tuned for the 16:9
-   crop. All sizes are in px so it exports identically regardless
-   of viewport. */
+   recipe as .uni-home-hero on the homepage. Every internal size
+   reads from --u (the height-relative unit) so the same rules
+   render proportionally across all five ratios. */
 .studio-card {
+  --u: calc(var(--card-h) / 900);
+  --pad-x: calc(104px * var(--u));
+  --pad-y: calc(96px * var(--u));
   position: relative;
   overflow: hidden;
   color: #191717;
   font-family: var(--sans);
-  padding: 96px 104px 88px;
+  padding: var(--pad-y) var(--pad-x);
   background-color: #ffb936;
   background-image:
     radial-gradient(
@@ -4322,18 +4359,20 @@ body:has(.methodology-page) {
       rgba(255, 185, 54, 0) 58%
     ),
     radial-gradient(circle, rgba(25, 23, 23, 0.08) 1.4px, transparent 1.8px);
-  background-size: auto, 18px 18px;
+  background-size: auto, calc(18px * var(--u)) calc(18px * var(--u));
   background-position: 0 0, 0 0;
   background-repeat: no-repeat, repeat;
   display: flex;
   flex-direction: column;
-  gap: 32px;
 }
-.studio-card-meta {
+
+/* === Hero layout =================================================== */
+.studio-card--hero { gap: calc(32px * var(--u)); }
+.studio-card--hero .studio-card-meta {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  font-size: 28px;
+  gap: calc(14px * var(--u));
+  font-size: calc(28px * var(--u));
   font-weight: 500;
   color: #2b2826;
   opacity: 0.86;
@@ -4342,20 +4381,20 @@ body:has(.methodology-page) {
 .studio-card-meta-chip {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: calc(10px * var(--u));
 }
 .studio-card-meta-chip img { border-radius: 50%; display: block; }
 .studio-card-meta-sep { opacity: 0.5; }
-.studio-card-id {
+.studio-card--hero .studio-card-id {
   display: inline-flex;
   align-items: center;
-  gap: 28px;
-  margin-top: 8px;
+  gap: calc(28px * var(--u));
+  margin-top: calc(8px * var(--u));
 }
 .studio-card-asset img { border-radius: 50%; display: block; }
-.studio-card-name {
+.studio-card--hero .studio-card-name {
   font-family: var(--display);
-  font-size: 116px;
+  font-size: calc(116px * var(--u));
   font-weight: 600;
   letter-spacing: -0.022em;
   line-height: 1.02;
@@ -4363,70 +4402,290 @@ body:has(.methodology-page) {
   color: #191717;
   max-width: 18ch;
 }
-.studio-card-figure {
+.studio-card--hero .studio-card-figure {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
+  gap: calc(8px * var(--u));
+  margin-top: calc(12px * var(--u));
 }
-.studio-card-value {
+.studio-card--hero .studio-card-value {
   font-family: var(--display);
-  font-size: 224px;
+  font-size: calc(224px * var(--u));
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 0.94;
   color: #191717;
   font-feature-settings: "tnum";
 }
-.studio-card-label {
-  font-size: 28px;
+.studio-card--hero .studio-card-label {
+  font-size: calc(28px * var(--u));
   font-weight: 500;
   color: #2b2826;
   letter-spacing: 0.01em;
   text-transform: uppercase;
   opacity: 0.7;
 }
-.studio-card-spark {
+.studio-card--hero .studio-card-spark {
   position: absolute;
-  right: 96px;
-  bottom: 110px;
-  width: 480px;
-  height: 200px;
+  right: var(--pad-x);
+  bottom: calc(var(--pad-y) + 22px * var(--u));
+  width: calc(480px * var(--u));
+  height: calc(200px * var(--u));
   opacity: 0.78;
   pointer-events: none;
 }
 
+/* === Trend layout ================================================== */
+.studio-card--trend {
+  gap: calc(28px * var(--u));
+  justify-content: space-between;
+}
+.studio-trend-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: calc(24px * var(--u));
+}
+.studio-trend-head-id {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(20px * var(--u));
+}
+.studio-trend-head-id img { border-radius: 50%; display: block; }
+.studio-trend-head-name {
+  font-family: var(--display);
+  font-size: calc(72px * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  color: #191717;
+}
+.studio-trend-head-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(10px * var(--u));
+  font-size: calc(24px * var(--u));
+  font-weight: 500;
+  color: #2b2826;
+  opacity: 0.78;
+  white-space: nowrap;
+}
+.studio-trend-head-meta img { border-radius: 50%; display: block; }
+.studio-trend-chart {
+  flex: 1;
+  display: block;
+  min-height: 0;
+}
+.studio-trend-chart svg { display: block; }
+.studio-trend-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #2b2826;
+  opacity: 0.5;
+  font-size: calc(28px * var(--u));
+}
+.studio-trend-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: calc(24px * var(--u));
+}
+.studio-trend-foot-value {
+  font-family: var(--display);
+  font-size: calc(160px * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 0.94;
+  color: #191717;
+  font-feature-settings: "tnum";
+}
+.studio-trend-foot-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: calc(14px * var(--u));
+  font-size: calc(28px * var(--u));
+  font-weight: 500;
+  color: #2b2826;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+.studio-trend-arrow.up { color: #1f7a2e; opacity: 1; }
+.studio-trend-arrow.down { color: #a82b1f; opacity: 1; }
+
+/* === Compare layout =============================================== */
+.studio-card--compare { gap: calc(24px * var(--u)); }
+.studio-compare-head {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--u));
+}
+.studio-compare-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: calc(96px * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.02;
+  color: #191717;
+}
+.studio-compare-sub {
+  font-size: calc(26px * var(--u));
+  font-weight: 500;
+  color: #2b2826;
+  opacity: 0.7;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.studio-compare-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(16px * var(--u));
+}
+.studio-compare-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(24px * var(--u));
+  padding: calc(20px * var(--u)) calc(28px * var(--u));
+  background: rgba(255, 255, 255, 0.32);
+  border-radius: calc(20px * var(--u));
+  border: 1px solid rgba(25, 23, 23, 0.06);
+}
+.studio-compare-rank {
+  font-family: var(--display);
+  font-size: calc(44px * var(--u));
+  font-weight: 600;
+  color: #191717;
+  opacity: 0.42;
+  font-feature-settings: "tnum";
+  width: calc(80px * var(--u));
+}
+.studio-compare-asset img {
+  border-radius: 50%;
+  display: block;
+  width: calc(56px * var(--u));
+  height: calc(56px * var(--u));
+}
+.studio-compare-id {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--u));
+  min-width: 0;
+}
+.studio-compare-name {
+  font-family: var(--display);
+  font-size: calc(40px * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.05;
+  color: #191717;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.studio-compare-chain {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(8px * var(--u));
+  font-size: calc(20px * var(--u));
+  font-weight: 500;
+  color: #2b2826;
+  opacity: 0.7;
+}
+.studio-compare-chain img { border-radius: 50%; display: block; }
+.studio-compare-value {
+  font-family: var(--display);
+  font-size: calc(56px * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: #191717;
+  font-feature-settings: "tnum";
+  justify-self: end;
+}
+
+/* Banner ratio: shrink the leaderboard rows so 2-3 fit in the short
+   500px height. Compare layout in 3:1 puts everything on a single
+   horizontal row instead. */
+.studio-card--3x1.studio-card--compare .studio-compare-list {
+  flex-direction: row;
+  gap: calc(16px * var(--u));
+}
+.studio-card--3x1.studio-card--compare .studio-compare-row {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(6px * var(--u));
+  padding: calc(18px * var(--u)) calc(22px * var(--u));
+}
+.studio-card--3x1.studio-card--compare .studio-compare-rank { width: auto; }
+.studio-card--3x1.studio-card--compare .studio-compare-value {
+  justify-self: stretch;
+  font-size: calc(64px * var(--u));
+}
+
+/* Hero in banner mode: drop the asset+name onto one line, shrink the
+   metric column. The 3:1 has just 500px height so we lean horizontal. */
+.studio-card--3x1.studio-card--hero {
+  flex-direction: row;
+  align-items: center;
+  gap: calc(48px * var(--u));
+}
+.studio-card--3x1.studio-card--hero .studio-card-meta { display: none; }
+.studio-card--3x1.studio-card--hero .studio-card-id {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(12px * var(--u));
+}
+.studio-card--3x1.studio-card--hero .studio-card-name {
+  font-size: calc(80px * var(--u));
+}
+.studio-card--3x1.studio-card--hero .studio-card-figure {
+  margin-left: auto;
+  text-align: right;
+  align-items: flex-end;
+}
+.studio-card--3x1.studio-card--hero .studio-card-value {
+  font-size: calc(140px * var(--u));
+}
+.studio-card--3x1.studio-card--hero .studio-card-spark { display: none; }
+
 /* Harvest wordmark overlay: same recipe as the topnav .brand but
-   sized for the card. Lives in a corner; absolute position picks
-   the offset side. */
+   sized for the card and absolute-positioned in a chosen corner. */
 .studio-card-mark {
   position: absolute;
   display: inline-flex;
   align-items: baseline;
-  gap: 8px;
+  gap: calc(8px * var(--u));
   font-family: var(--display);
-  font-size: 44px;
+  font-size: calc(44px * var(--u));
   font-weight: 600;
   letter-spacing: -0.022em;
   color: #191717;
 }
 .studio-card-mark-dot {
-  width: 11px;
-  height: 11px;
+  width: calc(11px * var(--u));
+  height: calc(11px * var(--u));
   border-radius: 50%;
   background: #ec9b1c;
   display: inline-block;
   align-self: center;
-  transform: translateY(2px);
+  transform: translateY(calc(2px * var(--u)));
 }
-.studio-card-mark-tl { top: 56px; left: 64px; }
-.studio-card-mark-tr { top: 56px; right: 64px; }
-.studio-card-mark-bl { bottom: 56px; left: 64px; }
-.studio-card-mark-br { bottom: 56px; right: 64px; }
+.studio-card-mark-tl { top: calc(56px * var(--u)); left: calc(64px * var(--u)); }
+.studio-card-mark-tr { top: calc(56px * var(--u)); right: calc(64px * var(--u)); }
+.studio-card-mark-bl { bottom: calc(56px * var(--u)); left: calc(64px * var(--u)); }
+.studio-card-mark-br { bottom: calc(56px * var(--u)); right: calc(64px * var(--u)); }
 
 @media (max-width: 900px) {
   .studio { grid-template-columns: 1fr; }
-  .studio-controls { position: static; }
+  .studio-controls { position: static; max-height: none; }
 }
 
 /* === Interactive HubTable ============================================
