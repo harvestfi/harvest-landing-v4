@@ -198,8 +198,9 @@ function deduplicateByDay<T extends { timestamp: number }>(points: T[]): T[] {
  * Plasma history fetch for Autopilot vaults. Autopilots live under
  * separate plasma* entities in the subgraph and return zero results
  * from the standard tvls/vaultHistories/apyAutoCompounds query, so
- * we route them through plasmaVaultHistories and derive APY from
- * share-price growth between consecutive daily samples.
+ * we route them through plasmaVaultHistories. The where clause uses
+ * The Graph's nested-relationship syntax (plasmaVault_: { id }) to
+ * filter on the referenced PlasmaVault entity's id.
  */
 async function fetchPlasmaVaultHistory(
   chainId: string,
@@ -210,9 +211,9 @@ async function fetchPlasmaVaultHistory(
     sharePriceHistory: [],
     apyHistory: [],
   };
-  const richQuery = `{
+  const query = `{
     plasmaVaultHistories(
-      where: { vault: "${addr}" }
+      where: { plasmaVault_: { id: "${addr}" } }
       orderBy: timestamp
       orderDirection: asc
       first: 1000
@@ -220,37 +221,18 @@ async function fetchPlasmaVaultHistory(
       timestamp
       tvl
       sharePrice
+      apy
     }
   }`;
-  let data = await queryGraphQL(chainId, richQuery);
-
-  if (!data) {
-    log(`[plasma] retrying with minimal query for vault=${addr}`);
-    const bareQuery = `{
-      plasmaVaultHistories(first: 1000) {
-        timestamp
-        tvl
-        sharePrice
-        vault
-      }
-    }`;
-    const bare = await queryGraphQL(chainId, bareQuery);
-    if (bare) {
-      const all = ((bare.plasmaVaultHistories as { vault?: string }[]) || []);
-      const filtered = all.filter(
-        (r) => (r.vault || "").toLowerCase() === addr,
-      );
-      data = { plasmaVaultHistories: filtered };
-      log(`[plasma] bare query: total=${all.length} matched=${filtered.length}`);
-    }
-  }
-
+  const data = await queryGraphQL(chainId, query);
   if (!data) return empty;
-  const raw = ((data.plasmaVaultHistories as { timestamp: string; tvl: string; sharePrice: string }[]) || []).map(
+
+  const raw = ((data.plasmaVaultHistories as { timestamp: string; tvl: string; sharePrice: string; apy: string }[]) || []).map(
     (r) => ({
       timestamp: parseInt(r.timestamp, 10),
       tvl: parseFloat(r.tvl),
       sharePrice: parseFloat(r.sharePrice),
+      apy: parseFloat(r.apy),
     }),
   );
   log(`[plasma] vault=${addr} chain=${chainId} records=${raw.length}`);
@@ -279,18 +261,12 @@ async function fetchPlasmaVaultHistory(
     }));
   }
 
-  const apyHistory: ApyHistoryPoint[] = [];
-  for (let i = 1; i < sharePriceDaily.length; i++) {
-    const prev = sharePriceDaily[i - 1];
-    const cur = sharePriceDaily[i];
-    const daysDelta = Math.max(0.5, (cur.timestamp - prev.timestamp) / 86400);
-    const periodReturn = cur.sharePrice / prev.sharePrice - 1;
-    if (!Number.isFinite(periodReturn)) continue;
-    const apy = ((1 + periodReturn) ** (365 / daysDelta) - 1) * 100;
-    if (Number.isFinite(apy) && apy >= 0 && apy <= 100) {
-      apyHistory.push({ apy, timestamp: cur.timestamp });
-    }
-  }
+  // APY comes straight from the subgraph (already a percent, e.g.
+  // 7.59 for 7.59%) - no derivation needed. Filter [0, 100] to drop
+  // the rare spike on a freshly deployed or migrated vault.
+  const apyHistory: ApyHistoryPoint[] = daily
+    .filter((p) => Number.isFinite(p.apy) && p.apy >= 0 && p.apy <= 100)
+    .map((p) => ({ apy: p.apy, timestamp: p.timestamp }));
 
   return { tvlHistory, sharePriceHistory, apyHistory };
 }

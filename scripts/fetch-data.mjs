@@ -461,22 +461,15 @@ function deduplicateByDay(points) {
 
 // Autopilot vaults are indexed under separate plasma* entities. The
 // schema (per the indexer team) exposes `plasmaVaultHistories` with
-// tvl + sharePrice per timestamp; there is no dedicated APY entity,
-// so we derive APY from the share-price growth between consecutive
-// daily samples - same formula the protocol uses on /[slug] for
-// vaults that lack an upstream APY feed.
-//
-// Schema guesses: where uses { vault: "0xaddr" }, lowercase. If the
-// indexer turns out to expect `plasmaVault` instead, the GraphQL
-// error gets logged and we return empty so the chart degrades to
-// the snapshotSeries fallback rather than blowing up the build.
+// timestamp + tvl + sharePrice + apy per record, filtered by the
+// nested plasmaVault relationship (note the `_:` suffix - that's
+// The Graph's syntax for filtering on a referenced entity's fields).
 async function fetchPlasmaVaultHistory(chainId, addr) {
   const empty = { tvlHistory: [], sharePriceHistory: [], apyHistory: [] };
 
-  // Primary query: filtered + sorted, what we want long-term.
-  const richQuery = `{
+  const query = `{
     plasmaVaultHistories(
-      where: { vault: "${addr}" }
+      where: { plasmaVault_: { id: "${addr}" } }
       orderBy: timestamp
       orderDirection: asc
       first: 1000
@@ -484,43 +477,18 @@ async function fetchPlasmaVaultHistory(chainId, addr) {
       timestamp
       tvl
       sharePrice
+      apy
     }
   }`;
 
-  let data = await queryGraphQL(chainId, richQuery);
-
-  // Fallback: bare-bones query that matches exactly what the
-  // indexer team showed us. If the entity exists but rejects our
-  // where/orderBy fields, this still pulls the records and we
-  // filter client-side. Keeps logging both attempts so we can see
-  // which schema assumption is wrong.
-  if (!data) {
-    log(`[plasma] retrying with minimal query for vault=${addr}`);
-    const bareQuery = `{
-      plasmaVaultHistories(first: 1000) {
-        timestamp
-        tvl
-        sharePrice
-        vault
-      }
-    }`;
-    data = await queryGraphQL(chainId, bareQuery);
-    if (data) {
-      const all = data.plasmaVaultHistories || [];
-      const filtered = all.filter(
-        (r) => (r.vault || "").toLowerCase() === addr,
-      );
-      data = { plasmaVaultHistories: filtered };
-      log(`[plasma] bare query: total=${all.length} matched=${filtered.length}`);
-    }
-  }
-
+  const data = await queryGraphQL(chainId, query);
   if (!data) return empty;
 
   const raw = (data.plasmaVaultHistories || []).map((r) => ({
     timestamp: parseInt(r.timestamp, 10),
     tvl: parseFloat(r.tvl),
     sharePrice: parseFloat(r.sharePrice),
+    apy: parseFloat(r.apy),
   }));
 
   log(`[plasma] vault=${addr} chain=${chainId} records=${raw.length}`);
@@ -554,24 +522,15 @@ async function fetchPlasmaVaultHistory(chainId, addr) {
     }));
   }
 
-  // Derive APY from share-price growth between consecutive daily
-  // samples. Cap at 100% (anything higher is almost always a
-  // deposit/migration spike, not real yield).
-  const apyHistory = [];
-  for (let i = 1; i < sharePriceDaily.length; i++) {
-    const prev = sharePriceDaily[i - 1];
-    const cur = sharePriceDaily[i];
-    const daysDelta = Math.max(
-      0.5,
-      (cur.timestamp - prev.timestamp) / 86400,
-    );
-    const periodReturn = cur.sharePrice / prev.sharePrice - 1;
-    if (!Number.isFinite(periodReturn)) continue;
-    const apy = ((1 + periodReturn) ** (365 / daysDelta) - 1) * 100;
-    if (Number.isFinite(apy) && apy >= 0 && apy <= 100) {
-      apyHistory.push({ apy, timestamp: cur.timestamp });
-    }
-  }
+  // APY comes straight from the subgraph (already a percent, e.g.
+  // 7.59 for 7.59%) - no need to derive from share-price growth.
+  // Still filter [0, 100] to drop the rare spike from a freshly
+  // deployed or migrated vault.
+  const apyHistory = daily
+    .filter(
+      (p) => Number.isFinite(p.apy) && p.apy >= 0 && p.apy <= 100,
+    )
+    .map((p) => ({ apy: p.apy, timestamp: p.timestamp }));
 
   return { tvlHistory, sharePriceHistory, apyHistory };
 }
