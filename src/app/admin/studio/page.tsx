@@ -56,10 +56,11 @@ export default async function StudioPage() {
       <div className="adm-header">
         <h1>Studio</h1>
         <p className="adm-sub">
-          Compose Twitter-ratio product cards using the homepage hero
-          treatment. Pick a vault, choose a metric, drop the Harvest
-          wordmark in a corner, then screenshot or right-click the
-          preview to save.
+          Compose social-media product cards. Outer canvas mirrors
+          the homepage hero (yellow + dotted); the centerpiece is
+          the same product preview card we render in that hero,
+          populated with the chosen vault. Pick a ratio, vault, and
+          metric, then download the PNG.
         </p>
       </div>
       <StudioClient vaults={cards} />

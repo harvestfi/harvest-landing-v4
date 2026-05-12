@@ -1,18 +1,14 @@
 "use client";
 
-// Studio: build product-card images at multiple social-media ratios
-// (Twitter 16:9, Instagram 1:1 and 4:5, Stories 9:16, Twitter banner
-// 3:1) using the same yellow + dotted hero treatment as the homepage.
+// Studio: compose social-media product cards. Outer canvas keeps
+// the homepage hero treatment (yellow base, warm radial glow, dense
+// ink dots); the centerpiece is the same product-preview card we
+// render on the homepage hero, populated with real vault data.
 //
-// Three layouts pick the composition:
-//   - hero     : big metric + product name + optional sparkline
-//   - trend    : chart-focused; sparkline dominates the card
-//   - compare  : 2-3 vaults stacked in a leaderboard
-//
-// The card renders at its full export resolution; a ResizeObserver
-// scales the stage to fit the preview pane without re-layout. PNG
-// export uses html-to-image to capture the card at full pixel size
-// regardless of the on-screen scale.
+// The card itself renders at the chosen export resolution; a
+// ResizeObserver scales the preview stage to fit the column without
+// re-layout. html-to-image captures the card at full pixel size for
+// PNG export regardless of the on-screen scale.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
@@ -35,15 +31,9 @@ export type StudioVault = {
 };
 
 type Metric = "apy24h" | "apy30d" | "tvl";
-type Corner = "tl" | "tr" | "bl" | "br" | "none";
-type LayoutId = "hero" | "trend" | "compare";
+type Corner = "tl" | "bl" | "br" | "none";
 
-type Ratio = {
-  id: string;
-  w: number;
-  h: number;
-  label: string;
-};
+type Ratio = { id: string; w: number; h: number; label: string };
 
 const RATIOS: Ratio[] = [
   { id: "16x9", w: 1600, h: 900, label: "Twitter post (16:9)" },
@@ -53,35 +43,16 @@ const RATIOS: Ratio[] = [
   { id: "3x1", w: 1500, h: 500, label: "Twitter banner (3:1)" },
 ];
 
-const LAYOUTS: { id: LayoutId; label: string }[] = [
-  { id: "hero", label: "Hero" },
-  { id: "trend", label: "Trend" },
-  { id: "compare", label: "Compare" },
-];
-
-const MAX_COMPARE = 3;
-
 export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   const [ratioId, setRatioId] = useState<string>(RATIOS[0].id);
-  const [layoutId, setLayoutId] = useState<LayoutId>("hero");
   const [slug, setSlug] = useState(vaults[0]?.slug ?? "");
-  const [compareSlugs, setCompareSlugs] = useState<string[]>(
-    vaults.slice(0, 3).map((v) => v.slug),
-  );
   const [metric, setMetric] = useState<Metric>("apy24h");
   const [corner, setCorner] = useState<Corner>("br");
-  const [showSpark, setShowSpark] = useState(true);
   const [downloading, setDownloading] = useState(false);
 
   const ratio = RATIOS.find((r) => r.id === ratioId) ?? RATIOS[0];
   const vault = vaults.find((v) => v.slug === slug) ?? vaults[0];
-  const compareVaults = compareSlugs
-    .map((s) => vaults.find((v) => v.slug === s))
-    .filter((v): v is StudioVault => Boolean(v));
 
-  // Auto-scale the card to fit the preview pane width while keeping
-  // its full pixel dimensions for export. Using a ResizeObserver
-  // instead of CSS calc(cqw/Xpx) so older browser builds stay safe.
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -110,8 +81,6 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         height: ratio.h,
         pixelRatio: 1,
         cacheBust: true,
-        // Override the on-screen scale during capture so html-to-image
-        // serializes the card at full export resolution.
         style: {
           transform: "none",
           width: `${ratio.w}px`,
@@ -119,11 +88,7 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         },
       });
       const link = document.createElement("a");
-      const subject =
-        layoutId === "compare"
-          ? `compare-${compareVaults.map((v) => v.slug).join("-")}`
-          : (vault?.slug ?? "card");
-      link.download = `harvest-${subject}-${layoutId}-${ratio.id}.png`;
+      link.download = `harvest-${vault?.slug ?? "card"}-${ratio.id}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -134,14 +99,6 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
     } finally {
       setDownloading(false);
     }
-  }
-
-  function toggleCompareSlug(s: string) {
-    setCompareSlugs((cur) => {
-      if (cur.includes(s)) return cur.filter((x) => x !== s);
-      if (cur.length >= MAX_COMPARE) return [...cur.slice(1), s];
-      return [...cur, s];
-    });
   }
 
   return (
@@ -165,65 +122,20 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         </div>
 
         <div className="studio-field">
-          <span className="studio-label">Layout</span>
-          <div className="studio-segment" role="group">
-            {LAYOUTS.map((l) => (
-              <button
-                key={l.id}
-                type="button"
-                className={`studio-segment-btn${layoutId === l.id ? " active" : ""}`}
-                onClick={() => setLayoutId(l.id)}
-              >
-                {l.label}
-              </button>
+          <label className="studio-label" htmlFor="studio-vault">Vault</label>
+          <select
+            id="studio-vault"
+            className="studio-select"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+          >
+            {vaults.map((v) => (
+              <option key={v.slug} value={v.slug}>
+                {v.productName} - {v.chain} - {formatAPY(v.apy24h)} APY
+              </option>
             ))}
-          </div>
+          </select>
         </div>
-
-        {layoutId === "compare" ? (
-          <div className="studio-field">
-            <span className="studio-label">
-              Vaults ({compareVaults.length} of {MAX_COMPARE})
-            </span>
-            <div className="studio-vault-list">
-              {vaults.slice(0, 60).map((v) => {
-                const checked = compareSlugs.includes(v.slug);
-                return (
-                  <label
-                    key={v.slug}
-                    className={`studio-vault-item${checked ? " active" : ""}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleCompareSlug(v.slug)}
-                    />
-                    <span className="studio-vault-item-name">{v.productName}</span>
-                    <span className="studio-vault-item-meta">
-                      {v.chain} - {formatAPY(v.apy24h)}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="studio-field">
-            <label className="studio-label" htmlFor="studio-vault">Vault</label>
-            <select
-              id="studio-vault"
-              className="studio-select"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-            >
-              {vaults.map((v) => (
-                <option key={v.slug} value={v.slug}>
-                  {v.productName} - {v.chain} - {formatAPY(v.apy24h)} APY
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         <div className="studio-field">
           <span className="studio-label">Headline metric</span>
@@ -248,12 +160,11 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         </div>
 
         <div className="studio-field">
-          <span className="studio-label">Harvest logo</span>
+          <span className="studio-label">Harvest logo on card</span>
           <div className="studio-corners">
             {(
               [
                 ["tl", "Top L"],
-                ["tr", "Top R"],
                 ["bl", "Bot L"],
                 ["br", "Bot R"],
                 ["none", "Off"],
@@ -269,20 +180,11 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
               </button>
             ))}
           </div>
+          <p className="studio-hint">
+            Top right is reserved for the gold View pill that
+            anchors the card to the product page on harvest.fi.
+          </p>
         </div>
-
-        {layoutId !== "trend" ? (
-          <div className="studio-field">
-            <label className="studio-check">
-              <input
-                type="checkbox"
-                checked={showSpark}
-                onChange={(e) => setShowSpark(e.target.checked)}
-              />
-              <span>Show sparkline</span>
-            </label>
-          </div>
-        ) : null}
 
         <button
           type="button"
@@ -296,9 +198,7 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         <div className="studio-meta">
           <div className="studio-meta-row">
             <span>Output</span>
-            <span className="studio-meta-val">
-              {ratio.w} x {ratio.h}
-            </span>
+            <span className="studio-meta-val">{ratio.w} x {ratio.h}</span>
           </div>
           <div className="studio-meta-row">
             <span>Aspect</span>
@@ -312,19 +212,13 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         ref={wrapRef}
         style={{ aspectRatio: `${ratio.w} / ${ratio.h}` }}
       >
-        <div
-          className="studio-stage"
-          style={{ transform: `scale(${scale})` }}
-        >
+        <div className="studio-stage" style={{ transform: `scale(${scale})` }}>
           <StudioCard
             ref={cardRef}
             ratio={ratio}
-            layoutId={layoutId}
-            corner={corner}
             vault={vault}
-            compareVaults={compareVaults}
             metric={metric}
-            showSpark={showSpark}
+            corner={corner}
           />
         </div>
       </section>
@@ -332,30 +226,23 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   );
 }
 
-// React 19 lets us take `ref` as a regular prop without forwardRef.
 function StudioCard({
   ref,
   ratio,
-  layoutId,
-  corner,
   vault,
-  compareVaults,
   metric,
-  showSpark,
+  corner,
 }: {
   ref: React.Ref<HTMLDivElement>;
   ratio: Ratio;
-  layoutId: LayoutId;
-  corner: Corner;
   vault: StudioVault;
-  compareVaults: StudioVault[];
   metric: Metric;
-  showSpark: boolean;
+  corner: Corner;
 }) {
   return (
     <article
       ref={ref}
-      className={`studio-card studio-card--${ratio.id} studio-card--${layoutId}`}
+      className={`studio-card studio-card--${ratio.id}`}
       style={
         {
           width: ratio.w,
@@ -365,206 +252,150 @@ function StudioCard({
         } as React.CSSProperties
       }
     >
-      {layoutId === "hero" ? (
-        <HeroBody vault={vault} metric={metric} showSpark={showSpark} />
-      ) : layoutId === "trend" ? (
-        <TrendBody vault={vault} metric={metric} />
-      ) : (
-        <CompareBody vaults={compareVaults} metric={metric} />
-      )}
-
-      {corner !== "none" ? (
-        <span className={`studio-card-mark studio-card-mark-${corner}`}>
-          <span className="studio-card-mark-name">Harvest</span>
-          <span className="studio-card-mark-dot" aria-hidden="true" />
-        </span>
-      ) : null}
+      <ProductCard vault={vault} metric={metric} corner={corner} />
     </article>
   );
 }
 
-function HeroBody({
+function ProductCard({
   vault,
   metric,
-  showSpark,
+  corner,
 }: {
   vault: StudioVault;
   metric: Metric;
-  showSpark: boolean;
+  corner: Corner;
 }) {
-  const headline = headlineFor(vault, metric);
-  const sparkPath = useSparkPath(vault, metric);
-
-  return (
-    <>
-      <header className="studio-card-meta">
-        <span className="studio-card-meta-chip">
-          <ChainIcon chain={vault.chain} size={32} />
-          <span>{vault.chain}</span>
-        </span>
-        <span className="studio-card-meta-sep" aria-hidden="true">·</span>
-        <span>{vault.protocol}</span>
-        {vault.vaultType ? (
-          <>
-            <span className="studio-card-meta-sep" aria-hidden="true">·</span>
-            <span>{vault.vaultType}</span>
-          </>
-        ) : null}
-      </header>
-
-      <div className="studio-card-id">
-        <span className="studio-card-asset">
-          <AssetIcon asset={vault.asset} size={88} />
-        </span>
-        <h2 className="studio-card-name">{vault.productName}</h2>
-      </div>
-
-      <div className="studio-card-figure">
-        <span className="studio-card-value">{headline.value}</span>
-        <span className="studio-card-label">{headline.label}</span>
-      </div>
-
-      {showSpark && sparkPath ? (
-        <div className="studio-card-spark">
-          <svg
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            width="100%"
-            height="100%"
-          >
-            <path
-              d={sparkPath}
-              fill="none"
-              stroke="#191717"
-              strokeWidth="0.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-        </div>
-      ) : null}
-    </>
+  const headline = useMemo(() => headlineFor(vault, metric), [vault, metric]);
+  const series = useMemo(
+    () => (metric === "tvl" ? vault.tvlSpark : vault.apySpark),
+    [vault, metric],
   );
-}
-
-function TrendBody({ vault, metric }: { vault: StudioVault; metric: Metric }) {
-  const headline = headlineFor(vault, metric);
-  const sparkPath = useSparkPath(vault, metric);
-  const series = metric === "tvl" ? vault.tvlSpark : vault.apySpark;
-  const trendUp = series.length > 1 && series[series.length - 1] >= series[0];
+  // Bars: same 24-bar grid as the homepage hero preview. Pad short
+  // series with the first value so the visual density is consistent
+  // across vaults regardless of how many real records we have.
+  const bars = useMemo(() => normalizeBars(series, 24), [series]);
+  const activeTabId: "tvl" | "apy" | "sharePrice" =
+    metric === "tvl" ? "tvl" : "apy";
 
   return (
-    <>
-      <header className="studio-trend-head">
-        <span className="studio-trend-head-id">
-          <AssetIcon asset={vault.asset} size={56} />
-          <span className="studio-trend-head-name">{vault.productName}</span>
-        </span>
-        <span className="studio-trend-head-meta">
-          <ChainIcon chain={vault.chain} size={24} />
-          <span>{vault.chain}</span>
-          <span aria-hidden="true">·</span>
-          <span>{vault.protocol}</span>
-        </span>
-      </header>
+    <div className="studio-prevcard">
+      {/* Top-right View pill: visual anchor back to the product page,
+          same gold-on-ink chip as the homepage hero preview. */}
+      <span className="studio-prevcard-cta">
+        View
+        <span className="studio-prevcard-cta-arrow" aria-hidden="true">↗</span>
+      </span>
 
-      <div className="studio-trend-chart">
-        {sparkPath ? (
-          <svg
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            width="100%"
-            height="100%"
-          >
-            <path
-              d={sparkPath}
-              fill="none"
-              stroke="#191717"
-              strokeWidth="0.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-        ) : (
-          <span className="studio-trend-empty">
-            No history available yet.
-          </span>
-        )}
-      </div>
-
-      <footer className="studio-trend-foot">
-        <span className="studio-trend-foot-value">{headline.value}</span>
-        <span className="studio-trend-foot-label">
-          {headline.label}
-          {sparkPath ? (
-            <span
-              className={`studio-trend-arrow${trendUp ? " up" : " down"}`}
-              aria-hidden="true"
-            >
-              {trendUp ? "▲" : "▼"}
+      <header className="studio-prevcard-head">
+        <span className="studio-prevcard-icon">
+          <AssetIcon asset={vault.asset} size={44} />
+        </span>
+        <div className="studio-prevcard-id">
+          <h3 className="studio-prevcard-name">{vault.productName}</h3>
+          <p className="studio-prevcard-byline">
+            <span className="studio-prevcard-byline-chain">
+              <ChainIcon chain={vault.chain} size={13} />
+              {vault.chain}
             </span>
-          ) : null}
-        </span>
-      </footer>
-    </>
-  );
-}
-
-function CompareBody({
-  vaults,
-  metric,
-}: {
-  vaults: StudioVault[];
-  metric: Metric;
-}) {
-  const headlineLabel =
-    metric === "tvl"
-      ? "Total value locked"
-      : metric === "apy30d"
-        ? "30d APY"
-        : "24h APY";
-
-  return (
-    <>
-      <header className="studio-compare-head">
-        <h2 className="studio-compare-title">Top yields</h2>
-        <span className="studio-compare-sub">Ranked by {headlineLabel}</span>
+            <span aria-hidden="true">·</span>
+            <span>{vault.protocol}</span>
+            {vault.vaultType ? (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{vault.vaultType}</span>
+              </>
+            ) : null}
+          </p>
+        </div>
       </header>
 
-      <ol className="studio-compare-list">
-        {vaults.map((v, i) => {
-          const headline = headlineFor(v, metric);
-          return (
-            <li key={v.slug} className="studio-compare-row">
-              <span className="studio-compare-rank">#{i + 1}</span>
-              <span className="studio-compare-asset">
-                <AssetIcon asset={v.asset} size={56} />
-              </span>
-              <span className="studio-compare-id">
-                <span className="studio-compare-name">{v.productName}</span>
-                <span className="studio-compare-chain">
-                  <ChainIcon chain={v.chain} size={20} />
-                  <span>{v.chain}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{v.protocol}</span>
-                </span>
-              </span>
-              <span className="studio-compare-value">{headline.value}</span>
-            </li>
-          );
-        })}
-      </ol>
-    </>
-  );
-}
+      <div className="studio-prevcard-bignum">
+        <span className="studio-prevcard-bignum-value">{headline.value}</span>
+        <span className="studio-prevcard-bignum-label">{headline.label}</span>
+      </div>
 
-function useSparkPath(vault: StudioVault, metric: Metric): string {
-  return useMemo(() => {
-    const series = metric === "tvl" ? vault.tvlSpark : vault.apySpark;
-    return buildSparklinePath(series);
-  }, [vault, metric]);
+      <div className="studio-prevcard-ranges" aria-label="Range">
+        {(["1M", "3M", "1Y", "ALL"] as const).map((r) => (
+          <span
+            key={r}
+            className={`studio-prevcard-range${r === "1M" ? " active" : ""}`}
+          >
+            {r}
+          </span>
+        ))}
+      </div>
+
+      <div className="studio-prevcard-chart">
+        <div className="studio-prevcard-bars">
+          {bars.map((h, i) => (
+            <span
+              key={i}
+              className="studio-prevcard-bar"
+              style={{ height: `${Math.max(4, h)}%` }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="studio-prevcard-foot">
+        <div className="studio-prevcard-tabs" aria-label="Metric">
+          {(
+            [
+              ["tvl", "TVL"],
+              ["apy", "APY"],
+              ["sharePrice", "Share price"],
+            ] as [string, string][]
+          ).map(([id, label]) => (
+            <span
+              key={id}
+              className={`studio-prevcard-tab${id === activeTabId ? " active" : ""}`}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+        <div className="studio-prevcard-style" aria-label="Chart style">
+          <span className="studio-prevcard-style-btn active" aria-label="Bars">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="2" y="7" width="2" height="5" rx="0.5" fill="currentColor" />
+              <rect x="6" y="4" width="2" height="8" rx="0.5" fill="currentColor" />
+              <rect x="10" y="6" width="2" height="6" rx="0.5" fill="currentColor" />
+            </svg>
+          </span>
+          <span className="studio-prevcard-style-btn" aria-label="Line">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M2 10 5 6 8 8 12 3"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <span className="studio-prevcard-style-btn" aria-label="Step">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M2 10 5 10 5 6 8 6 8 8 12 8"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      {corner !== "none" ? (
+        <span className={`studio-prevcard-mark studio-prevcard-mark-${corner}`}>
+          <span className="studio-prevcard-mark-name">Harvest</span>
+          <span className="studio-prevcard-mark-dot" aria-hidden="true" />
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 function headlineFor(
@@ -581,16 +412,26 @@ function headlineFor(
   }
 }
 
-function buildSparklinePath(values: number[]): string {
-  if (!values || values.length < 2) return "";
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const span = max - min || 1;
-  return values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * 100;
-      const y = 100 - ((v - min) / span) * 100;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
-    })
-    .join(" ");
+function normalizeBars(values: number[], target: number): number[] {
+  if (!values || values.length === 0) {
+    return Array.from({ length: target }, () => 12);
+  }
+  let sampled: number[];
+  if (values.length >= target) {
+    const step = (values.length - 1) / (target - 1);
+    sampled = Array.from(
+      { length: target },
+      (_, i) => values[Math.round(i * step)],
+    );
+  } else {
+    sampled = [
+      ...Array.from({ length: target - values.length }, () => values[0]),
+      ...values,
+    ];
+  }
+  const max = Math.max(...sampled);
+  const min = Math.min(...sampled);
+  const span = max - min;
+  if (span === 0) return sampled.map(() => 60);
+  return sampled.map((v) => ((v - min) / span) * 100);
 }
