@@ -81,12 +81,18 @@ function formatTVL(value: number): string {
   return `$${value.toFixed(0)}`;
 }
 
-// Normalize a real spark series to 0-100 bar heights, padding to
-// the same 24-bar grid the dummy series uses so visual density
-// matches across vaults regardless of how many records we have.
+// Normalize a real spark series to bar heights on the 24-bar grid
+// the dummy series uses. Two guarantees:
+//   - empty/short series get padded with the average of the real
+//     values (was: padded with the first value, which left a
+//     visible "flat shelf" at the start of the chart)
+//   - heights map to 30..100 (not 0..100), so no bar collapses
+//     into the chart floor and the row never reads as "empty".
+//     30% is enough to register visually while preserving the
+//     relative shape between min and max.
 function normalizeSeries(values: number[], target: number = 24): number[] {
   if (!values || values.length === 0) {
-    return Array.from({ length: target }, () => 50);
+    return Array.from({ length: target }, () => 60);
   }
   let sampled: number[];
   if (values.length >= target) {
@@ -96,8 +102,9 @@ function normalizeSeries(values: number[], target: number = 24): number[] {
       (_, i) => values[Math.round(i * step)],
     );
   } else {
+    const avg = values.reduce((s, v) => s + v, 0) / values.length;
     sampled = [
-      ...Array.from({ length: target - values.length }, () => values[0]),
+      ...Array.from({ length: target - values.length }, () => avg),
       ...values,
     ];
   }
@@ -105,13 +112,14 @@ function normalizeSeries(values: number[], target: number = 24): number[] {
   const min = Math.min(...sampled);
   const span = max - min;
   if (span === 0) return sampled.map(() => 60);
-  return sampled.map((v) => ((v - min) / span) * 100);
+  return sampled.map((v) => 30 + ((v - min) / span) * 70);
 }
 
 export function HomeHeroPreview({
   vault,
   headlineValueOverride,
   headlineLabelOverride,
+  lastBarHeightOverride,
   variant = "home",
 }: {
   vault?: HeroPreviewVault;
@@ -120,6 +128,11 @@ export function HomeHeroPreview({
   // undefined falls back to the vault-driven default.
   headlineValueOverride?: string;
   headlineLabelOverride?: string;
+  // Studio override: manually pin the LAST bar to a specific
+  // height (0..100 in the chart's normalized space). Lets us
+  // dramatize the trend on the rightmost bar for social posts.
+  // Undefined = use the auto-derived height.
+  lastBarHeightOverride?: number;
   // "home" (default): original layout used on the landing page -
   //   View CTA floats absolute in the top-right corner, no
   //   Harvest mark inside the card.
@@ -137,9 +150,21 @@ export function HomeHeroPreview({
   // override the dummy data. Range toggles still flip the visual
   // active pill but reuse the same snapshot series (we only have
   // one daily-aggregated set, not per-range bucketing).
-  const series = vault
+  const baseSeries = vault
     ? normalizeSeries(metric === "tvl" ? vault.tvlSpark : vault.apySpark)
     : SERIES[metric][range];
+  // Studio override: clamp the last bar's height to a user-set
+  // value (0..100) when supplied, so the rightmost bar can be
+  // dramatized without rebuilding the series.
+  const series =
+    typeof lastBarHeightOverride === "number" &&
+    Number.isFinite(lastBarHeightOverride) &&
+    baseSeries.length > 0
+      ? [
+          ...baseSeries.slice(0, -1),
+          Math.max(4, Math.min(100, lastBarHeightOverride)),
+        ]
+      : baseSeries;
   const baseHeadline = vault
     ? {
         value:

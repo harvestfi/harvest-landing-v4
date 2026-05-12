@@ -4326,22 +4326,21 @@ body:has(.methodology-page) {
   background-size: auto, 12px 12px;
   background-position: 0 0, 0 0;
   background-repeat: no-repeat, repeat;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 0;
 }
 
 /* Neutralize .uni-home-test's own styling (1320px max-width,
    24px/80px padding, transparent bg) and zoom the wrapper up so
    the preview card reads at social-media size without per-element
-   font overrides. The width:100% is essential: as a flex item the
-   inner would otherwise shrink to fit its content, so its child
-   percentages have nothing to anchor to and the card looks
-   stranded in the canvas. */
+   font overrides. Absolute-positioned at bottom-center so it sits
+   flush with the canvas floor regardless of how zoom interacts
+   with the parent's box - flex+zoom kept pinning the card to the
+   left edge on Chromium. */
 .studio-card .studio-card-inner.uni-home-test {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   display: block;
-  width: 100%;
   max-width: none;
   margin: 0;
   padding: 0;
@@ -4350,25 +4349,13 @@ body:has(.methodology-page) {
   font-size: 15px;
   line-height: 1.55;
   zoom: 2.2;
-  /* No explicit width: the inner shrinks to its content (the
-     preview card has explicit width: Xpx per ratio below), so the
-     flex container's justify-content: center can properly center
-     it. width: 100% here made the inner overflow zoom and pinned
-     the card off-center against the canvas edge. */
 }
 
-/* The preview wrapper kisses the bottom edge. Same translateY(8px)
-   lip dip the homepage uses to feel like the card is "rising from
-   below" the hero floor; top corners stay rounded, bottom corners
-   are already flat in home.css. */
+/* The preview wrapper kisses the bottom edge. translateY(8px)
+   gives the same "rising from below" lip dip the homepage uses;
+   top corners stay rounded, bottom flat from home.css. */
 .studio-card .uni-home-test .uni-home-hero-preview {
   position: static;
-  /* Fill the parent's width up to the per-ratio cap below. Using
-     `width: 100%` here (not the homepage's `auto`) is essential -
-     `auto` lets the inner content drive sizing, so max-width
-     never gets reached for short product names and the card
-     looks narrow regardless of the cap. */
-  width: 100%;
   right: auto;
   bottom: auto;
   transform: translateY(8px);

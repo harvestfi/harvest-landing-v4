@@ -47,6 +47,10 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   // social card (e.g. round to "5%" instead of the raw "4.80%").
   const [valueOverride, setValueOverride] = useState("");
   const [labelOverride, setLabelOverride] = useState("");
+  // Studio override for the last bar's height on the chart, in the
+  // 0..100 normalized space the rest of the series uses. Empty
+  // string = leave the bar at its auto-derived height.
+  const [lastBarOverride, setLastBarOverride] = useState("");
   const [downloading, setDownloading] = useState(false);
 
   const ratio = RATIOS.find((r) => r.id === ratioId) ?? RATIOS[0];
@@ -168,6 +172,28 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
           </p>
         </div>
 
+        <div className="studio-field">
+          <label className="studio-label" htmlFor="studio-lastbar">
+            Last bar height (0-100)
+          </label>
+          <input
+            id="studio-lastbar"
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            className="studio-input"
+            placeholder="auto"
+            value={lastBarOverride}
+            onChange={(e) => setLastBarOverride(e.target.value)}
+          />
+          <p className="studio-hint">
+            Pin the rightmost bar to a specific height (% of the
+            chart area). Useful when you want the last data point
+            to lead the eye.
+          </p>
+        </div>
+
         <button
           type="button"
           className="studio-download"
@@ -220,6 +246,11 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
                 variant="studio"
                 headlineValueOverride={valueOverride}
                 headlineLabelOverride={labelOverride}
+                lastBarHeightOverride={
+                  lastBarOverride.trim() === ""
+                    ? undefined
+                    : Number(lastBarOverride)
+                }
               />
             </div>
           </article>
