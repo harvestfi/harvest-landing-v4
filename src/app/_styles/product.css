@@ -22,6 +22,14 @@
   --uni-line:         #dddee0;       /* Alabaster Grey */
   --uni-line-2:       #ebebe7;
 
+  /* Tint family - low-alpha ink overlays used for muted pill bgs,
+     subtle dividers, dotted textures. Flips to light-on-dark in
+     dark mode so the same selectors render correctly without
+     per-element overrides. */
+  --uni-tint:         var(--uni-tint);
+  --uni-tint-thin:    var(--uni-tint-thin);
+  --uni-tint-strong:  var(--uni-tint-strong);
+
   /* Remap the global --up green to Sunflower Gold inside .uni-shell so
      every component that reads `var(--up)` directly (yield-source bars,
      consistency ring + label, long-term up-trajectory icon, etc.)
@@ -55,6 +63,31 @@ body:has(.uni-shell) {
   background: #ffffff !important;
   overscroll-behavior-y: contain;
 }
+
+/* Dark theme overrides for the single-product page. The .vh-* hero
+   band at the top is already hardcoded dark (intended in both
+   themes), so this block only flips the surrounding surfaces, card
+   fills, and ink ramps that the rest of the page reads through the
+   --uni-* family. The gold accent stays the same in both modes
+   since it's the brand anchor. */
+:root[data-theme="dark"] .uni-shell {
+  --uni-bg:     #1a1917;
+  --uni-card:   #232220;
+  --uni-card-2: #2a2825;
+  --uni-ink:    #f4f4f1;
+  --uni-ink-2:  #d4d2cc;
+  --uni-ink-3:  #9a9892;
+  --uni-line:   #2f2e2a;
+  --uni-line-2: #3a3833;
+
+  --uni-tint:        rgba(244, 244, 241, 0.06);
+  --uni-tint-thin:   rgba(244, 244, 241, 0.04);
+  --uni-tint-strong: rgba(244, 244, 241, 0.14);
+}
+:root[data-theme="dark"] body:has(.uni-shell) {
+  background: var(--bg) !important;
+}
+
 .uni-shell {
   overflow-x: clip;
 }
@@ -319,7 +352,7 @@ body:has(.uni-shell) {
   flex: 1;
   background-image: radial-gradient(
     circle,
-    rgba(25, 23, 23, 0.07) 1px,
+    var(--uni-tint) 1px,
     transparent 1.2px
   );
   background-size: 14px 14px;
@@ -366,7 +399,7 @@ body:has(.uni-shell) {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(25, 23, 23, 0.18);
+  background: var(--uni-tint-strong);
   pointer-events: none;
   z-index: 2;
 }
@@ -398,7 +431,7 @@ body:has(.uni-shell) {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(25, 23, 23, 0.05);
+  background: var(--uni-tint);
   border-radius: 5px 5px 0 0;
   pointer-events: none;
   z-index: 0;
@@ -460,7 +493,7 @@ body:has(.uni-shell) {
 .uni-shell .uni-pill-btn.active {
   background: var(--uni-gold);
   color: var(--uni-ink);
-  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
+  box-shadow: 0 1px 2px var(--uni-tint);
 }
 /* Metric selector: bordered pill group, no fill at rest. Active
    tab fills Sunflower Gold (matches the time-range pill rail). */
@@ -493,7 +526,7 @@ body:has(.uni-shell) {
   background: var(--uni-gold);
   color: var(--uni-ink);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
+  box-shadow: 0 1px 2px var(--uni-tint);
 }
 
 /* Sidebar stack */
@@ -522,7 +555,7 @@ body:has(.uni-shell) {
   border-radius: var(--uni-radius);
   text-decoration: none;
   border: 0;
-  box-shadow: 0 1px 0 rgba(25, 23, 23, 0.04);
+  box-shadow: 0 1px 0 var(--uni-tint-thin);
   transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .uni-shell .uni-cta:hover {
@@ -548,7 +581,7 @@ body:has(.uni-shell) {
 }
 .uni-shell .uni-side-card-divider {
   height: 1px;
-  background: rgba(25, 23, 23, 0.08);
+  background: var(--uni-tint);
   margin: 18px 0 16px;
 }
 .uni-shell .uni-side-card-title {
@@ -603,7 +636,7 @@ body:has(.uni-shell) {
   color: var(--uni-ink);
   font-size: 14.5px;
   font-weight: 500;
-  border-top: 1px solid rgba(25, 23, 23, 0.08);
+  border-top: 1px solid var(--uni-tint);
   transition: color 0.12s ease;
 }
 .uni-shell .uni-side-link:first-of-type { border-top: 0; }
@@ -626,11 +659,11 @@ body:has(.uni-shell) {
    so per the user). On /test we equalize to 16px, weight 600 on the
    summary, weight 400 on the answer, both Onyx/Graphite. */
 .uni-shell .faq details {
-  border-bottom-color: rgba(25, 23, 23, 0.08);
+  border-bottom-color: var(--uni-tint);
   padding: 18px 0;
 }
 .uni-shell .faq details:first-child {
-  border-top-color: rgba(25, 23, 23, 0.08);
+  border-top-color: var(--uni-tint);
 }
 .uni-shell .faq summary {
   font-size: 16px;
@@ -679,8 +712,8 @@ body:has(.uni-shell) {
   text-transform: none;
   text-wrap: balance;
   border-radius: 10px;
-  box-shadow: 0 12px 28px -12px rgba(25, 23, 23, 0.45),
-              0 2px 6px -2px rgba(25, 23, 23, 0.20);
+  box-shadow: 0 12px 28px -12px var(--uni-tint-strong),
+              0 2px 6px -2px var(--uni-tint-strong);
   opacity: 0;
   /* Center the bubble horizontally on the chip and offset vertically
      so the entrance reads as a small upward pop. */
@@ -740,7 +773,7 @@ body:has(.uni-shell) {
   gap: 4px;
   margin: 64px 0 40px;
   padding: 6px;
-  background: rgba(25, 23, 23, 0.025);
+  background: var(--uni-tint-thin);
   border-radius: 16px;
 }
 .uni-shell .uni-jump-item {
@@ -906,7 +939,7 @@ body:has(.uni-shell) {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding-top: 18px;
-  border-top: 1px solid rgba(25, 23, 23, 0.06);
+  border-top: 1px solid var(--uni-tint);
 }
 .uni-shell .uni-similar-stat-r { text-align: right; }
 .uni-shell .uni-similar-stat-label {
@@ -1222,7 +1255,7 @@ body:has(.uni-shell) {
 .uni-shell .pp-numbered-item {
   gap: 18px;
   padding: 18px 0;
-  border-bottom-color: rgba(25, 23, 23, 0.06);
+  border-bottom-color: var(--uni-tint);
 }
 .uni-shell .pp-num-badge {
   width: 34px;
@@ -1349,7 +1382,7 @@ body:has(.uni-shell) {
 .uni-shell .uni-stab-tick {
   flex: 1;
   min-width: 0;
-  background: rgba(25, 23, 23, 0.07);
+  background: var(--uni-tint);
   border-radius: 2px 2px 0 0;
   transform-origin: bottom center;
   animation: uni-stab-rise 0.45s cubic-bezier(0.2, 0.65, 0.35, 1.05) backwards;
@@ -1505,7 +1538,7 @@ body:has(.uni-shell) {
   color: var(--uni-ink);
 }
 .uni-shell .ys-bar {
-  background: rgba(25, 23, 23, 0.06);
+  background: var(--uni-tint);
   height: 10px;
 }
 .uni-shell .ys-val {
@@ -1526,7 +1559,7 @@ body:has(.uni-shell) {
   overflow: visible;
 }
 .uni-shell .vh-table-header {
-  border-bottom: 1px solid rgba(25, 23, 23, 0.06);
+  border-bottom: 1px solid var(--uni-tint);
   background: transparent;
   padding: 0 0 14px;
   margin-bottom: 4px;
@@ -1581,7 +1614,7 @@ body:has(.uni-shell) {
 .uni-shell .chart-data-tabs button.active {
   background: var(--uni-gold);
   color: var(--uni-ink);
-  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.08);
+  box-shadow: 0 1px 2px var(--uni-tint);
 }
 
 .uni-shell .chart-datatable thead th {
@@ -1595,7 +1628,7 @@ body:has(.uni-shell) {
   border-bottom: 2px solid var(--uni-gold);
 }
 .uni-shell .chart-datatable tbody tr {
-  border-bottom: 1px solid rgba(25, 23, 23, 0.05);
+  border-bottom: 1px solid var(--uni-tint);
   transition: background-color 0.12s ease;
 }
 .uni-shell .chart-datatable tbody tr:hover {
@@ -1627,7 +1660,7 @@ body:has(.uni-shell) {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--uni-ink-2);
-  border-top: 1px solid rgba(25, 23, 23, 0.06);
+  border-top: 1px solid var(--uni-tint);
   background: transparent;
 }
 .uni-shell .chart-datatable-foot .pager button {
@@ -1727,7 +1760,7 @@ body:has(.uni-shell) {
   gap: 18px;
 }
 .uni-shell .bt-row {
-  border-bottom: 1px solid rgba(25, 23, 23, 0.06);
+  border-bottom: 1px solid var(--uni-tint);
   font-size: 16px;
   color: var(--uni-ink);
   transition: background-color 0.12s ease;
@@ -1799,7 +1832,7 @@ body:has(.uni-shell) {
   border-bottom: 1px dashed var(--uni-line);
   background-image: radial-gradient(
     circle,
-    rgba(25, 23, 23, 0.07) 1px,
+    var(--uni-tint) 1px,
     transparent 1.2px
   );
   background-size: 14px 14px;
@@ -1890,7 +1923,7 @@ body:has(.uni-shell) {
   font-size: 14.5px;
   font-weight: 600;
   letter-spacing: -0.005em;
-  border: 1px solid rgba(25, 23, 23, 0.18);
+  border: 1px solid var(--uni-tint-strong);
   border-radius: var(--uni-radius);
   text-decoration: none;
   box-shadow: none;
@@ -1934,7 +1967,7 @@ body:has(.uni-shell) {
 }
 .uni-shell .cd-row {
   padding: 16px 0;
-  border-bottom: 1px solid rgba(25, 23, 23, 0.06);
+  border-bottom: 1px solid var(--uni-tint);
   gap: 20px;
 }
 .uni-shell .cd-row:last-child { border-bottom: 0; }
