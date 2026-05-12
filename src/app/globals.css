@@ -4370,6 +4370,16 @@ body:has(.methodology-page) {
 .studio-card--9x16 .studio-card-inner.uni-home-test { zoom: 2.5; }
 .studio-card--3x1 .studio-card-inner.uni-home-test  { zoom: 1.0; }
 
+/* Per-ratio max-width override - the homepage's 440px natural
+   width was leaving too much yellow margin on both sides. Bumped
+   so the card fills ~95% of the canvas width post-zoom, halving
+   the side padding while keeping comfortable internal spacing. */
+.studio-card--16x9 .uni-home-test .uni-home-hero-preview { max-width: 840px; }
+.studio-card--1x1  .uni-home-test .uni-home-hero-preview { max-width: 480px; }
+.studio-card--4x5  .uni-home-test .uni-home-hero-preview { max-width: 460px; }
+.studio-card--9x16 .uni-home-test .uni-home-hero-preview { max-width: 420px; }
+.studio-card--3x1  .uni-home-test .uni-home-hero-preview { max-width: 1400px; }
+
 @media (max-width: 900px) {
   .studio { grid-template-columns: 1fr; }
   .studio-controls { position: static; max-height: none; }
