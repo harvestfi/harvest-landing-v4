@@ -243,7 +243,7 @@ export async function getVaultHistory(contractAddress: string): Promise<FullVaul
   if (!chainKey) return empty;
 
   try {
-    return await fetchFullVaultHistory(contractAddress, chainKey);
+    return await fetchFullVaultHistory(contractAddress, chainKey, vault.vaultType);
   } catch {
     return empty;
   }

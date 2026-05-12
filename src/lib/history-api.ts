@@ -187,12 +187,92 @@ function deduplicateByDay<T extends { timestamp: number }>(points: T[]): T[] {
 }
 
 /**
+ * Plasma history fetch for Autopilot vaults. Autopilots live under
+ * separate plasma* entities in the subgraph and return zero results
+ * from the standard tvls/vaultHistories/apyAutoCompounds query, so
+ * we route them through plasmaVaultHistories and derive APY from
+ * share-price growth between consecutive daily samples.
+ */
+async function fetchPlasmaVaultHistory(
+  chainId: string,
+  addr: string,
+): Promise<FullVaultHistory> {
+  const empty: FullVaultHistory = {
+    tvlHistory: [],
+    sharePriceHistory: [],
+    apyHistory: [],
+  };
+  const query = `{
+    plasmaVaultHistories(
+      where: { vault: "${addr}" }
+      orderBy: timestamp
+      orderDirection: asc
+      first: 1000
+    ) {
+      timestamp
+      tvl
+      sharePrice
+    }
+  }`;
+  const data = await queryGraphQL(chainId, query);
+  if (!data) return empty;
+  const raw = ((data.plasmaVaultHistories as { timestamp: string; tvl: string; sharePrice: string }[]) || []).map(
+    (r) => ({
+      timestamp: parseInt(r.timestamp, 10),
+      tvl: parseFloat(r.tvl),
+      sharePrice: parseFloat(r.sharePrice),
+    }),
+  );
+  log(`[plasma] vault=${addr} chain=${chainId} records=${raw.length}`);
+  if (raw.length === 0) return empty;
+
+  const byDay = new Map<string, typeof raw[number]>();
+  for (const p of raw) {
+    const day = new Date(p.timestamp * 1000).toISOString().slice(0, 10);
+    byDay.set(day, p);
+  }
+  const daily = [...byDay.values()].sort((a, b) => a.timestamp - b.timestamp);
+
+  const tvlHistory: TvlHistoryPoint[] = daily
+    .filter((p) => Number.isFinite(p.tvl) && p.tvl >= 0)
+    .map((p) => ({ value: p.tvl, timestamp: p.timestamp }));
+
+  let sharePriceHistory: SharePriceHistoryPoint[] = [];
+  const sharePriceDaily = daily.filter(
+    (p) => Number.isFinite(p.sharePrice) && p.sharePrice > 0,
+  );
+  if (sharePriceDaily.length > 0) {
+    const base = sharePriceDaily[0].sharePrice;
+    sharePriceHistory = sharePriceDaily.map((p) => ({
+      sharePrice: p.sharePrice / base,
+      timestamp: p.timestamp,
+    }));
+  }
+
+  const apyHistory: ApyHistoryPoint[] = [];
+  for (let i = 1; i < sharePriceDaily.length; i++) {
+    const prev = sharePriceDaily[i - 1];
+    const cur = sharePriceDaily[i];
+    const daysDelta = Math.max(0.5, (cur.timestamp - prev.timestamp) / 86400);
+    const periodReturn = cur.sharePrice / prev.sharePrice - 1;
+    if (!Number.isFinite(periodReturn)) continue;
+    const apy = ((1 + periodReturn) ** (365 / daysDelta) - 1) * 100;
+    if (Number.isFinite(apy) && apy >= 0 && apy <= 100) {
+      apyHistory.push({ apy, timestamp: cur.timestamp });
+    }
+  }
+
+  return { tvlHistory, sharePriceHistory, apyHistory };
+}
+
+/**
  * Fetch full vault history (up to 1000 records each) for TVL, share price, and APY.
  * Returns one data point per day (last value of each day).
  */
 export async function fetchFullVaultHistory(
   vaultAddress: string,
   chainKey: string,
+  vaultType?: string,
 ): Promise<FullVaultHistory> {
   const empty: FullVaultHistory = {
     tvlHistory: [],
@@ -207,7 +287,15 @@ export async function fetchFullVaultHistory(
   }
 
   const addr = vaultAddress.toLowerCase();
-  log(`[history-full] FETCHING vault=${addr} chainKey=${chainKey} chainId=${chainId}`);
+  log(`[history-full] FETCHING vault=${addr} chainKey=${chainKey} chainId=${chainId} type=${vaultType ?? "?"}`);
+
+  if (vaultType === "Autopilot") {
+    const plasma = await fetchPlasmaVaultHistory(chainId, addr);
+    if (plasma.tvlHistory.length > 0 || plasma.sharePriceHistory.length > 0) {
+      return plasma;
+    }
+    log(`[history-full] plasma empty for ${addr}, falling through to standard query`);
+  }
 
   const query = `{
     tvls(

@@ -439,7 +439,96 @@ function deduplicateByDay(points) {
   return Array.from(byDay.values()).sort((a, b) => a.timestamp - b.timestamp);
 }
 
-async function fetchFullVaultHistory(vaultAddress, chainKey) {
+// Autopilot vaults are indexed under separate plasma* entities. The
+// schema (per the indexer team) exposes `plasmaVaultHistories` with
+// tvl + sharePrice per timestamp; there is no dedicated APY entity,
+// so we derive APY from the share-price growth between consecutive
+// daily samples - same formula the protocol uses on /[slug] for
+// vaults that lack an upstream APY feed.
+//
+// Schema guesses: where uses { vault: "0xaddr" }, lowercase. If the
+// indexer turns out to expect `plasmaVault` instead, the GraphQL
+// error gets logged and we return empty so the chart degrades to
+// the snapshotSeries fallback rather than blowing up the build.
+async function fetchPlasmaVaultHistory(chainId, addr) {
+  const empty = { tvlHistory: [], sharePriceHistory: [], apyHistory: [] };
+
+  const query = `{
+    plasmaVaultHistories(
+      where: { vault: "${addr}" }
+      orderBy: timestamp
+      orderDirection: asc
+      first: 1000
+    ) {
+      timestamp
+      tvl
+      sharePrice
+    }
+  }`;
+
+  const data = await queryGraphQL(chainId, query);
+  if (!data) return empty;
+
+  const raw = (data.plasmaVaultHistories || []).map((r) => ({
+    timestamp: parseInt(r.timestamp, 10),
+    tvl: parseFloat(r.tvl),
+    sharePrice: parseFloat(r.sharePrice),
+  }));
+
+  log(`[plasma] vault=${addr} chain=${chainId} records=${raw.length}`);
+
+  if (raw.length === 0) return empty;
+
+  // One sample per day (last wins) so the chart density matches the
+  // standard query's output.
+  const byDay = new Map();
+  for (const p of raw) {
+    const day = new Date(p.timestamp * 1000).toISOString().slice(0, 10);
+    byDay.set(day, p);
+  }
+  const daily = [...byDay.values()].sort((a, b) => a.timestamp - b.timestamp);
+
+  const tvlHistory = daily
+    .filter((p) => Number.isFinite(p.tvl) && p.tvl >= 0)
+    .map((p) => ({ value: p.tvl, timestamp: p.timestamp }));
+
+  // Normalize share price so the chart starts at 1.0 (same convention
+  // as the standard fetcher).
+  let sharePriceHistory = [];
+  const sharePriceDaily = daily.filter(
+    (p) => Number.isFinite(p.sharePrice) && p.sharePrice > 0,
+  );
+  if (sharePriceDaily.length > 0) {
+    const base = sharePriceDaily[0].sharePrice;
+    sharePriceHistory = sharePriceDaily.map((p) => ({
+      sharePrice: p.sharePrice / base,
+      timestamp: p.timestamp,
+    }));
+  }
+
+  // Derive APY from share-price growth between consecutive daily
+  // samples. Cap at 100% (anything higher is almost always a
+  // deposit/migration spike, not real yield).
+  const apyHistory = [];
+  for (let i = 1; i < sharePriceDaily.length; i++) {
+    const prev = sharePriceDaily[i - 1];
+    const cur = sharePriceDaily[i];
+    const daysDelta = Math.max(
+      0.5,
+      (cur.timestamp - prev.timestamp) / 86400,
+    );
+    const periodReturn = cur.sharePrice / prev.sharePrice - 1;
+    if (!Number.isFinite(periodReturn)) continue;
+    const apy = ((1 + periodReturn) ** (365 / daysDelta) - 1) * 100;
+    if (Number.isFinite(apy) && apy >= 0 && apy <= 100) {
+      apyHistory.push({ apy, timestamp: cur.timestamp });
+    }
+  }
+
+  return { tvlHistory, sharePriceHistory, apyHistory };
+}
+
+async function fetchFullVaultHistory(vaultAddress, chainKey, vaultType) {
   const empty = { tvlHistory: [], sharePriceHistory: [], apyHistory: [] };
 
   const chainId = CHAIN_IDS[chainKey];
@@ -449,7 +538,19 @@ async function fetchFullVaultHistory(vaultAddress, chainKey) {
   }
 
   const addr = vaultAddress.toLowerCase();
-  log(`[history-full] FETCHING vault=${addr} chainKey=${chainKey} chainId=${chainId}`);
+  log(`[history-full] FETCHING vault=${addr} chainKey=${chainKey} chainId=${chainId} type=${vaultType ?? "?"}`);
+
+  // Autopilot vaults live under separate plasma* entities in the
+  // subgraph; the standard tvls/vaultHistories/apyAutoCompounds
+  // collections return zero for them. Route them directly to the
+  // plasma query so the chart isn't empty for those products.
+  if (vaultType === "Autopilot") {
+    const plasma = await fetchPlasmaVaultHistory(chainId, addr);
+    if (plasma.tvlHistory.length > 0 || plasma.sharePriceHistory.length > 0) {
+      return plasma;
+    }
+    log(`[history-full] plasma returned empty for ${addr}, falling through to standard query`);
+  }
 
   const query = `{
     tvls(
@@ -571,7 +672,11 @@ async function main() {
     log(`[${i + 1}/${vaults.length}] ${v.productName} (${v.chain})`);
 
     try {
-      const history = await fetchFullVaultHistory(v.contractAddress, chainKey);
+      const history = await fetchFullVaultHistory(
+        v.contractAddress,
+        chainKey,
+        v.vaultType,
+      );
       const hasData =
         history.tvlHistory.length > 0 || history.apyHistory.length > 0;
       historyMap[v.contractAddress] = history;
