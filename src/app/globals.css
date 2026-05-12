@@ -4217,7 +4217,8 @@ body:has(.methodology-page) {
   line-height: 1.4;
   color: var(--ink-3);
 }
-.studio-select {
+.studio-select,
+.studio-input {
   appearance: none;
   width: 100%;
   padding: 9px 12px;
@@ -4227,6 +4228,11 @@ body:has(.methodology-page) {
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: 8px;
+}
+.studio-input::placeholder { color: var(--ink-4); }
+.studio-input:focus {
+  outline: none;
+  border-color: var(--ink);
 }
 .studio-segment,
 .studio-corners {
@@ -4335,7 +4341,6 @@ body:has(.methodology-page) {
    stranded in the canvas. */
 .studio-card .studio-card-inner.uni-home-test {
   display: block;
-  width: 100%;
   max-width: none;
   margin: 0;
   padding: 0;
@@ -4344,6 +4349,11 @@ body:has(.methodology-page) {
   font-size: 15px;
   line-height: 1.55;
   zoom: 2.2;
+  /* No explicit width: the inner shrinks to its content (the
+     preview card has explicit width: Xpx per ratio below), so the
+     flex container's justify-content: center can properly center
+     it. width: 100% here made the inner overflow zoom and pinned
+     the card off-center against the canvas edge. */
 }
 
 /* The preview wrapper kisses the bottom edge. Same translateY(8px)

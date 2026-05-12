@@ -41,6 +41,12 @@ const RATIOS: Ratio[] = [
 export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   const [ratioId, setRatioId] = useState<string>(RATIOS[0].id);
   const [slug, setSlug] = useState(vaults[0]?.slug ?? "");
+  // Optional manual overrides for the headline value + label. Empty
+  // string falls back to the vault-derived default; anything else
+  // displays verbatim. Lets us hand-craft the figure that fronts the
+  // social card (e.g. round to "5%" instead of the raw "4.80%").
+  const [valueOverride, setValueOverride] = useState("");
+  const [labelOverride, setLabelOverride] = useState("");
   const [downloading, setDownloading] = useState(false);
 
   const ratio = RATIOS.find((r) => r.id === ratioId) ?? RATIOS[0];
@@ -130,6 +136,38 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
           </select>
         </div>
 
+        <div className="studio-field">
+          <label className="studio-label" htmlFor="studio-value">
+            Headline value
+          </label>
+          <input
+            id="studio-value"
+            type="text"
+            className="studio-input"
+            placeholder={defaultHeadlineValue(vault)}
+            value={valueOverride}
+            onChange={(e) => setValueOverride(e.target.value)}
+          />
+        </div>
+
+        <div className="studio-field">
+          <label className="studio-label" htmlFor="studio-label">
+            Headline label
+          </label>
+          <input
+            id="studio-label"
+            type="text"
+            className="studio-input"
+            placeholder="24h APY"
+            value={labelOverride}
+            onChange={(e) => setLabelOverride(e.target.value)}
+          />
+          <p className="studio-hint">
+            Leave both empty to use the vault&apos;s current values.
+            Anything you type shows up verbatim in the card.
+          </p>
+        </div>
+
         <button
           type="button"
           className="studio-download"
@@ -177,11 +215,23 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
                 .uni-home-test sets background: transparent and a
                 fixed max-width that would nuke the studio canvas. */}
             <div className="studio-card-inner uni-home-test">
-              <HomeHeroPreview vault={vault} />
+              <HomeHeroPreview
+                vault={vault}
+                headlineValueOverride={valueOverride}
+                headlineLabelOverride={labelOverride}
+              />
             </div>
           </article>
         </div>
       </section>
     </div>
   );
+}
+
+// Match HomeHeroPreview's "apy" branch: vault.apy24h formatted as
+// e.g. "4.80%". Shown as the placeholder in the override input so
+// the user can see what they'd be overriding.
+function defaultHeadlineValue(vault: StudioVault | undefined): string {
+  if (!vault) return "";
+  return formatAPY(vault.apy24h);
 }

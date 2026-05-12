@@ -108,7 +108,18 @@ function normalizeSeries(values: number[], target: number = 24): number[] {
   return sampled.map((v) => ((v - min) / span) * 100);
 }
 
-export function HomeHeroPreview({ vault }: { vault?: HeroPreviewVault } = {}) {
+export function HomeHeroPreview({
+  vault,
+  headlineValueOverride,
+  headlineLabelOverride,
+}: {
+  vault?: HeroPreviewVault;
+  // Studio override: when a non-empty string is supplied, replace
+  // the auto-derived headline value/label. Empty string or
+  // undefined falls back to the vault-driven default.
+  headlineValueOverride?: string;
+  headlineLabelOverride?: string;
+} = {}) {
   const [metric, setMetric] = useState<Metric>("apy");
   const [range, setRange] = useState<Range>("1M");
   const [style, setStyle] = useState<Style>("bars");
@@ -121,7 +132,7 @@ export function HomeHeroPreview({ vault }: { vault?: HeroPreviewVault } = {}) {
   const series = vault
     ? normalizeSeries(metric === "tvl" ? vault.tvlSpark : vault.apySpark)
     : SERIES[metric][range];
-  const headline = vault
+  const baseHeadline = vault
     ? {
         value:
           metric === "tvl"
@@ -137,6 +148,10 @@ export function HomeHeroPreview({ vault }: { vault?: HeroPreviewVault } = {}) {
               : "Share price",
       }
     : HEADLINE[metric];
+  const headline = {
+    value: headlineValueOverride?.trim() || baseHeadline.value,
+    label: headlineLabelOverride?.trim() || baseHeadline.label,
+  };
 
   // Build SVG paths for line + step modes once per (series).
   // viewBox is 0..100 wide and 0..100 tall (top), so we invert y.
