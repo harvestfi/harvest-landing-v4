@@ -120,6 +120,8 @@ export function HomeHeroPreview({
   headlineValueOverride,
   headlineLabelOverride,
   lastBarHeightOverride,
+  secondLastBarHeightOverride,
+  apyTabLabel,
   variant = "home",
 }: {
   vault?: HeroPreviewVault;
@@ -128,11 +130,16 @@ export function HomeHeroPreview({
   // undefined falls back to the vault-driven default.
   headlineValueOverride?: string;
   headlineLabelOverride?: string;
-  // Studio override: manually pin the LAST bar to a specific
-  // height (0..100 in the chart's normalized space). Lets us
-  // dramatize the trend on the rightmost bar for social posts.
-  // Undefined = use the auto-derived height.
+  // Studio overrides: manually pin the last and/or second-to-last
+  // bar to a specific height (0..100 in the chart's normalized
+  // space). Lets us dramatize the trend on the rightmost bars
+  // for social posts.
   lastBarHeightOverride?: number;
+  secondLastBarHeightOverride?: number;
+  // Optional label override for the "APY" tab in the footer row
+  // (e.g. "Perf." for performance). Other tabs unchanged.
+  // Defaults to "APY" when undefined or empty.
+  apyTabLabel?: string;
   // "home" (default): original layout used on the landing page -
   //   View CTA floats absolute in the top-right corner, no
   //   Harvest mark inside the card.
@@ -153,18 +160,29 @@ export function HomeHeroPreview({
   const baseSeries = vault
     ? normalizeSeries(metric === "tvl" ? vault.tvlSpark : vault.apySpark)
     : SERIES[metric][range];
-  // Studio override: clamp the last bar's height to a user-set
-  // value (0..100) when supplied, so the rightmost bar can be
+  // Studio overrides: clamp the rightmost two bars to user-set
+  // heights (0..100) when supplied, so the trailing trend can be
   // dramatized without rebuilding the series.
-  const series =
-    typeof lastBarHeightOverride === "number" &&
-    Number.isFinite(lastBarHeightOverride) &&
-    baseSeries.length > 0
-      ? [
-          ...baseSeries.slice(0, -1),
-          Math.max(4, Math.min(100, lastBarHeightOverride)),
-        ]
-      : baseSeries;
+  const series = (() => {
+    if (baseSeries.length === 0) return baseSeries;
+    const clamp = (v: number) => Math.max(4, Math.min(100, v));
+    const last = baseSeries.length - 1;
+    const next = [...baseSeries];
+    if (
+      typeof secondLastBarHeightOverride === "number" &&
+      Number.isFinite(secondLastBarHeightOverride) &&
+      last - 1 >= 0
+    ) {
+      next[last - 1] = clamp(secondLastBarHeightOverride);
+    }
+    if (
+      typeof lastBarHeightOverride === "number" &&
+      Number.isFinite(lastBarHeightOverride)
+    ) {
+      next[last] = clamp(lastBarHeightOverride);
+    }
+    return next;
+  })();
   const baseHeadline = vault
     ? {
         value:
@@ -334,7 +352,11 @@ export function HomeHeroPreview({
                 className={`prevcard-tab${m === metric ? " active" : ""}`}
                 onClick={() => setMetric(m)}
               >
-                {m === "tvl" ? "TVL" : m === "apy" ? "APY" : "Share price"}
+                {m === "tvl"
+                  ? "TVL"
+                  : m === "apy"
+                    ? apyTabLabel?.trim() || "APY"
+                    : "Share price"}
               </button>
             ))}
           </div>

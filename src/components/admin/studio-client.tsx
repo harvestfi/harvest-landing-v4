@@ -47,10 +47,13 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   // social card (e.g. round to "5%" instead of the raw "4.80%").
   const [valueOverride, setValueOverride] = useState("");
   const [labelOverride, setLabelOverride] = useState("");
-  // Studio override for the last bar's height on the chart, in the
-  // 0..100 normalized space the rest of the series uses. Empty
-  // string = leave the bar at its auto-derived height.
+  // Studio overrides for the last + second-to-last bar heights on
+  // the chart, in the 0..100 normalized space. Empty string =
+  // leave the bar at its auto-derived height.
   const [lastBarOverride, setLastBarOverride] = useState("");
+  const [secondLastBarOverride, setSecondLastBarOverride] = useState("");
+  // When true, the "APY" tab in the footer reads as "Perf." instead.
+  const [usePerfLabel, setUsePerfLabel] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   const ratio = RATIOS.find((r) => r.id === ratioId) ?? RATIOS[0];
@@ -173,25 +176,46 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         </div>
 
         <div className="studio-field">
-          <label className="studio-label" htmlFor="studio-lastbar">
-            Last bar height (0-100)
-          </label>
-          <input
-            id="studio-lastbar"
-            type="number"
-            min={0}
-            max={100}
-            step={1}
-            className="studio-input"
-            placeholder="auto"
-            value={lastBarOverride}
-            onChange={(e) => setLastBarOverride(e.target.value)}
-          />
+          <span className="studio-label">Trailing bar heights (0-100)</span>
+          <div className="studio-bar-pair">
+            <input
+              id="studio-secondlastbar"
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              className="studio-input"
+              placeholder="2nd-last"
+              value={secondLastBarOverride}
+              onChange={(e) => setSecondLastBarOverride(e.target.value)}
+            />
+            <input
+              id="studio-lastbar"
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              className="studio-input"
+              placeholder="last"
+              value={lastBarOverride}
+              onChange={(e) => setLastBarOverride(e.target.value)}
+            />
+          </div>
           <p className="studio-hint">
-            Pin the rightmost bar to a specific height (% of the
-            chart area). Useful when you want the last data point
-            to lead the eye.
+            Pin the rightmost two bars to specific heights (% of
+            the chart area). Empty = auto height from the data.
           </p>
+        </div>
+
+        <div className="studio-field">
+          <label className="studio-check">
+            <input
+              type="checkbox"
+              checked={usePerfLabel}
+              onChange={(e) => setUsePerfLabel(e.target.checked)}
+            />
+            <span>Use &ldquo;Perf.&rdquo; instead of &ldquo;APY&rdquo; tab</span>
+          </label>
         </div>
 
         <button
@@ -251,6 +275,12 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
                     ? undefined
                     : Number(lastBarOverride)
                 }
+                secondLastBarHeightOverride={
+                  secondLastBarOverride.trim() === ""
+                    ? undefined
+                    : Number(secondLastBarOverride)
+                }
+                apyTabLabel={usePerfLabel ? "Perf." : undefined}
               />
             </div>
           </article>
