@@ -4329,12 +4329,13 @@ body:has(.methodology-page) {
 /* Neutralize .uni-home-test's own styling (1320px max-width,
    24px/80px padding, transparent bg) and zoom the wrapper up so
    the preview card reads at social-media size without per-element
-   font overrides. zoom scales both the layout box and visual
-   rendering, which is what we want here - flex centering uses the
-   scaled dimensions. Three classes deep so this beats home.css's
-   .uni-home-test rule on the equal-specificity tie. */
+   font overrides. The width:100% is essential: as a flex item the
+   inner would otherwise shrink to fit its content, so its child
+   percentages have nothing to anchor to and the card looks
+   stranded in the canvas. */
 .studio-card .studio-card-inner.uni-home-test {
   display: block;
+  width: 100%;
   max-width: none;
   margin: 0;
   padding: 0;
@@ -4374,15 +4375,16 @@ body:has(.methodology-page) {
 .studio-card--9x16 .studio-card-inner.uni-home-test { zoom: 2.5; }
 .studio-card--3x1 .studio-card-inner.uni-home-test  { zoom: 1.0; }
 
-/* Per-ratio max-width override - bumped so the card fills ~96% of
-   the canvas width post-zoom, leaving only a thin breathing strip
-   of yellow on each side. Targets: visualWidth = canvasW * 0.96,
-   so max-width = (canvasW * 0.96) / zoom. */
-.studio-card--16x9 .uni-home-test .uni-home-hero-preview { max-width: 850px; }
-.studio-card--1x1  .uni-home-test .uni-home-hero-preview { max-width: 470px; }
-.studio-card--4x5  .uni-home-test .uni-home-hero-preview { max-width: 450px; }
-.studio-card--9x16 .uni-home-test .uni-home-hero-preview { max-width: 415px; }
-.studio-card--3x1  .uni-home-test .uni-home-hero-preview { max-width: 1440px; }
+/* Per-ratio explicit width - using `width` (not just max-width)
+   so the box doesn't fall back to its content's intrinsic size.
+   Targets visualWidth = canvasW * 0.92 post-zoom, i.e.
+   width = (canvasW * 0.92) / zoom, leaving a narrow margin of
+   yellow on each side. */
+.studio-card--16x9 .uni-home-test .uni-home-hero-preview { width: 820px;  max-width: 820px; }
+.studio-card--1x1  .uni-home-test .uni-home-hero-preview { width: 450px;  max-width: 450px; }
+.studio-card--4x5  .uni-home-test .uni-home-hero-preview { width: 432px;  max-width: 432px; }
+.studio-card--9x16 .uni-home-test .uni-home-hero-preview { width: 397px;  max-width: 397px; }
+.studio-card--3x1  .uni-home-test .uni-home-hero-preview { width: 1380px; max-width: 1380px; }
 
 @media (max-width: 900px) {
   .studio { grid-template-columns: 1fr; }
