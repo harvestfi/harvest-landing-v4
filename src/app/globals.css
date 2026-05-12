@@ -4351,8 +4351,12 @@ body:has(.methodology-page) {
    are already flat in home.css. */
 .studio-card .uni-home-test .uni-home-hero-preview {
   position: static;
-  width: auto;
-  max-width: 440px;
+  /* Fill the parent's width up to the per-ratio cap below. Using
+     `width: 100%` here (not the homepage's `auto`) is essential -
+     `auto` lets the inner content drive sizing, so max-width
+     never gets reached for short product names and the card
+     looks narrow regardless of the cap. */
+  width: 100%;
   right: auto;
   bottom: auto;
   transform: translateY(8px);
@@ -4370,15 +4374,15 @@ body:has(.methodology-page) {
 .studio-card--9x16 .studio-card-inner.uni-home-test { zoom: 2.5; }
 .studio-card--3x1 .studio-card-inner.uni-home-test  { zoom: 1.0; }
 
-/* Per-ratio max-width override - the homepage's 440px natural
-   width was leaving too much yellow margin on both sides. Bumped
-   so the card fills ~95% of the canvas width post-zoom, halving
-   the side padding while keeping comfortable internal spacing. */
-.studio-card--16x9 .uni-home-test .uni-home-hero-preview { max-width: 840px; }
-.studio-card--1x1  .uni-home-test .uni-home-hero-preview { max-width: 480px; }
-.studio-card--4x5  .uni-home-test .uni-home-hero-preview { max-width: 460px; }
-.studio-card--9x16 .uni-home-test .uni-home-hero-preview { max-width: 420px; }
-.studio-card--3x1  .uni-home-test .uni-home-hero-preview { max-width: 1400px; }
+/* Per-ratio max-width override - bumped so the card fills ~96% of
+   the canvas width post-zoom, leaving only a thin breathing strip
+   of yellow on each side. Targets: visualWidth = canvasW * 0.96,
+   so max-width = (canvasW * 0.96) / zoom. */
+.studio-card--16x9 .uni-home-test .uni-home-hero-preview { max-width: 850px; }
+.studio-card--1x1  .uni-home-test .uni-home-hero-preview { max-width: 470px; }
+.studio-card--4x5  .uni-home-test .uni-home-hero-preview { max-width: 450px; }
+.studio-card--9x16 .uni-home-test .uni-home-hero-preview { max-width: 415px; }
+.studio-card--3x1  .uni-home-test .uni-home-hero-preview { max-width: 1440px; }
 
 @media (max-width: 900px) {
   .studio { grid-template-columns: 1fr; }
