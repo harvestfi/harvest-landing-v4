@@ -52,6 +52,10 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
   // leave the bar at its auto-derived height.
   const [lastBarOverride, setLastBarOverride] = useState("");
   const [secondLastBarOverride, setSecondLastBarOverride] = useState("");
+  // When false, only the yellow + dotted canvas renders. Lets us
+  // export the bare background image at any ratio for use as a
+  // standalone asset.
+  const [showCard, setShowCard] = useState(true);
   // When true, the "APY" tab in the footer reads as "Perf." instead.
   const [usePerfLabel, setUsePerfLabel] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -94,7 +98,8 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         },
       });
       const link = document.createElement("a");
-      link.download = `harvest-${vault?.slug ?? "card"}-${ratio.id}.png`;
+      const subject = showCard ? (vault?.slug ?? "card") : "bg";
+      link.download = `harvest-${subject}-${ratio.id}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -218,6 +223,17 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
           </label>
         </div>
 
+        <div className="studio-field">
+          <label className="studio-check">
+            <input
+              type="checkbox"
+              checked={!showCard}
+              onChange={(e) => setShowCard(!e.target.checked)}
+            />
+            <span>Hide product card (export bare background)</span>
+          </label>
+        </div>
+
         <button
           type="button"
           className="studio-download"
@@ -264,25 +280,27 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
                 resolve. The class is NOT on the article because
                 .uni-home-test sets background: transparent and a
                 fixed max-width that would nuke the studio canvas. */}
-            <div className="studio-card-inner uni-home-test">
-              <HomeHeroPreview
-                vault={vaultForCard(vault)}
-                variant="studio"
-                headlineValueOverride={valueOverride}
-                headlineLabelOverride={labelOverride}
-                lastBarHeightOverride={
-                  lastBarOverride.trim() === ""
-                    ? undefined
-                    : Number(lastBarOverride)
-                }
-                secondLastBarHeightOverride={
-                  secondLastBarOverride.trim() === ""
-                    ? undefined
-                    : Number(secondLastBarOverride)
-                }
-                apyTabLabel={usePerfLabel ? "Perf." : undefined}
-              />
-            </div>
+            {showCard ? (
+              <div className="studio-card-inner uni-home-test">
+                <HomeHeroPreview
+                  vault={vaultForCard(vault)}
+                  variant="studio"
+                  headlineValueOverride={valueOverride}
+                  headlineLabelOverride={labelOverride}
+                  lastBarHeightOverride={
+                    lastBarOverride.trim() === ""
+                      ? undefined
+                      : Number(lastBarOverride)
+                  }
+                  secondLastBarHeightOverride={
+                    secondLastBarOverride.trim() === ""
+                      ? undefined
+                      : Number(secondLastBarOverride)
+                  }
+                  apyTabLabel={usePerfLabel ? "Perf." : undefined}
+                />
+              </div>
+            ) : null}
           </article>
         </div>
       </section>
