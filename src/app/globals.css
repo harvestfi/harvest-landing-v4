@@ -4588,13 +4588,13 @@ body:has(.methodology-page) {
 .hub-thead,
 .hub-row {
   display: grid;
-  /* # | Vault | 24h APY | TVL | Strategy | Network | 30d trend
-     Vault track gets a wider min-width (220px) and a heavier flex
-     factor (2fr) so longer product names like "USDC Convex tricrypto
-     LP" stay fully visible before they would truncate. The middle
-     trio (APY/TVL/Strategy) shares one fr unit so they read as
-     equally sized; Network is half-track because it's a glyph. */
-  grid-template-columns: 50px minmax(220px, 2fr) 1fr 1fr 1fr 0.5fr 130px;
+  /* # | Vault | 24h APY | Strategy | Network | 30d trend
+     Vault track keeps the wider min-width (220px) + heavier flex
+     factor (2fr) for long product names. APY + Strategy share an
+     fr unit; Network is half-track because it's a glyph. TVL is
+     intentionally not listed - it currently lives on the product
+     page only. */
+  grid-template-columns: 50px minmax(220px, 2fr) 1fr 1fr 0.5fr 130px;
   align-items: center;
   gap: 24px;
 }
@@ -4829,43 +4829,43 @@ body:has(.methodology-page) {
    screens. We hide Strategy first, then Network, then 30d APY before
    touching the core ranking columns. */
 /* Responsive: collapse columns to keep the table readable on narrow
-   screens. Order is: # | Vault | 24h APY | TVL | Network | Strategy
-   | 30d trend. Drop Strategy first, then Network, then 30d trend. */
+   screens. Order is: # | Vault | 24h APY | Strategy | Network |
+   30d trend. Drop Strategy first, then Network, then 30d trend. */
 @media (max-width: 1100px) {
   .hub-thead,
   .hub-row {
-    /* Order: # | Vault | APY | TVL | Network(icon) | trend.
-       Strategy hidden first because it's the longest text col. */
-    grid-template-columns: 40px minmax(140px, 1.6fr) 100px 100px 48px 110px;
+    /* Order: # | Vault | APY | Network(icon) | trend.
+       Strategy (col 4) hidden first - longest text col. */
+    grid-template-columns: 40px minmax(140px, 1.6fr) 100px 48px 110px;
     gap: 18px;
   }
-  .hub-thead .hub-th:nth-child(5),
-  .hub-row .hub-cell:nth-child(5) { display: none; }
+  .hub-thead .hub-th:nth-child(4),
+  .hub-row .hub-cell:nth-child(4) { display: none; }
 }
 @media (max-width: 800px) {
   .hub-thead,
   .hub-row {
-    /* Order: # | Vault | APY | TVL | trend. Network hidden too. */
-    grid-template-columns: 32px minmax(120px, 1.6fr) 90px 90px 100px;
+    /* Order: # | Vault | APY | trend. Network (col 5) hidden too. */
+    grid-template-columns: 32px minmax(120px, 1.6fr) 90px 100px;
     padding-left: 16px;
     padding-right: 16px;
     gap: 12px;
   }
-  .hub-thead .hub-th:nth-child(6),
-  .hub-row .hub-cell:nth-child(6) { display: none; }
+  .hub-thead .hub-th:nth-child(5),
+  .hub-row .hub-cell:nth-child(5) { display: none; }
   .hub-filterbar { padding: 8px 0 10px; }
 }
 @media (max-width: 540px) {
   .hub-thead,
   .hub-row {
-    grid-template-columns: 22px minmax(0, 1fr) 60px 60px;
+    /* Visible cols on phone: # | Vault | APY. Trend (col 6) hidden. */
+    grid-template-columns: 22px minmax(0, 1fr) 60px;
     gap: 10px;
     padding: 10px 12px;
   }
   .hub-thead { padding: 8px 12px 7px; }
-  /* Hide trend column too on phone — visible cols: #, Vault, APY, TVL. */
-  .hub-thead .hub-th:nth-child(7),
-  .hub-row .hub-cell:nth-child(7) { display: none; }
+  .hub-thead .hub-th:nth-child(6),
+  .hub-row .hub-cell:nth-child(6) { display: none; }
   .hub-th { font-size: 10.5px; }
   .hub-th-sort { font-size: 10.5px; gap: 3px; }
   .hub-sort-ind { font-size: 8px; }

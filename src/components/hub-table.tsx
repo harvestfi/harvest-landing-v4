@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
-import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
+import { formatAPY, stripChainSuffix } from "@/lib/format";
 import { AssetIcon, ChainIcon } from "./token-icons";
 
-type SortKey = "apy24h" | "tvl";
+type SortKey = "apy24h";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -186,12 +186,6 @@ export function HubTable({
             dir={sortDir}
             onClick={() => clickSort("apy24h")}
           />
-          <SortHeader
-            label="TVL"
-            active={sortKey === "tvl"}
-            dir={sortDir}
-            onClick={() => clickSort("tvl")}
-          />
           <span className="hub-th hub-th-right">Strategy</span>
           <span className="hub-th hub-th-center">Network</span>
           <span className="hub-th hub-th-num">30d APY trend</span>
@@ -319,7 +313,6 @@ function Row({
         <span className="hub-vault-name">{vault.productName}</span>
       </span>
       <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
-      <span className="hub-cell hub-num hub-tvl">{formatTVL(vault.tvl)}</span>
       <span className="hub-cell hub-strategy">{protocolName}</span>
       <span
         className="hub-cell hub-network"

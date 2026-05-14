@@ -267,19 +267,23 @@ export async function getAllSparklines(): Promise<Record<string, number[]>> {
   }
   if (!_historyCache) return {};
 
-  const now = Math.floor(Date.now() / 1000);
-  const thirtyDaysAgo = now - 30 * 86400;
   const result: Record<string, number[]> = {};
 
   for (const [addr, h] of Object.entries(_historyCache)) {
+    // Take the last 30 valid APY entries chronologically (was: filter
+    // to `>= 30 days ago` then downsample). Many vaults only have a
+    // handful of records within the trailing 30 days, which read as
+    // visually flat sparklines; using the most recent 30 entries
+    // regardless of date range keeps each row's mini-chart densely
+    // populated and the trend more legible.
     const recent = h.apyHistory
-      .filter((p) => p.apy >= 0 && p.timestamp >= thirtyDaysAgo)
+      .filter((p) => p.apy >= 0)
       .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(-30)
       .map((p) => p.apy);
 
     if (recent.length >= 2) {
-      const step = Math.max(1, Math.floor(recent.length / 24));
-      result[addr] = recent.filter((_, i) => i % step === 0 || i === recent.length - 1);
+      result[addr] = recent;
     }
   }
 
