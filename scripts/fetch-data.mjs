@@ -467,29 +467,43 @@ function deduplicateByDay(points) {
 async function fetchPlasmaVaultHistory(chainId, addr) {
   const empty = { tvlHistory: [], sharePriceHistory: [], apyHistory: [] };
 
-  const query = `{
-    plasmaVaultHistories(
-      where: { plasmaVault_: { id: "${addr}" } }
-      orderBy: timestamp
-      orderDirection: asc
-      first: 1000
-    ) {
-      timestamp
-      tvl
-      sharePrice
-      apy
-    }
-  }`;
+  // Paginate via timestamp_gt: the indexer caps each call at 1000
+  // records, so we keep walking forward from the last record's
+  // timestamp until a page comes back short (no more rows). Cap at
+  // 10 pages = 10k records to bound runaway loops.
+  const raw = [];
+  let cursor = 0;
+  for (let page = 0; page < 10; page++) {
+    const query = `{
+      plasmaVaultHistories(
+        where: {
+          plasmaVault_: { id: "${addr}" }
+          timestamp_gt: "${cursor}"
+        }
+        orderBy: timestamp
+        orderDirection: asc
+        first: 1000
+      ) {
+        timestamp
+        tvl
+        sharePrice
+        apy
+      }
+    }`;
 
-  const data = await queryGraphQL(chainId, query);
-  if (!data) return empty;
-
-  const raw = (data.plasmaVaultHistories || []).map((r) => ({
-    timestamp: parseInt(r.timestamp, 10),
-    tvl: parseFloat(r.tvl),
-    sharePrice: parseFloat(r.sharePrice),
-    apy: parseFloat(r.apy),
-  }));
+    const data = await queryGraphQL(chainId, query);
+    if (!data) break;
+    const batch = (data.plasmaVaultHistories || []).map((r) => ({
+      timestamp: parseInt(r.timestamp, 10),
+      tvl: parseFloat(r.tvl),
+      sharePrice: parseFloat(r.sharePrice),
+      apy: parseFloat(r.apy),
+    }));
+    if (batch.length === 0) break;
+    raw.push(...batch);
+    cursor = batch[batch.length - 1].timestamp;
+    if (batch.length < 1000) break;
+  }
 
   log(`[plasma] vault=${addr} chain=${chainId} records=${raw.length}`);
 
