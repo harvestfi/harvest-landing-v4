@@ -21,12 +21,22 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
   const avgApy = sameAsset.reduce((s, v) => s + v.apy24h, 0) / sameAsset.length;
   const vsAvg = avgApy > 0 ? ((vault.apy24h - avgApy) / avgApy) * 100 : 0;
 
-  // Build the row layout per the editorial spec: top 3 of cohort,
-  // local neighbourhood (rank-1, rank, rank+1), tail (last). Insert
-  // ellipsis separators when adjacent visible rows are more than
-  // one rank apart. Special cases: current product in top 3 -> skip
-  // neighbourhood; current product at tail -> collapse with last
-  // row; cohort of 3 or fewer -> just the top.
+  // Row layout per the editorial spec.
+  //
+  // Case A: current product is in ranks 1-5. Show ranks 1..5 (or
+  // the whole cohort if smaller) as a contiguous block. No
+  // separator, no tail row - the top-5 block is more informative
+  // than a top-3-plus-tail layout when the product is already in
+  // the top, and the previous "top 3 + sep + tail" version
+  // produced a visually empty middle on top-ranked pages.
+  //
+  // Case B: current product is in ranks 6+. Anchor ranks are
+  // {1, 2, 3, rank-1, rank, rank+1, total}. Walk them in order
+  // and insert a separator only when there's a gap larger than
+  // one rank between anchors; when the gap is exactly one rank,
+  // fill the missing row so adjacent visible rows stay contiguous
+  // (handles the rank-6 case where 4 and 5 sit between top 3 and
+  // neighbourhood [5,6,7]).
   const total = sameAsset.length;
   type BenchRow =
     | { kind: "row"; vault: YieldVault; rank: number }
@@ -39,21 +49,30 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
     seen.add(r);
     layout.push({ kind: "row", vault: sameAsset[r - 1], rank: r });
   };
-  const pushSepBefore = (nextRank: number) => {
-    const lastRow = [...layout].reverse().find((x) => x.kind === "row") as
-      | { kind: "row"; rank: number }
-      | undefined;
-    if (!lastRow) return;
-    if (nextRank - lastRow.rank > 1) layout.push({ kind: "sep" });
-  };
-  for (let r = 1; r <= 3 && r <= total; r++) pushRow(r);
-  if (rank > 3) {
-    pushSepBefore(rank - 1 >= 1 ? rank - 1 : rank);
-    for (let r = rank - 1; r <= rank + 1; r++) pushRow(r);
-  }
-  if (total > 3) {
-    pushSepBefore(total);
-    pushRow(total);
+
+  if (rank <= 5) {
+    // Case A: contiguous top 5.
+    for (let r = 1; r <= Math.min(5, total); r++) pushRow(r);
+  } else {
+    // Case B: top 3 + (gap or fill) + neighbourhood + (gap) + tail.
+    const anchors = [
+      ...new Set([1, 2, 3, rank - 1, rank, rank + 1, total]),
+    ]
+      .filter((r) => r >= 1 && r <= total)
+      .sort((a, b) => a - b);
+    let prev: number | null = null;
+    for (const r of anchors) {
+      if (prev !== null) {
+        const gap = r - prev - 1;
+        if (gap === 1) {
+          pushRow(prev + 1);
+        } else if (gap > 1) {
+          layout.push({ kind: "sep" });
+        }
+      }
+      pushRow(r);
+      prev = r;
+    }
   }
 
   return (
