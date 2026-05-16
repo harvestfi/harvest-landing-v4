@@ -172,14 +172,39 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
       .filter((p) => p.value > 0)
       .sort((a, b) => a.timestamp - b.timestamp);
     if (sorted.length >= 10) {
+      // Conditional TVL narrative per the editorial spec. The
+      // inception-comparison framing (old default) was technically
+      // correct but produced misleading +312% percentages when
+      // inception TVL was near zero, contradicting the drawdown
+      // narrative in Long-term performance for past-peak vaults.
+      // 80% of peak is the cutoff between "near peak / still
+      // trending" (narrative A) and "past peak" (narrative B).
       const first = sorted[0].value;
       const last = sorted[sorted.length - 1].value;
-      const changePct = first > 0 ? ((last - first) / first) * 100 : 0;
-      if (Math.abs(changePct) > 10) {
-        const dir = changePct > 0 ? "growth" : "contraction";
-        const verb = changePct > 0 ? "increasing" : "declining";
+      const peak = sorted.reduce(
+        (best, p) => (p.value > best.value ? p : best),
+        sorted[0],
+      );
+      const days = Math.max(
+        0,
+        Math.round(
+          (sorted[sorted.length - 1].timestamp - sorted[0].timestamp) / 86400,
+        ),
+      );
+      if (peak.value > 0 && last >= 0.8 * peak.value) {
+        // Narrative A: growth-since-inception (no %, just endpoints).
         narratives.push(
-          `Total value locked has experienced ${dir}, ${verb} from ${formatTVL(first)} to ${formatTVL(last)}, a ${Math.abs(changePct).toFixed(1)}% ${changePct > 0 ? "increase" : "reduction"}.`,
+          `Total value locked currently sits at ${formatTVL(last)}, up from ${formatTVL(first)} at the start of tracking. The vault has been live for ${days} days.`,
+        );
+      } else if (peak.value > 0) {
+        // Narrative B: peak-and-current.
+        const pct = Math.round((last / peak.value) * 100);
+        const peakDate = new Date(peak.timestamp * 1000).toLocaleDateString(
+          "en-GB",
+          { month: "long", year: "numeric" },
+        );
+        narratives.push(
+          `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)} reached on ${peakDate}.`,
         );
       }
     }
