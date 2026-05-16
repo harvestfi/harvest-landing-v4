@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, stripChainSuffix } from "@/lib/format";
+import { isLpPairVault } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
+import { LpBadge } from "./lp-badge";
 
 type SortKey = "apy24h";
 type SortDir = "asc" | "desc";
@@ -310,7 +312,10 @@ function Row({
       <span className="hub-cell hub-rank">{rank}</span>
       <span className="hub-cell hub-vault">
         <AssetIcon asset={vault.asset} size={28} />
-        <span className="hub-vault-name">{vault.productName}</span>
+        <span className="hub-vault-name">
+          {vault.productName}
+          {isLpPairVault(vault) && <LpBadge />}
+        </span>
       </span>
       <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
       <span className="hub-cell hub-strategy">{protocolName}</span>

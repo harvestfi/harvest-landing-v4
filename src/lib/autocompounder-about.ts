@@ -89,8 +89,8 @@ export function buildAutocompounderAbout(
   // when the reward token IS the underlying token (avoids the
   // awkward "USDC is converted into USDC" phrasing).
   const rewards = rewardSameAsTicker
-    ? "Yield earned by the strategy is added back to the vault on a recurring basis. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors rather than borne by each user individually."
-    : `Rewards earned by the strategy (${reward}) are periodically converted into ${ticker} and added back to the vault. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors rather than borne by each user individually.`;
+    ? "Yield earned by the strategy is added back to the vault on a recurring basis. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all holders rather than borne by each user individually."
+    : `Rewards earned by the strategy (${reward}) are periodically converted into ${ticker} and added back to the vault. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all holders rather than borne by each user individually.`;
 
   // Paragraph 3: live stats. Same shape as Autopilot - each piece
   // degrades independently if a value is missing.

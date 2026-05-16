@@ -30,16 +30,24 @@ export function HistoricalNarrative({ history, asset }: Props) {
 
       let text = `Share price has compounded at an annualized rate of ${cagr.toFixed(2)}% over ${Math.round(daySpan)} days, growing from ${first.toFixed(4)} to ${last.toFixed(4)}.`;
 
-      // Contextualization: omit if tracked < 90 days
+      // Contextualization: omit if tracked < 90 days. Per-underlying-
+      // unit accounting (gain measured in the same ticker as the
+      // deposit) is unit-correct regardless of whether the asset is
+      // USD-denominated, so the previous "$X in returns" / "minimal
+      // returns" branches collapse into a single quantitative gain
+      // sentence. The literal "minimal returns" placeholder is gone.
       if (daySpan >= 90) {
-        const gainPerRef = (last - first) * ref.amount;
+        const ticker = asset.toUpperCase();
         if (last < 1.0) {
-          const lossPerRef = (1 - last) * ref.amount;
-          text += ` This represents a ${fmtEarnings(lossPerRef, asset)} loss per ${ref.label} deposited at inception.`;
-        } else if (gainPerRef < 5) {
-          text += ` This represents minimal returns per ${asset === "ETH" || asset === "BTC" ? ref.label : "dollar"} deposited at inception.`;
+          const lossInUnderlying = 1 - last;
+          const lossDecimals =
+            asset === "USDC" || asset === "USDT" || asset === "DAI" ? 3 : 4;
+          text += ` This represents a loss of ~${lossInUnderlying.toFixed(lossDecimals)} ${ticker} per 1 ${ticker} supplied at launch.`;
         } else {
-          text += ` This represents ${fmtEarnings(gainPerRef, asset)} in returns per ${ref.label} deposited at inception.`;
+          const gainInUnderlying = last - first;
+          const gainDecimals =
+            asset === "USDC" || asset === "USDT" || asset === "DAI" ? 3 : 4;
+          text += ` This represents a gain of ~${gainInUnderlying.toFixed(gainDecimals)} ${ticker} per 1 ${ticker} supplied at launch.`;
         }
       }
 
@@ -85,8 +93,28 @@ export function HistoricalNarrative({ history, asset }: Props) {
       let trajectory: "up" | "down" | "sideways";
 
       if (atPeak) {
-        // At or near peak: use simplified sentence
-        text = `TVL currently sits at or near its historical peak of ${formatTVL(peakVal)}.`;
+        // At or near peak: state current value (not stale peak value)
+        // and how long the vault has held this scale. Days-at-peak is
+        // measured from the first upward crossing of 0.8 * peak so the
+        // sentence acknowledges scale-stability without claiming the
+        // exact peak number has been pinned for that whole window.
+        const peakThreshold = peakVal * 0.8;
+        let firstCrossingTs: number | null = null;
+        for (const p of sorted) {
+          if (p.value >= peakThreshold) {
+            firstCrossingTs = p.timestamp;
+            break;
+          }
+        }
+        const daysAtPeak = firstCrossingTs
+          ? Math.round(
+              (sorted[sorted.length - 1].timestamp - firstCrossingTs) / 86400,
+            )
+          : null;
+        text =
+          daysAtPeak && daysAtPeak >= 1
+            ? `TVL currently sits at ${formatTVL(currentTvl)}, at or near its historical peak. The vault has held this scale for the past ${daysAtPeak} days.`
+            : `TVL currently sits at ${formatTVL(currentTvl)}, at or near its historical peak.`;
         trajectory = "sideways";
       } else {
         // Past peak. Single neutral framing - state drawdown,
@@ -99,7 +127,7 @@ export function HistoricalNarrative({ history, asset }: Props) {
         // withdrawal-month signal, append a single neutral sentence.
         if (maxDrawdownPct > 90) {
           const troughDate = new Date(troughTs * 1000).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-          text += ` Most depositors had withdrawn by ${troughDate}.`;
+          text += ` TVL had bottomed by ${troughDate}.`;
         }
         trajectory = "down";
       }

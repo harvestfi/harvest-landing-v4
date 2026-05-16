@@ -101,3 +101,16 @@ export function getLpPair(vault: YieldVault): LpPair | null {
 export function isLpPairVault(vault: YieldVault): boolean {
   return getLpPair(vault) !== null;
 }
+
+// Canonical display name for product pages. LP-pair vaults expand
+// the generic "ETH Aerodrome" database name into "ETH/VVV Aerodrome"
+// so visitors landing on the page know exactly which pair they're
+// looking at. Single-asset vaults return their raw productName.
+// Ranking views deliberately do NOT use this helper - they keep the
+// compact productName and signal LP-pair products with an [LP] badge
+// instead, so dense ranking tables stay scannable.
+export function getCanonicalDisplayName(vault: YieldVault): string {
+  const pair = getLpPair(vault);
+  if (!pair) return vault.productName;
+  return `${vault.asset.toUpperCase()}/${pair.counterpart} ${pair.platform}`;
+}

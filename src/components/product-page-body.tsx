@@ -24,7 +24,7 @@ import {
 import { buildAutopilotFaqItems } from "@/lib/autopilot-faq";
 import { buildAutocompounderFaqItems } from "@/lib/autocompounder-faq";
 import { buildLpPairFaqItems } from "@/lib/lp-pair-faq";
-import { isLpPairVault } from "@/lib/lp-pair";
+import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
@@ -128,6 +128,13 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
 
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   const crumbs = productPageCrumbs(vault);
+  // Canonical name on the product page itself: LP-pair vaults expand
+  // the bare database "ETH Aerodrome" into "ETH/VVV Aerodrome" so the
+  // breadcrumb, H1, sticky header, About heading, and About intro all
+  // identify the specific pair. Single-asset vaults return their raw
+  // productName unchanged. Ranking views deliberately keep the bare
+  // productName + [LP] badge instead - canonical names are page-only.
+  const displayName = getCanonicalDisplayName(vault);
 
   // Autopilot + Autocompounder products get the curated 7-question
   // FAQ list per vault type. Autopilots and Autocompounders each
@@ -158,7 +165,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
     },
     {
       question: "How does this vault work?",
-      answer: `It's a ${vault.vaultType.toLowerCase()} on ${vault.chain} operated by ${vault.protocol.name}. You deposit ${vault.asset}, and the vault routes capital through the ${protocolName} strategy on your behalf - harvesting rewards, swapping them back to ${vault.asset}, and redepositing without manual steps.`,
+      answer: `It's a ${vault.vaultType.toLowerCase()} on ${vault.chain} operated by ${vault.protocol.name}. You supply ${vault.asset}, and the vault routes the holdings through the ${protocolName} strategy on your behalf - harvesting rewards, swapping them back to ${vault.asset}, and adding them to the position without manual steps.`,
     },
     {
       question: "Where does the yield come from?",
@@ -175,10 +182,10 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
           : "APY history is too short to call stability one way or the other.",
     },
     {
-      question: "How much is currently deposited?",
+      question: "How much is currently in the vault?",
       answer:
         vault.tvl > 0
-          ? `Total value locked sits at ${formatTVL(vault.tvl)} right now. TVL changes as users deposit and withdraw; we update the figure every hour from the chain.`
+          ? `Total value locked sits at ${formatTVL(vault.tvl)} right now. TVL changes as users supply and withdraw; we update the figure every hour from the chain.`
           : "TVL data is currently unavailable.",
     },
     {
@@ -207,7 +214,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   return (
     <div className="uni-shell">
       <TestStickyHeader
-        productName={vault.productName}
+        productName={displayName}
         asset={vault.asset}
         apyLabel={formatAPY(vault.apy24h)}
         tvlLabel={formatTVL(vault.tvl)}
@@ -240,7 +247,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         <span className="uni-title-icon" aria-hidden="true">
           <AssetIcon asset={vault.asset} size={54} priority />
         </span>
-        <h1 className="uni-title">{vault.productName}</h1>
+        <h1 className="uni-title">{displayName}</h1>
         <div className="uni-title-meta">
           <div className="uni-title-sub">
             <span className="uni-addr-text">{shortAddress(vault.contractAddress)}</span>
@@ -255,8 +262,8 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
               ? `${operatorName}, the autocompounding platform that auto-claims native yield and reward emissions and routes them back into the underlying strategy.`
               : `${operatorName}, the platform running this vault on top of the underlying protocol.`;
             const typeTooltip = isAutocompounder
-              ? "Autocompounder: converts earned yield and reward emissions into more units of the underlying strategy token, simplifying the claim flow on behalf of the user and socialising the gas cost across deposits."
-              : `Type: ${vault.vaultType.toLowerCase()}. How the vault converts deposits into yield.`;
+              ? "Autocompounder: converts earned yield and reward emissions into more units of the underlying strategy token, simplifying the claim flow on behalf of the user and socialising the gas cost across holders."
+              : `Type: ${vault.vaultType.toLowerCase()}. How the vault converts supplied funds into yield.`;
             const showOperator =
               !!operatorName &&
               operatorName.toLowerCase() !== protocolName.toLowerCase();
@@ -363,7 +370,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             <div className="uni-side-stat">
               <div
                 className="uni-side-label"
-                data-tooltip="Total value locked: USD value of all deposits currently held by the vault contract."
+                data-tooltip="Total value locked: USD value of all funds currently held by the vault contract."
               >
                 TVL
               </div>
@@ -400,7 +407,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
       <div className="uni-below">
         {/* About */}
         <section className="pp-section" id="about">
-          <h2>About {vault.productName}</h2>
+          <h2>About {displayName}</h2>
           <div className="about-prose">
             {/* Three branches:
                   1. LP-pair Autocompounder (Aerodrome/Quickswap/etc.)

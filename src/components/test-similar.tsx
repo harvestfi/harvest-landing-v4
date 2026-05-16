@@ -11,6 +11,7 @@ import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { isLpPairVault } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
+import { LpBadge } from "./lp-badge";
 
 interface Props {
   vault: YieldVault;
@@ -87,7 +88,10 @@ export function TestSimilar({ vault, allVaults }: Props) {
                 <AssetIcon asset={v.asset} size={32} />
               </span>
               <div className="uni-similar-id">
-                <div className="uni-similar-name">{v.productName}</div>
+                <div className="uni-similar-name">
+                  {v.productName}
+                  {isLpPairVault(v) && <LpBadge />}
+                </div>
                 <div className="uni-similar-meta">
                   <ChainIcon chain={v.chain} size={12} />
                   <span>{v.chain}</span>

@@ -1855,6 +1855,26 @@ body:has(.uni-shell) {
   font-weight: 600;
 }
 
+/* [LP] badge surfaced in ranking-style views (hub tables, benchmark
+   table, ecosystem legend, "Other opportunities" cards) so LP-pair
+   products differentiate from single-asset products at a glance. The
+   product page itself uses a canonical "ETH/VVV Aerodrome" name and
+   does not render this badge. */
+.lp-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  border-radius: 3px;
+  background: var(--uni-tint-strong);
+  color: var(--uni-ink-2);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
 /* eco-chart: inherit hero-chart visual language so the two charts on
    the page read as siblings. Bar radius bumped to 5px (hero) and the
    inset shadow + lift-on-hover are dropped (hero just dims). The

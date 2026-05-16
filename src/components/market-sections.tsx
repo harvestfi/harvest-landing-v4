@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL } from "@/lib/format";
-import { depositRef, apyToMonthly, fmtEarnings } from "@/lib/contextualize";
 import { chainToSlug } from "@/lib/networks";
+import { isLpPairVault } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
+import { LpBadge } from "./lp-badge";
 
 interface Props {
   vault: YieldVault;
@@ -78,7 +79,6 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
   return (
     <section className="pp-section" id="benchmark">
       <h2>Market benchmarking</h2>
-      <BenchmarkIntro vault={vault} rank={rank} sameAssetCount={sameAsset.length} avgApy={avgApy} vsAvg={vsAvg} />
 
       <div className="bench-stats">
         <div>
@@ -143,7 +143,10 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
               <span className="bt-product-cell">
                 <span className="bt-product">
                   <AssetIcon asset={v.asset} size={22} />
-                  <strong>{v.productName}</strong>
+                  <strong>
+                    {v.productName}
+                    {isLpPairVault(v) && <LpBadge />}
+                  </strong>
                 </span>
                 {isYou && <span className="here-pill">You are here</span>}
               </span>
@@ -186,46 +189,6 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
         vsAvg={vsAvg}
       />
     </section>
-  );
-}
-
-function BenchmarkIntro({
-  vault,
-  rank,
-  sameAssetCount,
-  avgApy,
-  vsAvg,
-}: {
-  vault: YieldVault;
-  rank: number;
-  sameAssetCount: number;
-  avgApy: number;
-  vsAvg: number;
-}) {
-  const ref = depositRef(vault.asset);
-  const vaultMonthly = apyToMonthly(vault.apy24h, ref.amount);
-  const avgMonthly = apyToMonthly(avgApy, ref.amount);
-  const monthlyDiff = Math.abs(vaultMonthly - avgMonthly);
-  const diffDir = vsAvg >= 0 ? "more" : "less";
-
-  // Contextualization (#5): omit if diff < $0.50/mo; use $/year if < $1/mo
-  let ctx = "";
-  if (monthlyDiff >= 0.5) {
-    if (monthlyDiff < 1) {
-      const yearlyDiff = monthlyDiff * 12;
-      ctx = ` On a ${ref.label} deposit, that's ${fmtEarnings(yearlyDiff, vault.asset)} per year ${diffDir} than the cohort average.`;
-    } else {
-      ctx = ` On a ${ref.label} deposit, that's ${fmtEarnings(monthlyDiff, vault.asset)} per month ${diffDir} than the cohort average.`;
-    }
-  }
-
-  return (
-    <p>
-      Among the {sameAssetCount} {vault.asset} strategies we currently monitor, this product ranks <strong>#{rank}</strong>.
-      Its {formatAPY(vault.apy24h)} yield runs{" "}
-      <strong>{Math.abs(vsAvg).toFixed(1)}% {vsAvg >= 0 ? "higher" : "lower"}</strong> than
-      the cohort average of {formatAPY(avgApy)}.{ctx}
-    </p>
   );
 }
 
@@ -275,10 +238,10 @@ function ClosingBenchmark({
         {Math.abs(vsAvg).toFixed(1)}% {direction}
       </strong>{" "}
       than the cohort average of {formatAPY(avgApy)}. On a $1,000
-      deposit, that&apos;s ~${dollarDelta} per month {direction} than
+      position, that&apos;s ~${dollarDelta} per month {direction} than
       the cohort average. {apySummary} It currently holds{" "}
       {formatTVL(vault.tvl)} in TVL, ranking #{tvlRank} of {total} by
-      capital deployed.
+      TVL.
     </p>
   );
 }
@@ -421,7 +384,10 @@ function EcosystemChart({
                 <span className="eco-legend-asset" aria-hidden="true">
                   <AssetIcon asset={v.asset} size={18} />
                 </span>
-                <span className="eco-legend-name-text">{v.productName}</span>
+                <span className="eco-legend-name-text">
+                  {v.productName}
+                  {isLpPairVault(v) && <LpBadge />}
+                </span>
                 {isYou && <span className="here-pill">You</span>}
               </span>
               <span className="eco-legend-apy mono">{formatAPY(v.apy24h)}</span>

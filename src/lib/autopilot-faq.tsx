@@ -67,7 +67,7 @@ export function buildAutopilotFaqItems(
     "The strategy uses an optimisation engine built by IPOR Labs AG that reallocates between sub-vaults multiple times a day. Allocation decisions factor in sustained rate trends, gas costs, and liquidity depth. Short-lived rate spikes are deliberately ignored when chasing them would cost more than they earn. Reallocations happen onchain within predefined boundaries.";
   const q3Text =
     "There are no withdrawal periods or lockups. If the underlying strategy holds enough liquidity to satisfy the request, exits are instant. During periods of liquidity stress in the underlying sub-vaults, withdrawal capacity can be limited until liquidity returns. See the risk page for details on how this works.";
-  const q4Text = `The Autopilot sources yield from across several ${protocolInsert}. Returns come from a combination of lending interest paid by borrowers in those markets and protocol-level reward emissions where applicable. The mix shifts over time as the engine rebalances to the best-performing sources.`;
+  const q4Text = `The Autopilot sources yield from across several ${protocolInsert}. The income stream is a combination of lending interest paid by borrowers in those markets and protocol-level reward emissions where applicable. The mix shifts over time as the engine rebalances to the best-performing sources.`;
   const q5Text = has30d
     ? `Over the last 30 days, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
     : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
@@ -115,7 +115,7 @@ export function buildAutopilotFaqItems(
       answerText: q5Text,
     },
     {
-      question: "How much capital is currently in the vault?",
+      question: "How much is currently in the vault?",
       answer: q6Text,
       answerText: q6Text,
     },

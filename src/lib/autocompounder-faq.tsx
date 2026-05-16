@@ -62,13 +62,13 @@ export function buildAutocompounderFaqItems(
   // - both differ from the Autopilot wording on purpose.
   const q1Text = `${productName} is showing a 24-hour APY of ${apy24h}, with a 30-day average of ${apy30d}. Rates are variable and move with market conditions, liquidity, and the underlying protocol's incentives. The figures reflect the realised yield over the trailing window; they are not a forward guarantee.`;
   const q2Text = rewardSameAsTicker
-    ? `The strategy holds positions in ${venue} and the yield that accrues is added back to the vault on a recurring basis, increasing the value of each depositor's share. The process repeats automatically; depositors are not required to claim or redeposit anything themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors.`
-    : `The strategy holds positions in ${venue} and periodically claims any rewards that accrue. Those rewards (${reward}) are then converted into more ${ticker} and added back to the vault, increasing the value of each depositor's share. The process repeats automatically; depositors are not required to claim, swap, or redeposit anything themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors.`;
+    ? `The strategy holds positions in ${venue} and the yield that accrues is added back to the vault on a recurring basis, increasing the value of each holder's share. The process repeats automatically; holders are not required to claim or add anything back themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all holders.`
+    : `The strategy holds positions in ${venue} and periodically claims any rewards that accrue. Those rewards (${reward}) are then converted into more ${ticker} and added back to the vault, increasing the value of each holder's share. The process repeats automatically; holders are not required to claim, swap, or add anything back themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all holders.`;
   const q3Text =
     "There are no withdrawal periods or lockups. If the underlying strategy holds enough liquidity to satisfy the request, exits are instant. During periods of liquidity stress in the underlying venue, withdrawal capacity can be limited until liquidity returns. See the risk page for details on how this works.";
   const q4Text = rewardSameAsTicker
-    ? `Yield is sourced from ${venue}. Returns come from interest paid by the underlying market, added back to the vault on a recurring basis. The rate moves with the underlying venue's utilisation.`
-    : `Yield is sourced from ${venue}. Returns come from a combination of interest paid by the underlying market and reward emissions in ${reward}, which the strategy claims and converts back into ${ticker} on a recurring basis. The rate moves with the underlying venue's utilisation and incentive schedule.`;
+    ? `Yield is sourced from ${venue}. The income stream is interest paid by the underlying market, added back to the vault on a recurring basis. The rate moves with the underlying venue's utilisation.`
+    : `Yield is sourced from ${venue}. The income stream is a combination of interest paid by the underlying market and reward emissions in ${reward}, which the strategy claims and converts back into ${ticker} on a recurring basis. The rate moves with the underlying venue's utilisation and incentive schedule.`;
   const q5Text = has30d
     ? `Over the last 30 days, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
     : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
@@ -101,7 +101,7 @@ export function buildAutocompounderFaqItems(
     },
     { question: "Where does the yield come from?", answer: q4Text, answerText: q4Text },
     { question: "How stable has the APY been?", answer: q5Text, answerText: q5Text },
-    { question: "How much capital is currently in the vault?", answer: q6Text, answerText: q6Text },
+    { question: "How much is currently in the vault?", answer: q6Text, answerText: q6Text },
     { question: "What are the risks?", answer: q7Text, answerText: q7Text },
   ];
 }

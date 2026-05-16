@@ -2,6 +2,7 @@ import { YieldVault } from "./types";
 import { SITE_NAME, SITE_URL } from "./constants";
 import { getSubAsset, getSubAssetFamilyName, isUmbrellaAsset } from "./sub-asset";
 import { stripChainSuffix } from "./format";
+import { getCanonicalDisplayName } from "./lp-pair";
 
 const MAX_TITLE_CHARS = 58;
 
@@ -191,7 +192,7 @@ export function productPageCrumbs(vault: YieldVault): Crumb[] {
   return [
     { name: "Home", url: SITE_URL },
     { name: `${ticker} Ranking`, url: hubPath },
-    { name: vault.productName },
+    { name: getCanonicalDisplayName(vault) },
   ];
 }
 

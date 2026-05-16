@@ -36,11 +36,11 @@ const TVL_LABEL_TOOLTIPS: Record<string, string> = {
   "30D Low": "The lowest TVL value recorded by the indexer over the last 30 days.",
   "30D High": "The highest TVL value recorded by the indexer over the last 30 days.",
   "30D Average": "Mean of all daily TVL observations in the last 30 days.",
-  "Median TVL": "The middle value of the 30-day TVL distribution. Robust to deposit/withdraw spikes.",
+  "Median TVL": "The middle value of the 30-day TVL distribution. Robust to inflow/outflow spikes.",
   "Best day": "The single calendar day in the last 30 days with the highest TVL.",
   "Worst day": "The single calendar day in the last 30 days with the lowest TVL.",
   "Current TVL": "Most recent TVL value we have indexed for this strategy.",
-  "Largest daily change": "The biggest absolute movement (deposit or withdrawal) between two consecutive daily TVL points in the last 30 days.",
+  "Largest daily change": "The biggest absolute movement (inflow or outflow) between two consecutive daily TVL points in the last 30 days.",
 };
 function tooltipFor(label: string, kind: "apy" | "tvl"): string | undefined {
   if (label.startsWith("Lifetime avg")) {
@@ -158,12 +158,16 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
       const direction = changePct > 0 ? "increase" : "decrease";
       let text = `Over the past ${apyStats.dataPoints} days, this vault's APY has moved from ${earlyAvg.toFixed(2)}% to ${lateAvg.toFixed(2)}%, a ${Math.abs(changePct).toFixed(1)}% ${direction}.`;
 
-      // Contextualization (#14): omit if monthly diff < $1
+      // Always render the monthly-earnings comparison. The outer
+      // gate (changePct > 10%) already filters out windows where the
+      // delta is too small to be meaningful, so by this point both
+      // sentences carry information. The previous $1/mo threshold
+      // suppressed the comparison for non-USD vaults (where ref.amount
+      // = 1 instead of 1000 makes the unit-denominated diff tiny even
+      // when the underlying APY change is large).
       const earlyMonthly = apyToMonthly(earlyAvg, ref.amount);
       const lateMonthly = apyToMonthly(lateAvg, ref.amount);
-      if (Math.abs(earlyMonthly - lateMonthly) >= 1) {
-        text += ` At the start of the window, ${ref.label} would have earned ${fmtEarnings(earlyMonthly, asset)}/mo at then-current rates; at recent rates, ${fmtEarnings(lateMonthly, asset)}/mo.`;
-      }
+      text += ` At the start of the window, ${ref.label} would have earned ${fmtEarnings(earlyMonthly, asset)}/mo at then-current rates; at recent rates, ${fmtEarnings(lateMonthly, asset)}/mo.`;
 
       narratives.push(text);
     }
@@ -173,14 +177,16 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
     const sorted = [...history.tvlHistory]
       .filter((p) => p.value > 0)
       .sort((a, b) => a.timestamp - b.timestamp);
-    if (sorted.length >= 10) {
+    if (sorted.length >= 2) {
       // Conditional TVL narrative per the editorial spec. The
-      // inception-comparison framing (old default) was technically
-      // correct but produced misleading +312% percentages when
-      // inception TVL was near zero, contradicting the drawdown
-      // narrative in Long-term performance for past-peak vaults.
-      // 80% of peak is the cutoff between "near peak / still
+      // inception-comparison framing (old default) produced
+      // misleading +312% percentages when inception TVL was near
+      // zero. 80% of peak is the cutoff between "near peak / still
       // trending" (narrative A) and "past peak" (narrative B).
+      // Below 10 data points we fall back to a minimal sentence so
+      // the section always carries a TVL paragraph - the prior
+      // length-only gate was silently hiding it on freshly indexed
+      // LP-pair vaults that had < 10 positive TVL snapshots.
       const first = sorted[0].value;
       const last = sorted[sorted.length - 1].value;
       const peak = sorted.reduce(
@@ -193,12 +199,12 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
           (sorted[sorted.length - 1].timestamp - sorted[0].timestamp) / 86400,
         ),
       );
-      if (peak.value > 0 && last >= 0.8 * peak.value) {
+      if (sorted.length >= 10 && peak.value > 0 && last >= 0.8 * peak.value) {
         // Narrative A: growth-since-inception (no %, just endpoints).
         narratives.push(
           `Total value locked currently sits at ${formatTVL(last)}, up from ${formatTVL(first)} at the start of tracking. The vault has been live for ${days} days.`,
         );
-      } else if (peak.value > 0) {
+      } else if (sorted.length >= 10 && peak.value > 0) {
         // Narrative B: peak-and-current. Peak date is derived from
         // the peak snapshot's timestamp, formatted Month YYYY. If
         // the timestamp is missing or unparseable, drop the date
@@ -219,6 +225,12 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
           peakDate
             ? `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)} reached on ${peakDate}.`
             : `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)}.`,
+        );
+      } else {
+        // Fallback: minimal but always-present sentence for vaults
+        // with < 10 positive TVL points or missing peak data.
+        narratives.push(
+          `Total value locked currently sits at ${formatTVL(last)}. The vault has been live for ${days} days.`,
         );
       }
     }

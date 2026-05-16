@@ -9,7 +9,7 @@
 import type { YieldVault } from "./types";
 import type { FullVaultHistory } from "./history-api";
 import { formatAPY, formatTVL } from "./format";
-import { getLpPair } from "./lp-pair";
+import { getLpPair, getCanonicalDisplayName } from "./lp-pair";
 
 function inceptionDate(history: FullVaultHistory): string | null {
   const candidates = [
@@ -49,8 +49,13 @@ export function buildLpPairAbout(
   const network = vault.chain;
   const inception = inceptionDate(history);
 
+  // Use the canonical "ETH/VVV Aerodrome" form here (not the bare
+  // database "ETH Aerodrome"), so the About paragraph identifies the
+  // specific pair the visitor is looking at. The ProductPageBody
+  // splitter parses on " is an " - this template keeps that token.
+  const displayName = getCanonicalDisplayName(vault);
   const intro =
-    `${vault.productName} is an LP-token autocompounder on ${network}, ` +
+    `${displayName} is an LP-token autocompounder on ${network}, ` +
     `with ${ticker} paired with ${counterpart} in the underlying LP ` +
     `position. The strategy provides liquidity to the ${ticker}/${counterpart} ` +
     `pool on ${platform} and earns yield from both trading fees on ` +
@@ -62,7 +67,7 @@ export function buildLpPairAbout(
     `the manual claim and conversion steps a user would otherwise need to ` +
     `perform on their own. Autocompounding events run when economically ` +
     `feasible, anywhere from hourly to several days apart, with gas costs ` +
-    `socialised across all depositors rather than borne by each user ` +
+    `socialised across all holders rather than borne by each user ` +
     `individually.`;
 
   // Paragraph 3: same shape as Autopilot/Autocompounder liveline.
