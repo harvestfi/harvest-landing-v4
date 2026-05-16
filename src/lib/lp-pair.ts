@@ -112,5 +112,23 @@ export function isLpPairVault(vault: YieldVault): boolean {
 export function getCanonicalDisplayName(vault: YieldVault): string {
   const pair = getLpPair(vault);
   if (!pair) return vault.productName;
-  return `${vault.asset.toUpperCase()}/${pair.counterpart} ${pair.platform}`;
+  // Stake DAO OnlyBoost products carry boost-component icons
+  // (CVX for ETH, alternate-BTC variants for WBTC) that fire the
+  // LP-pair discriminator, but their database productName
+  // ("ETH OnlyBoost", "WBTC OnlyBoost", "stETH OnlyBoost") is
+  // already disambiguated by the asset prefix + OnlyBoost suffix.
+  // Generating "ETH/CVX Stake DAO" here would replace meaningful
+  // branding with the name of an internal boost token, so honor
+  // the productName as-is for this product family.
+  if (vault.productName.toLowerCase().includes("onlyboost")) {
+    return vault.productName;
+  }
+  // Defensive fallback for malformed icon data: if the counterpart
+  // couldn't be parsed cleanly (empty or whitespace), fall back to
+  // the database productName to avoid rendering "ETH/ Aerodrome"
+  // or "ETH/undefined Aerodrome".
+  const counterpart = pair.counterpart?.trim();
+  const platform = pair.platform?.trim();
+  if (!counterpart || !platform) return vault.productName;
+  return `${vault.asset.toUpperCase()}/${counterpart} ${platform}`;
 }

@@ -1803,6 +1803,29 @@ body:has(.uni-shell) {
 .uni-shell .bt-row:hover:not(.you):not(.avg) {
   background: rgba(255, 185, 54, 0.04);
 }
+/* Condensation-marker row between top 3 and neighbourhood (or
+   neighbourhood and tail). Overrides the standard grid layout so
+   the dot glyph centres across the whole table width. Matches the
+   data-row border-bottom so the visual rhythm stays consistent;
+   slightly tighter vertical padding and muted color make it read
+   as a separator rather than a data point. */
+.uni-shell .bt-row.bt-row-sep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 22px;
+  pointer-events: none;
+}
+.uni-shell .bt-row.bt-row-sep:hover {
+  background: transparent;
+}
+.uni-shell .bt-row-sep-glyph {
+  font-size: 13px;
+  color: var(--uni-ink-2);
+  opacity: 0.55;
+  letter-spacing: 0.15em;
+  line-height: 1;
+}
 .uni-shell .bt-product-cell {
   display: inline-flex;
   align-items: center;

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL } from "@/lib/format";
 import { chainToSlug } from "@/lib/networks";
-import { isLpPairVault } from "@/lib/lp-pair";
+import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
 import { LpBadge } from "./lp-badge";
 
@@ -125,13 +125,15 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
         </div>
         {layout.map((row, i) => {
           if (row.kind === "sep") {
+            // Slim single-cell separator row. The previous five-span
+            // layout left four cells empty in the grid, which read
+            // visually as a half-collapsed broken row. Now the dot
+            // glyph spans the full table width and sits muted in the
+            // middle, so the row reads as a deliberate condensation
+            // marker rather than missing data.
             return (
               <div key={`sep-${i}`} className="bt-row bt-row-sep" aria-hidden="true">
-                <span></span>
-                <span className="dim">…</span>
-                <span></span>
-                <span></span>
-                <span></span>
+                <span className="bt-row-sep-glyph">…</span>
               </div>
             );
           }
@@ -144,7 +146,7 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
                 <span className="bt-product">
                   <AssetIcon asset={v.asset} size={22} />
                   <strong>
-                    {v.productName}
+                    {getCanonicalDisplayName(v)}
                     {isLpPairVault(v) && <LpBadge />}
                   </strong>
                 </span>
@@ -385,7 +387,7 @@ function EcosystemChart({
                   <AssetIcon asset={v.asset} size={18} />
                 </span>
                 <span className="eco-legend-name-text">
-                  {v.productName}
+                  {getCanonicalDisplayName(v)}
                   {isLpPairVault(v) && <LpBadge />}
                 </span>
                 {isYou && <span className="here-pill">You</span>}

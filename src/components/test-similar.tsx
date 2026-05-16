@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
-import { isLpPairVault } from "@/lib/lp-pair";
+import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
 import { LpBadge } from "./lp-badge";
 
@@ -89,7 +89,7 @@ export function TestSimilar({ vault, allVaults }: Props) {
               </span>
               <div className="uni-similar-id">
                 <div className="uni-similar-name">
-                  {v.productName}
+                  {getCanonicalDisplayName(v)}
                   {isLpPairVault(v) && <LpBadge />}
                 </div>
                 <div className="uni-similar-meta">

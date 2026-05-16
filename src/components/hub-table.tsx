@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, stripChainSuffix } from "@/lib/format";
-import { isLpPairVault } from "@/lib/lp-pair";
+import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
 import { LpBadge } from "./lp-badge";
 
@@ -313,7 +313,7 @@ function Row({
       <span className="hub-cell hub-vault">
         <AssetIcon asset={vault.asset} size={28} />
         <span className="hub-vault-name">
-          {vault.productName}
+          {getCanonicalDisplayName(vault)}
           {isLpPairVault(vault) && <LpBadge />}
         </span>
       </span>

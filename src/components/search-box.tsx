@@ -4,10 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AssetIcon, ChainIcon } from "./token-icons";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
+import { LpBadge } from "./lp-badge";
 
 export interface SearchItem {
   slug: string;
   productName: string;
+  // Canonical name shown in the dropdown row. For LP-pair products
+  // this expands the database "ETH Aerodrome" into "ETH/VVV
+  // Aerodrome" so visually-identical names disambiguate without a
+  // click-through. Computed in header.tsx via getCanonicalDisplayName.
+  displayName: string;
+  isLpPair: boolean;
   asset: string;
   chain: string;
   protocol: string;
@@ -25,8 +32,11 @@ interface Scored extends SearchItem {
 }
 
 function scoreItem(item: SearchItem, q: string, tokens: string[]): number {
-  const hay = `${item.productName} ${item.asset} ${item.chain} ${item.protocol} ${item.category}`.toLowerCase();
-  const name = item.productName.toLowerCase();
+  // Include displayName in the haystack so users can find LP-pair
+  // products by counterpart ticker (typing "vvv" matches "ETH/VVV
+  // Aerodrome" even though the raw productName is just "ETH Aerodrome").
+  const hay = `${item.productName} ${item.displayName} ${item.asset} ${item.chain} ${item.protocol} ${item.category}`.toLowerCase();
+  const name = item.displayName.toLowerCase();
   const proto = item.protocol.toLowerCase();
   const asset = item.asset.toLowerCase();
   const chain = item.chain.toLowerCase();
@@ -173,7 +183,10 @@ export function SearchBox({ items }: Props) {
                 >
                   <span className="sr-icon"><AssetIcon asset={r.asset} size={16} /></span>
                   <span className="sr-main">
-                    <span className="sr-name">{r.productName}</span>
+                    <span className="sr-name">
+                      {r.displayName}
+                      {r.isLpPair && <LpBadge />}
+                    </span>
                     <span className="sr-meta">
                       <ChainIcon chain={r.chain} size={12} />
                       <span>{r.chain}</span>

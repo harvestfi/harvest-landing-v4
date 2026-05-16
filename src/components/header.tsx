@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getLiveVaults } from "@/lib/data";
+import { getCanonicalDisplayName, isLpPairVault } from "@/lib/lp-pair";
 import { SearchBox, type SearchItem } from "./search-box";
 import { AssetIcon } from "./token-icons";
 import { ThemeToggle } from "./theme-toggle";
@@ -13,9 +14,17 @@ export async function Header() {
   ];
 
   const vaults = await getLiveVaults();
+  // Precompute the canonical display name + LP discriminator here
+  // (the search box is a "use client" component and shouldn't pull
+  // in the lp-pair helpers indirectly through SearchItem). productName
+  // is still passed for the existing scoring function (which prefers
+  // raw productName tokens) and as a fallback if the derived name is
+  // ever empty.
   const items: SearchItem[] = vaults.map((v) => ({
     slug: v.slug,
     productName: v.productName,
+    displayName: getCanonicalDisplayName(v),
+    isLpPair: isLpPairVault(v),
     asset: v.asset,
     chain: v.chain,
     protocol: v.protocol.name,
