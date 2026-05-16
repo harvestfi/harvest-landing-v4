@@ -19,6 +19,7 @@ import {
   buildYieldTrajectory,
   buildPerformanceOverview,
 } from "@/lib/autopilot-sections";
+import { buildAutopilotFaqItems } from "@/lib/autopilot-faq";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
@@ -123,7 +124,16 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   const crumbs = productPageCrumbs(vault);
 
-  const faqItems = [
+  // Autopilot + Autocompounder products get the curated 7-question
+  // FAQ list reserved for them in lib/autopilot-faq. Other vault
+  // types keep the generic list below.
+  const isAutopilotLike =
+    vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder";
+  const autopilotFaqItems = isAutopilotLike
+    ? buildAutopilotFaqItems(vault, history, holderCount)
+    : null;
+
+  const faqItems = autopilotFaqItems ?? [
     {
       question: "What's the current APY?",
       answer:

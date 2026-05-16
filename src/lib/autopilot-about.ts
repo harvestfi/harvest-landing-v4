@@ -11,14 +11,21 @@ import type { FullVaultHistory } from "@/lib/history-api";
 import { formatAPY, formatTVL } from "@/lib/format";
 
 // Per-vault, hand-tuned protocol phrase. Closes with ", among
-// others" unless the vault is locked to a single venue.
-const PROTOCOL_INSERT_BY_ADDRESS: Record<string, string> = {
+// others" unless the vault is locked to a single venue. Exported
+// so the FAQ builder reuses the same lookup as the About template.
+export const PROTOCOL_INSERT_BY_ADDRESS: Record<string, string> = {
   "0xd6701905c59ee618dc36dc747506bce0a4ac760a":
     "Morpho markets, among others",
   "0x407d3d942d0911a2fea7e22417f81e27c02d6c6f":
     "Aave, Morpho, Euler and Fluid markets, among others",
 };
-const PROTOCOL_INSERT_FALLBACK = "lending and yield venues";
+export const PROTOCOL_INSERT_FALLBACK = "lending and yield venues";
+
+export function protocolInsertFor(addr: string): string {
+  return (
+    PROTOCOL_INSERT_BY_ADDRESS[addr.toLowerCase()] ?? PROTOCOL_INSERT_FALLBACK
+  );
+}
 
 // Earliest timestamp on the indexed history. Derive month + year so
 // the inception line reads like "Live since September 2025".
@@ -47,9 +54,7 @@ export function buildAutopilotAbout(
 ): AutopilotAbout {
   const ticker = vault.asset.toUpperCase();
   const network = vault.chain;
-  const protocolInsert =
-    PROTOCOL_INSERT_BY_ADDRESS[vault.contractAddress.toLowerCase()] ??
-    PROTOCOL_INSERT_FALLBACK;
+  const protocolInsert = protocolInsertFor(vault.contractAddress);
   const inception = inceptionDate(history);
   const apy24h = formatAPY(vault.apy24h);
   const apy30d = formatAPY(vault.apy30d);

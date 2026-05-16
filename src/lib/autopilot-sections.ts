@@ -161,7 +161,16 @@ export function buildPerformanceOverview(
   const lines: string[] = [];
   const ticker = vault.asset.toUpperCase();
 
-  // Line 01: asset-cohort rank + percentile.
+  // Line 01: asset-cohort rank with conditional wording. Three
+  // variants based on rank/total ratio:
+  //   <= 0.25       -> top quarter
+  //   0.25..0.75    -> "with N strategies currently delivering
+  //                     higher APY"
+  //   > 0.75        -> same wording as mid (per the spec, no
+  //                     need to be more negative; the rank is
+  //                     the data point).
+  // Avoids "outperforming X%" / "ranking above X%" which read as
+  // judgment when the vault sits below the cohort midpoint.
   const cohort = allVaults
     .filter((v) => v.asset === vault.asset && v.apy24h > 0)
     .sort((a, b) => b.apy24h - a.apy24h);
@@ -169,10 +178,17 @@ export function buildPerformanceOverview(
   const total = cohort.length;
   if (idx >= 0 && total > 1 && vault.apy24h > 0) {
     const rank = idx + 1;
-    const percentile = Math.round(((total - rank) / total) * 100);
-    lines.push(
-      `This vault's ${formatAPY(vault.apy24h)} APY ranks #${rank} among the ${total} ${ticker} vaults we monitor, ranking above ${percentile}% of them.`,
-    );
+    const ratio = rank / total;
+    const head = `This vault's ${formatAPY(vault.apy24h)} APY ranks #${rank} among the ${total} ${ticker} vaults we monitor`;
+    if (ratio <= 0.25) {
+      lines.push(`${head}, placing it in the top quarter of the cohort.`);
+    } else {
+      const above = rank - 1;
+      const noun = above === 1 ? "strategy" : "strategies";
+      lines.push(
+        `${head}, with ${above} ${noun} currently delivering higher APY.`,
+      );
+    }
   }
 
   // Line 02: 30-day APY range + monthly earnings at high/low.
