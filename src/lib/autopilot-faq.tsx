@@ -13,7 +13,12 @@ import { protocolInsertFor } from "./autopilot-about";
 
 export interface AutopilotFaqItem {
   question: string;
+  // ReactNode for rendering. May embed inline links (Q3).
   answer: string | ReactNode;
+  // Plain-text equivalent for JSON-LD FAQ schema. Always set so the
+  // schema in <head> matches what's rendered on the page (Google
+  // flags inconsistency when they drift).
+  answerText: string;
 }
 
 // Population sigma over a sample. Used for "measured volatility"
@@ -54,15 +59,35 @@ export function buildAutopilotFaqItems(
     : null;
   const vol = has30d ? stddev(trailing) : null;
 
+  // Each Q has parallel answer (ReactNode for rendering) + answerText
+  // (plain string for JSON-LD). For most Qs they're identical; Q3
+  // has an inline link in `answer` and a flat string in answerText.
+  const q1Text = `${productName} is showing a 24-hour APY of ${apy24h}, with a 30-day average of ${apy30d}. Rates are variable and move with market conditions, liquidity, and the underlying protocols' incentives. The figures reflect the realised yield over the trailing window; they are not a forward guarantee.`;
+  const q2Text =
+    "The strategy uses an optimisation engine built by IPOR Labs AG that reallocates between sub-vaults multiple times a day. Allocation decisions factor in sustained rate trends, gas costs, and liquidity depth. Short-lived rate spikes are deliberately ignored when chasing them would cost more than they earn. Reallocations happen onchain within predefined boundaries.";
+  const q3Text =
+    "There are no withdrawal periods or lockups. If the underlying strategy holds enough liquidity to satisfy the request, exits are instant. During periods of liquidity stress in the underlying sub-vaults, withdrawal capacity can be limited until liquidity returns. See the risk page for details on how this works.";
+  const q4Text = `The Autopilot sources yield from across several ${protocolInsert}. Returns come from a combination of lending interest paid by borrowers in those markets and protocol-level reward emissions where applicable. The mix shifts over time as the engine rebalances to the best-performing sources.`;
+  const q5Text = has30d
+    ? `Over the last 30 days, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
+    : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
+  const q6Text =
+    holderCount && holderCount > 0
+      ? `The vault currently holds ${tvl} in TVL across ${holderCount} holders. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`
+      : `The vault currently holds ${tvl} in TVL. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`;
+  const q7Text =
+    "Like any onchain yield strategy, this vault is exposed to smart contract risk in both the Harvest contracts and the underlying sub-vaults, market risk in the lending venues it routes to, and protocol-specific risks of the assets it interacts with. Harvest's core vault infrastructure was audited by Halborn in January 2025, and the Autopilot engine has been audited twice. Audits reduce but do not eliminate risk.";
+
   const items: AutopilotFaqItem[] = [
     {
       question: `What's the current APY for ${productName}?`,
-      answer: `${productName} is showing a 24-hour APY of ${apy24h}, with a 30-day average of ${apy30d}. Rates are variable and move with market conditions, liquidity, and the underlying protocols' incentives. The figures reflect the realised yield over the trailing window; they are not a forward guarantee.`,
+      answer: q1Text,
+      answerText: q1Text,
     },
     {
       question: "How does the Autopilot rebalance allocations?",
-      answer:
-        "The strategy uses an optimisation engine built by IPOR Labs AG that reallocates between sub-vaults multiple times a day. Allocation decisions factor in sustained rate trends, gas costs, and liquidity depth. Short-lived rate spikes are deliberately ignored when chasing them would cost more than they earn. Reallocations happen onchain within predefined boundaries.",
+      answer: q2Text,
+      answerText: q2Text,
     },
     {
       question: "Can I withdraw at any time?",
@@ -77,28 +102,27 @@ export function buildAutopilotFaqItems(
           for details on how this works.
         </>
       ),
+      answerText: q3Text,
     },
     {
       question: "Where does the yield come from?",
-      answer: `The Autopilot sources yield from across several ${protocolInsert}. Returns come from a combination of lending interest paid by borrowers in those markets and protocol-level reward emissions where applicable. The mix shifts over time as the engine rebalances to the best-performing sources.`,
+      answer: q4Text,
+      answerText: q4Text,
     },
     {
       question: "How stable has the APY been?",
-      answer: has30d
-        ? `Over the last 30 days, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
-        : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.",
+      answer: q5Text,
+      answerText: q5Text,
     },
     {
       question: "How much capital is currently in the vault?",
-      answer:
-        holderCount && holderCount > 0
-          ? `The vault currently holds ${tvl} in TVL across ${holderCount} holders. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`
-          : `The vault currently holds ${tvl} in TVL. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`,
+      answer: q6Text,
+      answerText: q6Text,
     },
     {
       question: "What are the risks?",
-      answer:
-        "Like any onchain yield strategy, this vault is exposed to smart contract risk in both the Harvest contracts and the underlying sub-vaults, market risk in the lending venues it routes to, and protocol-specific risks of the assets it interacts with. Harvest's core vault infrastructure was audited by Halborn in January 2025, and the Autopilot engine has been audited twice. Audits reduce but do not eliminate risk.",
+      answer: q7Text,
+      answerText: q7Text,
     },
   ];
 

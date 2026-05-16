@@ -252,13 +252,14 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
               operatorName.toLowerCase() !== protocolName.toLowerCase();
             return (
               <p className="uni-title-byline">
-                <span
+                <Link
+                  href={networkHrefFor(vault.chain)}
                   className="uni-byline-chip uni-byline-chain"
                   data-tooltip="Network: the blockchain this vault is deployed on."
                 >
                   <ChainIcon chain={vault.chain} size={14} />
                   {vault.chain}
-                </span>
+                </Link>
                 {showOperator && (
                   <>
                     <span className="uni-byline-sep" aria-hidden="true">·</span>
@@ -463,10 +464,10 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             </div>
             <div className="cd-row">
               <span className="cd-label">Network</span>
-              <span className="cd-val cd-network">
+              <Link href={networkHrefFor(vault.chain)} className="cd-val cd-network">
                 <ChainIcon chain={vault.chain} size={16} />
                 {vault.chain}
-              </span>
+              </Link>
             </div>
             <div className="cd-row">
               <span className="cd-label">Type</span>
@@ -610,6 +611,8 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
           </a>
         </div>
       </section>
+
+      <ProductPageFootnote history={history} />
     </div>
   );
 }
@@ -734,5 +737,75 @@ function NumberedFactList({ items }: { items: string[] }) {
         </div>
       ))}
     </div>
+  );
+}
+
+// Network display name -> filter-page slug. The network badge in
+// the product header links here so users can pivot from a single
+// vault to "all vaults on this chain". Slugs match the static
+// route folders under src/app/.
+const NETWORK_SLUGS: Record<string, string> = {
+  Ethereum: "ethereum",
+  Base: "base",
+  Arbitrum: "arbitrum",
+  Polygon: "polygon",
+  zkSync: "zksync",
+  HyperEVM: "hyperevm",
+};
+function networkHrefFor(chain: string): string {
+  return `/${NETWORK_SLUGS[chain] ?? chain.toLowerCase()}`;
+}
+
+// Most recent snapshot timestamp across all three history series.
+// Drives the "Last updated N minutes/hours/days ago" line at the
+// page bottom and the article:modified_time meta tag.
+function latestHistoryTimestamp(h: FullVaultHistory): number {
+  const stamps = [
+    ...h.tvlHistory.map((p) => p.timestamp),
+    ...h.sharePriceHistory.map((p) => p.timestamp),
+    ...h.apyHistory.map((p) => p.timestamp),
+  ].filter((t) => Number.isFinite(t) && t > 0);
+  if (stamps.length === 0) return 0;
+  return Math.max(...stamps);
+}
+
+function formatRelativeUpdated(ts: number, now: number = Date.now()): string {
+  if (!ts) return "Last updated recently";
+  const diffSec = Math.max(0, Math.floor((now - ts * 1000) / 1000));
+  const min = Math.floor(diffSec / 60);
+  const hour = Math.floor(diffSec / 3600);
+  const day = Math.floor(diffSec / 86400);
+  if (diffSec < 60) return "Last updated just now";
+  if (hour < 1) return `Last updated ${min} minute${min === 1 ? "" : "s"} ago`;
+  if (day < 1) return `Last updated ${hour} hour${hour === 1 ? "" : "s"} ago`;
+  if (day <= 7) return `Last updated ${day} day${day === 1 ? "" : "s"} ago`;
+  const d = new Date(ts * 1000);
+  return `Last updated on ${d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+}
+
+// Bottom-of-page stack: a per-product "last updated" relative
+// timestamp and the universal discrete risk acknowledgement line.
+// Both sit between the LINKS row and the global footer; the line
+// styling is intentionally muted (single line, regular weight, no
+// icons or boxes) to keep this reading as a data-page footnote
+// rather than a compliance banner.
+function ProductPageFootnote({ history }: { history: FullVaultHistory }) {
+  const ts = latestHistoryTimestamp(history);
+  const updated = formatRelativeUpdated(ts);
+  return (
+    <section className="pp-footnote" aria-label="Page metadata and disclosures">
+      <p className="pp-footnote-updated">{updated}</p>
+      <p className="pp-footnote-disclosure">
+        Harvest is an independent onchain yield index. Performance
+        data reflects historical onchain activity and is not a
+        forecast. See the{" "}
+        <Link href="/methodology">methodology</Link>,{" "}
+        <Link href="/risk-framework">risk framework</Link>,{" "}
+        <Link href="/terms">terms</Link>, and{" "}
+        <Link href="/disclosures">disclosures</Link> for details on
+        how data is calculated and the risks associated with onchain
+        yield strategies.
+      </p>
+    </section>
   );
 }

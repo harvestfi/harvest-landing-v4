@@ -13,6 +13,9 @@ import { underlyingVenueFor, rewardTokenLabel } from "./autocompounder-about";
 export interface AutocompounderFaqItem {
   question: string;
   answer: string | ReactNode;
+  // Plain-text equivalent for JSON-LD FAQ schema. Always set so the
+  // schema in <head> matches what's rendered on the page.
+  answerText: string;
 }
 
 function stddev(values: number[]): number {
@@ -53,19 +56,34 @@ export function buildAutocompounderFaqItems(
     : null;
   const vol = has30d ? stddev(trailing) : null;
 
+  // Parallel answer + answerText so the schema in <head> matches
+  // what the page actually renders. Q1 uses singular "protocol's"
+  // (one underlying venue) and Q3 uses singular "underlying venue"
+  // - both differ from the Autopilot wording on purpose.
+  const q1Text = `${productName} is showing a 24-hour APY of ${apy24h}, with a 30-day average of ${apy30d}. Rates are variable and move with market conditions, liquidity, and the underlying protocol's incentives. The figures reflect the realised yield over the trailing window; they are not a forward guarantee.`;
+  const q2Text = rewardSameAsTicker
+    ? `The strategy holds positions in ${venue} and the yield that accrues is added back to the vault on a recurring basis, increasing the value of each depositor's share. The process repeats automatically; depositors are not required to claim or redeposit anything themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors.`
+    : `The strategy holds positions in ${venue} and periodically claims any rewards that accrue. Those rewards (${reward}) are then converted into more ${ticker} and added back to the vault, increasing the value of each depositor's share. The process repeats automatically; depositors are not required to claim, swap, or redeposit anything themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors.`;
+  const q3Text =
+    "There are no withdrawal periods or lockups. If the underlying strategy holds enough liquidity to satisfy the request, exits are instant. During periods of liquidity stress in the underlying venue, withdrawal capacity can be limited until liquidity returns. See the risk page for details on how this works.";
+  const q4Text = rewardSameAsTicker
+    ? `Yield is sourced from ${venue}. Returns come from interest paid by the underlying market, added back to the vault on a recurring basis. The rate moves with the underlying venue's utilisation.`
+    : `Yield is sourced from ${venue}. Returns come from a combination of interest paid by the underlying market and reward emissions in ${reward}, which the strategy claims and converts back into ${ticker} on a recurring basis. The rate moves with the underlying venue's utilisation and incentive schedule.`;
+  const q5Text = has30d
+    ? `Over the last 30 days, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
+    : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
+  const q6Text =
+    holderCount && holderCount > 0
+      ? `The vault currently holds ${tvl} in TVL across ${holderCount} holders. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`
+      : `The vault currently holds ${tvl} in TVL. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`;
+  // No reference to an Autopilot engine in Q7 because there isn't
+  // one here. Halborn audit stays - it covers Harvest's core
+  // vault infrastructure that Autocompounders use too.
+  const q7Text = `Like any onchain yield strategy, this vault is exposed to smart contract risk in both the Harvest contracts and ${venue}, market risk in the underlying venue it routes to, and protocol-specific risks of the assets it interacts with. Harvest's core vault infrastructure was audited by Halborn in January 2025. Audits reduce but do not eliminate risk.`;
+
   return [
-    {
-      question: `What's the current APY for ${productName}?`,
-      // Singular "protocol's" - one underlying venue, unlike the
-      // Autopilot version which is plural.
-      answer: `${productName} is showing a 24-hour APY of ${apy24h}, with a 30-day average of ${apy30d}. Rates are variable and move with market conditions, liquidity, and the underlying protocol's incentives. The figures reflect the realised yield over the trailing window; they are not a forward guarantee.`,
-    },
-    {
-      question: "How does the autocompounding work?",
-      answer: rewardSameAsTicker
-        ? `The strategy holds positions in ${venue} and the yield that accrues is added back to the vault on a recurring basis, increasing the value of each depositor's share. The process repeats automatically; depositors are not required to claim or redeposit anything themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors.`
-        : `The strategy holds positions in ${venue} and periodically claims any rewards that accrue. Those rewards (${reward}) are then converted into more ${ticker} and added back to the vault, increasing the value of each depositor's share. The process repeats automatically; depositors are not required to claim, swap, or redeposit anything themselves. Autocompounding events run when economically feasible, anywhere from hourly to several days apart, with gas costs socialised across all depositors.`,
-    },
+    { question: `What's the current APY for ${productName}?`, answer: q1Text, answerText: q1Text },
+    { question: "How does the autocompounding work?", answer: q2Text, answerText: q2Text },
     {
       question: "Can I withdraw at any time?",
       answer: (
@@ -79,33 +97,11 @@ export function buildAutocompounderFaqItems(
           on how this works.
         </>
       ),
+      answerText: q3Text,
     },
-    {
-      question: "Where does the yield come from?",
-      answer: rewardSameAsTicker
-        ? `Yield is sourced from ${venue}. Returns come from interest paid by the underlying market, added back to the vault on a recurring basis. The rate moves with the underlying venue's utilisation.`
-        : `Yield is sourced from ${venue}. Returns come from a combination of interest paid by the underlying market and reward emissions in ${reward}, which the strategy claims and converts back into ${ticker} on a recurring basis. The rate moves with the underlying venue's utilisation and incentive schedule.`,
-    },
-    {
-      question: "How stable has the APY been?",
-      answer: has30d
-        ? `Over the last 30 days, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
-        : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.",
-    },
-    {
-      question: "How much capital is currently in the vault?",
-      answer:
-        holderCount && holderCount > 0
-          ? `The vault currently holds ${tvl} in TVL across ${holderCount} holders. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`
-          : `The vault currently holds ${tvl} in TVL. The Historical statistics section above shows how this compares to the vault's 30-day range and lifetime peak.`,
-    },
-    {
-      question: "What are the risks?",
-      // Autocompounder version: no reference to the Autopilot
-      // engine audits because there is no Autopilot engine here.
-      // Halborn audit stays - it covers Harvest's core vault
-      // infrastructure, which Autocompounders also use.
-      answer: `Like any onchain yield strategy, this vault is exposed to smart contract risk in both the Harvest contracts and ${venue}, market risk in the underlying venue it routes to, and protocol-specific risks of the assets it interacts with. Harvest's core vault infrastructure was audited by Halborn in January 2025. Audits reduce but do not eliminate risk.`,
-    },
+    { question: "Where does the yield come from?", answer: q4Text, answerText: q4Text },
+    { question: "How stable has the APY been?", answer: q5Text, answerText: q5Text },
+    { question: "How much capital is currently in the vault?", answer: q6Text, answerText: q6Text },
+    { question: "What are the risks?", answer: q7Text, answerText: q7Text },
   ];
 }

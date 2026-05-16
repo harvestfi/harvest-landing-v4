@@ -15,6 +15,9 @@ import { financialProductSchema, breadcrumbSchema, datasetSchema } from "@/lib/j
 import type { YieldVault } from "@/lib/types";
 import type { FullVaultHistory } from "@/lib/history-api";
 import { ProductPageBody } from "@/components/product-page-body";
+import { getHoldersMap } from "@/lib/data";
+import { buildAutopilotFaqItems } from "@/lib/autopilot-faq";
+import { buildAutocompounderFaqItems } from "@/lib/autocompounder-faq";
 import "../_styles/product.css";
 
 export async function generateStaticParams() {
@@ -72,6 +75,19 @@ export async function generateMetadata({
       url: `${SITE_URL}/${vault.slug}`,
       siteName: SITE_NAME,
       type: "article",
+      // article:modified_time signals freshness to crawlers.
+      // Resolved from the latest indexer snapshot across all
+      // history series so it reflects this specific product.
+      ...(() => {
+        const stamps = [
+          ...history.tvlHistory.map((p) => p.timestamp),
+          ...history.sharePriceHistory.map((p) => p.timestamp),
+          ...history.apyHistory.map((p) => p.timestamp),
+        ].filter((t) => Number.isFinite(t) && t > 0);
+        if (stamps.length === 0) return {};
+        const ts = Math.max(...stamps);
+        return { modifiedTime: new Date(ts * 1000).toISOString() };
+      })(),
     },
     twitter: { card: "summary", title, description },
     alternates: { canonical: `${SITE_URL}/${vault.slug}` },
@@ -182,7 +198,23 @@ export default async function ProductPage({
   if (!vault) notFound();
 
   const history = await getVaultHistory(vault.contractAddress);
-  const faqItems = generateFaqItems(vault);
+
+  // FAQ items for JSON-LD: pull from the same builders that
+  // ProductPageBody uses so the schema in <head> matches what
+  // the page renders. answerText is the plain-string version of
+  // each answer (Q3 has an inline link in JSX; the schema gets a
+  // flat string instead).
+  const holdersMap = await getHoldersMap();
+  const holderCount =
+    holdersMap[vault.contractAddress.toLowerCase()] ?? null;
+  const typedFaq =
+    vault.vaultType === "Autopilot"
+      ? buildAutopilotFaqItems(vault, history, holderCount)
+      : buildAutocompounderFaqItems(vault, history, holderCount);
+  const faqItems: FaqItem[] = typedFaq.map((it) => ({
+    question: it.question,
+    answer: it.answerText,
+  }));
 
   return (
     <>

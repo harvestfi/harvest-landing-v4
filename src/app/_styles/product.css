@@ -1178,6 +1178,30 @@ body:has(.uni-shell) {
   padding-top: 22px;
   border-top: 1px solid var(--uni-line);
 }
+/* Page-bottom footnote: per-product "last updated" timestamp + a
+   universal discrete risk acknowledgement line. Both sit between
+   the LINKS row and the global footer. Muted size + colour so the
+   block reads as a data-page footnote, not a compliance banner. */
+.uni-shell .pp-footnote {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--uni-line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--uni-ink-3);
+}
+.uni-shell .pp-footnote p { margin: 0; }
+.uni-shell .pp-footnote a {
+  color: var(--uni-ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--uni-tint-strong);
+  text-underline-offset: 2px;
+}
+.uni-shell .pp-footnote a:hover { color: var(--uni-ink); }
+
 .uni-shell .uni-bottom-links-title {
   font-family: var(--mono);
   font-size: 11.5px;
