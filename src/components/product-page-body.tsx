@@ -15,6 +15,10 @@ import { productPageCrumbs } from "@/lib/seo";
 import { SITE_URL } from "@/lib/constants";
 import { harvestAppUrl } from "@/lib/harvest-app";
 import { buildAutopilotAbout } from "@/lib/autopilot-about";
+import {
+  buildYieldTrajectory,
+  buildPerformanceOverview,
+} from "@/lib/autopilot-sections";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
@@ -406,23 +410,36 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
           </div>
         </section>
 
-        <VaultCommentary
-          vault={vault}
-          allVaults={allVaults}
-          history={history}
-          numbered
-        />
+        {vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder" ? (
+          <>
+            <AutopilotYieldTrajectoryBlock vault={vault} history={history} />
+            <AutopilotPerformanceOverviewBlock
+              vault={vault}
+              history={history}
+              allVaults={allVaults}
+            />
+          </>
+        ) : (
+          <VaultCommentary
+            vault={vault}
+            allVaults={allVaults}
+            history={history}
+            numbered
+          />
+        )}
 
         <MarketBenchmark vault={vault} allVaults={allVaults} />
 
         <EcosystemContext vault={vault} allVaults={allVaults} />
 
-        <YieldTrajectory
-          history={history}
-          productName={vault.productName}
-          apy24h={vault.apy24h}
-          asset={vault.asset}
-        />
+        {vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder" ? null : (
+          <YieldTrajectory
+            history={history}
+            productName={vault.productName}
+            apy24h={vault.apy24h}
+            asset={vault.asset}
+          />
+        )}
 
         <TestStabilityCard history={history} asset={vault.asset} />
 
@@ -619,5 +636,67 @@ function AutopilotAboutBlock({
       <p>{engine}</p>
       {liveline ? <p>{liveline}</p> : null}
     </>
+  );
+}
+
+// Numbered-list "Yield trajectory" block reserved for Autopilot +
+// Autocompounder vault types. Sentences are produced by the
+// builder; the renderer just numbers them per the spec.
+function AutopilotYieldTrajectoryBlock({
+  vault,
+  history,
+}: {
+  vault: YieldVault;
+  history: FullVaultHistory;
+}) {
+  const { lines } = buildYieldTrajectory(vault, history);
+  if (lines.length === 0) return null;
+  return (
+    <section className="pp-section" id="yield-trajectory">
+      <h2>Yield trajectory</h2>
+      <NumberedFactList items={lines} />
+    </section>
+  );
+}
+
+// Numbered-list "Performance Overview" block reserved for Autopilot
+// + Autocompounder vault types. Each line is one fact; the renderer
+// guarantees the visual rhythm spec asks for (one block per item).
+function AutopilotPerformanceOverviewBlock({
+  vault,
+  history,
+  allVaults,
+}: {
+  vault: YieldVault;
+  history: FullVaultHistory;
+  allVaults: YieldVault[];
+}) {
+  const { lines } = buildPerformanceOverview(vault, history, allVaults);
+  if (lines.length === 0) return null;
+  return (
+    <section className="pp-section" id="performance-overview">
+      <h2>Performance Overview</h2>
+      <NumberedFactList items={lines} />
+    </section>
+  );
+}
+
+// Shared numbered renderer for both Autopilot sections. Reuses the
+// .pp-numbered-* styling already used by VaultCommentary so the
+// visual rhythm matches the page's existing numbered lists (gold
+// rank tile + sentence text in two columns, blank-line gap
+// between items).
+function NumberedFactList({ items }: { items: string[] }) {
+  return (
+    <div className="pp-numbered-list">
+      {items.map((text, i) => (
+        <div key={i} className="pp-numbered-item">
+          <span className="pp-num-badge">
+            {String(i + 1).padStart(2, "0")}
+          </span>
+          <span className="pp-num-text">{text}</span>
+        </div>
+      ))}
+    </div>
   );
 }
