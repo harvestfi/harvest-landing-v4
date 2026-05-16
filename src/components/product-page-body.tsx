@@ -411,14 +411,15 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         </section>
 
         {vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder" ? (
-          <>
-            <AutopilotYieldTrajectoryBlock vault={vault} history={history} />
-            <AutopilotPerformanceOverviewBlock
-              vault={vault}
-              history={history}
-              allVaults={allVaults}
-            />
-          </>
+          // Performance Overview (numbered) leads. Market
+          // benchmarking + Ecosystem context follow as prose-with-
+          // charts, then Yield trajectory closes (also numbered)
+          // so the two numbered-list blocks don't sit adjacent.
+          <AutopilotPerformanceOverviewBlock
+            vault={vault}
+            history={history}
+            allVaults={allVaults}
+          />
         ) : (
           <VaultCommentary
             vault={vault}
@@ -432,7 +433,9 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
 
         <EcosystemContext vault={vault} allVaults={allVaults} />
 
-        {vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder" ? null : (
+        {vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder" ? (
+          <AutopilotYieldTrajectoryBlock vault={vault} history={history} />
+        ) : (
           <YieldTrajectory
             history={history}
             productName={vault.productName}
