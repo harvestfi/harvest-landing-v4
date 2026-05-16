@@ -34,6 +34,9 @@ export default function AdminLayout({
             <Link href="/admin/ranking-rules" className="admin-nav-link">
               Ranking Rules
             </Link>
+            <Link href="/admin/master-rules" className="admin-nav-link">
+              Master Rules
+            </Link>
             <Link href="/admin/studio" className="admin-nav-link">
               Studio
             </Link>
