@@ -9,7 +9,7 @@ import { METHODOLOGY_VERSION, METHODOLOGY_CHANGELOG, METHODOLOGY_URL } from "@/l
 
 const TITLE = "Methodology: How Harvest Tracks DeFi Yields | Harvest";
 const DESCRIPTION =
-  "How Harvest Finance tracks 150+ DeFi yield strategies. APY calculations, data sources, ranking methodology, and update cadence.";
+  "How Harvest tracks 150+ DeFi yield strategies. APY calculations, data sources, ranking methodology, and update cadence.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -194,7 +194,7 @@ export default async function MethodologyPage() {
 
               <div className="meth-callout">
                 All {allVaults.length} strategies currently in this index are operated
-                by Harvest Finance. This is not a neutral third-party aggregator -
+                by Harvest. This is not a neutral third-party aggregator -
                 it is Harvest's own product catalog. The index is being expanded to
                 cover strategies from other operators under the same methodology as
                 that infrastructure develops. See the{" "}
@@ -459,7 +459,7 @@ export default async function MethodologyPage() {
               <h2 className="meth-h2">Inclusion and exclusion criteria</h2>
               <p>
                 Inclusion is currently editorial and discretionary. The index covers
-                strategies operated by Harvest Finance that pass two automated conditions:
+                strategies operated by Harvest that pass two automated conditions:
                 the operator API must not flag the strategy as <code>inactive</code>,
                 and the strategy must have a positive APY and a positive TVL at the time
                 of the last fetch. There is no minimum TVL threshold and no minimum age
@@ -506,7 +506,7 @@ export default async function MethodologyPage() {
               <p>
                 Strategy metadata - vault addresses, token names, platform names, estimated
                 APY, TVL, APY breakdown by source, and reward token information - is sourced
-                from the Harvest Finance API at{" "}
+                from the Harvest API at{" "}
                 <a
                   href="https://api.harvest.finance/vaults"
                   target="_blank"
@@ -515,14 +515,14 @@ export default async function MethodologyPage() {
                 >
                   api.harvest.finance/vaults
                 </a>
-                . This API is operated by Harvest Finance and reflects the state of
+                . This API is operated by Harvest and reflects the state of
                 the protocols as read by their backend infrastructure.
               </p>
               <p>
                 Reward token APY contributions (e.g., AERO, CRV) are converted to USD
-                by the Harvest Finance API using its own pricing infrastructure. The
+                by the Harvest API using its own pricing infrastructure. The
                 specific price sources used - whether DEX quotes, on-chain oracles, or
-                third-party price feeds - are maintained by Harvest Finance and are not
+                third-party price feeds - are maintained by Harvest and are not
                 separately documented in the API's public reference. If a price source
                 is stale or inaccurate, the APY reported on this site will reflect that
                 inaccuracy.
@@ -600,7 +600,7 @@ export default async function MethodologyPage() {
 
               <div className="meth-disclosure">
                 <p>
-                  Harvest Finance operates every strategy currently listed in this index.
+                  Harvest operates every strategy currently listed in this index.
                   The index is not, at this stage, a neutral aggregator of third-party
                   protocols - it is an index of Harvest's own products. We state this
                   explicitly because the site's positioning as an "independent yield index"

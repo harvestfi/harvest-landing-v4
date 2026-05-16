@@ -135,6 +135,13 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   // productName unchanged. Ranking views deliberately keep the bare
   // productName + [LP] badge instead - canonical names are page-only.
   const displayName = getCanonicalDisplayName(vault);
+  // Operator brand for user-facing prose / structured fields. The
+  // upstream `protocol.name` is the legal entity ("Harvest Finance");
+  // every prose surface and the Strategy-details Operator row use
+  // the trimmed product brand ("Harvest") for consistency with the
+  // byline trim already applied at the top of the page.
+  const operatorBrand =
+    vault.protocol.name.replace(/\s*Finance\s*$/i, "").trim() || "Harvest";
 
   // Autopilot + Autocompounder products get the curated 7-question
   // FAQ list per vault type. Autopilots and Autocompounders each
@@ -165,7 +172,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
     },
     {
       question: "How does this vault work?",
-      answer: `It's a ${vault.vaultType.toLowerCase()} on ${vault.chain} operated by ${vault.protocol.name}. You supply ${vault.asset}, and the vault routes the holdings through the ${protocolName} strategy on your behalf - harvesting rewards, swapping them back to ${vault.asset}, and adding them to the position without manual steps.`,
+      answer: `It's a ${vault.vaultType.toLowerCase()} on ${vault.chain} operated by ${operatorBrand}. You supply ${vault.asset}, and the vault routes the holdings through the ${protocolName} strategy on your behalf - harvesting rewards, swapping them back to ${vault.asset}, and adding them to the position without manual steps.`,
     },
     {
       question: "Where does the yield come from?",
@@ -516,7 +523,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             )}
             <div className="cd-row">
               <span className="cd-label">Operator</span>
-              <span className="cd-val">{vault.protocol.name}</span>
+              <span className="cd-val">{operatorBrand}</span>
             </div>
             {trackedDays > 0 && (
               <div className="cd-row">
@@ -598,7 +605,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
 
         <VaultFaq
           productName={vault.productName}
-          protocolName={vault.protocol.name}
+          protocolName={operatorBrand}
           asset={vault.asset}
           chain={vault.chain}
           vaultType={vault.vaultType}

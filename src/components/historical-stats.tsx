@@ -143,7 +143,25 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
   // Narrative intro paragraph: trend direction over lifetime
   const narratives: string[] = [];
 
-  if (apyStats && apyStats.dataPoints >= 60) {
+  // Days of indexed APY history. Used to choose between three modes:
+  // < 7 days  -> minimal "still accumulating" notice
+  // 7..59     -> no APY narrative (table renders alone)
+  // >= 60     -> full lifetime-change paragraph
+  let apyTrackedDays = 0;
+  if (allApy.length >= 2) {
+    const sortedApyLife = [...allApy].sort((a, b) => a.timestamp - b.timestamp);
+    apyTrackedDays = Math.round(
+      (sortedApyLife[sortedApyLife.length - 1].timestamp -
+        sortedApyLife[0].timestamp) /
+        86400,
+    );
+  }
+
+  if (apyStats && apyTrackedDays < 7) {
+    narratives.push(
+      `Tracked for ${apyTrackedDays} day${apyTrackedDays === 1 ? "" : "s"}. APY data is still accumulating; the first meaningful summary requires at least a week of readings.`,
+    );
+  } else if (apyStats && apyStats.dataPoints >= 60) {
     const ref = depositRef(asset);
     const sorted = [...allApy].sort((a, b) => a.timestamp - b.timestamp);
     const firstQuarter = sorted.slice(0, Math.ceil(sorted.length / 4));

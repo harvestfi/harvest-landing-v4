@@ -470,11 +470,14 @@ function ClosingEcosystem({
     ? `Currently the top-yielding ${vault.asset} opportunity on ${vault.chain} across the ${sameChain.length} products we monitor.`
     : `By TVL, this product ranks #${tvlRank} of ${sameChain.length} ${vault.asset} strategies on ${vault.chain} in our index.`;
 
+  // Single-sentence closer. The previous trailing sentence
+  // ("This strategy is operated by X and competes against N other...")
+  // was deleted because:
+  // (a) operator attribution is a no-op fact since every product on
+  //     the site is operated by Harvest, and
+  // (b) `competes against` is now blacklisted phrasing, and the
+  //     cohort context is already covered by the topLabel sentence.
   return (
-    <p style={{ marginTop: 14 }}>
-      {topLabel} This strategy is operated by {vault.protocol.name} and
-      competes against {sameChain.length - 1} other {vault.asset} strategies
-      we follow on the {vault.chain} network.
-    </p>
+    <p style={{ marginTop: 14 }}>{topLabel}</p>
   );
 }

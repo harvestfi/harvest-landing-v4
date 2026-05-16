@@ -96,6 +96,11 @@ export function buildYieldTrajectory(
   const spNow = sp[sp.length - 1].sharePrice;
   const inceptionTs = sp[0].timestamp;
   const nowTs = sp[sp.length - 1].timestamp;
+  // ageDays = days of indexed share-price history. Equivalent to
+  // `tracked_days`, not on-chain inception age. Used in the
+  // "at launch (N days ago)" template because we can only compute
+  // $1,000-deposited values for dates within our index, never
+  // earlier than sp[0].timestamp.
   const ageDays = Math.max(0, Math.round((nowTs - inceptionTs) / 86400));
 
   // 30-day lines: only render when the vault has at least 30 days

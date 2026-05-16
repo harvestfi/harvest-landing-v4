@@ -98,7 +98,12 @@ export function buildAutocompounderAbout(
   if (inception) parts.push(`Live since ${inception}.`);
   const indexedBits: string[] = [];
   if (vault.tvl > 0) indexedBits.push(`${tvl} TVL`);
-  if (holderCount && holderCount > 0) {
+  // Holder count: skip the fragment entirely for 0 (or null/undefined)
+  // to avoid "across 0 holders"; render singular "1 holder" for one,
+  // plural for two or more.
+  if (holderCount === 1) {
+    indexedBits.push(`1 holder`);
+  } else if (holderCount && holderCount > 1) {
     indexedBits.push(`${holderCount} holders`);
   }
   if (indexedBits.length > 0) {

@@ -7,7 +7,41 @@ interface Props {
   asset: string;
 }
 
+// Drawdown percentages have a misleading rounding edge case: a vault
+// that fell from $746K to $169 has a 99.977% drawdown, which rounds
+// to 100% and reads as "TVL went to zero" even though $169 remained.
+// Cap at 99 whenever trough is non-zero; reserve 100 for true zero.
+function formatDrawdownPct(pct: number, troughValue: number): string {
+  if (troughValue <= 0) return "100";
+  if (pct >= 95) return "99";
+  return Math.round(pct).toString();
+}
+
+// Total span of indexed history in days, across the longest of the
+// three series. Used by the top-level age gate so the section doesn't
+// render for vaults with under a month of data (peak/trough,
+// annualised CAGR, best/worst month are all uninformative there).
+function computeTrackedDays(history: FullVaultHistory): number {
+  const spans = [
+    history.tvlHistory,
+    history.sharePriceHistory,
+    history.apyHistory,
+  ].map((series) => {
+    if (!series || series.length < 2) return 0;
+    const sorted = [...series].sort((a, b) => a.timestamp - b.timestamp);
+    return (sorted[sorted.length - 1].timestamp - sorted[0].timestamp) / 86400;
+  });
+  return Math.max(0, ...spans);
+}
+
 export function HistoricalNarrative({ history, asset }: Props) {
+  // Fresh-vault gate: skip the whole section for vaults with under
+  // 30 days of tracking. Annualised CAGR, best/worst month, and
+  // peak/trough framing all need more history than that to be
+  // informative; rendering them on a 5-day-old vault produces
+  // misleading bullets.
+  if (computeTrackedDays(history) < 30) return null;
+
   const ref = depositRef(asset);
 
   const items: Array<{
@@ -117,18 +151,12 @@ export function HistoricalNarrative({ history, asset }: Props) {
             : `TVL currently sits at ${formatTVL(currentTvl)}, at or near its historical peak.`;
         trajectory = "sideways";
       } else {
-        // Past peak. Single neutral framing - state drawdown,
+        // Past peak. Two-sentence framing only - state drawdown,
         // trough, and current side by side. No "recovered X%"
-        // wording (the recovery framing reads as a bounce-back
-        // when in fact $11K is 1% of an $980K peak), no editorial
-        // "operates at a small fraction" trailer.
-        text = `TVL experienced a ${maxDrawdownPct.toFixed(0)}% drawdown from its ${formatTVL(peakVal)} peak, bottoming at ${formatTVL(troughVal)} over ${daysDown} days. It currently stands at ${formatTVL(currentTvl)}, ${currentVsPeakPct}% of the peak value.`;
-        // For deep drawdowns where the indexer has a clear
-        // withdrawal-month signal, append a single neutral sentence.
-        if (maxDrawdownPct > 90) {
-          const troughDate = new Date(troughTs * 1000).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-          text += ` TVL had bottomed by ${troughDate}.`;
-        }
+        // wording, no trailing "had bottomed by" date (which was
+        // grammatically awkward past-perfect for a one-time event
+        // and redundant with daysDown already shown above).
+        text = `TVL experienced a ${formatDrawdownPct(maxDrawdownPct, troughVal)}% drawdown from its ${formatTVL(peakVal)} peak, bottoming at ${formatTVL(troughVal)} over ${daysDown} days. It currently stands at ${formatTVL(currentTvl)}, ${currentVsPeakPct}% of the peak value.`;
         trajectory = "down";
       }
 

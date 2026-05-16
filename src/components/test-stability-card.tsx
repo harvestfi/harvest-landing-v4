@@ -54,6 +54,19 @@ function computeStability(history: FullVaultHistory) {
   }
   const label = labelForScore(score);
 
+  // Suppress the score (but keep the stats) for genuinely fresh
+  // vaults. A vault with five days of tracking and six readings has
+  // not had time to demonstrate stability one way or the other -
+  // rendering "Score: 0 / 100 - Very volatile" misreads as a verdict.
+  // Established vaults with sparse snapshots remain meaningful, so
+  // both conditions (under 30 days tracked AND under 14 readings)
+  // must hold before suppression triggers.
+  const trackedDays = Math.round(
+    (valid[valid.length - 1].timestamp - valid[0].timestamp) / DAY,
+  );
+  const readingsIndexed = valid.length;
+  const suppressScore = trackedDays < 30 && readingsIndexed < 14;
+
   return {
     score,
     label,
@@ -62,6 +75,7 @@ function computeStability(history: FullVaultHistory) {
     minApy: Math.min(...values),
     maxApy: Math.max(...values),
     dataPoints: values.length,
+    suppressScore,
   };
 }
 
@@ -119,63 +133,72 @@ export function TestStabilityCard({ history, asset }: Props) {
       <div className="uni-stability-card">
         <div className="uni-stability-grid">
         <div className="uni-stability-left">
-        <div className="uni-stability-head">
-          <div className="uni-stability-score-block">
-            <div className="uni-stability-score">{s.score}</div>
-            <div className="uni-stability-out-of">/ 100</div>
+        {s.suppressScore ? (
+          // Fresh-vault suppression: keep the stats block but replace
+          // the score gauge with a "not available" notice. A score of
+          // 0/100 from six readings reads as a verdict, which it
+          // isn't.
+          <div className="uni-stability-empty-block">
+            <p className="uni-stability-empty">
+              Score not available - insufficient data (less than 14
+              daily readings indexed within the first 30 days of
+              tracking).
+            </p>
           </div>
-          <div className="uni-stability-label-block">
-            <div
-              className="uni-stability-label"
-              data-tooltip="Lower coefficient-of-variation in 30-day APY = higher score. 80-100 Very consistent, 60-79 Consistent, 40-59 Moderately variable, 20-39 Highly variable, 0-19 Very volatile."
-              style={{ color: labelColorForScore(s.score) }}
-            >
-              {s.label}
+        ) : (
+          <>
+            <div className="uni-stability-head">
+              <div className="uni-stability-score-block">
+                <div className="uni-stability-score">{s.score}</div>
+                <div className="uni-stability-out-of">/ 100</div>
+              </div>
+              <div className="uni-stability-label-block">
+                <div
+                  className="uni-stability-label"
+                  data-tooltip="Lower coefficient-of-variation in 30-day APY = higher score. 80-100 Very consistent, 60-79 Consistent, 40-59 Moderately variable, 20-39 Highly variable, 0-19 Very volatile."
+                  style={{ color: labelColorForScore(s.score) }}
+                >
+                  {s.label}
+                </div>
+                <div className="uni-stability-sublabel">
+                  Last 30 days · {s.dataPoints} {s.dataPoints === 1 ? "reading" : "readings"} indexed
+                </div>
+              </div>
             </div>
-            <div className="uni-stability-sublabel">
-              Last 30 days · {s.dataPoints} {s.dataPoints === 1 ? "reading" : "readings"} indexed
-            </div>
-          </div>
-        </div>
 
-        {/* VU-meter style score gauge: 20 vertical ticks ramping from
-            short (left) to tall (right). Filled gold when the tick
-            index falls within the score band; staggered fade-in so
-            it reads as "the dial winding up to max", not a static
-            progress bar. */}
-        <div
-          className="uni-stability-meter"
-          role="meter"
-          aria-valuenow={s.score}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`Stability score ${s.score} of 100`}
-        >
-          {Array.from({ length: 20 }).map((_, i) => {
-            const tickScore = (i + 1) * 5; // 5, 10, 15, ... 100
-            const isFilled = tickScore <= s.score;
-            // Height ramps from 38% (leftmost) to 100% (rightmost)
-            const heightPct = 38 + (i / 19) * 62;
-            // Every filled tick paints in the current tier colour so
-            // the gauge agrees with the headline word above. A
-            // strategy in the green zone reads as a green dial;
-            // amber/red strategies tint the same way without the
-            // staircase of competing colours that the previous
-            // segmented version produced.
-            const tickColor = labelColorForScore(s.score);
-            return (
-              <span
-                key={i}
-                className={`uni-stab-tick${isFilled ? " on" : ""}`}
-                style={{
-                  height: `${heightPct}%`,
-                  animationDelay: `${i * 22}ms`,
-                  ...(isFilled ? { background: tickColor } : {}),
-                }}
-              />
-            );
-          })}
-        </div>
+            {/* VU-meter style score gauge: 20 vertical ticks ramping
+                from short (left) to tall (right). Filled gold when
+                the tick index falls within the score band; staggered
+                fade-in so it reads as "the dial winding up to max",
+                not a static progress bar. */}
+            <div
+              className="uni-stability-meter"
+              role="meter"
+              aria-valuenow={s.score}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Stability score ${s.score} of 100`}
+            >
+              {Array.from({ length: 20 }).map((_, i) => {
+                const tickScore = (i + 1) * 5;
+                const isFilled = tickScore <= s.score;
+                const heightPct = 38 + (i / 19) * 62;
+                const tickColor = labelColorForScore(s.score);
+                return (
+                  <span
+                    key={i}
+                    className={`uni-stab-tick${isFilled ? " on" : ""}`}
+                    style={{
+                      height: `${heightPct}%`,
+                      animationDelay: `${i * 22}ms`,
+                      ...(isFilled ? { background: tickColor } : {}),
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
         </div>
 
         <div className="uni-stability-stats">
