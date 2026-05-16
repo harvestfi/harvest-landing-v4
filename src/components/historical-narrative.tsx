@@ -76,9 +76,10 @@ export function HistoricalNarrative({ history, asset }: Props) {
     if (maxDrawdownPct >= 15 && peakVal > 0) {
       const daysDown = Math.round((troughTs - peakTs) / 86400);
       const currentTvl = sorted[sorted.length - 1].value;
-      const recoveryPct =
-        troughVal > 0 ? ((currentTvl - troughVal) / troughVal) * 100 : 0;
       const atPeak = currentTvl >= peakVal * 0.9;
+      const currentVsPeakPct = peakVal > 0
+        ? Math.round((currentTvl / peakVal) * 100)
+        : 0;
 
       let text: string;
       let trajectory: "up" | "down" | "sideways";
@@ -87,26 +88,20 @@ export function HistoricalNarrative({ history, asset }: Props) {
         // At or near peak: use simplified sentence
         text = `TVL currently sits at or near its historical peak of ${formatTVL(peakVal)}.`;
         trajectory = "sideways";
-      } else if (recoveryPct > 10) {
-        text = `TVL experienced a ${maxDrawdownPct.toFixed(0)}% drawdown from its ${formatTVL(peakVal)} peak, bottoming at ${formatTVL(troughVal)} over ${daysDown} days. It has since recovered ${recoveryPct.toFixed(0)}% to ${formatTVL(currentTvl)}.`;
-        trajectory = recoveryPct > maxDrawdownPct * 0.5 ? "sideways" : "down";
-        // Add contextualization for 30-70% drawdown
-        if (maxDrawdownPct >= 30 && maxDrawdownPct <= 70) {
-          text += " TVL is materially below its historical peak.";
-        } else if (maxDrawdownPct > 90) {
-          const troughDate = new Date(troughTs * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-          text += ` Most depositors had withdrawn by ${troughDate}; the strategy currently operates at a small fraction of its historical scale.`;
-        }
       } else {
-        text = `TVL drew down ${maxDrawdownPct.toFixed(0)}% from a peak of ${formatTVL(peakVal)} to ${formatTVL(troughVal)} over ${daysDown} days and currently stands at ${formatTVL(currentTvl)}.`;
-        trajectory = "down";
-        // Add contextualization
-        if (maxDrawdownPct >= 30 && maxDrawdownPct <= 70) {
-          text += " TVL is materially below its historical peak.";
-        } else if (maxDrawdownPct > 90) {
-          const troughDate = new Date(troughTs * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-          text += ` Most depositors had withdrawn by ${troughDate}; the strategy currently operates at a small fraction of its historical scale.`;
+        // Past peak. Single neutral framing - state drawdown,
+        // trough, and current side by side. No "recovered X%"
+        // wording (the recovery framing reads as a bounce-back
+        // when in fact $11K is 1% of an $980K peak), no editorial
+        // "operates at a small fraction" trailer.
+        text = `TVL experienced a ${maxDrawdownPct.toFixed(0)}% drawdown from its ${formatTVL(peakVal)} peak, bottoming at ${formatTVL(troughVal)} over ${daysDown} days. It currently stands at ${formatTVL(currentTvl)}, ${currentVsPeakPct}% of the peak value.`;
+        // For deep drawdowns where the indexer has a clear
+        // withdrawal-month signal, append a single neutral sentence.
+        if (maxDrawdownPct > 90) {
+          const troughDate = new Date(troughTs * 1000).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+          text += ` Most depositors had withdrawn by ${troughDate}.`;
         }
+        trajectory = "down";
       }
 
       items.push({ text, trajectory });

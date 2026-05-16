@@ -242,7 +242,10 @@ export function buildPerformanceOverview(
     );
   }
 
-  // Line 04: TVL 30d change.
+  // Line 04: TVL 30d change. Suppress the percentage framing
+  // when either endpoint is below $50K - small absolute moves on
+  // low-TVL strategies produce percentages dominated by single-
+  // deposit noise that read as a signal but aren't.
   const tvlSorted = [...history.tvlHistory].sort(
     (a, b) => a.timestamp - b.timestamp,
   );
@@ -251,13 +254,22 @@ export function buildPerformanceOverview(
     const past = closestPoint(tvlSorted, target);
     if (past && past.value > 0 && past.timestamp <= now - 7 * 86400) {
       const current = vault.tvl;
-      const pct = ((current - past.value) / past.value) * 100;
-      const direction = pct >= 0 ? "increased" : "decreased";
-      lines.push(
-        `TVL has ${direction} ${Math.abs(pct).toFixed(1)}% over the past 30 days, from ${formatTvlShort(
-          past.value,
-        )} to ${formatTvlShort(current)}.`,
-      );
+      const TVL_PCT_THRESHOLD = 50_000;
+      const eligibleForPct =
+        current >= TVL_PCT_THRESHOLD && past.value >= TVL_PCT_THRESHOLD;
+      if (eligibleForPct) {
+        const pct = ((current - past.value) / past.value) * 100;
+        const direction = pct >= 0 ? "increased" : "decreased";
+        lines.push(
+          `TVL has ${direction} ${Math.abs(pct).toFixed(1)}% over the past 30 days, from ${formatTvlShort(
+            past.value,
+          )} to ${formatTvlShort(current)}.`,
+        );
+      } else {
+        lines.push(
+          `TVL stands at ${formatTvlShort(current)}, compared to ${formatTvlShort(past.value)} 30 days ago.`,
+        );
+      }
     }
   }
 

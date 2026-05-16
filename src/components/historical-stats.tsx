@@ -152,15 +152,17 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
     const lateAvg = lastQuarter.reduce((s, p) => s + p.apy, 0) / lastQuarter.length;
     const changePct = earlyAvg > 0 ? ((lateAvg - earlyAvg) / earlyAvg) * 100 : 0;
     if (Math.abs(changePct) > 10) {
-      const dir = changePct > 0 ? "an upward" : "a downward";
-      const verb = changePct > 0 ? "expanding" : "contracting";
-      let text = `Over the past ${apyStats.dataPoints} days, this vault's yield has shown ${dir} trend, with yields ${verb} from ${earlyAvg.toFixed(2)}% to ${lateAvg.toFixed(2)}%, a ${Math.abs(changePct).toFixed(1)}% ${changePct > 0 ? "increase" : "decrease"}.`;
+      // No "upward/downward trend" framing - "trend" implies
+      // persistence and forecastability the data may not support.
+      // State endpoints + delta neutrally; let the user infer.
+      const direction = changePct > 0 ? "increase" : "decrease";
+      let text = `Over the past ${apyStats.dataPoints} days, this vault's APY has moved from ${earlyAvg.toFixed(2)}% to ${lateAvg.toFixed(2)}%, a ${Math.abs(changePct).toFixed(1)}% ${direction}.`;
 
       // Contextualization (#14): omit if monthly diff < $1
       const earlyMonthly = apyToMonthly(earlyAvg, ref.amount);
       const lateMonthly = apyToMonthly(lateAvg, ref.amount);
       if (Math.abs(earlyMonthly - lateMonthly) >= 1) {
-        text += ` At the start of tracking, ${ref.label} would have earned ${fmtEarnings(earlyMonthly, asset)}/mo at then-current rates; at recent rates, ${fmtEarnings(lateMonthly, asset)}/mo.`;
+        text += ` At the start of the window, ${ref.label} would have earned ${fmtEarnings(earlyMonthly, asset)}/mo at then-current rates; at recent rates, ${fmtEarnings(lateMonthly, asset)}/mo.`;
       }
 
       narratives.push(text);

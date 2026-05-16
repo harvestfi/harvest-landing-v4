@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL } from "@/lib/format";
-import { depositRef, apyToMonthly, fmtEarnings, tvlPercentileLabel, benchmarkQualifier } from "@/lib/contextualize";
+import { depositRef, apyToMonthly, fmtEarnings } from "@/lib/contextualize";
 import { chainToSlug } from "@/lib/networks";
 import { AssetIcon, ChainIcon } from "./token-icons";
 
@@ -178,7 +178,13 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
         </div>
       </div>
 
-      <ClosingBenchmark vault={vault} sameAsset={sameAsset} rank={rank} />
+      <ClosingBenchmark
+        vault={vault}
+        sameAsset={sameAsset}
+        rank={rank}
+        avgApy={avgApy}
+        vsAvg={vsAvg}
+      />
     </section>
   );
 }
@@ -227,39 +233,52 @@ function ClosingBenchmark({
   vault,
   sameAsset,
   rank,
+  avgApy,
+  vsAvg,
 }: {
   vault: YieldVault;
   sameAsset: YieldVault[];
   rank: number;
+  avgApy: number;
+  vsAvg: number;
 }) {
-  const outperformPct = Math.round(
-    ((sameAsset.length - rank) / sameAsset.length) * 100,
-  );
+  const total = sameAsset.length;
+  const ratio = rank / total;
+  const above = rank - 1;
+  const below = total - rank;
+  // APY-rank phrase: three variants per the editorial spec - no
+  // "outperforming X%" or "% beaten" framing.
+  const apySummary =
+    ratio <= 0.25
+      ? "This product sits in the top quarter of the cohort by APY."
+      : ratio <= 0.75
+        ? `${above} ${above === 1 ? "strategy" : "strategies"} in the cohort are currently delivering higher APY; ${below} are delivering lower.`
+        : `${above} ${above === 1 ? "strategy" : "strategies"} in the cohort are currently delivering higher APY.`;
 
+  // Cohort-average vs vault delta in $/month per $1,000, two
+  // decimals. Mirrors the BenchmarkIntro context but separated
+  // into a tail-sentence here.
+  const direction = vsAvg >= 0 ? "higher" : "lower";
+  const monthlyDelta = Math.abs((1000 * (vault.apy24h - avgApy)) / 100 / 12);
+  const dollarDelta = monthlyDelta.toFixed(2);
+
+  // TVL rank within the same-asset cohort, sorted by TVL desc.
   const tvlSorted = [...sameAsset].sort((a, b) => b.tvl - a.tvl);
   const tvlRank = tvlSorted.findIndex((v) => v.id === vault.id) + 1;
-  const topTvl = tvlSorted[0];
-
-  // TVL context (#6)
-  let tvlComparison = "";
-  if (vault.tvl < 1000) {
-    // Under $1k: replace closing sentence's TVL part with small-vault note
-    tvlComparison = ` This vault is currently small, holding under $1,000 in deposits. It is not representative of strategy capacity at scale.`;
-  } else if (tvlRank <= 5) {
-    tvlComparison = ` By TVL it ranks #${tvlRank}, putting it among the most established ${vault.asset} vaults in our index. That makes it one of the largest ${vault.asset} strategies in the index by capital deployed.`;
-  } else if (tvlRank <= 3) {
-    tvlComparison = ` By TVL it ranks #${tvlRank}, putting it among the most established ${vault.asset} vaults in our index.`;
-  } else if (topTvl && topTvl.id !== vault.id && topTvl.tvl > vault.tvl * 2) {
-    const percentileLabel = tvlPercentileLabel(tvlRank, sameAsset.length);
-    tvlComparison = ` However, with ${formatTVL(vault.tvl)} TVL it holds significantly less capital than ${topTvl.productName} (${formatTVL(topTvl.tvl)}). That places it in the ${percentileLabel} of ${vault.asset} strategies by capital deployed.`;
-  }
 
   return (
     <p style={{ marginTop: 14 }}>
-      {vault.productName} currently ranks #{rank} among the{" "}
-      {sameAsset.length} {vault.asset} strategies we follow, outperforming{" "}
-      {outperformPct}% of them by APY.
-      {tvlComparison}
+      Among the {total} {vault.asset} strategies we currently monitor,
+      this product ranks <strong>#{rank}</strong>. Its{" "}
+      {formatAPY(vault.apy24h)} yield runs{" "}
+      <strong>
+        {Math.abs(vsAvg).toFixed(1)}% {direction}
+      </strong>{" "}
+      than the cohort average of {formatAPY(avgApy)}. On a $1,000
+      deposit, that&apos;s ~${dollarDelta} per month {direction} than
+      the cohort average. {apySummary} It currently holds{" "}
+      {formatTVL(vault.tvl)} in TVL, ranking #{tvlRank} of {total} by
+      capital deployed.
     </p>
   );
 }
@@ -452,17 +471,18 @@ function EcosystemIntro({
   networkAvg: number;
   vsNetAvg: number;
 }) {
-  // Contextualization (#7): qualify position relative to network avg
-  const qualifier = benchmarkQualifier(vsNetAvg);
-  const ctx = ` Yields on ${vault.chain} for ${vault.asset} have averaged ${networkAvg.toFixed(2)}% in our index - this strategy is delivering ${qualifier} that benchmark.`;
-
+  // No editorial trailing clause. The two factual sentences above
+  // (relative-to-average + rank in set) plus the bare cohort
+  // average below already cover the comparison; the previous
+  // "delivering well above that benchmark" was an intensifier
+  // comparison violating the universal hard rule.
   return (
     <p>
       On <Link href={`/${chainToSlug(vault.chain)}`}>{vault.chain}</Link>, this
       product{"'"}s yield runs{" "}
       <strong>{Math.abs(vsNetAvg).toFixed(1)}% {vsNetAvg >= 0 ? "higher" : "lower"}</strong> than
       the network average across the {vault.asset} strategies we monitor. By APY it ranks{" "}
-      <strong>#{rank} of {sameChainCount}</strong> in that set.{ctx}
+      <strong>#{rank} of {sameChainCount}</strong> in that set. Yields on {vault.chain} for {vault.asset} have averaged {networkAvg.toFixed(2)}% in our index.
     </p>
   );
 }

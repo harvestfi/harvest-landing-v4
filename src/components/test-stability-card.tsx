@@ -34,23 +34,25 @@ function computeStability(history: FullVaultHistory) {
   const stdDev = Math.sqrt(variance);
   const cv = stdDev / mean;
 
+  // Score lands in 0..100 from the CV ramp. Label is derived
+  // strictly from the score per the editorial 5-zone mapping so the
+  // two never disagree (the previous "label set in the CV branch"
+  // approach drifted out of sync with score thresholds, e.g.
+  // CV-based label said "Highly variable" while the score was 10
+  // which the spec maps to "Very volatile").
   let score: number;
-  let label: string;
   if (cv < 0.1) {
     score = Math.round(100 - (cv / 0.1) * 10);
-    label = "Very consistent";
   } else if (cv < 0.2) {
     score = Math.round(89 - ((cv - 0.1) / 0.1) * 19);
-    label = "Consistent";
   } else if (cv < 0.4) {
     score = Math.round(69 - ((cv - 0.2) / 0.2) * 29);
-    label = "Variable";
   } else {
     const clampedCv = Math.min(cv, 1.0);
     score = Math.round(39 - ((clampedCv - 0.4) / 0.6) * 39);
     score = Math.max(0, score);
-    label = "Highly variable";
   }
+  const label = labelForScore(score);
 
   return {
     score,
@@ -63,15 +65,27 @@ function computeStability(history: FullVaultHistory) {
   };
 }
 
-// Label colour follows the same 4-zone ramp as the VU-meter ticks
-// so the headline status word ("Highly variable" / "Variable" /
-// "Consistent" / "Very consistent") inherits the tier colour and the
-// gauge + label visually agree on what "92" or "30" means.
+// Map score (0..100) to the editorial 5-zone label per the
+// punch-list spec. Boundaries are inclusive on the lower end and
+// exclusive on the upper end so each score maps to exactly one
+// label and the two never disagree at thresholds.
+function labelForScore(score: number): string {
+  if (score >= 80) return "Very consistent";
+  if (score >= 60) return "Consistent";
+  if (score >= 40) return "Moderately variable";
+  if (score >= 20) return "Highly variable";
+  return "Very volatile";
+}
+
+// Label colour follows a 5-zone ramp matching the score thresholds
+// so the headline status word inherits the tier colour and the
+// gauge + label visually agree on what "92" or "10" means.
 function labelColorForScore(score: number): string {
-  if (score < 25) return "#e5484d";
-  if (score < 50) return "#f4801a";
-  if (score < 75) return "#ffb936";
-  return "#27a567";
+  if (score < 20) return "#c2362f"; // Very volatile - deep red
+  if (score < 40) return "#e5484d"; // Highly variable - red
+  if (score < 60) return "#f4801a"; // Moderately variable - amber
+  if (score < 80) return "#ffb936"; // Consistent - gold
+  return "#27a567"; // Very consistent - green
 }
 
 export function TestStabilityCard({ history, asset }: Props) {
@@ -113,7 +127,7 @@ export function TestStabilityCard({ history, asset }: Props) {
           <div className="uni-stability-label-block">
             <div
               className="uni-stability-label"
-              data-tooltip="Lower coefficient-of-variation in 30-day APY = higher score. 90-100 Very consistent, 70-89 Consistent, 40-69 Variable, 0-39 Highly variable."
+              data-tooltip="Lower coefficient-of-variation in 30-day APY = higher score. 80-100 Very consistent, 60-79 Consistent, 40-59 Moderately variable, 20-39 Highly variable, 0-19 Very volatile."
               style={{ color: labelColorForScore(s.score) }}
             >
               {s.label}
