@@ -219,18 +219,26 @@ export function buildPerformanceOverview(
     );
   }
 
-  // Line 03: lifetime percentile of current APY.
+  // Line 03: current APY vs lifetime average. The percentile
+  // framing it replaced (e.g. "Xth percentile of its lifetime") was
+  // statistically correct but read as a financial report; comparing
+  // to the lifetime average (same number shown in Historical
+  // statistics) is something the user can hold in their head.
+  // Threshold: ±0.5 percentage points = "roughly in line".
   const lifetime = history.apyHistory
     .filter((p) => Number.isFinite(p.apy) && p.apy >= 0)
     .map((p) => p.apy);
   if (lifetime.length >= 5 && vault.apy24h > 0) {
-    const below = lifetime.filter((v) => v < vault.apy24h).length;
-    const pct = Math.max(
-      0,
-      Math.min(100, Math.round((below / lifetime.length) * 100)),
-    );
+    const avg = lifetime.reduce((s, v) => s + v, 0) / lifetime.length;
+    const delta = vault.apy24h - avg;
+    const verb =
+      delta < -0.5
+        ? "is below"
+        : delta > 0.5
+          ? "is above"
+          : "is roughly in line with";
     lines.push(
-      `Current APY of ${formatAPY(vault.apy24h)} sits at the ${pct}${ordinalSuffix(pct)} percentile of its lifetime.`,
+      `Current APY of ${formatAPY(vault.apy24h)} ${verb} this vault's lifetime average of ${formatAPY(avg)}.`,
     );
   }
 
@@ -256,20 +264,6 @@ export function buildPerformanceOverview(
   return { lines };
 }
 
-function ordinalSuffix(n: number): string {
-  const v = n % 100;
-  if (v >= 11 && v <= 13) return "th";
-  switch (n % 10) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
-  }
-}
 
 // Short TVL formatter matching the spec ($86K, $36K, $2.0M etc).
 // Distinct from formatTVL in lib/format because that one rounds

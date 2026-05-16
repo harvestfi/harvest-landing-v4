@@ -1,7 +1,10 @@
-// "Similar {asset} opportunities" cross-sell rail. Pulls every other
-// vault for the same asset from the global list, sorts by 24h APY,
-// renders the top 6 as a card grid. Links jump to the production
-// product page for that vault.
+// "Other {asset} opportunities" cross-sell rail. Filters the global
+// list down to vaults that are proximate to the current product
+// (same network OR same strategy type, same asset), then orders by
+// TVL descending so the most comparable products lead by scale
+// rather than by yield. APY-based ranking is already covered in
+// Market benchmarking; this section is about proximity, not
+// performance.
 
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
@@ -14,26 +17,38 @@ interface Props {
 }
 
 export function TestSimilar({ vault, allVaults }: Props) {
-  // Filter out vaults with no live numbers — empty TVL or no APY makes
-  // them dead links from a yield-comparison standpoint and they
-  // pollute the cross-sell rail.
-  const similar = allVaults
-    .filter(
-      (v) =>
-        v.asset === vault.asset &&
-        v.id !== vault.id &&
-        v.tvl > 0 &&
-        v.apy24h > 0,
-    )
-    .sort((a, b) => b.apy24h - a.apy24h)
-    .slice(0, 6);
+  // Eligible: same asset, live numbers, not the current product.
+  const eligible = allVaults.filter(
+    (v) =>
+      v.asset === vault.asset &&
+      v.id !== vault.id &&
+      v.tvl > 0 &&
+      v.apy24h > 0,
+  );
+
+  // Bucket by relationship to the current product. The spec
+  // prioritises rows in this order when more than 6 candidates
+  // qualify: same-network-and-same-type, same-network-other-type,
+  // same-type-other-network. We keep the buckets disjoint and
+  // concatenate in priority order, then take the first 6.
+  const sameNet = (v: YieldVault) => v.chain === vault.chain;
+  const sameType = (v: YieldVault) => v.vaultType === vault.vaultType;
+  const bucketA = eligible.filter((v) => sameNet(v) && sameType(v));
+  const bucketB = eligible.filter((v) => sameNet(v) && !sameType(v));
+  const bucketC = eligible.filter((v) => !sameNet(v) && sameType(v));
+  const byTvlDesc = (a: YieldVault, b: YieldVault) => b.tvl - a.tvl;
+  const similar = [
+    ...bucketA.sort(byTvlDesc),
+    ...bucketB.sort(byTvlDesc),
+    ...bucketC.sort(byTvlDesc),
+  ].slice(0, 6);
 
   if (similar.length === 0) return null;
 
   return (
     <section className="pp-section uni-similar" id="similar">
       <header className="uni-similar-head">
-        <h2>Similar {vault.asset} opportunities</h2>
+        <h2>Other {vault.asset} opportunities</h2>
         <Link
           href={`/${vault.asset.toLowerCase()}`}
           className="uni-similar-all"

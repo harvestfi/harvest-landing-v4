@@ -21,10 +21,39 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
   const avgApy = sameAsset.reduce((s, v) => s + v.apy24h, 0) / sameAsset.length;
   const vsAvg = avgApy > 0 ? ((vault.apy24h - avgApy) / avgApy) * 100 : 0;
 
-  const top6 = sameAsset.slice(0, 6);
-  const currentInTop = top6.some((v) => v.id === vault.id);
-  if (!currentInTop && rank > 0) {
-    top6[top6.length - 1] = vault;
+  // Build the row layout per the editorial spec: top 3 of cohort,
+  // local neighbourhood (rank-1, rank, rank+1), tail (last). Insert
+  // ellipsis separators when adjacent visible rows are more than
+  // one rank apart. Special cases: current product in top 3 -> skip
+  // neighbourhood; current product at tail -> collapse with last
+  // row; cohort of 3 or fewer -> just the top.
+  const total = sameAsset.length;
+  type BenchRow =
+    | { kind: "row"; vault: YieldVault; rank: number }
+    | { kind: "sep" };
+  const seen = new Set<number>();
+  const layout: BenchRow[] = [];
+  const pushRow = (r: number) => {
+    if (r < 1 || r > total) return;
+    if (seen.has(r)) return;
+    seen.add(r);
+    layout.push({ kind: "row", vault: sameAsset[r - 1], rank: r });
+  };
+  const pushSepBefore = (nextRank: number) => {
+    const lastRow = [...layout].reverse().find((x) => x.kind === "row") as
+      | { kind: "row"; rank: number }
+      | undefined;
+    if (!lastRow) return;
+    if (nextRank - lastRow.rank > 1) layout.push({ kind: "sep" });
+  };
+  for (let r = 1; r <= 3 && r <= total; r++) pushRow(r);
+  if (rank > 3) {
+    pushSepBefore(rank - 1 >= 1 ? rank - 1 : rank);
+    for (let r = rank - 1; r <= rank + 1; r++) pushRow(r);
+  }
+  if (total > 3) {
+    pushSepBefore(total);
+    pushRow(total);
   }
 
   return (
@@ -75,12 +104,23 @@ export function MarketBenchmark({ vault, allVaults }: Props) {
         <div className="bt-head">
           <span>#</span><span>Product</span><span>Chain</span><span className="r">APY</span><span className="r">TVL</span>
         </div>
-        {top6.map((v) => {
+        {layout.map((row, i) => {
+          if (row.kind === "sep") {
+            return (
+              <div key={`sep-${i}`} className="bt-row bt-row-sep" aria-hidden="true">
+                <span></span>
+                <span className="dim">…</span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            );
+          }
+          const v = row.vault;
           const isYou = v.id === vault.id;
-          const displayRank = sameAsset.findIndex((s) => s.id === v.id) + 1;
           const cells = (
             <>
-              <span className="mono dim">#{displayRank}</span>
+              <span className="mono dim">#{row.rank}</span>
               <span className="bt-product-cell">
                 <span className="bt-product">
                   <AssetIcon asset={v.asset} size={22} />

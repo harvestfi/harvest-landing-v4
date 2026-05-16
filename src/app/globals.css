@@ -2033,7 +2033,21 @@ button { font-family: inherit; cursor: pointer; }
 }
 .bt-row { border-bottom: 1px dotted var(--line-2); transition: background-color 0.12s ease; }
 .bt-row:last-child { border-bottom: 0; }
-.bt-row:hover:not(.you):not(.avg) { background: rgba(255, 185, 54, 0.06); }
+.bt-row:hover:not(.you):not(.avg):not(.bt-row-sep) { background: rgba(255, 185, 54, 0.06); }
+/* Ellipsis row sits between non-adjacent rank groups in the
+   benchmark table. Quiet visual - centered ink-3 dots, no hover. */
+.bt-row-sep {
+  pointer-events: none;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  color: var(--ink-3);
+}
+.bt-row-sep .dim {
+  grid-column: 1 / -1;
+  text-align: center;
+  letter-spacing: 0.2em;
+  font-size: 14px;
+}
 .bt-row-link {
   text-decoration: none;
   color: inherit;
