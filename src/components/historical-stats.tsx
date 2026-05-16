@@ -197,14 +197,26 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
           `Total value locked currently sits at ${formatTVL(last)}, up from ${formatTVL(first)} at the start of tracking. The vault has been live for ${days} days.`,
         );
       } else if (peak.value > 0) {
-        // Narrative B: peak-and-current.
+        // Narrative B: peak-and-current. Peak date is derived from
+        // the peak snapshot's timestamp, formatted Month YYYY. If
+        // the timestamp is missing or unparseable, drop the date
+        // clause as graceful degradation rather than rendering "on
+        // Invalid Date".
         const pct = Math.round((last / peak.value) * 100);
-        const peakDate = new Date(peak.timestamp * 1000).toLocaleDateString(
-          "en-GB",
-          { month: "long", year: "numeric" },
-        );
+        let peakDate: string | null = null;
+        if (Number.isFinite(peak.timestamp) && peak.timestamp > 0) {
+          const d = new Date(peak.timestamp * 1000);
+          if (!Number.isNaN(d.getTime())) {
+            peakDate = d.toLocaleDateString("en-GB", {
+              month: "long",
+              year: "numeric",
+            });
+          }
+        }
         narratives.push(
-          `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)} reached on ${peakDate}.`,
+          peakDate
+            ? `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)} reached on ${peakDate}.`
+            : `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)}.`,
         );
       }
     }

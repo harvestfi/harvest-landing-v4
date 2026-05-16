@@ -81,6 +81,10 @@ export function TestStabilityCard({ history, asset }: Props) {
     return (
       <section className="pp-section uni-stability" id="consistency">
         <h2>Strategy stability</h2>
+        <p className="uni-stability-subtitle">
+          Based on APY volatility over the last 30 days. Higher scores
+          indicate steadier yields.
+        </p>
         <div className="uni-stability-card">
           <p className="uni-stability-empty">
             Insufficient APY history to score stability for this strategy yet.
@@ -94,6 +98,10 @@ export function TestStabilityCard({ history, asset }: Props) {
   return (
     <section className="pp-section uni-stability" id="consistency">
       <h2>Strategy stability</h2>
+      <p className="uni-stability-subtitle">
+        Based on APY volatility over the last 30 days. Higher scores
+        indicate steadier yields.
+      </p>
       <div className="uni-stability-card">
         <div className="uni-stability-grid">
         <div className="uni-stability-left">

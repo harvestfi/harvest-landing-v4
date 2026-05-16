@@ -70,25 +70,30 @@ export function VaultHistoryTable({ history }: VaultHistoryTableProps) {
   const [tab, setTab] = useState<TabMode>("apy");
   const [page, setPage] = useState(0);
 
+  // One row per calendar day, using the LATEST intraday snapshot
+  // (end-of-day reading) as the canonical value for that date. The
+  // chart above this table can still use the full granularity; the
+  // table is presented as a daily log, so duplicated dates would be
+  // confusing. Applies to all three tabs.
   const apyData = useMemo(
     () =>
-      [...history.apyHistory]
-        .filter((p) => p.apy >= 0)
-        .sort((a, b) => b.timestamp - a.timestamp),
+      dedupeLatestPerDay(history.apyHistory.filter((p) => p.apy >= 0)).sort(
+        (a, b) => b.timestamp - a.timestamp,
+      ),
     [history.apyHistory],
   );
   const tvlData = useMemo(
     () =>
-      [...history.tvlHistory]
-        .filter((p) => p.value > 0)
-        .sort((a, b) => b.timestamp - a.timestamp),
+      dedupeLatestPerDay(history.tvlHistory.filter((p) => p.value > 0)).sort(
+        (a, b) => b.timestamp - a.timestamp,
+      ),
     [history.tvlHistory],
   );
   const spData = useMemo(
     () =>
-      [...history.sharePriceHistory]
-        .filter((p) => p.sharePrice > 0)
-        .sort((a, b) => b.timestamp - a.timestamp),
+      dedupeLatestPerDay(
+        history.sharePriceHistory.filter((p) => p.sharePrice > 0),
+      ).sort((a, b) => b.timestamp - a.timestamp),
     [history.sharePriceHistory],
   );
 
@@ -245,4 +250,22 @@ export function VaultHistoryTable({ history }: VaultHistoryTableProps) {
       </div>
     </div>
   );
+}
+
+// Keep one record per UTC calendar day, picking the snapshot with
+// the latest timestamp for that day (end-of-day reading). Preserves
+// the original record shape so the caller's downstream mapping
+// (p.apy / p.value / p.sharePrice) still works.
+function dedupeLatestPerDay<T extends { timestamp: number }>(
+  points: T[],
+): T[] {
+  const byDay = new Map<string, T>();
+  for (const p of points) {
+    const day = new Date(p.timestamp * 1000).toISOString().slice(0, 10);
+    const existing = byDay.get(day);
+    if (!existing || p.timestamp > existing.timestamp) {
+      byDay.set(day, p);
+    }
+  }
+  return Array.from(byDay.values());
 }
