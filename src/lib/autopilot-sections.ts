@@ -247,10 +247,14 @@ export function buildPerformanceOverview(
     );
   }
 
-  // Line 04: TVL 30d change. Suppress the percentage framing
-  // when either endpoint is below $50K - small absolute moves on
-  // low-TVL strategies produce percentages dominated by single-
-  // deposit noise that read as a signal but aren't.
+  // Line 04: TVL 30d change. Suppress the percentage framing only
+  // when BOTH endpoints are below $50K - those are the cases where
+  // single-deposit noise dominates (e.g. $95 -> $95 producing
+  // "0.0%" or $26 -> $782K producing "2907.7%"). When at least one
+  // endpoint is above $50K, the percentage reflects an actual TVL
+  // movement: hiding it (the previous OR-gate behaviour) was
+  // suppressing the signal users most need to see, e.g. $86K ->
+  // $36K is a real 58% decrease, not noise.
   const tvlSorted = [...history.tvlHistory].sort(
     (a, b) => a.timestamp - b.timestamp,
   );
@@ -260,9 +264,9 @@ export function buildPerformanceOverview(
     if (past && past.value > 0 && past.timestamp <= now - 7 * 86400) {
       const current = vault.tvl;
       const TVL_PCT_THRESHOLD = 50_000;
-      const eligibleForPct =
-        current >= TVL_PCT_THRESHOLD && past.value >= TVL_PCT_THRESHOLD;
-      if (eligibleForPct) {
+      const bothEndpointsSmall =
+        current < TVL_PCT_THRESHOLD && past.value < TVL_PCT_THRESHOLD;
+      if (!bothEndpointsSmall) {
         const pct = ((current - past.value) / past.value) * 100;
         const direction = pct >= 0 ? "increased" : "decreased";
         lines.push(

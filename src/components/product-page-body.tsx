@@ -295,13 +295,22 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
                     </span>
                   </>
                 )}
-                <span className="uni-byline-sep" aria-hidden="true">·</span>
-                <span
-                  className="uni-byline-chip"
-                  data-tooltip="Platform: the underlying protocol the strategy supplies into."
-                >
-                  {protocolName}
-                </span>
+                {/* Skip the platform chip for Autopilot products -
+                    protocolName collapses to "Autopilot" there and
+                    sits right next to the Type chip which already
+                    says "Autopilot". The duplicate read as a
+                    rendering bug. */}
+                {vault.vaultType !== "Autopilot" && (
+                  <>
+                    <span className="uni-byline-sep" aria-hidden="true">·</span>
+                    <span
+                      className="uni-byline-chip"
+                      data-tooltip="Platform: the underlying protocol the strategy supplies into."
+                    >
+                      {protocolName}
+                    </span>
+                  </>
+                )}
                 <span className="uni-byline-sep" aria-hidden="true">·</span>
                 <span
                   className="uni-byline-chip"
@@ -494,10 +503,18 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         <section className="pp-section" id="details">
           <h2>Strategy details</h2>
           <div className="contract-details-grid">
-            <div className="cd-row">
-              <span className="cd-label">Strategy</span>
-              <span className="cd-val">{protocolName}</span>
-            </div>
+            {/* For Autopilot products, the protocolName derived
+                from category equals the vault type ("Autopilot"),
+                producing duplicate "Strategy: Autopilot / Type:
+                Autopilot" rows. The underlying protocol list is
+                already named in About paragraph 1 + FAQ Q4, so the
+                Strategy row adds nothing here. Skip it. */}
+            {vault.vaultType !== "Autopilot" && (
+              <div className="cd-row">
+                <span className="cd-label">Strategy</span>
+                <span className="cd-val">{protocolName}</span>
+              </div>
+            )}
             <div className="cd-row">
               <span className="cd-label">Network</span>
               <Link href={networkHrefFor(vault.chain)} className="cd-val cd-network">

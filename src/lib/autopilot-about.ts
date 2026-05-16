@@ -66,7 +66,7 @@ export function buildAutopilotAbout(
     `with ${ticker} as its underlying token, in which the yield is distributed. ` +
     `It sources yield from across several ${protocolInsert} and actively ` +
     `reallocates liquidity to the best-performing sources, keeping users ` +
-    `positioned to the most optimal yield available at any given time.`;
+    `positioned to the optimal yield available at any given time.`;
 
   // Paragraph 2: engine + execution. Constant string per the template.
   const engine =

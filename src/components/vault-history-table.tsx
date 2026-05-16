@@ -11,21 +11,35 @@ type TabMode = "apy" | "tvl" | "sharePrice";
 
 const ROWS_PER_PAGE = 7;
 
+// Always format in UTC so the displayed date matches the
+// dedupeLatestPerDay key (also UTC). The previous local-time
+// formatting could render two snapshots on adjacent UTC days as the
+// same local calendar date - the dedupe kept both records (correct,
+// they're distinct days), but the rendered table showed "May 15"
+// twice, which read as a deduplication regression. Locking both
+// keying and display to UTC keeps them in lockstep.
 function formatDate(ts: number): string {
   return new Date(ts * 1000).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
+// Real zero is a real reading, not a missing value. The previous
+// `if (value === 0) return "-"` substitution hid legitimate "Low:
+// 0.00%" entries (Autopilot pages with a single zero-APY day in
+// history) behind a placeholder dash. Render 0 as a real number;
+// the parent component already skips rendering when summary itself
+// is null (zero data points).
 function formatPercent(value: number): string {
-  if (value === 0) return "-";
+  if (!Number.isFinite(value)) return "-";
   return `${value.toFixed(2)}%`;
 }
 
 function formatDollar(value: number): string {
-  if (value === 0) return "-";
+  if (!Number.isFinite(value)) return "-";
   if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
@@ -33,7 +47,7 @@ function formatDollar(value: number): string {
 }
 
 function formatSharePrice(value: number): string {
-  if (value === 0) return "-";
+  if (!Number.isFinite(value)) return "-";
   if (value >= 1) return value.toFixed(4);
   return value.toFixed(6);
 }
