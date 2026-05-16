@@ -1388,7 +1388,12 @@ body:has(.uni-shell) {
 .uni-shell .uni-stab-tick {
   flex: 1;
   min-width: 0;
-  background: var(--uni-tint);
+  /* Unfilled ticks use the strong tint (~18% ink alpha) so the
+     greyed-out portion of the meter is clearly visible against
+     the card. The 6% --uni-tint was effectively invisible, which
+     hid the upper end of the scale and made it impossible to
+     read where the score sits relative to "max". */
+  background: var(--uni-tint-strong);
   border-radius: 2px 2px 0 0;
   transform-origin: bottom center;
   animation: uni-stab-rise 0.45s cubic-bezier(0.2, 0.65, 0.35, 1.05) backwards;
