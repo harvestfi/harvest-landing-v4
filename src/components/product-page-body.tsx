@@ -16,12 +16,15 @@ import { SITE_URL } from "@/lib/constants";
 import { harvestAppUrl } from "@/lib/harvest-app";
 import { buildAutopilotAbout } from "@/lib/autopilot-about";
 import { buildAutocompounderAbout } from "@/lib/autocompounder-about";
+import { buildLpPairAbout } from "@/lib/lp-pair-about";
 import {
   buildYieldTrajectory,
   buildPerformanceOverview,
 } from "@/lib/autopilot-sections";
 import { buildAutopilotFaqItems } from "@/lib/autopilot-faq";
 import { buildAutocompounderFaqItems } from "@/lib/autocompounder-faq";
+import { buildLpPairFaqItems } from "@/lib/lp-pair-faq";
+import { isLpPairVault } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
@@ -131,8 +134,15 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   // get a curated 7-question list (Q2, Q4, Q7 differ between the
   // two types per the editorial spec). Other vault types fall
   // through to the generic list below.
-  const typedFaqItems =
-    vault.vaultType === "Autopilot"
+  // LP-pair Autocompounders (Aerodrome/Quickswap/Uniswap/etc.)
+  // get their own FAQ because Q2/Q4/Q7 wording differs from
+  // single-asset Autocompounders (LP-add flow, fees + emissions
+  // dual-source, impermanent loss). Detected via the
+  // underlyingLogos.length > 1 discriminator.
+  const isLpPair = isLpPairVault(vault);
+  const typedFaqItems = isLpPair
+    ? buildLpPairFaqItems(vault, history, holderCount)
+    : vault.vaultType === "Autopilot"
       ? buildAutopilotFaqItems(vault, history, holderCount)
       : vault.vaultType === "Autocompounder"
         ? buildAutocompounderFaqItems(vault, history, holderCount)
@@ -392,11 +402,23 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         <section className="pp-section" id="about">
           <h2>About {vault.productName}</h2>
           <div className="about-prose">
-            {/* VaultType is exhaustively "Autopilot" | "Autocompounder"
-                per @/lib/types, so the two branches below cover every
-                product. Each block emits the curated 3-paragraph
-                template reserved for its type. */}
-            {vault.vaultType === "Autopilot" ? (
+            {/* Three branches:
+                  1. LP-pair Autocompounder (Aerodrome/Quickswap/etc.)
+                     detected by underlyingLogos.length > 1 - takes
+                     precedence over the vaultType branches because
+                     LP-pair wording differs even though vaultType is
+                     still "Autocompounder".
+                  2. vaultType "Autopilot" - IPOR Labs engine copy.
+                  3. vaultType "Autocompounder" (single-asset).
+                Each block emits the curated 3-paragraph template
+                reserved for its type. */}
+            {isLpPair ? (
+              <LpPairAboutBlock
+                vault={vault}
+                history={history}
+                holderCount={holderCount}
+              />
+            ) : vault.vaultType === "Autopilot" ? (
               <AutopilotAboutBlock
                 vault={vault}
                 history={history}
@@ -666,6 +688,37 @@ function AutocompounderAboutBlock({
     history,
     holderCount,
   );
+  const [first, ...rest] = intro.split(" is an ");
+  return (
+    <>
+      <p>
+        <strong>{first}</strong> is an {rest.join(" is an ")}
+      </p>
+      <p>{rewards}</p>
+      {liveline ? <p>{liveline}</p> : null}
+    </>
+  );
+}
+
+// Three-paragraph "About" block for LP-pair Autocompounders
+// (vault.underlyingLogos.length > 1). Signals dual-asset
+// exposure in paragraph 1 ("paired with X") but defers the
+// impermanent-loss explanation to FAQ Q7. Falls back to
+// rendering nothing if getLpPair() returns null - which
+// shouldn't happen if the caller checked isLpPair, but the
+// builder is defensive anyway.
+function LpPairAboutBlock({
+  vault,
+  history,
+  holderCount,
+}: {
+  vault: YieldVault;
+  history: FullVaultHistory;
+  holderCount: number | null;
+}) {
+  const result = buildLpPairAbout(vault, history, holderCount);
+  if (!result) return null;
+  const { intro, rewards, liveline } = result;
   const [first, ...rest] = intro.split(" is an ");
   return (
     <>

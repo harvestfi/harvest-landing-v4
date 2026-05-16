@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
+import { isLpPairVault } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
 
 interface Props {
@@ -26,22 +27,43 @@ export function TestSimilar({ vault, allVaults }: Props) {
       v.apy24h > 0,
   );
 
-  // Bucket by relationship to the current product. The spec
-  // prioritises rows in this order when more than 6 candidates
-  // qualify: same-network-and-same-type, same-network-other-type,
-  // same-type-other-network. We keep the buckets disjoint and
-  // concatenate in priority order, then take the first 6.
+  // Bucket by relationship to the current product. Priority
+  // depends on whether the current product is LP-pair: an LP-pair
+  // page surfaces other LP-pair products first (more comparable
+  // risk profile - dual-asset exposure + impermanent loss), then
+  // same-network single-asset, then off-network LP-pair. For
+  // non-LP-pair (Autopilot, single-asset Autocompounder) we keep
+  // the original ordering.
   const sameNet = (v: YieldVault) => v.chain === vault.chain;
   const sameType = (v: YieldVault) => v.vaultType === vault.vaultType;
-  const bucketA = eligible.filter((v) => sameNet(v) && sameType(v));
-  const bucketB = eligible.filter((v) => sameNet(v) && !sameType(v));
-  const bucketC = eligible.filter((v) => !sameNet(v) && sameType(v));
   const byTvlDesc = (a: YieldVault, b: YieldVault) => b.tvl - a.tvl;
-  const similar = [
-    ...bucketA.sort(byTvlDesc),
-    ...bucketB.sort(byTvlDesc),
-    ...bucketC.sort(byTvlDesc),
-  ].slice(0, 6);
+  const currentIsLp = isLpPairVault(vault);
+  let similar: YieldVault[];
+  if (currentIsLp) {
+    const sameNetLp = eligible.filter(
+      (v) => sameNet(v) && isLpPairVault(v),
+    );
+    const sameNetSingle = eligible.filter(
+      (v) => sameNet(v) && !isLpPairVault(v),
+    );
+    const otherNetLp = eligible.filter(
+      (v) => !sameNet(v) && isLpPairVault(v),
+    );
+    similar = [
+      ...sameNetLp.sort(byTvlDesc),
+      ...sameNetSingle.sort(byTvlDesc),
+      ...otherNetLp.sort(byTvlDesc),
+    ].slice(0, 6);
+  } else {
+    const bucketA = eligible.filter((v) => sameNet(v) && sameType(v));
+    const bucketB = eligible.filter((v) => sameNet(v) && !sameType(v));
+    const bucketC = eligible.filter((v) => !sameNet(v) && sameType(v));
+    similar = [
+      ...bucketA.sort(byTvlDesc),
+      ...bucketB.sort(byTvlDesc),
+      ...bucketC.sort(byTvlDesc),
+    ].slice(0, 6);
+  }
 
   if (similar.length === 0) return null;
 

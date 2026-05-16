@@ -18,6 +18,8 @@ import { ProductPageBody } from "@/components/product-page-body";
 import { getHoldersMap } from "@/lib/data";
 import { buildAutopilotFaqItems } from "@/lib/autopilot-faq";
 import { buildAutocompounderFaqItems } from "@/lib/autocompounder-faq";
+import { buildLpPairFaqItems } from "@/lib/lp-pair-faq";
+import { isLpPairVault, getLpPair } from "@/lib/lp-pair";
 import "../_styles/product.css";
 
 export async function generateStaticParams() {
@@ -56,8 +58,31 @@ export async function generateMetadata({
   }
   const isUniqueCombo = comboCount === 1;
 
-  const title = productPageTitle(vault, isUniqueCombo);
-  const description = productPageDescription(vault, trackedDays);
+  // LP-pair Autocompounders get a dedicated SEO meta pair so the
+  // page lands on pair-specific long-tail queries ("ETH/WBTC
+  // Quickswap yield"). Neither title nor description carries APY
+  // or TVL - both move too often to keep Google's indexed
+  // snapshots accurate. Single-asset vaults use the existing
+  // productPageTitle / productPageDescription helpers.
+  const lpPair = getLpPair(vault);
+  const inception = (() => {
+    const stamps = [
+      ...history.tvlHistory.map((p) => p.timestamp),
+      ...history.sharePriceHistory.map((p) => p.timestamp),
+      ...history.apyHistory.map((p) => p.timestamp),
+    ].filter((t) => Number.isFinite(t) && t > 0);
+    if (stamps.length === 0) return null;
+    return new Date(Math.min(...stamps) * 1000).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  })();
+  const title = lpPair
+    ? `${vault.asset}/${lpPair.counterpart} ${lpPair.platform} Yield on ${vault.chain} | ${SITE_NAME}`
+    : productPageTitle(vault, isUniqueCombo);
+  const description = lpPair
+    ? `Autocompounding LP yield on the ${vault.asset}/${lpPair.counterpart} pair on ${lpPair.platform} (${vault.chain}). ${lpPair.rewardToken ?? "Platform-native"} rewards are claimed and added back to the position automatically.${inception ? ` Tracked continuously since ${inception}.` : ""}`
+    : productPageDescription(vault, trackedDays);
 
   const canonical = await isCanonicalSlug(slug);
   const broken = isBrokenLowTvlVault(vault);
@@ -207,10 +232,14 @@ export default async function ProductPage({
   const holdersMap = await getHoldersMap();
   const holderCount =
     holdersMap[vault.contractAddress.toLowerCase()] ?? null;
+  const lpFaq = isLpPairVault(vault)
+    ? buildLpPairFaqItems(vault, history, holderCount)
+    : null;
   const typedFaq =
-    vault.vaultType === "Autopilot"
+    lpFaq ??
+    (vault.vaultType === "Autopilot"
       ? buildAutopilotFaqItems(vault, history, holderCount)
-      : buildAutocompounderFaqItems(vault, history, holderCount);
+      : buildAutocompounderFaqItems(vault, history, holderCount));
   const faqItems: FaqItem[] = typedFaq.map((it) => ({
     question: it.question,
     answer: it.answerText,
