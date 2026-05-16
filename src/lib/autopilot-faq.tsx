@@ -1,7 +1,8 @@
-// FAQ items reserved for vaultType "Autopilot" or "Autocompounder".
-// Per the editorial spec: fixed 7-question list, Q1 expanded by
-// default, Q3 has an inline link to /risk. Other vault types keep
-// their existing FAQ list.
+// FAQ items reserved for vaultType "Autopilot". Per the editorial
+// spec: fixed 7-question list, Q1 expanded by default, Q3 has an
+// inline link to /risk-framework (the existing risk page in the
+// footer). Other vault types keep their existing FAQ list;
+// Autocompounders get a parallel FAQ in lib/autocompounder-faq.
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -71,7 +72,8 @@ export function buildAutopilotFaqItems(
           strategy holds enough liquidity to satisfy the request, exits
           are instant. During periods of liquidity stress in the
           underlying sub-vaults, withdrawal capacity can be limited
-          until liquidity returns. See <Link href="/risk">the risk page</Link>{" "}
+          until liquidity returns. See{" "}
+          <Link href="/risk-framework">the risk page</Link>{" "}
           for details on how this works.
         </>
       ),

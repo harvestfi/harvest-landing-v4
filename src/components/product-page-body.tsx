@@ -15,11 +15,13 @@ import { productPageCrumbs } from "@/lib/seo";
 import { SITE_URL } from "@/lib/constants";
 import { harvestAppUrl } from "@/lib/harvest-app";
 import { buildAutopilotAbout } from "@/lib/autopilot-about";
+import { buildAutocompounderAbout } from "@/lib/autocompounder-about";
 import {
   buildYieldTrajectory,
   buildPerformanceOverview,
 } from "@/lib/autopilot-sections";
 import { buildAutopilotFaqItems } from "@/lib/autopilot-faq";
+import { buildAutocompounderFaqItems } from "@/lib/autocompounder-faq";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
@@ -125,15 +127,18 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   const crumbs = productPageCrumbs(vault);
 
   // Autopilot + Autocompounder products get the curated 7-question
-  // FAQ list reserved for them in lib/autopilot-faq. Other vault
-  // types keep the generic list below.
-  const isAutopilotLike =
-    vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder";
-  const autopilotFaqItems = isAutopilotLike
-    ? buildAutopilotFaqItems(vault, history, holderCount)
-    : null;
+  // FAQ list per vault type. Autopilots and Autocompounders each
+  // get a curated 7-question list (Q2, Q4, Q7 differ between the
+  // two types per the editorial spec). Other vault types fall
+  // through to the generic list below.
+  const typedFaqItems =
+    vault.vaultType === "Autopilot"
+      ? buildAutopilotFaqItems(vault, history, holderCount)
+      : vault.vaultType === "Autocompounder"
+        ? buildAutocompounderFaqItems(vault, history, holderCount)
+        : null;
 
-  const faqItems = autopilotFaqItems ?? [
+  const faqItems = typedFaqItems ?? [
     {
       question: "What's the current APY?",
       answer:
@@ -386,6 +391,10 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         <section className="pp-section" id="about">
           <h2>About {vault.productName}</h2>
           <div className="about-prose">
+            {/* VaultType is exhaustively "Autopilot" | "Autocompounder"
+                per @/lib/types, so the two branches below cover every
+                product. Each block emits the curated 3-paragraph
+                template reserved for its type. */}
             {vault.vaultType === "Autopilot" ? (
               <AutopilotAboutBlock
                 vault={vault}
@@ -393,29 +402,11 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
                 holderCount={holderCount}
               />
             ) : (
-              <>
-                <p>
-                  <strong>{vault.productName}</strong> is a{" "}
-                  {vault.vaultType.toLowerCase()} on{" "}
-                  <strong>{vault.chain}</strong>. Deposit {vault.asset};
-                  the vault routes capital into the {protocolName} strategy{" "}
-                  {vault.vaultType === "Autocompounder"
-                    ? `and harvests rewards back into ${vault.asset} on a schedule, compounding without manual steps.`
-                    : `with allocations the operator updates as conditions change.`}
-                </p>
-                {vault.tvl > 0 && vault.apy24h > 0 && (
-                  <p>
-                    <strong>{formatTVL(vault.tvl)}</strong> in deposits
-                    right now. Paying{" "}
-                    <strong>{formatAPY(vault.apy24h)}</strong> over the
-                    last 24 hours,{" "}
-                    <strong>{formatAPY(vault.apy30d)}</strong> across the
-                    trailing 30 days. Both move with utilisation, reward
-                    emissions, and onchain demand for the underlying
-                    protocol.
-                  </p>
-                )}
-              </>
+              <AutocompounderAboutBlock
+                vault={vault}
+                history={history}
+                holderCount={holderCount}
+              />
             )}
           </div>
         </section>
@@ -647,6 +638,38 @@ function AutopilotAboutBlock({
         <strong>{first}</strong> is a {rest.join(" is a ")}
       </p>
       <p>{engine}</p>
+      {liveline ? <p>{liveline}</p> : null}
+    </>
+  );
+}
+
+// Three-paragraph "About" block reserved for vaultType="Autocompounder".
+// Differs from the Autopilot template: single underlying venue
+// (no IPOR Labs / rebalancing language), reward token explicit in
+// paragraph 2, curator stays attributed to the underlying venue
+// inside the {UNDERLYING_VENUE} phrase, never to the
+// Autocompounder itself.
+function AutocompounderAboutBlock({
+  vault,
+  history,
+  holderCount,
+}: {
+  vault: YieldVault;
+  history: FullVaultHistory;
+  holderCount: number | null;
+}) {
+  const { intro, rewards, liveline } = buildAutocompounderAbout(
+    vault,
+    history,
+    holderCount,
+  );
+  const [first, ...rest] = intro.split(" is an ");
+  return (
+    <>
+      <p>
+        <strong>{first}</strong> is an {rest.join(" is an ")}
+      </p>
+      <p>{rewards}</p>
       {liveline ? <p>{liveline}</p> : null}
     </>
   );
