@@ -191,7 +191,14 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
     }
   }
 
-  if (tvlStats) {
+  // TVL narrative gate is independent of the 30-day stats block:
+  // it only needs lifetime data (first / last / peak / current). The
+  // previous `if (tvlStats)` gate accidentally suppressed the
+  // paragraph on vaults whose latest TVL snapshot was more than 30
+  // days stale - e.g. ETH/VVV Aerodrome with only 1 point in the
+  // trailing 30 days made tvlStats null, hiding a 389-day TVL
+  // narrative that's perfectly computable from lifetime data.
+  {
     const sorted = [...history.tvlHistory]
       .filter((p) => p.value > 0)
       .sort((a, b) => a.timestamp - b.timestamp);

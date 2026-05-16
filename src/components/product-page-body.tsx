@@ -295,12 +295,17 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
                     </span>
                   </>
                 )}
-                {/* Skip the platform chip for Autopilot products -
-                    protocolName collapses to "Autopilot" there and
-                    sits right next to the Type chip which already
-                    says "Autopilot". The duplicate read as a
-                    rendering bug. */}
-                {vault.vaultType !== "Autopilot" && (
+                {/* Skip the platform chip in two cases:
+                    (a) Autopilot: protocolName collapses to
+                    "Autopilot" and sits right next to the Type chip
+                    which already says "Autopilot".
+                    (b) LP-pair products: the canonical product name
+                    already states the platform ("ETH/VVV Aerodrome"
+                    spells "Aerodrome"), so the chip is redundant.
+                    Single-asset Autocompounders keep the chip because
+                    the product name doesn't always make the platform
+                    self-evident ("USDC Clearstar Core V2" → Morpho). */}
+                {vault.vaultType !== "Autopilot" && !isLpPair && (
                   <>
                     <span className="uni-byline-sep" aria-hidden="true">·</span>
                     <span

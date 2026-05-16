@@ -1879,21 +1879,24 @@ body:has(.uni-shell) {
 }
 
 /* [LP] badge surfaced in ranking-style views (hub tables, benchmark
-   table, ecosystem legend, "Other opportunities" cards) so LP-pair
-   products differentiate from single-asset products at a glance. The
-   product page itself uses a canonical "ETH/VVV Aerodrome" name and
-   does not render this badge. */
+   table, ecosystem legend, "Other opportunities" cards, search
+   dropdown). The component renders a literal space before the span
+   as a safety net against context-specific margin overrides; this
+   rule supplies the rest of the pill treatment - border, padding,
+   muted background - so the badge reads as a deliberate UI element
+   rather than concatenated text. */
 .lp-badge {
   display: inline-block;
-  margin-left: 6px;
-  padding: 1px 5px;
+  margin-left: 2px;
+  padding: 1px 6px;
   font-size: 10px;
   font-weight: 600;
   line-height: 1.4;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   border-radius: 3px;
   background: var(--uni-tint-strong);
   color: var(--uni-ink-2);
+  border: 1px solid var(--uni-tint-strong);
   vertical-align: 1px;
   white-space: nowrap;
 }
