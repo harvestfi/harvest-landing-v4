@@ -4,6 +4,7 @@ import {
   isAerodromeName,
   HIDE_AERODROME,
 } from "@/lib/admin-rules";
+import { RuleStateBadge } from "@/components/admin/rule-state-badge";
 
 export const metadata = {
   title: "Ranking Rules | Admin",
@@ -52,7 +53,7 @@ export default async function RankingRulesPage() {
                   {rule.source}
                 </p>
               </div>
-              <FlipSwitch enabled={rule.enabled} ruleId={rule.id} />
+              <RuleStateBadge enabled={rule.enabled} source={rule.source} />
             </div>
 
             {rule.id === "hide-aerodrome" && (
@@ -76,48 +77,23 @@ export default async function RankingRulesPage() {
       </section>
 
       <footer className="mt-10 rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-        <p className="font-semibold">How to flip a rule</p>
+        <p className="font-semibold">These switches are read-only</p>
         <p className="mt-2">
-          Edit the constants at the top of{" "}
+          The site is a static export, so rule state lives in code,
+          not in a runtime store. To flip a rule, edit the
+          constants at the top of{" "}
           <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs">
             src/lib/admin-rules.ts
           </code>
-          , commit, push to <code className="font-mono">main</code>. Vercel
-          rebuilds and the new ruleset is live within a minute or two.
-          The next hourly cron will pick up the change automatically.
+          , commit, push to <code className="font-mono">main</code>.
+          Vercel rebuilds and the new ruleset is live within a minute
+          or two. The next hourly cron will pick up the change
+          automatically. The &ldquo;Copy source path&rdquo; button on
+          each rule pastes the file location to your clipboard so
+          you can jump straight there.
         </p>
       </footer>
     </main>
   );
 }
 
-function FlipSwitch({
-  enabled,
-  ruleId,
-}: {
-  enabled: boolean;
-  ruleId: string;
-}) {
-  // Read-only visual switch reflecting the build-time configuration.
-  // Interactive toggling lives in the source file because the site is
-  // a static export — see footer note on the page.
-  return (
-    <div className="flex flex-shrink-0 items-center gap-2">
-      <span
-        className={`text-xs font-semibold uppercase tracking-wider ${enabled ? "text-emerald-700" : "text-gray-400"}`}
-      >
-        {enabled ? "On" : "Off"}
-      </span>
-      <span
-        role="img"
-        aria-label={`${ruleId} is ${enabled ? "on" : "off"}`}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border transition-colors ${enabled ? "border-emerald-500 bg-emerald-500" : "border-gray-300 bg-gray-200"}`}
-      >
-        <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}
-          style={{ marginTop: "1.5px" }}
-        />
-      </span>
-    </div>
-  );
-}

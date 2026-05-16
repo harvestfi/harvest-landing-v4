@@ -21,7 +21,7 @@ export interface RankingRule {
 export const STALE_APY_DAYS = 14;
 export const BROKEN_TVL_THRESHOLD = 10_000;
 export const BROKEN_MIN_OBSERVATIONS = 14;
-export const HIDE_AERODROME = true;
+export const HIDE_AERODROME = false;
 
 export const RANKING_RULES: RankingRule[] = [
   {
