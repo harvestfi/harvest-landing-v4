@@ -1,17 +1,11 @@
 "use client";
 
-// Admin > Acquisition. Built on the canonical .uni-hub-test shell
-// used by /eth, /usdc, /usdt, /btc - same boxed layout, same hero
-// header with stats tiles, same uni-hub-section structure, same
-// hub-table-wrap for the visits table. The only bespoke bit is the
-// gold-bars-on-dotted-bg chart card, styled to match the bar mode
-// of TestChart from product pages.
-//
-// CRITICAL: this stylesheet is import-scoped per page in this app.
-// Every hub page (/eth, /usdc, /btc, /polygon, ...) does the same
-// import. Without it the .uni-hub-test selectors don't apply and
-// the page renders as unstyled boxes.
-import "../../_styles/asset-hub.css";
+// Acquisition funnel — step 01: Traffic.
+// Anonymous visits captured from the public site, surfaced as
+// summary tiles + a 30-day daily-bar chart + a recent-visits table.
+// The .uni-hub-test shell + the funnel sub-nav are rendered by the
+// parent layout (src/app/admin/acquisition/layout.tsx) so this page
+// only contributes its own content area.
 
 import { useEffect, useMemo, useState } from "react";
 import { supabaseSelect } from "@/lib/supabase";
@@ -72,31 +66,30 @@ export default function AcquisitionPage() {
   }, [visits]);
 
   return (
-    <div className="uni-hub-test">
-      <header className="uni-hub-hero">
-        <div className="uni-hub-hero-headline">
-          <div>
-            <h1 className="uni-hub-h1">Acquisition</h1>
-            <p className="uni-hub-sub">
-              Anonymous page visits captured from the public site. No cookies,
-              no third-party trackers, no personal data. Operator pages
-              (<code>/admin/*</code>) are excluded from tracking.
-            </p>
-          </div>
-        </div>
+    <>
+      <section className="aq-step-header">
+        <h2 className="aq-step-title">Traffic</h2>
+        <p className="aq-step-sub">
+          Anonymous page visits captured from the public site. No cookies, no
+          third-party trackers, no personal data. Operator pages
+          (<code>/admin/*</code>) are excluded from tracking.
+        </p>
+      </section>
 
-        <div
-          className="uni-hub-stats"
-          role="group"
-          aria-label="Visit summary"
-          style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
-        >
-          <Stat label="Last 24h" value={stats?.last24} />
-          <Stat label="Last 7d" value={stats?.last7} />
-          <Stat label="Last 30d" value={stats?.last30} />
-          <Stat label="Unique sessions" value={stats?.uniqueSessions} />
-        </div>
-      </header>
+      <div
+        className="uni-hub-stats"
+        role="group"
+        aria-label="Visit summary"
+        style={{
+          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+          marginBottom: 32,
+        }}
+      >
+        <Stat label="Last 24h" value={stats?.last24} />
+        <Stat label="Last 7d" value={stats?.last7} />
+        <Stat label="Last 30d" value={stats?.last30} />
+        <Stat label="Unique sessions" value={stats?.uniqueSessions} />
+      </div>
 
       {error && (
         <div className="uni-hub-empty" style={{ color: "#b91c1c" }}>
@@ -114,7 +107,7 @@ export default function AcquisitionPage() {
           <TableSection visits={visits.slice(0, ROWS_DISPLAY_LIMIT)} />
         </>
       )}
-    </div>
+    </>
   );
 }
 

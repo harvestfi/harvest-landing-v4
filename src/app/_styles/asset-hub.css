@@ -635,3 +635,143 @@ body:has(.uni-hub-test) {
   .uni-hub-test .aq-chart { min-height: 200px; }
   .uni-hub-test .aq-chart-bars { min-height: 160px; }
 }
+
+/* === Acquisition funnel sub-nav =====================================
+   Sub-navigation at the top of every page under /admin/acquisition.
+   Four pill-style links connected by chevron arrows, reinforcing the
+   visitor-to-depositor funnel direction. Active step gets the gold
+   pill, others stay muted ink on hover-tinted background. */
+.uni-hub-test .aq-hero-slim {
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+}
+.uni-hub-test .aq-funnel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--uni-line);
+}
+.uni-hub-test .aq-funnel-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.uni-hub-test .aq-funnel-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--uni-ink-2);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: var(--uni-radius-pill);
+  transition: color 0.15s ease, background 0.15s ease;
+  font-weight: 500;
+}
+.uni-hub-test .aq-funnel-step:hover {
+  color: var(--uni-ink);
+  background: var(--uni-card);
+}
+.uni-hub-test .aq-funnel-step.active {
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  font-weight: 600;
+}
+.uni-hub-test .aq-funnel-step-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--uni-ink-3);
+  opacity: 0.9;
+}
+.uni-hub-test .aq-funnel-step:hover .aq-funnel-step-num,
+.uni-hub-test .aq-funnel-step.active .aq-funnel-step-num {
+  color: inherit;
+  opacity: 0.7;
+}
+.uni-hub-test .aq-funnel-step-label {
+  /* Keep the label flush with the step number visually. */
+  line-height: 1;
+}
+.uni-hub-test .aq-funnel-chevron {
+  display: inline-flex;
+  align-items: center;
+  color: var(--uni-ink-3);
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+/* === Per-step header inside an acquisition sub-page ================ */
+.uni-hub-test .aq-step-header {
+  margin-bottom: 24px;
+}
+.uni-hub-test .aq-step-title {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--uni-ink);
+  margin: 0 0 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.uni-hub-test .aq-step-num-inline {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--uni-ink-3);
+  letter-spacing: 0.06em;
+}
+.uni-hub-test .aq-step-sub {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--uni-ink-2);
+  line-height: 1.55;
+  max-width: 70ch;
+}
+.uni-hub-test .aq-step-sub code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  background: var(--uni-card);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* === Stub placeholder card for the not-yet-wired sub-pages ========= */
+.uni-hub-test .aq-stub-card {
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  text-align: left;
+}
+.uni-hub-test .aq-stub-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--uni-radius-pill);
+  background: var(--uni-gold);
+  color: var(--uni-ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.uni-hub-test .aq-stub-text {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--uni-ink-2);
+  line-height: 1.6;
+  max-width: 70ch;
+}
+
+@media (max-width: 720px) {
+  .uni-hub-test .aq-funnel-step { padding: 6px 12px; font-size: 13px; }
+  .uni-hub-test .aq-step-title { font-size: 22px; }
+}
