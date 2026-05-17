@@ -152,6 +152,10 @@ function ChartSection({
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
 }) {
+  const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
+    null,
+  );
+
   const oldestMs = useMemo(() => {
     if (clicks.length === 0) return null;
     let oldest = Infinity;
@@ -190,12 +194,17 @@ function ChartSection({
     };
   }, [clicks, days]);
 
+  const displayValue = hovered ? hovered.v : total;
+  const displayLabel = hovered
+    ? `outbound clicks ${labelForDaysAgo(hovered.daysAgo)}`
+    : `outbound clicks indexed across the trailing ${days} days`;
+
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
       <header className="uni-hub-section-head">
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">
-            App Clicks — last {days} days
+            App Clicks, last {days} days
           </h2>
           <span className="uni-hub-section-meta">
             today {latest.toLocaleString("en-US")} · peak{" "}
@@ -205,10 +214,8 @@ function ChartSection({
         <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
       <div className="aq-chart-card">
-        <div className="aq-chart-bignum">{total.toLocaleString("en-US")}</div>
-        <div className="aq-chart-bignum-label">
-          outbound clicks indexed across the trailing {days} days
-        </div>
+        <div className="aq-chart-bignum">{displayValue.toLocaleString("en-US")}</div>
+        <div className="aq-chart-bignum-label">{displayLabel}</div>
 
         <div className="aq-chart">
           <div className="aq-chart-bars">
@@ -219,6 +226,8 @@ function ChartSection({
                   key={i}
                   className="aq-bar-col"
                   title={`${b.v} click${b.v === 1 ? "" : "s"} (${labelForDaysAgo(b.daysAgo)})`}
+                  onMouseEnter={() => setHovered(b)}
+                  onMouseLeave={() => setHovered(null)}
                 >
                   <div className="aq-bar" style={{ height: `${heightPct}%` }} />
                 </div>

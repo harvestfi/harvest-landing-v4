@@ -23,7 +23,7 @@ const STEPS = [
   },
   {
     num: "03",
-    label: "App Net Worth",
+    label: "User Networth",
     href: "/admin/acquisition/app-net-worth",
   },
   {

@@ -230,6 +230,8 @@ function ChartSection({
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
 }) {
+  const [hovered, setHovered] = useState<Bin | null>(null);
+
   const oldestMs = useMemo(() => {
     if (connections.length === 0) return null;
     let oldest = Infinity;
@@ -292,9 +294,13 @@ function ChartSection({
         <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
       <div className="aq-chart-card">
-        <div className="aq-chart-bignum">{formatTVL(total)}</div>
+        <div className="aq-chart-bignum">
+          {formatTVL(hovered ? hovered.v : total)}
+        </div>
         <div className="aq-chart-bignum-label">
-          cumulative harvest_balance snapshots over the trailing {days} days
+          {hovered
+            ? `${hovered.outlier ? "outlier snapshot, " : ""}harvest_balance ${labelForDaysAgo(hovered.daysAgo)}`
+            : `cumulative harvest_balance snapshots over the trailing ${days} days`}
         </div>
 
         <div className="aq-chart">
@@ -309,10 +315,16 @@ function ChartSection({
                   : 0;
               const labelDay = labelForDaysAgo(b.daysAgo);
               const titleText = b.outlier
-                ? `${formatTVL(b.v)} (outlier, capped at $100M) — ${labelDay}`
-                : `${formatTVL(b.v)} — ${labelDay}`;
+                ? `${formatTVL(b.v)} (outlier, capped at $100M), ${labelDay}`
+                : `${formatTVL(b.v)}, ${labelDay}`;
               return (
-                <div key={i} className="aq-bar-col" title={titleText}>
+                <div
+                  key={i}
+                  className="aq-bar-col"
+                  title={titleText}
+                  onMouseEnter={() => setHovered(b)}
+                  onMouseLeave={() => setHovered(null)}
+                >
                   <div
                     className={`aq-bar${b.outlier ? " aq-bar-outlier" : ""}`}
                     style={{ height: `${visualHeight}%` }}

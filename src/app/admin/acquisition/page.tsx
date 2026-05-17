@@ -150,6 +150,10 @@ function ChartSection({
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
 }) {
+  const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
+    null,
+  );
+
   // Oldest visit timestamp drives the "All" window. memo'd so we don't
   // recompute on every render.
   const oldestMs = useMemo(() => {
@@ -190,11 +194,16 @@ function ChartSection({
     };
   }, [visits, days]);
 
+  const displayValue = hovered ? hovered.v : total;
+  const displayLabel = hovered
+    ? `visits ${labelForDaysAgo(hovered.daysAgo)}`
+    : `visits indexed across the trailing ${days} days`;
+
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
       <header className="uni-hub-section-head">
         <div className="aq-section-head-left">
-          <h2 className="uni-hub-section-title">Visits — last {days} days</h2>
+          <h2 className="uni-hub-section-title">Visits, last {days} days</h2>
           <span className="uni-hub-section-meta">
             today {latest.toLocaleString("en-US")} · peak{" "}
             {peak.toLocaleString("en-US")}/day
@@ -204,11 +213,9 @@ function ChartSection({
       </header>
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">
-          {total.toLocaleString("en-US")}
+          {displayValue.toLocaleString("en-US")}
         </div>
-        <div className="aq-chart-bignum-label">
-          visits indexed across the trailing {days} days
-        </div>
+        <div className="aq-chart-bignum-label">{displayLabel}</div>
 
         <div className="aq-chart">
           <div className="aq-chart-bars">
@@ -219,6 +226,8 @@ function ChartSection({
                   key={i}
                   className="aq-bar-col"
                   title={`${b.v} visit${b.v === 1 ? "" : "s"} (${labelForDaysAgo(b.daysAgo)})`}
+                  onMouseEnter={() => setHovered(b)}
+                  onMouseLeave={() => setHovered(null)}
                 >
                   <div
                     className="aq-bar"

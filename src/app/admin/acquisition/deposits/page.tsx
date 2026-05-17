@@ -32,6 +32,7 @@ interface WalletRow {
   wallet_address: string;
   connected_at: string;
   harvest_balance: number | null;
+  balance: number | null;
 }
 
 interface VisitRow {
@@ -74,7 +75,7 @@ export default function DepositsPage() {
         const [w, v, c] = await Promise.all([
           supabaseSelectAll<WalletRow>(
             "wallet_connections_prod",
-            "select=wallet_address,connected_at,harvest_balance&order=connected_at.desc",
+            "select=wallet_address,connected_at,harvest_balance,balance&order=connected_at.desc",
           ),
           supabaseSelectAll<VisitRow>(
             "frontpage_visits",
@@ -203,6 +204,7 @@ export default function DepositsPage() {
             wallets={uniqueWallets}
             timeframe={timeframe}
           />
+          <RecentDepositorsSection wallets={uniqueWallets} />
         </>
       )}
 
@@ -233,6 +235,10 @@ function TvlChartSection({
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
 }) {
+  const [hovered, setHovered] = useState<{ date: string; tvl: number } | null>(
+    null,
+  );
+
   const oldestMs = useMemo(() => {
     const first = TVL.series[0]?.date;
     if (!first) return null;
@@ -261,7 +267,7 @@ function TvlChartSection({
       <header className="uni-hub-section-head">
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">
-            Network TVL — last {days} days
+            Network TVL, last {days} days
           </h2>
           <span className="uni-hub-section-meta">
             today {formatUsd(latest)} · peak {formatUsd(peak)}
@@ -270,9 +276,13 @@ function TvlChartSection({
         <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
       <div className="aq-chart-card">
-        <div className="aq-chart-bignum">{formatUsd(latest)}</div>
+        <div className="aq-chart-bignum">
+          {formatUsd(hovered ? hovered.tvl : latest)}
+        </div>
         <div className="aq-chart-bignum-label">
-          current Harvest TVL across {TVL.vaults} indexed vaults
+          {hovered
+            ? `Harvest TVL on ${hovered.date}`
+            : `current Harvest TVL across ${TVL.vaults} indexed vaults`}
         </div>
         <div className="aq-chart">
           <div className="aq-chart-bars">
@@ -283,6 +293,8 @@ function TvlChartSection({
                   key={i}
                   className="aq-bar-col"
                   title={`${formatUsd(b.tvl)} (${b.date})`}
+                  onMouseEnter={() => setHovered(b)}
+                  onMouseLeave={() => setHovered(null)}
                 >
                   <div
                     className="aq-bar"
@@ -318,6 +330,10 @@ function NewWalletsChartSection({
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
 }) {
+  const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
+    null,
+  );
+
   const oldestMs = useMemo(() => {
     if (wallets.length === 0) return null;
     let oldest = Infinity;
@@ -360,7 +376,7 @@ function NewWalletsChartSection({
       <header className="uni-hub-section-head">
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">
-            New wallets — last {days} days
+            New wallets, last {days} days
           </h2>
           <span className="uni-hub-section-meta">
             today {latest.toLocaleString("en-US")} · peak{" "}
@@ -371,10 +387,12 @@ function NewWalletsChartSection({
       </header>
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">
-          {total.toLocaleString("en-US")}
+          {(hovered ? hovered.v : total).toLocaleString("en-US")}
         </div>
         <div className="aq-chart-bignum-label">
-          first-time wallet connections in the trailing {days} days
+          {hovered
+            ? `new wallets ${labelForDaysAgo(hovered.daysAgo)}`
+            : `first-time wallet connections in the trailing ${days} days`}
         </div>
 
         <div className="aq-chart">
@@ -386,6 +404,8 @@ function NewWalletsChartSection({
                   key={i}
                   className="aq-bar-col"
                   title={`${b.v} new wallet${b.v === 1 ? "" : "s"} (${labelForDaysAgo(b.daysAgo)})`}
+                  onMouseEnter={() => setHovered(b)}
+                  onMouseLeave={() => setHovered(null)}
                 >
                   <div className="aq-bar" style={{ height: `${heightPct}%` }} />
                 </div>
@@ -581,4 +601,131 @@ function formatUsd(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
   return `$${n.toFixed(0)}`;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Recent depositors - wallets first seen in the last 7 days that
+// currently hold a Harvest position. Proxies a deposit-event feed
+// until we wire onchain Deposit events from the subgraph. Sorted
+// most-recent first; truncated to a single readable page.
+// ──────────────────────────────────────────────────────────────────
+
+const RECENT_DEPOSITORS_DAYS = 7;
+const RECENT_DEPOSITORS_LIMIT = 200;
+
+const RECENT_DEPOSITORS_COLS =
+  "150px minmax(220px, 1.6fr) 120px 120px 70px";
+
+function RecentDepositorsSection({ wallets }: { wallets: WalletRow[] }) {
+  const rows = useMemo(() => {
+    const now = Date.now();
+    const cutoff = now - RECENT_DEPOSITORS_DAYS * DAY_MS;
+    const out: WalletRow[] = [];
+    for (const w of wallets) {
+      const t = new Date(w.connected_at).getTime();
+      if (t < cutoff) continue;
+      const b =
+        typeof w.harvest_balance === "number" ? w.harvest_balance : 0;
+      if (b <= 0 || b >= WALLET_OUTLIER_CAP) continue;
+      out.push(w);
+    }
+    out.sort(
+      (a, b) =>
+        new Date(b.connected_at).getTime() -
+        new Date(a.connected_at).getTime(),
+    );
+    return out.slice(0, RECENT_DEPOSITORS_LIMIT);
+  }, [wallets]);
+
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">
+            Recent depositors, last {RECENT_DEPOSITORS_DAYS} days
+          </h2>
+          <span className="uni-hub-section-meta">
+            wallets first seen in this window that currently hold a Harvest
+            position. Will be replaced by onchain Deposit events once the
+            subgraph feed is wired.
+          </span>
+        </div>
+      </header>
+
+      {rows.length === 0 ? (
+        <div className="uni-hub-empty">
+          No new depositors in the last {RECENT_DEPOSITORS_DAYS} days yet.
+        </div>
+      ) : (
+        <div className="hub-table-wrap aq-recent-wrap">
+          <div className="hub-table aq-clicks-table aq-recent-table">
+            <div
+              className="hub-thead"
+              style={{ gridTemplateColumns: RECENT_DEPOSITORS_COLS }}
+            >
+              <span className="hub-th">Time</span>
+              <span className="hub-th">Wallet</span>
+              <span className="hub-th">Harvest balance</span>
+              <span className="hub-th">Total wallet</span>
+              <span className="hub-th">Link</span>
+            </div>
+            {rows.map((w) => (
+              <div
+                key={w.wallet_address}
+                className="hub-row"
+                style={{ gridTemplateColumns: RECENT_DEPOSITORS_COLS }}
+              >
+                <span className="hub-cell aq-cell-time">
+                  {formatTime(w.connected_at)}
+                </span>
+                <span className="hub-cell aq-cell-vault">
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 12.5 }}>
+                    {shortenAddress(w.wallet_address)}
+                  </span>
+                </span>
+                <span className="hub-cell">
+                  {formatUsd(w.harvest_balance ?? 0)}
+                </span>
+                <span className="hub-cell">
+                  {typeof w.balance === "number" && w.balance > 0
+                    ? formatUsd(w.balance)
+                    : "—"}
+                </span>
+                <span className="hub-cell">
+                  <a
+                    href={`https://debank.com/profile/${w.wallet_address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="aq-vault-link"
+                  >
+                    debank
+                  </a>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function shortenAddress(addr: string): string {
+  if (!addr || addr.length < 10) return addr || "—";
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+function formatTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  } catch {
+    return iso;
+  }
 }
