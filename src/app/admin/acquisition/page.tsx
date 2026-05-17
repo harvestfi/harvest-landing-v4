@@ -1,11 +1,11 @@
 "use client";
 
-// Admin > Acquisition. Uses the canonical product-page chart chrome
-// (uni-shell / uni-chart-wrap / uni-chart / uni-chart-bars / etc.)
-// for the visits chart, and the canonical hub-row grid for the
-// visits table. No bespoke CSS - every class used here is defined
-// in src/app/_styles/product.css or src/app/globals.css and already
-// in use on the public site.
+// Admin > Acquisition. Built on the canonical .uni-hub-test shell
+// used by /eth, /usdc, /usdt, /btc - same boxed layout, same hero
+// header with stats tiles, same uni-hub-section structure, same
+// hub-table-wrap for the visits table. The only bespoke bit is the
+// gold-bars-on-dotted-bg chart card, styled to match the bar mode
+// of TestChart from product pages.
 
 import { useEffect, useMemo, useState } from "react";
 import { supabaseSelect } from "@/lib/supabase";
@@ -24,6 +24,11 @@ interface Visit {
 const ROWS_FETCH_LIMIT = 1000;
 const ROWS_DISPLAY_LIMIT = 200;
 const CHART_DAYS = 30;
+
+// 7-column track for the visits table. Same shape as the hub-table
+// grid on /eth (6 cols) plus one extra for Session.
+const TABLE_COLS =
+  "150px minmax(220px, 2fr) 1fr 1fr 1fr 0.7fr 110px";
 
 export default function AcquisitionPage() {
   const [visits, setVisits] = useState<Visit[] | null>(null);
@@ -61,95 +66,71 @@ export default function AcquisitionPage() {
   }, [visits]);
 
   return (
-    <div className="uni-shell">
-      {/* Title row matches the product-page header pattern. */}
-      <header className="uni-title-row" style={{ marginTop: 8 }}>
-        <h1 className="uni-title">Acquisition</h1>
+    <div className="uni-hub-test">
+      <header className="uni-hub-hero">
+        <div className="uni-hub-hero-headline">
+          <div>
+            <h1 className="uni-hub-h1">Acquisition</h1>
+            <p className="uni-hub-sub">
+              Anonymous page visits captured from the public site. No cookies,
+              no third-party trackers, no personal data. Operator pages
+              (<code>/admin/*</code>) are excluded from tracking.
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="uni-hub-stats"
+          role="group"
+          aria-label="Visit summary"
+          style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
+        >
+          <Stat label="Last 24h" value={stats?.last24} />
+          <Stat label="Last 7d" value={stats?.last7} />
+          <Stat label="Last 30d" value={stats?.last30} />
+          <Stat label="Unique sessions" value={stats?.uniqueSessions} />
+        </div>
       </header>
-      <div className="uni-divider" aria-hidden="true" />
 
       {error && (
-        <p
-          className="uni-bignum-meta"
-          style={{ marginTop: 16, color: "#b91c1c" }}
-        >
+        <div className="uni-hub-empty" style={{ color: "#b91c1c" }}>
           Could not load visits: {error}
-        </p>
+        </div>
       )}
 
       {visits === null && !error && (
-        <p
-          className="uni-bignum-meta"
-          style={{ marginTop: 24 }}
-        >
-          Loading visits…
-        </p>
+        <div className="uni-hub-empty">Loading visits…</div>
       )}
 
       {visits && (
         <>
-          {/* Top stats sit on the same uni-side-card surface used by
-              the product-page sidebar. Render four tiles in one row
-              by replacing the side-card's column flow with a 4-column
-              grid via inline style. Tile internals (uni-side-label +
-              uni-side-value) match the sidebar 1:1. */}
-          <section
-            className="uni-side-card"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 0,
-              marginTop: 24,
-            }}
-          >
-            {stats && (
-              <>
-                <StatTile label="Last 24h" value={stats.last24} />
-                <StatTile label="Last 7d" value={stats.last7} />
-                <StatTile label="Last 30d" value={stats.last30} />
-                <StatTile label="Unique sessions" value={stats.uniqueSessions} />
-              </>
-            )}
-          </section>
-
-          {/* Chart uses the canonical uni-chart-wrap / uni-chart /
-              uni-chart-bars structure from TestChart - same gold
-              bars on the dotted background. */}
-          <VisitsChart visits={visits} days={CHART_DAYS} />
-
-          {/* Recent visits table uses hub-row + hub-cell so it reads
-              identical to the asset-hub ranking surface. */}
-          <VisitsTable visits={visits.slice(0, ROWS_DISPLAY_LIMIT)} />
+          <ChartSection visits={visits} days={CHART_DAYS} />
+          <TableSection visits={visits.slice(0, ROWS_DISPLAY_LIMIT)} />
         </>
       )}
     </div>
   );
 }
 
-function StatTile({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: { label: string; value: number | undefined }) {
   return (
-    <div
-      className="uni-side-stat"
-      style={{
-        borderRight: "1px solid var(--uni-tint)",
-        paddingTop: 0,
-        paddingBottom: 0,
-      }}
-    >
-      <div className="uni-side-label">{label}</div>
-      <div className="uni-side-value">{value.toLocaleString("en-US")}</div>
+    <div className="uni-hub-stat">
+      <div className="uni-hub-stat-label">{label}</div>
+      <div className="uni-hub-stat-value">
+        {value === undefined ? "—" : value.toLocaleString("en-US")}
+      </div>
     </div>
   );
 }
 
-// Canonical chart from TestChart, simplified: single metric (visits),
-// bar style only, no tabs, no time-range picker. All classes
-// (uni-chart-wrap, uni-chart-header, uni-bignum, uni-chart,
-// uni-chart-bars, uni-bar-col, uni-chart-bar, uni-chart-axis) are
-// defined in src/app/_styles/product.css and inherited via the
-// uni-shell wrapper.
-function VisitsChart({ visits, days }: { visits: Visit[]; days: number }) {
-  const { bins, max, total, latest } = useMemo(() => {
+// ──────────────────────────────────────────────────────────────────
+// Chart - matches the bar mode of TestChart from product pages:
+// white card, bignum headline, dotted plot background, gold bars
+// rooted at the baseline.
+// ──────────────────────────────────────────────────────────────────
+
+function ChartSection({ visits, days }: { visits: Visit[]; days: number }) {
+  const { bins, max, total, latest, peak } = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
     const out: { v: number; daysAgo: number }[] = [];
@@ -165,60 +146,58 @@ function VisitsChart({ visits, days }: { visits: Visit[]; days: number }) {
       }
     }
     const m = Math.max(1, ...out.map((b) => b.v));
-    const t = visits.length;
     return {
       bins: out,
       max: m,
-      total: t,
+      total: visits.length,
       latest: out[out.length - 1]?.v ?? 0,
+      peak: m,
     };
   }, [visits, days]);
 
   return (
-    <div
-      className="uni-chart-wrap uni-chart--bars"
-      style={{ marginTop: 20 }}
-    >
-      <div className="uni-chart-header">
-        <div className="uni-bignum">
-          <div className="uni-bignum-value">
-            {total.toLocaleString("en-US")}
-          </div>
-          <div className="uni-bignum-meta">
-            <span className="uni-bignum-label">visits in the last {days} days</span>
-            <span className="uni-bignum-dot" aria-hidden="true">·</span>
-            <span className="uni-bignum-date uni-bignum-date-long">
-              today: {latest.toLocaleString("en-US")} · peak {max.toLocaleString("en-US")} / day
-            </span>
-          </div>
+    <section className="uni-hub-section" style={{ marginTop: 0 }}>
+      <header className="uni-hub-section-head">
+        <h2 className="uni-hub-section-title">Visits — last {days} days</h2>
+        <span className="uni-hub-section-meta">
+          today {latest.toLocaleString("en-US")} · peak{" "}
+          {peak.toLocaleString("en-US")}/day
+        </span>
+      </header>
+      <div className="aq-chart-card">
+        <div className="aq-chart-bignum">
+          {total.toLocaleString("en-US")}
         </div>
-      </div>
+        <div className="aq-chart-bignum-label">
+          visits indexed across the trailing {days} days
+        </div>
 
-      <div className="uni-chart">
-        <div className="uni-chart-bars">
-          {bins.map((b, i) => {
-            const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
-            return (
-              <div
-                key={i}
-                className="uni-bar-col"
-                title={`${b.v} visit${b.v === 1 ? "" : "s"} (${labelForDaysAgo(b.daysAgo)})`}
-              >
+        <div className="aq-chart">
+          <div className="aq-chart-bars">
+            {bins.map((b, i) => {
+              const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
+              return (
                 <div
-                  className="uni-chart-bar"
-                  style={{ height: `${heightPct}%` }}
-                />
-              </div>
-            );
-          })}
-        </div>
-        <div className="uni-chart-axis">
-          <span>{days}d ago</span>
-          <span>{Math.floor(days / 2)}d ago</span>
-          <span>today</span>
+                  key={i}
+                  className="aq-bar-col"
+                  title={`${b.v} visit${b.v === 1 ? "" : "s"} (${labelForDaysAgo(b.daysAgo)})`}
+                >
+                  <div
+                    className="aq-bar"
+                    style={{ height: `${heightPct}%` }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div className="aq-chart-axis">
+            <span>{days}d ago</span>
+            <span>{Math.floor(days / 2)}d ago</span>
+            <span>today</span>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -228,101 +207,82 @@ function labelForDaysAgo(d: number): string {
   return `${d} days ago`;
 }
 
-// Recent visits table. Same hub-thead + hub-row + hub-cell scaffold
-// the asset hub pages use. Only addition is the inline
-// grid-template-columns override (7 cols here vs 6 on hubs).
-function VisitsTable({ visits }: { visits: Visit[] }) {
-  const cols =
-    "160px minmax(220px, 2fr) 1fr 1fr 1fr 0.7fr 110px";
+// ──────────────────────────────────────────────────────────────────
+// Table - identical scaffold to HubTable on /eth /usdc /usdt /btc.
+// Global classes hub-table-wrap / hub-table / hub-thead / hub-row /
+// hub-cell / hub-th carry all the visual chrome; only override is
+// the 7-column grid-template-columns inline style.
+// ──────────────────────────────────────────────────────────────────
 
-  if (visits.length === 0) {
-    return (
-      <div style={{ marginTop: 28 }}>
-        <h2
-          className="uni-bignum-label"
-          style={{
-            fontSize: 13,
-            textTransform: "uppercase",
-            letterSpacing: "0.04em",
-            margin: "0 0 12px",
-          }}
-        >
-          Recent visits
-        </h2>
-        <p
-          className="uni-bignum-meta"
-          style={{
-            padding: "40px 24px",
-            textAlign: "center",
-          }}
-        >
+function TableSection({ visits }: { visits: Visit[] }) {
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <h2 className="uni-hub-section-title">Recent visits</h2>
+        <span className="uni-hub-section-meta">
+          showing latest {visits.length.toLocaleString("en-US")}
+        </span>
+      </header>
+
+      {visits.length === 0 ? (
+        <div className="uni-hub-empty">
           No visits indexed yet. Once visitors accept the consent banner the
           table will populate.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ marginTop: 28 }}>
-      <h2
-        className="uni-bignum-label"
-        style={{
-          fontSize: 13,
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-          margin: "0 0 12px",
-        }}
-      >
-        Recent visits — showing latest {visits.length}
-      </h2>
-      <div className="hub-table-wrap">
-        <div className="hub-table">
-          <div className="hub-thead" style={{ gridTemplateColumns: cols }}>
-            <span className="hub-th hub-th-rank">Time</span>
-            <span className="hub-th">Page</span>
-            <span className="hub-th">Source</span>
-            <span className="hub-th">Country</span>
-            <span className="hub-th">City</span>
-            <span className="hub-th">Device</span>
-            <span className="hub-th">Session</span>
-          </div>
-          {visits.map((v) => (
-            <div
-              key={v.id}
-              className="hub-row"
-              style={{ gridTemplateColumns: cols }}
-            >
-              <span className="hub-cell hub-rank">{formatTime(v.created_at)}</span>
-              <span className="hub-cell hub-vault">
-                <span
-                  className="hub-vault-name"
-                  style={{ fontFamily: "var(--mono)" }}
-                >
-                  {v.page_path}
-                </span>
-              </span>
-              <span className="hub-cell hub-strategy">{v.source ?? "—"}</span>
-              <span className="hub-cell hub-strategy">{v.country ?? "—"}</span>
-              <span className="hub-cell hub-strategy">{v.city ?? "—"}</span>
-              <span className="hub-cell hub-strategy">
-                {v.device_type ?? "—"}
-              </span>
-              <span
-                className="hub-cell"
-                style={{
-                  fontFamily: "var(--mono)",
-                  fontSize: 11,
-                  color: "var(--uni-ink-3)",
-                }}
-              >
-                {(v.session_id || "").slice(0, 8)}
-              </span>
-            </div>
-          ))}
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className="hub-table-wrap">
+          <div className="hub-table">
+            <div
+              className="hub-thead"
+              style={{ gridTemplateColumns: TABLE_COLS }}
+            >
+              <span className="hub-th hub-th-rank">Time</span>
+              <span className="hub-th">Page</span>
+              <span className="hub-th">Source</span>
+              <span className="hub-th">Country</span>
+              <span className="hub-th">City</span>
+              <span className="hub-th">Device</span>
+              <span className="hub-th">Session</span>
+            </div>
+            {visits.map((v) => (
+              <div
+                key={v.id}
+                className="hub-row"
+                style={{ gridTemplateColumns: TABLE_COLS }}
+              >
+                <span className="hub-cell hub-rank">
+                  {formatTime(v.created_at)}
+                </span>
+                <span className="hub-cell hub-vault">
+                  <span
+                    className="hub-vault-name"
+                    style={{ fontFamily: "var(--mono)", fontSize: 13 }}
+                  >
+                    {v.page_path}
+                  </span>
+                </span>
+                <span className="hub-cell hub-strategy">{v.source ?? "—"}</span>
+                <span className="hub-cell hub-strategy">{v.country ?? "—"}</span>
+                <span className="hub-cell hub-strategy">{v.city ?? "—"}</span>
+                <span className="hub-cell hub-strategy">
+                  {v.device_type ?? "—"}
+                </span>
+                <span
+                  className="hub-cell"
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: 11,
+                    color: "var(--hub-ink-3)",
+                  }}
+                >
+                  {(v.session_id || "").slice(0, 8)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

@@ -513,3 +513,87 @@ body:has(.uni-hub-test) {
   }
   .uni-hub-test .uni-hub-spark svg { width: 70px; height: 24px; }
 }
+
+/* === Acquisition admin chart =======================================
+   Used only on /admin/acquisition. Bar mode lifted from the product-
+   page TestChart but lives under .uni-hub-test so it sits inside the
+   canonical hub shell. White card, bignum headline, dotted plot
+   background with gold bars rooted at the baseline. */
+.uni-hub-test .aq-chart-card {
+  background: var(--uni-card-2);
+  border: 1px solid var(--uni-line);
+  border-radius: var(--uni-radius);
+  padding: 28px 32px;
+  margin-bottom: 32px;
+}
+.uni-hub-test .aq-chart-bignum {
+  font-family: var(--display);
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.uni-hub-test .aq-chart-bignum-label {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test .aq-chart {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 280px;
+}
+.uni-hub-test .aq-chart-bars {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-height: 240px;
+  padding: 12px 0 0;
+  background-image: radial-gradient(
+    circle,
+    rgba(25, 23, 23, 0.08) 1px,
+    transparent 1.3px
+  );
+  background-size: 14px 14px;
+  background-position: 0 100%;
+  border-bottom: 1px solid var(--uni-line-2);
+}
+.uni-hub-test .aq-bar-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+}
+.uni-hub-test .aq-bar {
+  width: 100%;
+  background: var(--uni-gold);
+  border-radius: 5px 5px 0 0;
+  min-height: 2px;
+  transition: filter 0.12s ease;
+}
+.uni-hub-test .aq-bar-col:hover .aq-bar {
+  filter: brightness(0.92);
+}
+.uni-hub-test .aq-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--uni-ink-3);
+  font-weight: 500;
+  padding: 2px 2px 0;
+}
+
+@media (max-width: 720px) {
+  .uni-hub-test .aq-chart-card { padding: 20px 18px; }
+  .uni-hub-test .aq-chart-bignum { font-size: 32px; }
+  .uni-hub-test .aq-chart-bignum-label { font-size: 13.5px; }
+  .uni-hub-test .aq-chart { min-height: 200px; }
+  .uni-hub-test .aq-chart-bars { min-height: 160px; }
+}
