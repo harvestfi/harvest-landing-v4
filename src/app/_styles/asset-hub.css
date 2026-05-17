@@ -541,48 +541,47 @@ body:has(.uni-hub-test) {
   color: var(--uni-ink-2);
 }
 .uni-hub-test .aq-chart {
+  /* Explicit height (not just min) so the plot area always reserves
+     its space even before bars are populated. Visible inner border
+     so the bounds of the chart area are obvious even on sparse data
+     (a single tall bar today + 29 thin stubs reads as "empty" when
+     the container has no visible edge). */
   margin-top: 28px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 280px;
-}
-.uni-hub-test .aq-chart-bars {
-  /* Mirror the canonical product-page chart layout exactly: parent
-     stretches children (NOT flex-end), each bar-col then uses
-     flex-end internally to anchor its bar to the bottom. The prior
-     align-items: flex-end here collapsed bar-cols to content height
-     so the % heights on .aq-bar resolved against 0px → no visible
-     bars. */
-  flex: 1;
-  min-height: 240px;
-  display: flex;
-  align-items: stretch;
-  gap: 3px;
-  overflow: hidden;
-  position: relative;
-  padding: 18px 0 0;
+  height: 300px;
+  border: 1px solid var(--uni-line-2);
+  border-radius: var(--uni-radius-sm);
+  padding: 16px 14px 12px;
   background-image: radial-gradient(
     circle,
-    rgba(25, 23, 23, 0.08) 1px,
-    transparent 1.3px
+    rgba(25, 23, 23, 0.09) 1px,
+    transparent 1.4px
   );
   background-size: 14px 14px;
   background-position: 0 100%;
-  border-bottom: 1px solid var(--uni-line-2);
+}
+.uni-hub-test .aq-chart-bars {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  position: relative;
 }
 .uni-hub-test .aq-bar-col {
   flex: 1;
   min-width: 0;
   display: flex;
   align-items: flex-end;
-  justify-content: stretch;
 }
 .uni-hub-test .aq-bar {
   width: 100%;
   background: var(--uni-gold);
   border-radius: 5px 5px 0 0;
-  min-height: 2px;
+  /* Make zero-value bars visible enough to read the row as a baseline. */
+  min-height: 4px;
   transition: filter 0.12s ease;
 }
 .uni-hub-test .aq-bar-col:hover .aq-bar {
