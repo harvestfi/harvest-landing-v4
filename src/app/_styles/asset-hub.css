@@ -1068,29 +1068,33 @@ body:has(.uni-hub-test) {
 /* events tables (Traffic visits, App clicks, Wallet connects) carry */
 /* unique-per-row data we cannot lose, so instead of hiding columns */
 /* the wrapper scrolls horizontally and a min-width keeps every cell */
-/* readable. */
+/* readable. Every cell also clips with ellipsis so neighbouring */
+/* columns never bleed into each other when the grid is tight. */
 .uni-hub-test .aq-recent-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  /* Visual hint that horizontal scroll is available - a soft fade on */
-  /* the right edge when content overflows. */
   scrollbar-gutter: stable;
 }
 .uni-hub-test .aq-recent-table {
-  min-width: 900px;
+  /* Roomy enough for the widest table (Clicks: 8 cols) to lay each */
+  /* track at content-readable width. Smaller tables (App Net Worth) */
+  /* still benefit because Page + Source columns get more breathing */
+  /* room than the 1fr units alone would provide. */
+  min-width: 1180px;
 }
-/* Cancel the public-table column-hide media queries so every cell */
-/* stays visible even on phones; the scroll container handles the */
-/* viewport mismatch. */
+.uni-hub-test .aq-recent-table .hub-th,
+.uni-hub-test .aq-recent-table .hub-cell {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Override the public-page nth-child display:none rules so every */
+/* cell stays visible inside the scroll container. */
 @media (max-width: 1100px) {
   .uni-hub-test .aq-recent-table .hub-th,
   .uni-hub-test .aq-recent-table .hub-cell {
     display: revert;
-  }
-}
-@media (max-width: 540px) {
-  .uni-hub-test .aq-recent-table {
-    min-width: 820px;
   }
 }
 
