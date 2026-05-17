@@ -42,7 +42,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    label: null,
+    label: "Marketing",
     items: [{ label: "Studio", href: "/admin/studio" }],
   },
   {

@@ -17,6 +17,7 @@ import {
   resolveDays,
   type Timeframe,
 } from "@/components/admin/timeframe-selector";
+import { CountryFlag } from "@/components/admin/country-flag";
 
 interface Click {
   id: string;
@@ -35,14 +36,13 @@ interface Click {
 const ROWS_FETCH_LIMIT = 1000;
 const ROWS_DISPLAY_LIMIT = 200;
 
-// 8-column track for the clicks table. Mirrors the Traffic page
-// rhythm exactly (150px time anchor + minmax(220px, 2fr) primary
-// content column + 1fr categorical columns + 0.7fr device + 110px
-// session id) and just slots an extra 130px CTA column in third
-// position so the visit + click tables read as siblings, not
-// cousins.
+// 8-column track. Matches the Traffic table's column rhythm so the
+// two feel like siblings: 140px time anchor + flexible primary
+// content (Vault) + fixed CTA chip + flexible secondary content
+// (From page) + tight Source / Country / Device chips + 110px
+// session anchor.
 const TABLE_COLS =
-  "150px minmax(220px, 2fr) 130px 1fr 1fr 1fr 0.7fr 110px";
+  "140px minmax(160px, 1.4fr) 150px minmax(180px, 1.5fr) 110px 110px 100px 110px";
 
 export default function AppClicksPage() {
   const [clicks, setClicks] = useState<Click[] | null>(null);
@@ -292,11 +292,13 @@ function TableSection({ clicks }: { clicks: Click[] }) {
                     <span className="aq-muted">—</span>
                   )}
                 </span>
-                <span className="hub-cell">{labelForCta(c.source_cta)}</span>
+                <span className="hub-cell aq-cell-text">{labelForCta(c.source_cta)}</span>
                 <span className="hub-cell aq-cell-page">{c.source_page}</span>
-                <span className="hub-cell">{c.source ?? "—"}</span>
-                <span className="hub-cell">{c.country ?? "—"}</span>
-                <span className="hub-cell">{c.device_type ?? "—"}</span>
+                <span className="hub-cell aq-cell-text">{c.source ?? "—"}</span>
+                <span className="hub-cell">
+                  <CountryFlag country={c.country} />
+                </span>
+                <span className="hub-cell aq-cell-text">{c.device_type ?? "—"}</span>
                 <span className="hub-cell aq-cell-session">
                   {(c.session_id || "").slice(0, 8)}
                 </span>

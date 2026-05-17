@@ -282,7 +282,7 @@ function ChartSection({
       <header className="uni-hub-section-head">
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">
-            Daily harvest balance — last {days} days
+            Daily harvest balance, last {days} days
           </h2>
           <span className="uni-hub-section-meta">
             today {formatTVL(latest)} · peak {formatTVL(peak)}/day

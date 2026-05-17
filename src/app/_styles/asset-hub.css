@@ -825,6 +825,23 @@ body:has(.uni-hub-test) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Free-text cell used for short categorical fields on the Traffic
+   and App Clicks tables (Source / City / Device). Left-aligned -
+   the public-ranking .hub-strategy class is right-aligned because
+   on /eth it sits next to numeric columns, which is wrong for the
+   admin admin-side tables. Ellipsis-clips so longer utm_source or
+   device strings stop bleeding across the next column edge. */
+.uni-hub-test .aq-cell-text {
+  font-size: 13.5px;
+  color: var(--uni-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  justify-self: start;
+  min-width: 0;
+}
 .uni-hub-test .aq-cell-session {
   font-family: var(--mono);
   font-size: 11px;
@@ -854,9 +871,14 @@ body:has(.uni-hub-test) {
   flex-direction: column;
   gap: 8px;
 }
+/* Primary tile (Total in Harvest) keeps the flat card surface that
+   every other .uni-hub-stat / .aq-networth-tile uses; the gold tone
+   shows on the value text via the .aq-networth-value override below,
+   so the tile reads as "the highlight number" without the gradient
+   wash. */
 .uni-hub-test .aq-networth-tile-primary {
-  background: linear-gradient(180deg, rgba(255, 185, 54, 0.22), var(--uni-card));
-  border-color: rgba(255, 185, 54, 0.5);
+  background: var(--uni-card);
+  border-color: var(--uni-line);
 }
 .uni-hub-test .aq-networth-label {
   font-family: var(--mono);
@@ -1038,4 +1060,3 @@ body:has(.uni-hub-test) {
     text-align: left;
   }
 }
-
