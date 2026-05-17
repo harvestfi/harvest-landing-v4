@@ -3184,12 +3184,12 @@ body:has(.admin-shell) .foot {
 
 .uni-hub-test .serp-card {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr;
-  gap: 20px;
+  grid-template-columns: minmax(260px, 300px) 1fr;
+  gap: 24px;
   background: var(--uni-card-2);
   border: 1px solid var(--uni-line);
   border-radius: var(--uni-radius);
-  padding: 20px;
+  padding: 24px;
 }
 .uni-hub-test .serp-picker {
   display: flex;
@@ -3289,10 +3289,13 @@ body:has(.admin-shell) .foot {
   color: var(--uni-ink-3);
 }
 
+/* Desktop preview now spans the full right column for a faithful
+   Google SERP read; mobile preview stacks beneath it at its real
+   ~360px max-width. */
 .uni-hub-test .serp-previews {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
   min-width: 0;
 }
 .uni-hub-test .serp-preview {
@@ -3323,14 +3326,20 @@ body:has(.admin-shell) .foot {
   background: var(--uni-bg);
   border: 1px solid var(--uni-line-2);
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 18px 22px;
   min-width: 0;
   overflow: hidden;
+  /* Google desktop SERP result width is ~600px. Cap the preview at
+     that so it reads faithfully even when the section column is
+     wider. Left-aligned (margin-right: auto) so it sits where real
+     results sit, not centered. */
+  max-width: 600px;
+  margin-right: auto;
 }
 .uni-hub-test .serp-preview-frame-mobile {
   padding: 14px;
   max-width: 360px;
-  margin: 0 auto;
+  margin: 0;
 }
 .uni-hub-test .serp-result {
   font-family: arial, sans-serif;
@@ -3417,10 +3426,7 @@ body:has(.admin-shell) .foot {
 
 @media (max-width: 1100px) {
   .uni-hub-test .serp-card { grid-template-columns: 1fr; }
-  .uni-hub-test .serp-previews {
-    grid-template-columns: 1fr;
-  }
-  .uni-hub-test .serp-preview-frame-mobile { margin: 0; }
+  .uni-hub-test .serp-preview-frame { max-width: 100%; }
   .uni-hub-test .serp-picker-list { max-height: 220px; }
 }
 
@@ -3510,55 +3516,138 @@ body:has(.admin-shell) .foot {
   border-bottom-color: #ffb936;
 }
 
+/* Type pills: yellow-accented to stay on-theme, distinguished by
+   tint depth + outline rather than disparate hues. Home is the most
+   prominent (solid gold fill) since it's the single highest-traffic
+   page; hubs get progressively lighter gold; Product rows use a
+   muted neutral so the table reads "categories vs leaves" cleanly. */
 .uni-hub-test .seo-type-pill {
   display: inline-block;
-  padding: 2px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
 .uni-hub-test .seo-type-home {
-  background: rgba(255, 185, 54, 0.2);
-  color: #946208;
+  background: #ffb936;
+  color: #191717;
 }
 .uni-hub-test .seo-type-asset-hub {
-  background: rgba(31, 124, 77, 0.14);
-  color: #1f7c4d;
+  background: rgba(255, 185, 54, 0.28);
+  color: #6b4400;
+  border-color: rgba(255, 185, 54, 0.5);
 }
 .uni-hub-test .seo-type-network-hub {
-  background: rgba(99, 102, 241, 0.14);
-  color: #4a4eb5;
+  background: rgba(255, 185, 54, 0.12);
+  color: #946208;
+  border-color: rgba(255, 185, 54, 0.4);
 }
 .uni-hub-test .seo-type-product {
-  background: var(--uni-tint);
+  background: transparent;
   color: var(--uni-ink-2);
+  border-color: var(--uni-line);
 }
-:root[data-theme="dark"] .uni-hub-test .seo-type-home { color: #ffd98a; }
-:root[data-theme="dark"] .uni-hub-test .seo-type-asset-hub { color: #6dd0a0; }
-:root[data-theme="dark"] .uni-hub-test .seo-type-network-hub { color: #a4a8ff; }
+:root[data-theme="dark"] .uni-hub-test .seo-type-asset-hub {
+  color: #ffd98a;
+  background: rgba(255, 185, 54, 0.22);
+}
+:root[data-theme="dark"] .uni-hub-test .seo-type-network-hub {
+  color: #ffd98a;
+  background: rgba(255, 185, 54, 0.1);
+}
 
+/* Index status pill - shows ON (indexable) or OFF (noindex). ON gets
+   the brand gold treatment to read as "switched on / good"; OFF
+   keeps a muted red so it stands out as the small minority that
+   needs attention. */
 .uni-hub-test .seo-index-pill {
-  display: inline-block;
-  padding: 2px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 11px;
   border-radius: 999px;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
 }
 .uni-hub-test .seo-index-pill.ok {
-  background: rgba(39, 165, 103, 0.14);
-  color: #1f7c4d;
+  background: rgba(255, 185, 54, 0.22);
+  color: #6b4400;
+  border-color: rgba(255, 185, 54, 0.5);
 }
 .uni-hub-test .seo-index-pill.no {
   background: rgba(192, 50, 42, 0.12);
   color: #b13129;
+  border-color: rgba(192, 50, 42, 0.35);
 }
-:root[data-theme="dark"] .uni-hub-test .seo-index-pill.ok { color: #6dd0a0; }
+:root[data-theme="dark"] .uni-hub-test .seo-index-pill.ok { color: #ffd98a; }
 :root[data-theme="dark"] .uni-hub-test .seo-index-pill.no { color: #ff8a82; }
+
+/* Status-filter toggle in the inventory filter bar. Three-segment
+   tab: All / Index ON / Index OFF. Lets the operator drill down on
+   either side of the index/noindex line without sorting. */
+.uni-hub-test .seo-status-toggle {
+  display: inline-flex;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.uni-hub-test .seo-status-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.uni-hub-test .seo-status-tab:hover { color: var(--uni-ink); }
+.uni-hub-test .seo-status-tab.active {
+  background: #ffb936;
+  color: #191717;
+  font-weight: 600;
+}
+
+/* Tone variants for stat tiles in the SEO hero. Index Status ON
+   gets a subtle gold accent (positive), OFF gets muted red when
+   non-zero or neutral when zero. Matches the index-pill semantics
+   so the hero summary reads as the same dial as the table column. */
+.uni-hub-test .uni-hub-stat.adm-stat-positive .uni-hub-stat-value {
+  color: #946208;
+}
+.uni-hub-test .uni-hub-stat.adm-stat-positive {
+  background: linear-gradient(180deg, rgba(255, 185, 54, 0.18), var(--uni-card));
+}
+.uni-hub-test .uni-hub-stat.adm-stat-warn .uni-hub-stat-value {
+  color: #b13129;
+}
+.uni-hub-test .uni-hub-stat.adm-stat-warn {
+  background: linear-gradient(180deg, rgba(192, 50, 42, 0.12), var(--uni-card));
+}
+.uni-hub-test .uni-hub-stat.adm-stat-muted .uni-hub-stat-value {
+  color: var(--uni-ink-3);
+}
+:root[data-theme="dark"] .uni-hub-test .uni-hub-stat.adm-stat-positive .uni-hub-stat-value {
+  color: #ffd98a;
+}
+:root[data-theme="dark"] .uni-hub-test .uni-hub-stat.adm-stat-warn .uni-hub-stat-value {
+  color: #ff8a82;
+}
 
 .uni-hub-test .adm-char-count {
   display: inline-block;

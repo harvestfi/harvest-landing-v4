@@ -10,6 +10,8 @@ interface SeoRow {
   slug: string;
   title: string;
   description: string;
+  // Other fields (chain / apy / tvl) still flow in from the page
+  // but are no longer surfaced - this view is SEO-only now.
   chain: string;
   apy: string;
   tvl: string;
@@ -22,9 +24,6 @@ type SortKey =
   | "slug"
   | "title"
   | "description"
-  | "chain"
-  | "apy"
-  | "tvl"
   | "indexed";
 type SortDir = "asc" | "desc";
 
@@ -38,11 +37,11 @@ const TYPE_ORDER: Record<RowType, number> = {
   Product: 3,
 };
 
-// Single ranking grid track. Matches the columnar look of the public
-// hub tables (/eth, /usdc, /admin/acquisition) so the SEO page sits
-// inside the same visual language as the rest of the admin.
+// Six-column track: rank, type pill, slug, meta title, meta
+// description, index status. Drops the previous chain / APY / TVL
+// columns - this is the SEO inventory, not a product ranking.
 const COLS =
-  "48px 110px minmax(170px, 1.4fr) minmax(260px, 2fr) minmax(280px, 2.4fr) 90px 70px 80px 70px";
+  "48px 130px minmax(170px, 1.4fr) minmax(280px, 2fr) minmax(320px, 2.6fr) 120px";
 
 function CharCount({ count, limit }: { count: number; limit: number }) {
   const over = count > limit;
@@ -90,6 +89,7 @@ export function SeoTable({
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("natural");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [indexFilter, setIndexFilter] = useState<"all" | "on" | "off">("all");
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -101,16 +101,20 @@ export function SeoTable({
   }
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return rows;
-    const q = search.toLowerCase();
-    return rows.filter(
-      (r) =>
-        r.slug.toLowerCase().includes(q) ||
-        r.title.toLowerCase().includes(q) ||
-        r.chain.toLowerCase().includes(q) ||
-        r.type.toLowerCase().includes(q),
-    );
-  }, [rows, search]);
+    let out = rows;
+    if (indexFilter === "on") out = out.filter((r) => r.indexed);
+    if (indexFilter === "off") out = out.filter((r) => !r.indexed);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      out = out.filter(
+        (r) =>
+          r.slug.toLowerCase().includes(q) ||
+          r.title.toLowerCase().includes(q) ||
+          r.type.toLowerCase().includes(q),
+      );
+    }
+    return out;
+  }, [rows, search, indexFilter]);
 
   const sorted = useMemo(() => {
     if (sortKey === "natural") return filtered;
@@ -129,11 +133,6 @@ export function SeoTable({
       }
       let av = a[sortKey] as string;
       let bv = b[sortKey] as string;
-      if (sortKey === "apy" || sortKey === "tvl") {
-        const an = parseFloat(av.replace(/[^0-9.\-]/g, "")) || 0;
-        const bn = parseFloat(bv.replace(/[^0-9.\-]/g, "")) || 0;
-        return sortDir === "asc" ? an - bn : bn - an;
-      }
       av = av.toLowerCase();
       bv = bv.toLowerCase();
       if (av < bv) return sortDir === "asc" ? -1 : 1;
@@ -146,10 +145,43 @@ export function SeoTable({
   return (
     <>
       <div className="hub-filterbar" role="group" aria-label="Filter pages">
+        <div
+          className="seo-status-toggle"
+          role="tablist"
+          aria-label="Filter by index status"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={indexFilter === "all"}
+            className={`seo-status-tab${indexFilter === "all" ? " active" : ""}`}
+            onClick={() => setIndexFilter("all")}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={indexFilter === "on"}
+            className={`seo-status-tab${indexFilter === "on" ? " active" : ""}`}
+            onClick={() => setIndexFilter("on")}
+          >
+            Index ON
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={indexFilter === "off"}
+            className={`seo-status-tab${indexFilter === "off" ? " active" : ""}`}
+            onClick={() => setIndexFilter("off")}
+          >
+            Index OFF
+          </button>
+        </div>
         <input
           type="search"
           className="seo-filter-input"
-          placeholder="Filter by slug, title, type, or chain"
+          placeholder="Filter by slug, title, or type"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Filter pages"
@@ -196,30 +228,7 @@ export function SeoTable({
               onClick={handleSort}
             />
             <SortHeader
-              label="Chain"
-              sortKey="chain"
-              currentKey={sortKey}
-              currentDir={sortDir}
-              onClick={handleSort}
-            />
-            <SortHeader
-              label="APY"
-              sortKey="apy"
-              currentKey={sortKey}
-              currentDir={sortDir}
-              onClick={handleSort}
-              className="hub-th-right"
-            />
-            <SortHeader
-              label="TVL"
-              sortKey="tvl"
-              currentKey={sortKey}
-              currentDir={sortDir}
-              onClick={handleSort}
-              className="hub-th-right"
-            />
-            <SortHeader
-              label="Index"
+              label="Index status"
               sortKey="indexed"
               currentKey={sortKey}
               currentDir={sortDir}
@@ -263,18 +272,11 @@ export function SeoTable({
                     <span className="seo-desc">{truncatedDesc}</span>
                     <CharCount count={descLen} limit={DESC_LIMIT} />
                   </span>
-                  <span className="hub-cell hub-strategy">{row.chain}</span>
-                  <span className="hub-cell hub-num hub-th-right">
-                    {row.apy}
-                  </span>
-                  <span className="hub-cell hub-num hub-th-right">
-                    {row.tvl}
-                  </span>
                   <span className="hub-cell">
                     <span
                       className={`seo-index-pill${row.indexed ? " ok" : " no"}`}
                     >
-                      {row.indexed ? "index" : "noindex"}
+                      {row.indexed ? "ON" : "OFF"}
                     </span>
                   </span>
                 </div>

@@ -50,7 +50,6 @@ const SECTIONS: Section[] = [
     items: [
       { label: "Master Rules", href: "/admin/master-rules" },
       { label: "Ranking Rules", href: "/admin/ranking-rules" },
-      { label: "Changelog", href: "/admin/changelog" },
     ],
   },
 ];

@@ -110,6 +110,7 @@ export default async function AdminPage() {
 
   const rows = [homeRow, ...assetRows, ...networkRows, ...productRows];
   const indexedCount = rows.filter((r) => r.indexed).length;
+  const noindexCount = rows.length - indexedCount;
 
   let lastUpdated = new Date().toISOString();
   const vaultsFile = join(process.cwd(), "data", "vaults.json");
@@ -154,8 +155,16 @@ export default async function AdminPage() {
           style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
         >
           <Stat label="Pages" value={rows.length.toLocaleString("en-US")} />
-          <Stat label="Indexed" value={indexedCount.toLocaleString("en-US")} />
-          <Stat label="Vaults" value={vaults.length.toLocaleString("en-US")} />
+          <Stat
+            label="Index Status ON"
+            value={indexedCount.toLocaleString("en-US")}
+            tone="positive"
+          />
+          <Stat
+            label="Index Status OFF"
+            value={noindexCount.toLocaleString("en-US")}
+            tone={noindexCount > 0 ? "warn" : "muted"}
+          />
           <Stat label="Updated" value={lastUpdatedLabel} mono={false} />
         </div>
       </header>
@@ -170,11 +179,12 @@ export default async function AdminPage() {
         <SerpPreview rows={previewRows} siteOrigin={SITE_URL} />
       </section>
 
-      <section className="uni-hub-section">
+      <section className="uni-hub-section" style={{ marginTop: 56 }}>
         <header className="uni-hub-section-head">
           <h2 className="uni-hub-section-title">Inventory</h2>
           <span className="uni-hub-section-meta">
-            {rows.length} pages indexed
+            {indexedCount} of {rows.length} indexable
+            {noindexCount > 0 ? ` · ${noindexCount} noindex` : ""}
           </span>
         </header>
         <SeoTable rows={rows} siteOrigin={SITE_URL} />
@@ -187,13 +197,16 @@ function Stat({
   label,
   value,
   mono = true,
+  tone,
 }: {
   label: string;
   value: string;
   mono?: boolean;
+  tone?: "positive" | "warn" | "muted";
 }) {
+  const toneClass = tone ? ` adm-stat-${tone}` : "";
   return (
-    <div className="uni-hub-stat">
+    <div className={`uni-hub-stat${toneClass}`}>
       <div className="uni-hub-stat-label">{label}</div>
       <div
         className="uni-hub-stat-value"
