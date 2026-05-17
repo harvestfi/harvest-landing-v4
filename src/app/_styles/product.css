@@ -762,19 +762,24 @@ body:has(.uni-shell) {
   transform: translateX(0) translateY(0);
 }
 
-/* Jump-to nav: very soft pill rail with refined lucide-style icons.
-   Lives in the document flow (not sticky) - once it scrolls past
-   the viewport, the dedicated full-width sticky sub-header takes
-   over and pins below the global topnav. */
+/* Jump-to nav: clean horizontal rail with monoline icons. No tinted
+   container background - the rail reads as a row of navigation
+   anchors directly on the page surface, defined by a single hairline
+   beneath. Items are crisp by default (full ink color), and hover
+   lifts them onto a card surface with a gold icon accent. Lives in
+   the document flow (not sticky) - once it scrolls past the
+   viewport, the dedicated full-width sticky sub-header takes over
+   and pins below the global topnav. */
 .uni-shell .uni-jump {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 4px;
-  margin: 64px 0 40px;
-  padding: 6px;
-  background: var(--uni-tint-thin);
-  border-radius: 16px;
+  gap: 2px;
+  margin: 56px 0 40px;
+  padding: 4px 0;
+  background: transparent;
+  border-bottom: 1px solid var(--uni-line);
+  border-radius: 0;
 }
 .uni-shell .uni-jump-item {
   flex: 1 1 0;
@@ -782,18 +787,19 @@ body:has(.uni-shell) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 11px;
-  padding: 14px 22px;
-  border-radius: 12px;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 10px;
   background: transparent;
-  color: var(--uni-ink-2);
-  font-size: 15px;
+  color: var(--uni-ink);
+  font-size: 14.5px;
   font-weight: 500;
+  letter-spacing: -0.005em;
   text-decoration: none;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 .uni-shell .uni-jump-item:hover {
-  background: rgba(255, 185, 54, 0.08);
+  background: var(--uni-card);
   color: var(--uni-ink);
   box-shadow: none;
 }
@@ -801,15 +807,15 @@ body:has(.uni-shell) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
-  color: var(--uni-ink-2);
+  color: var(--uni-ink-3);
   transition: color 0.18s ease;
 }
 .uni-shell .uni-jump-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   transition: transform 0.45s cubic-bezier(0.4, 0.9, 0.3, 1);
 }
 .uni-shell .uni-jump-item:hover .uni-jump-icon-wrap {
@@ -1148,8 +1154,7 @@ body:has(.uni-shell) {
 }
 @media (max-width: 700px) {
   .uni-shell .uni-jump {
-    border-radius: 18px;
-    padding: 4px;
+    padding: 2px 0;
     margin-top: 44px;
   }
   .uni-shell .uni-jump-item {
