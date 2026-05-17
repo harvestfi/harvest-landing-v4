@@ -5233,6 +5233,14 @@ body:has(.methodology-page) {
   --hub-card:   #f1f5f4;
   --hub-bg:     #ffffff;
   --hub-gold:   #ffb936;
+  /* Wide admin tables (Traffic, App Clicks, Products, SEO inventory)
+     set their grid track via inline `style={{gridTemplateColumns}}`,
+     which beats CSS media queries on specificity. Rather than fight
+     that with !important everywhere, we let the table keep its full
+     desktop column rhythm and scroll the whole wrap horizontally on
+     mobile. Momentum scrolling enabled for iOS. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 /* Dark theme for the shared HubTable - filter pills, dropdown
    panel, table chrome and reset button all read these vars. */

@@ -1098,3 +1098,67 @@ body:has(.uni-hub-test) {
   }
 }
 
+
+/* ====================================================================
+   Admin responsive
+   Every admin page sits in .uni-hub-test inside .admin-shell. The
+   sidebar already collapses to a horizontal rail at <=900px (see
+   globals.css). Below is the inner-page chrome: hero stats stack
+   into a 2-column grid, the filterbar stacks vertically, cards lose
+   some padding, and tables horizontally scroll (via .hub-table-wrap
+   in globals.css) rather than reflow their inline-set grid tracks.
+   ==================================================================== */
+@media (max-width: 900px) {
+  .uni-hub-test { padding-left: 18px; padding-right: 18px; }
+  .uni-hub-test .uni-hub-hero {
+    padding-bottom: 22px;
+    margin-bottom: 24px;
+  }
+  /* Override the inline gridTemplateColumns: "repeat(4, ...)" that
+     every admin page passes - on phones the four-up row pushes each
+     stat to a sliver. 2x2 reads cleanly on phones. */
+  .uni-hub-test .uni-hub-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  /* Tighter section heads + meta on narrow viewports. */
+  .uni-hub-test .uni-hub-section-head {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .uni-hub-test .uni-hub-section-title { font-size: 20px; }
+  .uni-hub-test .uni-hub-section-meta { font-size: 11px; }
+  /* Filter bar (Index ON/OFF + search + count) wraps onto multiple
+     rows on phones - search input takes the full width, toggle row
+     keeps the chips inline so they don't squash. */
+  .uni-hub-test .hub-filterbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .uni-hub-test .seo-status-toggle { width: max-content; max-width: 100%; }
+  .uni-hub-test .seo-filter-input { width: 100%; }
+  .uni-hub-test .hub-filter-meta { text-align: right; }
+  /* Rule + handout cards: trim padding so they don't feel like
+     billboards on a phone. */
+  .uni-hub-test .rules-card { padding: 18px 18px; }
+  .uni-hub-test .rules-card-title { font-size: 15.5px; }
+  .uni-hub-test .rules-card-blurb { font-size: 13.5px; }
+  /* Networth aggregate grid: already collapses to 1 col at 720px,
+     but tighten the value font on narrower phones so the dollar
+     bignum doesn't horizontally overflow. */
+  .uni-hub-test .aq-networth-value { font-size: 24px; }
+  /* SERP preview: search input + picker scroll length already
+     adapt, but narrow the preview frame padding too. */
+  .uni-hub-test .serp-card { padding: 16px; gap: 18px; }
+  .uni-hub-test .serp-preview-frame { padding: 14px 16px; }
+}
+@media (max-width: 540px) {
+  /* Hero stats fall to a single column on very narrow phones - 2x2
+     starts to crush long labels like "Index Status OFF" once the
+     viewport drops below 380px. */
+  .uni-hub-test .uni-hub-stats {
+    grid-template-columns: 1fr !important;
+  }
+  .uni-hub-test .rules-card { padding: 16px; }
+  .uni-hub-test .rules-card-blurb { font-size: 13px; }
+}
