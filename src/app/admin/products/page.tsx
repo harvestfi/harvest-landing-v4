@@ -1,6 +1,11 @@
 import { getVaults } from "@/lib/data";
 import { getCanonicalSlugs, getDuplicateGroupKey } from "@/lib/canonical-vaults";
 import { AdminProductsTable, type AdminRow } from "@/components/admin-products-table";
+import "../../_styles/asset-hub.css";
+
+// Admin > Products. Sits inside the canonical .uni-hub-test shell
+// (the same one /eth, /usdc, /admin/acquisition, /admin SEO use)
+// so every admin surface speaks one visual language.
 
 export default async function AdminProductsPage() {
   const vaults = await getVaults();
@@ -32,17 +37,66 @@ export default async function AdminProductsPage() {
       return b.tvl - a.tvl;
     });
 
+  const indexedCount = rows.filter((r) => r.indexed).length;
+  const noindexCount = rows.length - indexedCount;
+  const duplicateGroups = [...groupSizes.values()].filter((s) => s > 1).length;
+
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="adm-header">
-        <h1>Products</h1>
-        <p className="adm-sub">
-          Indexing strategy: when the API returns the same product under multiple slugs
-          ({"{slug}-1, {slug}-2, ..."}), the highest-TVL entry stays indexed and the rest
-          are marked noindex to protect crawl budget.
-        </p>
-      </div>
-      <AdminProductsTable rows={rows} />
-    </main>
+    <div className="uni-hub-test">
+      <header className="uni-hub-hero">
+        <div className="uni-hub-hero-headline">
+          <div>
+            <h1 className="uni-hub-h1">Products</h1>
+            <p className="uni-hub-sub">
+              Every vault returned by the indexer. When the API surfaces the
+              same product under multiple slugs ({"{slug}-1, {slug}-2"}), the
+              highest-TVL entry stays indexed and the rest are marked noindex
+              to protect crawl budget.
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="uni-hub-stats"
+          role="group"
+          aria-label="Products summary"
+          style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
+        >
+          <Stat label="Total products" value={rows.length.toLocaleString("en-US")} />
+          <Stat
+            label="Indexed"
+            value={indexedCount.toLocaleString("en-US")}
+          />
+          <Stat
+            label="Noindex"
+            value={noindexCount.toLocaleString("en-US")}
+          />
+          <Stat
+            label="Duplicate groups"
+            value={duplicateGroups.toLocaleString("en-US")}
+          />
+        </div>
+      </header>
+
+      <section className="uni-hub-section" style={{ marginTop: 0 }}>
+        <header className="uni-hub-section-head">
+          <h2 className="uni-hub-section-title">Inventory</h2>
+          <span className="uni-hub-section-meta">
+            {indexedCount} of {rows.length} indexable
+            {noindexCount > 0 ? ` · ${noindexCount} noindex` : ""}
+          </span>
+        </header>
+        <AdminProductsTable rows={rows} />
+      </section>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="uni-hub-stat">
+      <div className="uni-hub-stat-label">{label}</div>
+      <div className="uni-hub-stat-value">{value}</div>
+    </div>
   );
 }

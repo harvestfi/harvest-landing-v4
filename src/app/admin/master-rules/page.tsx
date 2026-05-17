@@ -2,11 +2,12 @@
 // product type. Each handout is a complete reference another AI can
 // read on its own and use to rebuild the corresponding product page
 // from scratch; they overlap in the universal copy rules + section
-// architecture, but the per-section templates (About, FAQ, byline,
-// strategy details) diverge enough that splitting them into focused
-// documents reads better than one giant umbrella page.
+// architecture, but the per-section templates diverge enough that
+// splitting them into focused documents reads better than one giant
+// umbrella page.
 
 import Link from "next/link";
+import "../../_styles/asset-hub.css";
 
 export const metadata = {
   title: "Master Rules | Admin",
@@ -43,66 +44,103 @@ const HANDOUTS = [
 
 export default function MasterRulesHubPage() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-          Master Rules
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
-          Self-contained reference documents for rebuilding each
-          single-product-page variant from scratch. Hand any one of these to a
-          fresh AI and they can recreate the corresponding page with full
-          editorial fidelity. The universal copy rules + render order are
-          repeated in each handout on purpose - the goal is that one document
-          stands alone.
-        </p>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
-          Word-level rules are enforced automatically by{" "}
-          <code className="rounded bg-gray-100 px-1 font-mono text-xs">
-            scripts/check-banned-words.mjs
-          </code>{" "}
-          on every build. Everything else is editorial discipline.
-        </p>
+    <div className="uni-hub-test">
+      <header className="uni-hub-hero">
+        <div className="uni-hub-hero-headline">
+          <div>
+            <h1 className="uni-hub-h1">Master Rules</h1>
+            <p className="uni-hub-sub">
+              Self-contained reference documents for rebuilding each
+              single-product-page variant from scratch. Hand any one of these
+              to a fresh AI and they can recreate the corresponding page with
+              full editorial fidelity. Word-level rules are enforced
+              automatically by{" "}
+              <code className="rules-code">scripts/check-banned-words.mjs</code>{" "}
+              on every build; everything else is editorial discipline.
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="uni-hub-stats"
+          role="group"
+          aria-label="Handouts summary"
+          style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+        >
+          <Stat label="Handouts" value="3" />
+          <Stat label="Product variants" value="3" />
+          <Stat label="Render order" value="Universal" mono={false} />
+        </div>
       </header>
 
-      <section className="space-y-4">
-        {HANDOUTS.map((h) => (
-          <Link
-            key={h.slug}
-            href={`/admin/master-rules/${h.slug}`}
-            className="block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
-          >
-            <h2 className="text-base font-semibold text-gray-900">
-              {h.title}
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-gray-600">
-              {h.blurb}
-            </p>
-            <dl className="mt-3 space-y-1 text-xs">
-              <div className="flex gap-2">
-                <dt className="font-semibold text-gray-500">Discriminator</dt>
-                <dd className="font-mono text-gray-700">{h.discriminator}</dd>
+      <section className="uni-hub-section" style={{ marginTop: 0 }}>
+        <header className="uni-hub-section-head">
+          <h2 className="uni-hub-section-title">Handouts</h2>
+          <span className="uni-hub-section-meta">one document per product type</span>
+        </header>
+        <div className="rules-cards">
+          {HANDOUTS.map((h) => (
+            <Link
+              key={h.slug}
+              href={`/admin/master-rules/${h.slug}`}
+              className="rules-card"
+            >
+              <div className="rules-card-head">
+                <h3 className="rules-card-title">{h.title}</h3>
+                <span className="rules-card-arrow" aria-hidden="true">→</span>
               </div>
-              <div className="flex gap-2">
-                <dt className="font-semibold text-gray-500">Examples</dt>
-                <dd className="text-gray-700">{h.examples}</dd>
-              </div>
-            </dl>
-          </Link>
-        ))}
+              <p className="rules-card-blurb">{h.blurb}</p>
+              <dl className="rules-card-meta">
+                <div className="rules-meta-row">
+                  <dt>Discriminator</dt>
+                  <dd className="mono">{h.discriminator}</dd>
+                </div>
+                <div className="rules-meta-row">
+                  <dt>Examples</dt>
+                  <dd>{h.examples}</dd>
+                </div>
+              </dl>
+            </Link>
+          ))}
+        </div>
       </section>
 
-      <footer className="mt-10 rounded-lg border border-gray-200 bg-gray-50 p-5 text-sm text-gray-600">
-        <p className="font-semibold text-gray-800">When to update which handout</p>
-        <p className="mt-2">
-          A patch that changes a section that&apos;s identical across product
-          types (the page architecture, the banned-word list, the render order)
-          must update <strong>all three</strong> handouts. A patch that changes
-          a per-variant template (About P1, FAQ Q4, byline chip rules) only
-          updates the affected handout. Keep this rule load-bearing - the
-          whole point of these documents is that each one stays accurate.
-        </p>
-      </footer>
-    </main>
+      <section className="uni-hub-section">
+        <div className="rules-note">
+          <p className="rules-note-title">When to update which handout</p>
+          <p className="rules-note-body">
+            A patch that changes a section that&apos;s identical across product
+            types (the page architecture, the banned-word list, the render
+            order) must update <strong>all three</strong> handouts. A patch
+            that changes a per-variant template (About P1, FAQ Q4, byline
+            chip rules) only updates the affected handout. Keep this rule
+            load-bearing - the whole point of these documents is that each
+            one stays accurate.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  mono = true,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="uni-hub-stat">
+      <div className="uni-hub-stat-label">{label}</div>
+      <div
+        className="uni-hub-stat-value"
+        style={mono ? undefined : { fontSize: 15, fontWeight: 500 }}
+      >
+        {value}
+      </div>
+    </div>
   );
 }

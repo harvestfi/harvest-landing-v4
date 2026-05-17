@@ -3663,6 +3663,174 @@ body:has(.admin-shell) .foot {
 }
 :root[data-theme="dark"] .uni-hub-test .adm-char-count.over { color: #ff8a82; }
 
+/* === Admin Products row extras inside the canonical hub-table ===
+   The product name + duplicate-group annotation stack vertically in
+   the second column. The URL cell wraps long slugs without breaking
+   the grid track. */
+.uni-hub-test .adm-product-name {
+  display: block;
+  font-family: var(--display);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--uni-ink);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.uni-hub-test .adm-product-group {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--uni-ink-3);
+}
+.uni-hub-test .adm-chain {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.uni-hub-test .adm-url-cell {
+  min-width: 0;
+  overflow: hidden;
+}
+.uni-hub-test .adm-url-cell .seo-slug-link {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* === Master Rules + Ranking Rules cards =========================
+   Card grid used by both /admin/master-rules and /admin/ranking-rules.
+   Sits inside .uni-hub-test so the surface, ink ramp, and dark-mode
+   palette all flow through. Master Rules cards are <a> elements
+   (hoverable, gold border on hover, arrow nudge); Ranking Rules
+   cards are static <article>s with a state badge in the top-right. */
+.uni-hub-test .rules-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.uni-hub-test .rules-card {
+  display: block;
+  background: var(--uni-card-2);
+  border: 1px solid var(--uni-line);
+  border-radius: var(--uni-radius);
+  padding: 22px 24px;
+  color: var(--uni-ink);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+.uni-hub-test a.rules-card:hover {
+  border-color: #ffb936;
+  background: rgba(255, 185, 54, 0.06);
+}
+.uni-hub-test a.rules-card:hover .rules-card-arrow {
+  transform: translateX(3px);
+  color: #ffb936;
+}
+.uni-hub-test .rules-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.uni-hub-test .rules-card-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+}
+.uni-hub-test .rules-card-arrow {
+  font-size: 20px;
+  color: var(--uni-ink-3);
+  transition: transform 0.18s cubic-bezier(0.4, 0.9, 0.3, 1), color 0.18s ease;
+  flex-shrink: 0;
+}
+.uni-hub-test .rules-card-blurb {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test .rules-card-meta {
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+}
+.uni-hub-test .rules-meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.uni-hub-test .rules-meta-row dt {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  letter-spacing: 0;
+}
+.uni-hub-test .rules-meta-row dd {
+  margin: 0;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test .rules-card-source {
+  margin: 12px 0 0;
+  font-size: 11.5px;
+  color: var(--uni-ink-3);
+}
+.uni-hub-test .rules-card-stat {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--uni-tint);
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test .rules-card-stat strong {
+  color: var(--uni-ink);
+  font-weight: 600;
+}
+
+.uni-hub-test .rules-note {
+  background: var(--uni-card);
+  border: 1px solid var(--uni-line);
+  border-radius: var(--uni-radius);
+  padding: 20px 22px;
+}
+.uni-hub-test .rules-note-warn {
+  border-color: rgba(255, 185, 54, 0.45);
+  background: rgba(255, 185, 54, 0.08);
+}
+.uni-hub-test .rules-note-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--uni-ink);
+}
+.uni-hub-test .rules-note-body {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test .rules-code {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--uni-tint);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--uni-ink);
+}
+
 /* === Admin Products === */
 .adm-header { margin-bottom: 20px; }
 .adm-header h1 { font-size: 22px; font-weight: 600; color: var(--ink); }

@@ -23,6 +23,13 @@ interface Props {
   rows: AdminRow[];
 }
 
+// Grid track for the products ranking. Mirrors the column rhythm
+// used by HubTable on the public ranking surfaces so this admin
+// view sits on the same visual rails as /eth, /usdc, the SEO
+// inventory, and Acquisition's recent-visits table.
+const COLS =
+  "44px minmax(220px, 2fr) 1fr 70px 90px 100px 90px minmax(180px, 1.4fr)";
+
 export function AdminProductsTable({ rows }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
@@ -40,77 +47,120 @@ export function AdminProductsTable({ rows }: Props) {
     });
   }, [rows, filter, search]);
 
-  const counts = useMemo(() => ({
-    all: rows.length,
-    indexed: rows.filter((r) => r.indexed).length,
-    noindex: rows.filter((r) => !r.indexed).length,
-  }), [rows]);
+  const counts = useMemo(
+    () => ({
+      all: rows.length,
+      indexed: rows.filter((r) => r.indexed).length,
+      noindex: rows.filter((r) => !r.indexed).length,
+    }),
+    [rows],
+  );
 
   return (
-    <div className="adm-wrap">
-      <div className="adm-toolbar">
-        <select
-          className="adm-select"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as Filter)}
-        >
-          <option value="all">All ({counts.all})</option>
-          <option value="indexed">Indexed ({counts.indexed})</option>
-          <option value="noindex">Noindex ({counts.noindex})</option>
-        </select>
+    <>
+      <div className="hub-filterbar" role="group" aria-label="Filter products">
+        <div className="seo-status-toggle" role="tablist" aria-label="Filter by index status">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === "all"}
+            className={`seo-status-tab${filter === "all" ? " active" : ""}`}
+            onClick={() => setFilter("all")}
+          >
+            All ({counts.all})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === "indexed"}
+            className={`seo-status-tab${filter === "indexed" ? " active" : ""}`}
+            onClick={() => setFilter("indexed")}
+          >
+            Indexed ({counts.indexed})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === "noindex"}
+            className={`seo-status-tab${filter === "noindex" ? " active" : ""}`}
+            onClick={() => setFilter("noindex")}
+          >
+            Noindex ({counts.noindex})
+          </button>
+        </div>
         <input
-          className="adm-input"
-          placeholder="Search name, slug, chain, asset..."
+          type="search"
+          className="seo-filter-input"
+          placeholder="Search name, slug, chain, asset"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search products"
         />
-        <span className="adm-count">{filtered.length} shown</span>
+        <span className="hub-filter-meta">
+          {filtered.length} of {rows.length} products
+        </span>
       </div>
 
-      <table className="adm-table">
-        <thead>
-          <tr>
-            <th>Product name</th>
-            <th>Network</th>
-            <th>Asset</th>
-            <th>24H APY</th>
-            <th>TVL</th>
-            <th>Index</th>
-            <th>URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((r) => (
-            <tr key={r.slug} className={!r.indexed ? "adm-row-no" : ""}>
-              <td>
-                <div className="adm-name">{r.productName}</div>
-                {r.groupSize > 1 && (
-                  <div className="adm-group">duplicate group: {r.groupKey} ({r.groupSize})</div>
-                )}
-              </td>
-              <td>
-                <span className="adm-chain">
-                  <ChainIcon chain={r.chain} size={16} />
-                  <span>{r.chain}</span>
+      <div className="hub-table-wrap">
+        <div className="hub-table" role="table" aria-label="Products">
+          <div className="hub-thead" role="row" style={{ gridTemplateColumns: COLS }}>
+            <span className="hub-th hub-th-rank">#</span>
+            <span className="hub-th">Product</span>
+            <span className="hub-th">Network</span>
+            <span className="hub-th">Asset</span>
+            <span className="hub-th hub-th-right">24h APY</span>
+            <span className="hub-th hub-th-right">TVL</span>
+            <span className="hub-th">Index</span>
+            <span className="hub-th">URL</span>
+          </div>
+          {filtered.length === 0 ? (
+            <div className="hub-empty">No products match those filters.</div>
+          ) : (
+            filtered.map((r, i) => (
+              <div
+                key={r.slug}
+                className="hub-row"
+                role="row"
+                style={{ gridTemplateColumns: COLS }}
+              >
+                <span className="hub-cell hub-rank">{i + 1}</span>
+                <span className="hub-cell">
+                  <span className="adm-product-name">{r.productName}</span>
+                  {r.groupSize > 1 && (
+                    <span className="adm-product-group">
+                      duplicate group: {r.groupKey} ({r.groupSize})
+                    </span>
+                  )}
                 </span>
-              </td>
-              <td>{r.asset}</td>
-              <td className="mono">{formatAPY(r.apy24h)}</td>
-              <td className="mono">{formatTVL(r.tvl)}</td>
-              <td>
-                <span className={`adm-badge ${r.indexed ? "ok" : "no"}`}>
-                  {r.indexed ? "index" : "noindex"}
+                <span className="hub-cell hub-strategy">
+                  <span className="adm-chain">
+                    <ChainIcon chain={r.chain} size={16} />
+                    <span>{r.chain}</span>
+                  </span>
                 </span>
-              </td>
-              <td className="mono adm-url">
-                <a href={`/${r.slug}`} target="_blank" rel="noopener noreferrer">
-                  {SITE_URL.replace(/^https?:\/\//, "")}/{r.slug}
-                </a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                <span className="hub-cell hub-strategy">{r.asset}</span>
+                <span className="hub-cell hub-num hub-th-right">{formatAPY(r.apy24h)}</span>
+                <span className="hub-cell hub-num hub-th-right">{formatTVL(r.tvl)}</span>
+                <span className="hub-cell">
+                  <span className={`seo-index-pill${r.indexed ? " ok" : " no"}`}>
+                    {r.indexed ? "index" : "noindex"}
+                  </span>
+                </span>
+                <span className="hub-cell adm-url-cell">
+                  <a
+                    href={`/${r.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="seo-slug-link mono"
+                  >
+                    {SITE_URL.replace(/^https?:\/\//, "")}/{r.slug}
+                  </a>
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </>
   );
 }
