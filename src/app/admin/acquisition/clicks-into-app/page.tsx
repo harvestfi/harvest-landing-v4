@@ -12,6 +12,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelect } from "@/lib/supabase";
+import {
+  TimeframeSelector,
+  resolveDays,
+  type Timeframe,
+} from "@/components/admin/timeframe-selector";
 
 interface Click {
   id: string;
@@ -29,7 +34,6 @@ interface Click {
 
 const ROWS_FETCH_LIMIT = 1000;
 const ROWS_DISPLAY_LIMIT = 200;
-const CHART_DAYS = 30;
 
 // 8-column track for the clicks table. Mirrors the Traffic page
 // rhythm exactly (150px time anchor + minmax(220px, 2fr) primary
@@ -43,6 +47,7 @@ const TABLE_COLS =
 export default function AppClicksPage() {
   const [clicks, setClicks] = useState<Click[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
 
   useEffect(() => {
     let cancelled = false;
@@ -115,7 +120,11 @@ export default function AppClicksPage() {
 
       {clicks && (
         <>
-          <ChartSection clicks={clicks} days={CHART_DAYS} />
+          <ChartSection
+            clicks={clicks}
+            timeframe={timeframe}
+            onTimeframeChange={setTimeframe}
+          />
           <TableSection clicks={clicks.slice(0, ROWS_DISPLAY_LIMIT)} />
         </>
       )}
@@ -134,7 +143,26 @@ function Stat({ label, value }: { label: string; value: number | undefined }) {
   );
 }
 
-function ChartSection({ clicks, days }: { clicks: Click[]; days: number }) {
+function ChartSection({
+  clicks,
+  timeframe,
+  onTimeframeChange,
+}: {
+  clicks: Click[];
+  timeframe: Timeframe;
+  onTimeframeChange: (tf: Timeframe) => void;
+}) {
+  const oldestMs = useMemo(() => {
+    if (clicks.length === 0) return null;
+    let oldest = Infinity;
+    for (const c of clicks) {
+      const t = new Date(c.created_at).getTime();
+      if (t < oldest) oldest = t;
+    }
+    return Number.isFinite(oldest) ? oldest : null;
+  }, [clicks]);
+  const days = resolveDays(timeframe, oldestMs);
+
   const { bins, max, total, latest, peak } = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
@@ -142,19 +170,21 @@ function ChartSection({ clicks, days }: { clicks: Click[]; days: number }) {
     for (let i = 0; i < days; i++) {
       out.push({ v: 0, daysAgo: days - 1 - i });
     }
+    let inWindow = 0;
     for (const c of clicks) {
       const daysAgo = Math.floor(
         (now - new Date(c.created_at).getTime()) / dayMs,
       );
       if (daysAgo >= 0 && daysAgo < days) {
         out[days - 1 - daysAgo].v++;
+        inWindow++;
       }
     }
     const m = Math.max(1, ...out.map((b) => b.v));
     return {
       bins: out,
       max: m,
-      total: clicks.length,
+      total: inWindow,
       latest: out[out.length - 1]?.v ?? 0,
       peak: m,
     };
@@ -163,11 +193,16 @@ function ChartSection({ clicks, days }: { clicks: Click[]; days: number }) {
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
       <header className="uni-hub-section-head">
-        <h2 className="uni-hub-section-title">App Clicks — last {days} days</h2>
-        <span className="uni-hub-section-meta">
-          today {latest.toLocaleString("en-US")} · peak{" "}
-          {peak.toLocaleString("en-US")}/day
-        </span>
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">
+            App Clicks — last {days} days
+          </h2>
+          <span className="uni-hub-section-meta">
+            today {latest.toLocaleString("en-US")} · peak{" "}
+            {peak.toLocaleString("en-US")}/day
+          </span>
+        </div>
+        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">{total.toLocaleString("en-US")}</div>

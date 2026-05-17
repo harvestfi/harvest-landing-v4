@@ -9,6 +9,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabaseSelect } from "@/lib/supabase";
+import {
+  TimeframeSelector,
+  resolveDays,
+  type Timeframe,
+} from "@/components/admin/timeframe-selector";
 
 interface Visit {
   id: string;
@@ -23,7 +28,6 @@ interface Visit {
 
 const ROWS_FETCH_LIMIT = 1000;
 const ROWS_DISPLAY_LIMIT = 200;
-const CHART_DAYS = 30;
 
 // 7-column track for the visits table. Same shape as the hub-table
 // grid on /eth (6 cols) plus one extra for Session.
@@ -33,6 +37,7 @@ const TABLE_COLS =
 export default function AcquisitionPage() {
   const [visits, setVisits] = useState<Visit[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
 
   useEffect(() => {
     let cancelled = false;
@@ -103,7 +108,11 @@ export default function AcquisitionPage() {
 
       {visits && (
         <>
-          <ChartSection visits={visits} days={CHART_DAYS} />
+          <ChartSection
+            visits={visits}
+            timeframe={timeframe}
+            onTimeframeChange={setTimeframe}
+          />
           <TableSection visits={visits.slice(0, ROWS_DISPLAY_LIMIT)} />
         </>
       )}
@@ -128,7 +137,28 @@ function Stat({ label, value }: { label: string; value: number | undefined }) {
 // rooted at the baseline.
 // ──────────────────────────────────────────────────────────────────
 
-function ChartSection({ visits, days }: { visits: Visit[]; days: number }) {
+function ChartSection({
+  visits,
+  timeframe,
+  onTimeframeChange,
+}: {
+  visits: Visit[];
+  timeframe: Timeframe;
+  onTimeframeChange: (tf: Timeframe) => void;
+}) {
+  // Oldest visit timestamp drives the "All" window. memo'd so we don't
+  // recompute on every render.
+  const oldestMs = useMemo(() => {
+    if (visits.length === 0) return null;
+    let oldest = Infinity;
+    for (const v of visits) {
+      const t = new Date(v.created_at).getTime();
+      if (t < oldest) oldest = t;
+    }
+    return Number.isFinite(oldest) ? oldest : null;
+  }, [visits]);
+  const days = resolveDays(timeframe, oldestMs);
+
   const { bins, max, total, latest, peak } = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
@@ -136,19 +166,21 @@ function ChartSection({ visits, days }: { visits: Visit[]; days: number }) {
     for (let i = 0; i < days; i++) {
       out.push({ v: 0, daysAgo: days - 1 - i });
     }
+    let inWindow = 0;
     for (const v of visits) {
       const daysAgo = Math.floor(
         (now - new Date(v.created_at).getTime()) / dayMs,
       );
       if (daysAgo >= 0 && daysAgo < days) {
         out[days - 1 - daysAgo].v++;
+        inWindow++;
       }
     }
     const m = Math.max(1, ...out.map((b) => b.v));
     return {
       bins: out,
       max: m,
-      total: visits.length,
+      total: inWindow,
       latest: out[out.length - 1]?.v ?? 0,
       peak: m,
     };
@@ -157,11 +189,14 @@ function ChartSection({ visits, days }: { visits: Visit[]; days: number }) {
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
       <header className="uni-hub-section-head">
-        <h2 className="uni-hub-section-title">Visits — last {days} days</h2>
-        <span className="uni-hub-section-meta">
-          today {latest.toLocaleString("en-US")} · peak{" "}
-          {peak.toLocaleString("en-US")}/day
-        </span>
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">Visits — last {days} days</h2>
+          <span className="uni-hub-section-meta">
+            today {latest.toLocaleString("en-US")} · peak{" "}
+            {peak.toLocaleString("en-US")}/day
+          </span>
+        </div>
+        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">

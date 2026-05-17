@@ -11,6 +11,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabaseSelectAll } from "@/lib/supabase";
 import { formatTVL } from "@/lib/format";
+import {
+  TimeframeSelector,
+  resolveDays,
+  type Timeframe,
+} from "@/components/admin/timeframe-selector";
 
 interface WalletConnection {
   id: string;
@@ -21,7 +26,6 @@ interface WalletConnection {
 }
 
 const ROWS_DISPLAY_LIMIT = 200;
-const CHART_DAYS = 30;
 // Daily TVL above this is an outlier - the underlying row contains
 // a corrupt balance reading. Bars cap at this height and paint red.
 const TVL_OUTLIER_CAP = 100_000_000; // $100M
@@ -34,6 +38,7 @@ export default function UserNetworthPage() {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
 
   useEffect(() => {
     let cancelled = false;
@@ -160,7 +165,11 @@ export default function UserNetworthPage() {
 
       {connections && (
         <>
-          <ChartSection connections={connections} days={CHART_DAYS} />
+          <ChartSection
+            connections={connections}
+            timeframe={timeframe}
+            onTimeframeChange={setTimeframe}
+          />
           <NetworthCard stats={stats} totalConnections={connections.length} />
           <TableSection
             connections={connections.slice(0, ROWS_DISPLAY_LIMIT)}
@@ -214,11 +223,24 @@ interface Bin {
 
 function ChartSection({
   connections,
-  days,
+  timeframe,
+  onTimeframeChange,
 }: {
   connections: WalletConnection[];
-  days: number;
+  timeframe: Timeframe;
+  onTimeframeChange: (tf: Timeframe) => void;
 }) {
+  const oldestMs = useMemo(() => {
+    if (connections.length === 0) return null;
+    let oldest = Infinity;
+    for (const c of connections) {
+      const t = new Date(c.connected_at).getTime();
+      if (t < oldest) oldest = t;
+    }
+    return Number.isFinite(oldest) ? oldest : null;
+  }, [connections]);
+  const days = resolveDays(timeframe, oldestMs);
+
   const { bins, max, total, latest, peak, outlierDays } = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
@@ -258,13 +280,16 @@ function ChartSection({
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
       <header className="uni-hub-section-head">
-        <h2 className="uni-hub-section-title">
-          Daily harvest balance — last {days} days
-        </h2>
-        <span className="uni-hub-section-meta">
-          today {formatTVL(latest)} · peak {formatTVL(peak)}/day
-          {outlierDays > 0 ? ` · ${outlierDays} outlier day(s)` : ""}
-        </span>
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">
+            Daily harvest balance — last {days} days
+          </h2>
+          <span className="uni-hub-section-meta">
+            today {formatTVL(latest)} · peak {formatTVL(peak)}/day
+            {outlierDays > 0 ? ` · ${outlierDays} outlier day(s)` : ""}
+          </span>
+        </div>
+        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">{formatTVL(total)}</div>

@@ -903,3 +903,44 @@ body:has(.uni-hub-test) {
 .uni-hub-test .aq-bar-col:hover .aq-bar.aq-bar-outlier {
   filter: brightness(0.92);
 }
+
+/* === Acquisition chart timeframe selector ===========================
+   Top-right pill toggle in every Acquisition chart section header.
+   Same gold-on-onyx active treatment as the sidebar + funnel tabs
+   so the whole admin reads as one visual family. */
+.uni-hub-test .aq-section-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.uni-hub-test .aq-timeframe {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 10px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.uni-hub-test .aq-timeframe-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 5px 12px;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  letter-spacing: 0.04em;
+}
+.uni-hub-test .aq-timeframe-tab:hover { color: var(--uni-ink); }
+.uni-hub-test .aq-timeframe-tab.active {
+  background: #ffb936;
+  color: #191717;
+  font-weight: 600;
+}
