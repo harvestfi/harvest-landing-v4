@@ -20,6 +20,7 @@
 // timestamps from the subgraph.
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabaseSelectAll } from "@/lib/supabase";
 import {
   TimeframeSelector,
@@ -33,6 +34,18 @@ interface WalletRow {
   connected_at: string;
   harvest_balance: number | null;
   balance: number | null;
+}
+
+interface VaultEventRow {
+  tx_hash: string;
+  log_index: number;
+  block_timestamp: string;
+  chain: string;
+  vault_address: string;
+  vault_slug: string | null;
+  event_type: "deposit" | "withdraw" | "transfer";
+  wallet_address: string;
+  amount_shares: string;
 }
 
 interface VisitRow {
@@ -65,6 +78,7 @@ export default function DepositsPage() {
   const [wallets, setWallets] = useState<WalletRow[] | null>(null);
   const [visits, setVisits] = useState<VisitRow[] | null>(null);
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
+  const [events, setEvents] = useState<VaultEventRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
 
@@ -72,7 +86,12 @@ export default function DepositsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const [w, v, c] = await Promise.all([
+        // Last 7 days for the event feed; everything else gets the
+        // full table.
+        const eventCutoff = new Date(
+          Date.now() - 7 * 86_400_000,
+        ).toISOString();
+        const [w, v, c, e] = await Promise.all([
           supabaseSelectAll<WalletRow>(
             "wallet_connections_prod",
             "select=wallet_address,connected_at,harvest_balance,balance&order=connected_at.desc",
@@ -85,11 +104,16 @@ export default function DepositsPage() {
             "outbound_clicks",
             "select=created_at,session_id&order=created_at.desc",
           ),
+          supabaseSelectAll<VaultEventRow>(
+            "vault_events_prod",
+            `select=tx_hash,log_index,block_timestamp,chain,vault_address,vault_slug,event_type,wallet_address,amount_shares&block_timestamp=gte.${eventCutoff}&order=block_timestamp.desc`,
+          ),
         ]);
         if (cancelled) return;
         setWallets(w);
         setVisits(v);
         setClicks(c);
+        setEvents(e);
       } catch (e) {
         if (!cancelled) setErr(String(e));
       }
@@ -205,6 +229,7 @@ export default function DepositsPage() {
             timeframe={timeframe}
           />
           <RecentDepositorsSection wallets={uniqueWallets} />
+          <VaultEventsSection events={events ?? []} />
         </>
       )}
 
@@ -713,6 +738,174 @@ function RecentDepositorsSection({ wallets }: { wallets: WalletRow[] }) {
 function shortenAddress(addr: string): string {
   if (!addr || addr.length < 10) return addr || "—";
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Vault events feed - real onchain Deposit / Withdraw events
+// streamed by scripts/index-vault-events.mjs (GitHub Actions cron,
+// runs every 15 min on main, free public RPCs).
+// ──────────────────────────────────────────────────────────────────
+
+const EVENTS_COLS =
+  "150px minmax(180px, 1.6fr) 100px 110px 130px 120px 70px";
+
+function VaultEventsSection({ events }: { events: VaultEventRow[] }) {
+  // Most recent 200 visible; counts use the full window.
+  const sorted = useMemo(
+    () =>
+      [...events].sort(
+        (a, b) =>
+          new Date(b.block_timestamp).getTime() -
+          new Date(a.block_timestamp).getTime(),
+      ),
+    [events],
+  );
+  const display = sorted.slice(0, 200);
+
+  const counts = useMemo(() => {
+    let deposits = 0;
+    let withdraws = 0;
+    for (const e of events) {
+      if (e.event_type === "deposit") deposits++;
+      else if (e.event_type === "withdraw") withdraws++;
+    }
+    return { deposits, withdraws };
+  }, [events]);
+
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">
+            Onchain deposit + withdraw events, last 7 days
+          </h2>
+          <span className="uni-hub-section-meta">
+            {counts.deposits.toLocaleString("en-US")} deposits ·{" "}
+            {counts.withdraws.toLocaleString("en-US")} withdrawals · indexed
+            every 15 min via GitHub Actions cron
+          </span>
+        </div>
+      </header>
+
+      {display.length === 0 ? (
+        <div className="uni-hub-empty">
+          No events indexed yet. First cron run lands within 15 min of the
+          workflow being enabled; the table fills as new on-chain
+          Deposit / Withdraw events occur on the {TVL.vaults} vaults we
+          track.
+        </div>
+      ) : (
+        <div className="hub-table-wrap aq-recent-wrap">
+          <div className="hub-table aq-clicks-table aq-recent-table">
+            <div
+              className="hub-thead"
+              style={{ gridTemplateColumns: EVENTS_COLS }}
+            >
+              <span className="hub-th">Time</span>
+              <span className="hub-th">Vault</span>
+              <span className="hub-th">Chain</span>
+              <span className="hub-th">Event</span>
+              <span className="hub-th">Wallet</span>
+              <span className="hub-th">Shares</span>
+              <span className="hub-th">Tx</span>
+            </div>
+            {display.map((e) => (
+              <div
+                key={`${e.tx_hash}-${e.log_index}`}
+                className="hub-row"
+                style={{ gridTemplateColumns: EVENTS_COLS }}
+              >
+                <span className="hub-cell aq-cell-time">
+                  {formatTime(e.block_timestamp)}
+                </span>
+                <span className="hub-cell aq-cell-vault">
+                  {e.vault_slug ? (
+                    <Link href={`/${e.vault_slug}`} className="aq-vault-link">
+                      {e.vault_slug}
+                    </Link>
+                  ) : (
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 12 }}>
+                      {shortenAddress(e.vault_address)}
+                    </span>
+                  )}
+                </span>
+                <span className="hub-cell">{e.chain}</span>
+                <span className="hub-cell">
+                  <span
+                    style={{
+                      color:
+                        e.event_type === "deposit"
+                          ? "#15803d"
+                          : e.event_type === "withdraw"
+                            ? "#b91c1c"
+                            : "var(--uni-ink-3)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {e.event_type}
+                  </span>
+                </span>
+                <span className="hub-cell">
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 12 }}>
+                    {shortenAddress(e.wallet_address)}
+                  </span>
+                </span>
+                <span className="hub-cell" title={e.amount_shares}>
+                  {formatShares(e.amount_shares)}
+                </span>
+                <span className="hub-cell">
+                  <a
+                    href={txLink(e.chain, e.tx_hash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="aq-vault-link"
+                  >
+                    view
+                  </a>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function formatShares(raw: string): string {
+  // amount_shares is a uint256 string in the token's smallest units.
+  // Vault tokens almost universally use 18 decimals; until we wire
+  // per-vault decimals we present 18-decimal-divided values for a
+  // sensible at-a-glance read. The full raw value is in the cell
+  // tooltip.
+  try {
+    const n = Number(BigInt(raw)) / 1e18;
+    if (!Number.isFinite(n)) return raw;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(2)}k`;
+    if (n >= 1) return n.toFixed(3);
+    return n.toFixed(5);
+  } catch {
+    return raw;
+  }
+}
+
+function txLink(chain: string, tx: string): string {
+  const base =
+    chain === "Ethereum"
+      ? "https://etherscan.io/tx/"
+      : chain === "Base"
+        ? "https://basescan.org/tx/"
+        : chain === "Polygon"
+          ? "https://polygonscan.com/tx/"
+          : chain === "Arbitrum"
+            ? "https://arbiscan.io/tx/"
+            : chain === "HyperEVM"
+              ? "https://hyperevmscan.io/tx/"
+              : chain === "zkSync"
+                ? "https://explorer.zksync.io/tx/"
+                : "https://etherscan.io/tx/";
+  return base + tx;
 }
 
 function formatTime(iso: string): string {

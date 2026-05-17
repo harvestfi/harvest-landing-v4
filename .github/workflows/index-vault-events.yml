@@ -1,0 +1,39 @@
+name: Index Vault Events
+
+# Polls each chain's vaults for new Transfer events (mint = deposit,
+# burn = withdraw) and upserts into Supabase. Forward-only from a
+# per-vault cursor; first run defaults to "now minus 1000 blocks".
+#
+# Runs every 15 minutes on main. Each chain gets its own matrix job so
+# a slow RPC on one chain doesn't block the others. Free public RPCs
+# only; cost is zero.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chain: [Ethereum, Base, Polygon, Arbitrum, HyperEVM, zkSync]
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Index events for ${{ matrix.chain }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/index-vault-events.mjs --chain="${{ matrix.chain }}"
