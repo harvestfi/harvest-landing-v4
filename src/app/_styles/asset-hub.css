@@ -834,3 +834,61 @@ body:has(.uni-hub-test) {
 .uni-hub-test .aq-muted {
   color: var(--uni-ink-3);
 }
+
+/* === Networth aggregate grid =======================================
+   Three big tiles for the User Networth step: Total in Harvest /
+   Total wallet net worth / Share in Harvest. First tile gets the
+   gold accent (primary headline number). */
+.uni-hub-test .aq-networth-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.uni-hub-test .aq-networth-tile {
+  background: var(--uni-card);
+  border: 1px solid var(--uni-line);
+  border-radius: var(--uni-radius-sm);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.uni-hub-test .aq-networth-tile-primary {
+  background: linear-gradient(180deg, rgba(255, 185, 54, 0.22), var(--uni-card));
+  border-color: rgba(255, 185, 54, 0.5);
+}
+.uni-hub-test .aq-networth-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--uni-ink-3);
+  font-weight: 600;
+}
+.uni-hub-test .aq-networth-value {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+  line-height: 1.1;
+}
+.uni-hub-test .aq-networth-tile-primary .aq-networth-value {
+  color: #6b4400;
+}
+:root[data-theme="dark"] .uni-hub-test .aq-networth-tile-primary .aq-networth-value {
+  color: #ffd98a;
+}
+.uni-hub-test .aq-networth-meta {
+  font-size: 12px;
+  color: var(--uni-ink-3);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 720px) {
+  .uni-hub-test .aq-networth-grid { grid-template-columns: 1fr; }
+  .uni-hub-test .aq-networth-value { font-size: 24px; }
+}
