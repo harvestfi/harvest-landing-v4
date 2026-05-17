@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
 import { formatAPY, formatTVL } from "@/lib/format";
+import { depositRef, apyToMonthly, fmtEarnings } from "@/lib/contextualize";
 import { chainToSlug } from "@/lib/networks";
 import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
@@ -220,12 +221,15 @@ function ClosingBenchmark({
         ? `${above} ${above === 1 ? "strategy" : "strategies"} in the cohort are currently delivering higher APY; ${below} are delivering lower.`
         : `${above} ${above === 1 ? "strategy" : "strategies"} in the cohort are currently delivering higher APY.`;
 
-  // Cohort-average vs vault delta in $/month per $1,000, two
-  // decimals. Mirrors the BenchmarkIntro context but separated
-  // into a tail-sentence here.
+  // Cohort-average vs vault delta in monthly earnings per reference
+  // deposit. For USD-denominated assets the reference is $1,000; for
+  // ETH / BTC it's 1 unit of the underlying (translating to USD here
+  // would require a historical price feed we don't have and would
+  // imply the asset price is flat).
   const direction = vsAvg >= 0 ? "higher" : "lower";
-  const monthlyDelta = Math.abs((1000 * (vault.apy24h - avgApy)) / 100 / 12);
-  const dollarDelta = monthlyDelta.toFixed(2);
+  const ref = depositRef(vault.asset);
+  const monthlyDelta = Math.abs(apyToMonthly(vault.apy24h - avgApy, ref.amount));
+  const deltaPhrase = fmtEarnings(monthlyDelta, vault.asset);
 
   // TVL rank within the same-asset cohort, sorted by TVL desc.
   const tvlSorted = [...sameAsset].sort((a, b) => b.tvl - a.tvl);
@@ -239,9 +243,9 @@ function ClosingBenchmark({
       <strong>
         {Math.abs(vsAvg).toFixed(1)}% {direction}
       </strong>{" "}
-      than the cohort average of {formatAPY(avgApy)}. On a $1,000
-      position, that&apos;s ~${dollarDelta} per month {direction} than
-      the cohort average. {apySummary} It currently holds{" "}
+      than the cohort average of {formatAPY(avgApy)}. On a {ref.label}{" "}
+      position, that&apos;s {deltaPhrase} per month {direction} than the
+      cohort average. {apySummary} It currently holds{" "}
       {formatTVL(vault.tvl)} in TVL, ranking #{tvlRank} of {total} by
       TVL.
     </p>

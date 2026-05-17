@@ -7,6 +7,7 @@
 import type { YieldVault } from "./types";
 import type { FullVaultHistory } from "./history-api";
 import { formatAPY } from "./format";
+import { depositRef, apyToMonthly, fmtEarnings } from "./contextualize";
 
 // USD-pegged tickers. The Yield-trajectory spec collapses the
 // underlying-balance lines to noise for these (sharePrice ratio is
@@ -105,22 +106,29 @@ export function buildYieldTrajectory(
 
   // 30-day lines: only render when the vault has at least 30 days
   // of history (per the spec, skip when the window doesn't apply).
+  // For non-stable assets (ETH/BTC/etc.) we deliberately skip the
+  // $1,000-USD framing: share-price growth is denominated in the
+  // underlying token, so translating to dollars would require a
+  // historical USD/asset price feed we don't have. The
+  // underlying-terms line below carries the same information without
+  // implicitly claiming the asset price hasn't moved.
   if (ageDays >= 30) {
     const target30d = nowTs - 30 * 86400;
     const p30 = closestPoint(sp, target30d);
     if (p30) {
       const ratio30 = spNow / p30.sharePrice;
-      const usdValue = 1000 * ratio30;
-      const usdDelta = usdValue - 1000;
-      const phrase = gainLossPhrase(usdDelta);
-      lines.push(
-        `$1,000 deposited 30 days ago would now be worth ~$${formatUsdInt(
-          usdValue,
-        )}, ${phrase} of ~$${formatUsdInt(Math.abs(usdDelta))} over that period.`,
-      );
-      if (!stable) {
+      if (stable) {
+        const usdValue = 1000 * ratio30;
+        const usdDelta = usdValue - 1000;
+        const phrase = gainLossPhrase(usdDelta);
         lines.push(
-          `In underlying terms, 1 ${ticker} deposited 30 days ago would now be ~${formatUnderlying(
+          `$1,000 deposited 30 days ago would now be worth ~$${formatUsdInt(
+            usdValue,
+          )}, ${phrase} of ~$${formatUsdInt(Math.abs(usdDelta))} over that period.`,
+        );
+      } else {
+        lines.push(
+          `1 ${ticker} deposited 30 days ago would now be ~${formatUnderlying(
             ratio30,
             decimals,
           )} ${ticker}.`,
@@ -130,19 +138,21 @@ export function buildYieldTrajectory(
   }
 
   // Inception lines: render whenever we have at least one earlier
-  // share-price sample (which we do given length >= 2).
+  // share-price sample (which we do given length >= 2). Same
+  // stable/non-stable split as the 30-day lines above.
   const ratioInception = spNow; // sharePriceHistory is normalized to start at 1.0
-  const usdInception = 1000 * ratioInception;
-  const usdInceptionDelta = usdInception - 1000;
-  const inceptionPhrase = gainLossPhrase(usdInceptionDelta);
-  lines.push(
-    `$1,000 deposited at launch (${ageDays} days ago) would now be worth ~$${formatUsdInt(
-      usdInception,
-    )}, ${inceptionPhrase} of ~$${formatUsdInt(Math.abs(usdInceptionDelta))}.`,
-  );
-  if (!stable) {
+  if (stable) {
+    const usdInception = 1000 * ratioInception;
+    const usdInceptionDelta = usdInception - 1000;
+    const inceptionPhrase = gainLossPhrase(usdInceptionDelta);
     lines.push(
-      `In underlying terms, 1 ${ticker} deposited at launch would now be ~${formatUnderlying(
+      `$1,000 deposited at launch (${ageDays} days ago) would now be worth ~$${formatUsdInt(
+        usdInception,
+      )}, ${inceptionPhrase} of ~$${formatUsdInt(Math.abs(usdInceptionDelta))}.`,
+    );
+  } else {
+    lines.push(
+      `1 ${ticker} deposited at launch (${ageDays} days ago) would now be ~${formatUnderlying(
         ratioInception,
         decimals,
       )} ${ticker}.`,
@@ -211,16 +221,21 @@ export function buildPerformanceOverview(
     const lo = Math.min(...trailing);
     const hi = Math.max(...trailing);
     const avg = trailing.reduce((s, v) => s + v, 0) / trailing.length;
-    const earnHigh = (1000 * (hi / 100)) / 12;
-    const earnLow = (1000 * (lo / 100)) / 12;
-    const fmtEarn = (v: number) =>
-      v >= 10 ? Math.round(v).toString() : v.toFixed(2);
+    // Earnings framing depends on the underlying asset:
+    // USD-denominated assets get the $1,000 reference; ETH / BTC get
+    // a 1-unit underlying reference (translating to USD here would
+    // require a price feed we don't have and would imply the asset
+    // price is flat over the comparison window).
+    const ref = depositRef(vault.asset);
+    const earnHigh = apyToMonthly(hi, ref.amount);
+    const earnLow = apyToMonthly(lo, ref.amount);
     lines.push(
       `Over the past 30 days, APY has ranged from ${formatAPY(lo)} to ${formatAPY(hi)}, averaging ${formatAPY(
         avg,
-      )}. At the ${formatAPY(hi)} high, $1,000 would earn ~$${fmtEarn(
+      )}. At the ${formatAPY(hi)} high, ${ref.label} would earn ${fmtEarnings(
         earnHigh,
-      )} per month; at the ${formatAPY(lo)} low, ~$${fmtEarn(earnLow)}.`,
+        vault.asset,
+      )} per month; at the ${formatAPY(lo)} low, ${fmtEarnings(earnLow, vault.asset)}.`,
     );
   }
 
