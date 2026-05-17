@@ -37,6 +37,9 @@ export default function AdminLayout({
             <Link href="/admin/master-rules" className="admin-nav-link">
               Master Rules
             </Link>
+            <Link href="/admin/acquisition" className="admin-nav-link">
+              Acquisition
+            </Link>
             <Link href="/admin/studio" className="admin-nav-link">
               Studio
             </Link>
