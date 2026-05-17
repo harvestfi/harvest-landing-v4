@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf public/_next && next build && rm -rf public && mv out public && npm run check-banned-words",
+    "build": "rm -rf public/_next && node scripts/build-network-tvl.mjs && next build && rm -rf public && mv out public && npm run check-banned-words",
     "check-banned-words": "node scripts/check-banned-words.mjs",
     "start": "next start",
     "lint": "eslint"
