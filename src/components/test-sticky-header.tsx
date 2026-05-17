@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from "react";
 import { AssetIcon } from "./token-icons";
+import { TrackedAppLink } from "./tracked-app-link";
 
 interface Props {
   productName: string;
@@ -16,6 +17,11 @@ interface Props {
   apyLabel: string;
   tvlLabel: string;
   ctaHref: string;
+  // Vault context for tracking the outbound CTA click. Optional so
+  // existing call sites without context still render the bar; click
+  // tracking only fires when these are present.
+  vaultSlug?: string;
+  vaultAddress?: string;
 }
 
 // Full set of section anchors mirroring the jump-nav. The CSS hides
@@ -35,6 +41,8 @@ export function TestStickyHeader({
   apyLabel,
   tvlLabel,
   ctaHref,
+  vaultSlug,
+  vaultAddress,
 }: Props) {
   const [show, setShow] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -134,15 +142,16 @@ export function TestStickyHeader({
             );
           })}
         </nav>
-        <a
+        <TrackedAppLink
           href={ctaHref}
-          target="_blank"
-          rel="noopener noreferrer"
+          cta="sticky-view"
+          vaultSlug={vaultSlug}
+          vaultAddress={vaultAddress}
           className="uni-sticky-cta"
         >
           View<span className="uni-sticky-cta-strategy"> Strategy</span>
           <span aria-hidden="true">↗</span>
-        </a>
+        </TrackedAppLink>
       </div>
     </div>
   );

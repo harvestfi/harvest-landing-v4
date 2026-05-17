@@ -18,11 +18,11 @@ export default function AcquisitionLayout({
 }) {
   return (
     <div className="uni-hub-test">
-      <header className="uni-hub-hero aq-hero-slim">
+      <header className="uni-hub-hero aq-hero-slim aq-hero-fullwidth">
         <div className="uni-hub-hero-headline">
-          <div>
+          <div style={{ width: "100%" }}>
             <h1 className="uni-hub-h1">Acquisition</h1>
-            <p className="uni-hub-sub">
+            <p className="uni-hub-sub aq-sub-full">
               Command centre for the visitor-to-depositor funnel. Each step
               below tracks one stage of how anonymous traffic on the index
               site converts into actual TVL in the Harvest app.

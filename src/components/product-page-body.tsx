@@ -14,6 +14,7 @@ import type { FullVaultHistory } from "@/lib/history-api";
 import { productPageCrumbs } from "@/lib/seo";
 import { SITE_URL } from "@/lib/constants";
 import { harvestAppUrl } from "@/lib/harvest-app";
+import { TrackedAppLink } from "@/components/tracked-app-link";
 import { buildAutopilotAbout } from "@/lib/autopilot-about";
 import { buildAutocompounderAbout } from "@/lib/autocompounder-about";
 import { buildLpPairAbout } from "@/lib/lp-pair-about";
@@ -226,6 +227,8 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         apyLabel={formatAPY(vault.apy24h)}
         tvlLabel={formatTVL(vault.tvl)}
         ctaHref={harvestAppUrl(vault.chain, vault.contractAddress)}
+        vaultSlug={vault.slug}
+        vaultAddress={vault.contractAddress}
       />
 
       {/* Breadcrumb: home icon -> {Ticker} Ranking -> {product name} */}
@@ -339,10 +342,11 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         </div>
 
         <aside className="uni-detail-side">
-          <a
+          <TrackedAppLink
             href={harvestAppUrl(vault.chain, vault.contractAddress)}
-            target="_blank"
-            rel="noopener noreferrer"
+            cta="sidebar-view-strategy"
+            vaultSlug={vault.slug}
+            vaultAddress={vault.contractAddress}
             className="uni-cta"
           >
             View Strategy
@@ -361,7 +365,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
               <path d="M7 17 17 7" />
               <path d="M8 7h9v9" />
             </svg>
-          </a>
+          </TrackedAppLink>
 
           <div className="uni-side-card">
             <div className="uni-side-headline-block">
@@ -657,16 +661,17 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
               <span className="uni-side-link-arrow">↗</span>
             </a>
           )}
-          <a
+          <TrackedAppLink
             href={harvestAppUrl(vault.chain, vault.contractAddress)}
-            target="_blank"
-            rel="noopener noreferrer"
+            cta="bottom-open-in-app"
+            vaultSlug={vault.slug}
+            vaultAddress={vault.contractAddress}
             className="uni-side-link"
           >
             <span className="uni-side-link-dot" />
             Open in Harvest app
             <span className="uni-side-link-arrow">↗</span>
-          </a>
+          </TrackedAppLink>
         </div>
       </section>
 

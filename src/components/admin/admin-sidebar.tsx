@@ -26,7 +26,7 @@ interface Section {
 
 const SECTIONS: Section[] = [
   {
-    label: "User Journey",
+    label: "Acquisition",
     items: [
       { label: "Traffic", href: "/admin/acquisition", exact: true },
       { label: "App Clicks", href: "/admin/acquisition/clicks-into-app" },

@@ -645,6 +645,13 @@ body:has(.uni-hub-test) {
   padding-bottom: 18px;
   margin-bottom: 18px;
 }
+/* Full-width hero variant for the Acquisition section. Disables the
+   two-column hero grid so the headline + sub stretch the full width
+   and drops the 60ch cap on the sub so the description uses the
+   available horizontal room rather than wrapping at half-width. */
+.uni-hub-test .aq-hero-fullwidth { display: block; }
+.uni-hub-test .aq-hero-fullwidth .uni-hub-hero-headline { width: 100%; }
+.uni-hub-test .aq-sub-full { max-width: none; }
 .uni-hub-test .aq-funnel {
   display: flex;
   align-items: center;
@@ -731,7 +738,8 @@ body:has(.uni-hub-test) {
   font-size: 14.5px;
   color: var(--uni-ink-2);
   line-height: 1.55;
-  max-width: 70ch;
+  /* Full content width - saves vertical space across the funnel. */
+  max-width: none;
 }
 .uni-hub-test .aq-step-sub code {
   font-family: var(--mono);
