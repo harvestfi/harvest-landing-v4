@@ -425,6 +425,37 @@ body:has(.uni-home-test) {
     line-height: 1.5;
     max-width: 38ch;
   }
+  /* Mobile: lay the two CTAs as equal-width siblings on one line
+     so the hero stays short. Primary loses the "top" qualifier
+     (hidden via the .uni-home-cta-extra span) so the labels fit on
+     the same row at the same length. Heights are locked via fixed
+     line-height + padding so the gold and ink buttons read as a
+     single visual pair. */
+  .uni-home-test .uni-home-hero-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    width: 100%;
+    justify-content: stretch;
+  }
+  .uni-home-test .uni-home-cta-primary,
+  .uni-home-test .uni-home-cta-secondary {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    line-height: 1.2;
+    gap: 6px;
+    border-width: 1.5px;
+    border-style: solid;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+  .uni-home-test .uni-home-cta-primary {
+    border-color: var(--uni-ink);
+  }
+  .uni-home-test .uni-home-cta-extra { display: none; }
 }
 
 .uni-home-test .uni-home-hero-stats {

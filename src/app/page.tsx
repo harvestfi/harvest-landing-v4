@@ -78,7 +78,7 @@ export default async function HomePage() {
 
           <div className="uni-home-hero-actions">
             <a href="#yields" className="uni-home-cta-primary">
-              Browse top yields
+              Browse <span className="uni-home-cta-extra">top </span>yields
               <span aria-hidden="true">↓</span>
             </a>
             <a

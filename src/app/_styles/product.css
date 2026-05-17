@@ -2219,8 +2219,27 @@ body:has(.uni-shell) {
   .uni-shell .uni-pill-btn { padding: 5px 11px; font-size: 12px; }
   .uni-shell .uni-tab-btn { padding: 3px 8px; font-size: 10.5px; }
 
-  /* Side card and other cards: trim padding for narrow phones. */
-  .uni-shell .uni-side-card { padding: 18px 20px; }
+  /* Side card and other cards: trim padding for narrow phones.
+     Mobile only: keep the 24h APY headline full-width on top, then
+     pack Holders / TVL / 30d avg APY / Tracked for into a 2x2 grid
+     so the four stats fit in two rows instead of four. The
+     headline-block and divider span the full width via grid-column;
+     the stats are auto-placed into two columns underneath. */
+  .uni-shell .uni-side-card {
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 18px;
+  }
+  .uni-shell .uni-side-card .uni-side-headline-block,
+  .uni-shell .uni-side-card .uni-side-card-divider {
+    grid-column: 1 / -1;
+  }
+  .uni-shell .uni-side-card .uni-side-stat { padding: 8px 0; }
+  .uni-shell .uni-side-card > div:nth-child(3),
+  .uni-shell .uni-side-card > div:nth-child(4) { padding-top: 0; }
+  .uni-shell .uni-side-card > div:nth-child(5),
+  .uni-shell .uni-side-card > div:nth-child(6) { padding-bottom: 0; }
   .uni-shell .uni-side-headline { font-size: 26px; }
   .uni-shell .uni-side-value { font-size: 18px; }
   .uni-shell .uni-soft-card { padding: 20px 18px; }

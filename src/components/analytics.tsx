@@ -57,6 +57,7 @@ export function Analytics() {
   // internal - showing a consent banner there is misleading since
   // those pages aren't tracked anyway).
   if (!mounted) return null;
+  if (pathname?.startsWith("/admin")) return null;
   if (consent === "accepted" || consent === "declined") return null;
   if (pathname?.startsWith("/admin")) return null;
   return <CookieBanner onAccept={accept} onDecline={decline} />;
@@ -123,9 +124,12 @@ function CookieBanner({
   return (
     <div className="cookie-banner" role="dialog" aria-label="Analytics consent">
       <p className="cookie-banner-text">
-        We track anonymous page visits (page, source, country, device) to
-        understand how the index gets used. No third-party cookies, no
-        cross-site trackers, no personal data.
+        <span className="cookie-banner-text-lede">
+          We track anonymous page visits to understand how the index gets used.
+        </span>
+        <span className="cookie-banner-text-detail">
+          {" "}No third-party cookies, no cross-site trackers, no personal data.
+        </span>
       </p>
       <div className="cookie-banner-actions">
         <button

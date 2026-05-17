@@ -5506,6 +5506,8 @@ body:has(.methodology-page) {
   line-height: 1.5;
   color: var(--ink-2);
 }
+.cookie-banner-text-lede,
+.cookie-banner-text-detail { display: inline; }
 .cookie-banner-actions { display: flex; gap: 10px; align-items: center; }
 .cookie-banner-decline {
   background: transparent;
@@ -5556,12 +5558,27 @@ body:has(.methodology-page) {
 
 @media (max-width: 480px) {
   .cookie-banner {
-    flex-direction: column;
-    align-items: stretch;
     bottom: 12px;
     left: 12px;
     right: 12px;
-    padding: 14px 16px;
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 12px;
+    border-top-width: 2px;
+    font-size: 12px;
   }
-  .cookie-banner-actions { justify-content: flex-end; }
+  .cookie-banner-text { line-height: 1.4; flex-basis: 160px; }
+  /* Hide the secondary "no third-party cookies" sentence on phones;
+     the lede already conveys the ask, and we want the banner to
+     stay short so it doesn't swallow half the viewport. */
+  .cookie-banner-text-detail { display: none; }
+  .cookie-banner-actions { gap: 6px; }
+  .cookie-banner-decline {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .cookie-banner-accept {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
 }
