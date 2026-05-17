@@ -2773,77 +2773,152 @@ button { font-family: inherit; cursor: pointer; }
    (bg-gray-50, border-gray-200, text-gray-500, etc.) are remapped
    to brand tokens via .admin-shell scope so the existing markup
    doesn't need to be rewritten class-for-class. */
+/* === Admin shell — sidebar layout ===================================
+   Admin pages are an internal operator surface; they hide the public
+   topnav (Harvest logo + USDC/USDT/ETH/BTC links + search + theme
+   toggle) and the public footer, and run on a sidebar pattern with
+   a 240px fixed left rail + flex-1 content column. */
 body:has(.admin-shell) {
   background: #ffffff !important;
 }
+body:has(.admin-shell) .topnav,
+body:has(.admin-shell) .foot {
+  display: none !important;
+}
+
 .admin-shell {
+  display: flex;
   min-height: 100vh;
   background: #ffffff;
   font-family: var(--sans);
   color: var(--ink);
 }
-.admin-nav {
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+
+/* Sidebar: fixed-width left rail. Sticky so it stays visible while
+   the right column scrolls. Hairline right border separates the two
+   columns. */
+.admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
   position: sticky;
   top: 0;
-  z-index: 30;
-  backdrop-filter: blur(6px);
-}
-.admin-nav-inner {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 0 var(--shell-pad);
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px 14px;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
   display: flex;
-  align-items: center;
-  gap: 28px;
-  height: 56px;
+  flex-direction: column;
+  gap: 6px;
 }
-.admin-brand {
+.admin-sidebar-brand {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 6px 8px 18px;
   text-decoration: none;
+  color: inherit;
 }
-.admin-brand-tag {
-  margin-left: 8px;
+.admin-sidebar-tag {
+  margin-left: 6px;
   padding: 2px 8px;
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: 999px;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-3);
   font-weight: 600;
 }
-.admin-nav-links {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 18px;
+
+.admin-sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
-.admin-nav-link {
-  padding: 6px 12px;
-  font-size: 13px;
+.admin-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.admin-sidebar-section-label {
+  margin: 0 8px 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.admin-sidebar-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.admin-sidebar-link {
+  display: block;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--ink-2);
-  border-radius: 6px;
   text-decoration: none;
   transition: color 0.12s ease, background-color 0.12s ease;
+  border-left: 2px solid transparent;
 }
-.admin-nav-link:hover {
+.admin-sidebar-link:hover {
   color: var(--ink);
-  background: var(--bg-2);
+  background: rgba(255, 185, 54, 0.06);
 }
-.admin-nav-back {
-  margin-left: auto;
+.admin-sidebar-link.active {
+  color: var(--ink);
+  background: rgba(255, 185, 54, 0.14);
+  border-left-color: #ffb936;
+  font-weight: 600;
+}
+
+.admin-sidebar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  margin-top: 12px;
   font-size: 12.5px;
+  font-weight: 500;
   color: var(--ink-3);
   text-decoration: none;
+  border-top: 1px solid var(--line);
+  transition: color 0.12s ease;
 }
-.admin-nav-back:hover { color: #ffb936; }
+.admin-sidebar-back:hover { color: #ffb936; }
+
+.admin-content {
+  flex: 1;
+  min-width: 0;
+  background: #ffffff;
+}
+
+/* Mobile: stack the sidebar above the content. Sidebar collapses
+   to a horizontal scrollable rail; full vertical scroll behaviour
+   stays sane. */
+@media (max-width: 900px) {
+  .admin-shell { flex-direction: column; }
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 14px;
+  }
+  .admin-sidebar-nav { gap: 14px; }
+}
 
 /* Tailwind colour utilities used in /admin/ranking-rules and
    /admin/changelog get a brand re-skin so those sub-pages don't look

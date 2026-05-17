@@ -53,9 +53,12 @@ export function Analytics() {
   };
 
   // Don't render the banner during SSR hydration mismatch window,
-  // and don't render it once a choice has been made.
+  // once a choice has been made, or on operator pages (admin is
+  // internal - showing a consent banner there is misleading since
+  // those pages aren't tracked anyway).
   if (!mounted) return null;
   if (consent === "accepted" || consent === "declined") return null;
+  if (pathname?.startsWith("/admin")) return null;
   return <CookieBanner onAccept={accept} onDecline={decline} />;
 }
 
