@@ -306,9 +306,17 @@ P3: Live since {INCEPTION_DATE}. Currently indexed at {TVL} TVL[ across
     higher APY."
 
 Line 02 (30d APY range + monthly earnings, render if trailing.length >= 2):
+  ref = depositRef(vault.asset)
+    stable assets (USDC/USDT/DAI/...): { amount: 1000, label: "$1,000" }
+    non-stable (ETH/BTC):              { amount: 1,    label: "1 ETH" / "1 BTC" }
+  earnHigh = apyToMonthly(hi, ref.amount)
+  earnLow  = apyToMonthly(lo, ref.amount)
   "Over the past 30 days, APY has ranged from {LO} to {HI}, averaging {AVG}.
-   At the {HI} high, $1,000 would earn ~\${EARN_HIGH} per month; at the {LO}
-   low, ~\${EARN_LOW}."
+   At the {HI} high, {ref.label} would earn {fmtEarnings(earnHigh, asset)}
+   per month; at the {LO} low, {fmtEarnings(earnLow, asset)}."
+  Translates to "$1,000 would earn ~$15" for stable, "1 ETH would earn
+  ~0.05 ETH" for non-stable. Never assume flat asset price for non-stable
+  vaults - the USD conversion would require a price feed we don't have.
 
 Line 03 (current vs lifetime avg, render if lifetime.length >= 5):
   "Current APY of {APY} is below|above|roughly in line with this vault's
@@ -353,11 +361,19 @@ Separator row: collapsed single-cell <span class="bt-row-sep-glyph">…</span>
         <h3 className="mt-6 mb-2 text-sm font-semibold uppercase tracking-wide text-gray-700">
           Closing summary template
         </h3>
-        <CodeBlock>{`"Among the {N} {ASSET} strategies we currently monitor, this product ranks
+        <CodeBlock>{`ref = depositRef(vault.asset)
+monthlyDelta = |apyToMonthly(vault.apy24h - avgApy, ref.amount)|
+deltaPhrase  = fmtEarnings(monthlyDelta, vault.asset)
+
+"Among the {N} {ASSET} strategies we currently monitor, this product ranks
  #{R}. Its {APY} yield runs {ABS_DELTA}% {higher|lower} than the cohort
- average of {AVG}. On a $1,000 position, that's ~$ {DOLLAR_DELTA} per month
+ average of {AVG}. On a {ref.label} position, that's {deltaPhrase} per month
  {higher|lower} than the cohort average. {APY_SUMMARY_PHRASE} It currently
  holds {TVL} in TVL, ranking #{TVL_RANK} of {N} by TVL."
+
+Stable: "On a $1,000 position, that's ~$15 per month higher..."
+Non-stable: "On a 1 ETH position, that's ~0.05 ETH per month higher..."
+Never translate non-stable yield to USD here.
 
 APY_SUMMARY_PHRASE (three variants by rank/total ratio):
   <= 0.25  → "This product sits in the top quarter of the cohort by APY."
@@ -411,17 +427,27 @@ no-op fact and "competes against" is blacklisted phrasing.`}</CodeBlock>
 ageDays = (sp[last].timestamp - sp[0].timestamp) / 86400 (this is
   tracked_days, not on-chain inception age).
 
+stable = isStable(vault.asset.toUpperCase())   ← USDC/USDT/DAI/PYUSD/etc.
+
 If ageDays >= 30:
-  Line A: "$1,000 deposited 30 days ago would now be worth ~\${USD30}, a
-           {gain|loss} of ~\${ABS_DELTA} over that period."
-  Line B (non-stable only): "In underlying terms, 1 {TICKER} deposited 30
-           days ago would now be ~{RATIO} {TICKER}."
+  stable:
+    "$1,000 deposited 30 days ago would now be worth ~\${USD30}, a
+     {gain|loss} of ~\${ABS_DELTA} over that period."
+  non-stable (single line, no USD line):
+    "1 {TICKER} deposited 30 days ago would now be ~{RATIO} {TICKER}."
 
 Always (ageDays >= 1):
-  Line C: "$1,000 deposited at launch ({ageDays} days ago) would now be
-           worth ~\${USD_INC}, a {gain|loss} of ~\${ABS_INC_DELTA}."
-  Line D (non-stable only): "In underlying terms, 1 {TICKER} deposited at
-           launch would now be ~{RATIO_INC} {TICKER}."`}</CodeBlock>
+  stable:
+    "$1,000 deposited at launch ({ageDays} days ago) would now be worth
+     ~\${USD_INC}, a {gain|loss} of ~\${ABS_INC_DELTA}."
+  non-stable (single line, no USD line):
+    "1 {TICKER} deposited at launch ({ageDays} days ago) would now be
+     ~{RATIO_INC} {TICKER}."
+
+NEVER emit a "\$1,000 deposited" line for non-stable assets. Translating
+share-price growth in {TICKER} to USD requires a historical price feed
+we don't have; the underlying-units line carries the same information
+truthfully.`}</CodeBlock>
         <SourceLink path="src/lib/autopilot-sections.ts" symbol="buildYieldTrajectory" />
       </Section>
 

@@ -348,9 +348,17 @@ P3: Live since {INCEPTION_DATE}. Currently indexed at {TVL} TVL[ across
                  higher APY."
 
 Line 02 (30d APY range + monthly earnings, render if trailing.length >= 2):
-  "Over the past 30 days, APY has ranged from {LO} to {HI}, averaging
-   {AVG}. At the {HI} high, $1,000 would earn ~\${EARN_HIGH} per month;
-   at the {LO} low, ~\${EARN_LOW}."
+  ref = depositRef(vault.asset)
+    stable assets (USDC/USDT/DAI/...): { amount: 1000, label: "$1,000" }
+    non-stable (ETH/BTC):              { amount: 1,    label: "1 ETH" / "1 BTC" }
+  earnHigh = apyToMonthly(hi, ref.amount)
+  earnLow  = apyToMonthly(lo, ref.amount)
+  "Over the past 30 days, APY has ranged from {LO} to {HI}, averaging {AVG}.
+   At the {HI} high, {ref.label} would earn {fmtEarnings(earnHigh, asset)}
+   per month; at the {LO} low, {fmtEarnings(earnLow, asset)}."
+  Stable: "...$1,000 would earn ~$15..."
+  Non-stable: "...1 ETH would earn ~0.05 ETH..." (no USD conversion -
+  asset price feed not available).
 
 Line 03 (current vs lifetime avg, render if lifetime.length >= 5):
   "Current APY of {APY} is {below|above|roughly in line with} this vault's
@@ -373,11 +381,18 @@ Line 04 (TVL 30d change, render if tvlSorted >= 2 and past >= 7d old):
     with "..." separator rows inserted only when gaps > 1.
 
 Closing summary:
+  ref = depositRef(vault.asset)
+  monthlyDelta = |apyToMonthly(vault.apy24h - avgApy, ref.amount)|
+  deltaPhrase  = fmtEarnings(monthlyDelta, vault.asset)
+
   "Among the {N} {ASSET} strategies we currently monitor, this product
    ranks #{R}. Its {APY} yield runs {ABS_DELTA}% {higher|lower} than the
-   cohort average of {AVG}. On a $1,000 position, that's ~$ {DOLLAR_DELTA}
+   cohort average of {AVG}. On a {ref.label} position, that's {deltaPhrase}
    per month {higher|lower} than the cohort average. {APY_SUMMARY_PHRASE}
-   It currently holds {TVL} in TVL, ranking #{TVL_RANK} of {N} by TVL."`}</CodeBlock>
+   It currently holds {TVL} in TVL, ranking #{TVL_RANK} of {N} by TVL."
+
+Stable: "On a $1,000 position, that's ~$15 per month higher..."
+Non-stable: "On a 1 ETH position, that's ~0.05 ETH per month higher..."`}</CodeBlock>
         <SourceLink path="src/components/market-sections.tsx" symbol="MarketBenchmark" />
       </Section>
 
@@ -410,16 +425,25 @@ NO trailing "operated by X and competes against..." sentence.`}</CodeBlock>
         </p>
         <CodeBlock>{`Render: sharePriceHistory.length >= 2.
 ageDays = (sp[last].ts - sp[0].ts) / 86400 (tracked_days, not on-chain age)
+stable = isStable(vault.asset.toUpperCase())   ← USDC/USDT/DAI/PYUSD/etc.
 
 If ageDays >= 30:
-  "$1,000 deposited 30 days ago would now be worth ~\${USD30}..."
-  Non-stable only: "In underlying terms, 1 {TICKER} deposited 30 days
-   ago would now be ~{RATIO} {TICKER}."
+  stable:
+    "$1,000 deposited 30 days ago would now be worth ~\${USD30}..."
+  non-stable (single line, no USD line):
+    "1 {TICKER} deposited 30 days ago would now be ~{RATIO} {TICKER}."
 
 Always:
-  "$1,000 deposited at launch ({ageDays} days ago) would now be worth
-   ~\${USD_INC}..."
-  Non-stable only: "In underlying terms, 1 {TICKER} deposited at launch..."`}</CodeBlock>
+  stable:
+    "$1,000 deposited at launch ({ageDays} days ago) would now be worth
+     ~\${USD_INC}..."
+  non-stable (single line, no USD line):
+    "1 {TICKER} deposited at launch ({ageDays} days ago) would now be
+     ~{RATIO_INC} {TICKER}."
+
+NEVER emit a "\$1,000 deposited" line for non-stable assets - translating
+{TICKER}-denominated share-price growth to USD requires a historical price
+feed we don't have.`}</CodeBlock>
         <SourceLink path="src/lib/autopilot-sections.ts" symbol="buildYieldTrajectory" />
       </Section>
 
