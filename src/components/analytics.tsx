@@ -59,7 +59,6 @@ export function Analytics() {
   if (!mounted) return null;
   if (pathname?.startsWith("/admin")) return null;
   if (consent === "accepted" || consent === "declined") return null;
-  if (pathname?.startsWith("/admin")) return null;
   return <CookieBanner onAccept={accept} onDecline={decline} />;
 }
 
