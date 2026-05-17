@@ -1,15 +1,23 @@
 "use client";
 
 // Acquisition funnel - step 04: Deposits (TVL).
-// Network-wide Harvest TVL aggregated from per-vault history. The
-// daily series is precomputed at build time by
-// scripts/build-network-tvl.mjs into src/data/network-tvl-daily.json
-// so the client doesn't have to parse the 300 KB raw history.json.
+// Network-wide Harvest TVL aggregated from per-vault history, paired
+// with a daily new-wallets chart and a cohort funnel that walks
+// visits -> clicks -> new wallet connects -> depositors for the
+// selected timeframe.
 //
-// V1 scope: total TVL chart + summary tiles. Cohort attribution
-// (visits -> clicks -> connects -> depositors) is the next pass and
-// will sit below the chart once wallet_session_links is populated
-// on the app side.
+// Data sources:
+//  - Network TVL: precomputed at build time by
+//    scripts/build-network-tvl.mjs into src/data/network-tvl-daily.json
+//  - Wallet connects: wallet_connections_prod (Supabase)
+//  - Visits / clicks: frontpage_visits and outbound_clicks (Supabase),
+//    used for the cohort funnel.
+//
+// Depositor proxy: a wallet is treated as a "depositor" if its
+// harvest_balance is currently > 0 (and below the outlier cap). This
+// is a snapshot, not a first-deposit-date - good enough for the
+// conversion-rate cohort framing until we wire onchain Deposit-event
+// timestamps from the subgraph.
 
 import { useEffect, useMemo, useState } from "react";
 import { supabaseSelectAll } from "@/lib/supabase";
@@ -22,7 +30,18 @@ import networkTvl from "@/data/network-tvl-daily.json";
 
 interface WalletRow {
   wallet_address: string;
+  connected_at: string;
   harvest_balance: number | null;
+}
+
+interface VisitRow {
+  created_at: string;
+  session_id: string;
+}
+
+interface ClickRow {
+  created_at: string;
+  session_id: string;
 }
 
 interface DailyTvlPoint {
@@ -38,29 +57,40 @@ interface NetworkTvlFile {
 }
 
 const TVL: NetworkTvlFile = networkTvl as NetworkTvlFile;
-
-// Cap a single vault's reported balance at this number when rolling
-// up the wallet snapshot - mirrors the outlier cap on the User
-// Networth page so corrupted Debank readings don't dominate the
-// tiles here either.
 const WALLET_OUTLIER_CAP = 100_000_000;
+const DAY_MS = 86_400_000;
 
 export default function DepositsPage() {
   const [wallets, setWallets] = useState<WalletRow[] | null>(null);
-  const [walletErr, setWalletErr] = useState<string | null>(null);
+  const [visits, setVisits] = useState<VisitRow[] | null>(null);
+  const [clicks, setClicks] = useState<ClickRow[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await supabaseSelectAll<WalletRow>(
-          "wallet_connections_prod",
-          "select=wallet_address,harvest_balance",
-        );
-        if (!cancelled) setWallets(data);
+        const [w, v, c] = await Promise.all([
+          supabaseSelectAll<WalletRow>(
+            "wallet_connections_prod",
+            "select=wallet_address,connected_at,harvest_balance&order=connected_at.desc",
+          ),
+          supabaseSelectAll<VisitRow>(
+            "frontpage_visits",
+            "select=created_at,session_id&order=created_at.desc",
+          ),
+          supabaseSelectAll<ClickRow>(
+            "outbound_clicks",
+            "select=created_at,session_id&order=created_at.desc",
+          ),
+        ]);
+        if (cancelled) return;
+        setWallets(w);
+        setVisits(v);
+        setClicks(c);
       } catch (e) {
-        if (!cancelled) setWalletErr(String(e));
+        if (!cancelled) setErr(String(e));
       }
     })();
     return () => {
@@ -68,11 +98,28 @@ export default function DepositsPage() {
     };
   }, []);
 
-  const walletStats = useMemo(() => {
+  // Earliest-connect per wallet, deduped, capped at the outlier
+  // threshold. Used by both the daily new-wallets chart and the
+  // funnel "new connects" count.
+  const uniqueWallets = useMemo(() => {
     if (!wallets) return null;
+    const earliest = new Map<string, WalletRow>();
+    for (const w of wallets) {
+      const addr = (w.wallet_address || "").toLowerCase();
+      if (!addr) continue;
+      const prev = earliest.get(addr);
+      if (!prev || w.connected_at < prev.connected_at) {
+        earliest.set(addr, w);
+      }
+    }
+    return [...earliest.values()];
+  }, [wallets]);
+
+  const walletStats = useMemo(() => {
+    if (!uniqueWallets) return null;
     let activeDepositors = 0;
     let trackedBalance = 0;
-    for (const w of wallets) {
+    for (const w of uniqueWallets) {
       const b = typeof w.harvest_balance === "number" ? w.harvest_balance : 0;
       if (b > 0 && b < WALLET_OUTLIER_CAP) {
         activeDepositors++;
@@ -80,7 +127,7 @@ export default function DepositsPage() {
       }
     }
     return { activeDepositors, trackedBalance };
-  }, [wallets]);
+  }, [uniqueWallets]);
 
   const latestTvl = TVL.series[TVL.series.length - 1]?.tvl ?? 0;
   const avgPosition =
@@ -88,15 +135,17 @@ export default function DepositsPage() {
       ? walletStats.trackedBalance / walletStats.activeDepositors
       : null;
 
+  const loading = wallets === null || visits === null || clicks === null;
+
   return (
     <>
       <section className="aq-step-header">
         <h2 className="aq-step-title">Deposits (TVL)</h2>
         <p className="aq-step-sub">
           Network-wide Harvest TVL aggregated across the {TVL.vaults} vaults
-          we index. The terminal step of the funnel: anonymous visit
-          converted into a real onchain position. Cohort attribution
-          (visits to depositors) lands in the next pass.
+          we index, with a cohort funnel that follows visits through to
+          first-deposit. The terminal step: anonymous visit converted into
+          a real onchain position.
         </p>
       </section>
 
@@ -130,16 +179,36 @@ export default function DepositsPage() {
         />
       </div>
 
-      {walletErr && (
+      {err && (
         <div className="uni-hub-empty" style={{ color: "#b91c1c" }}>
-          Could not load wallet snapshot: {walletErr}
+          Could not load Supabase tables: {err}
         </div>
       )}
 
-      <ChartSection
+      <TvlChartSection
         timeframe={timeframe}
         onTimeframeChange={setTimeframe}
       />
+
+      {!loading && uniqueWallets && (
+        <>
+          <NewWalletsChartSection
+            wallets={uniqueWallets}
+            timeframe={timeframe}
+            onTimeframeChange={setTimeframe}
+          />
+          <FunnelSection
+            visits={visits!}
+            clicks={clicks!}
+            wallets={uniqueWallets}
+            timeframe={timeframe}
+          />
+        </>
+      )}
+
+      {loading && !err && (
+        <div className="uni-hub-empty">Loading cohort data…</div>
+      )}
     </>
   );
 }
@@ -153,7 +222,11 @@ function Stat({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-function ChartSection({
+// ──────────────────────────────────────────────────────────────────
+// TVL chart - network-wide, sourced from the precomputed daily JSON.
+// ──────────────────────────────────────────────────────────────────
+
+function TvlChartSection({
   timeframe,
   onTimeframeChange,
 }: {
@@ -168,16 +241,18 @@ function ChartSection({
   const days = resolveDays(timeframe, oldestMs);
 
   const { bins, max, latest, peak } = useMemo(() => {
-    // The precomputed series ends on the build day. Walk backwards
-    // from the last entry so "today" lines up with the freshest bar.
     const tail = TVL.series.slice(-days);
     const out = tail.map((p) => ({ date: p.date, tvl: p.tvl }));
     const m = Math.max(1, ...out.map((b) => b.tvl));
+    const peakBin = out.reduce(
+      (best, b) => (b.tvl > best.tvl ? b : best),
+      out[0] ?? { date: "", tvl: 0 },
+    );
     return {
       bins: out,
       max: m,
       latest: out[out.length - 1]?.tvl ?? 0,
-      peak: m,
+      peak: peakBin.tvl,
     };
   }, [days]);
 
@@ -199,7 +274,6 @@ function ChartSection({
         <div className="aq-chart-bignum-label">
           current Harvest TVL across {TVL.vaults} indexed vaults
         </div>
-
         <div className="aq-chart">
           <div className="aq-chart-bars">
             {bins.map((b, i) => {
@@ -226,6 +300,279 @@ function ChartSection({
         </div>
       </div>
     </section>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────
+// New wallets per day - mirrors the bar shape of the other charts
+// in the funnel so the four steps read as a coherent series. Bin a
+// wallet on the day of its earliest connected_at row.
+// ──────────────────────────────────────────────────────────────────
+
+function NewWalletsChartSection({
+  wallets,
+  timeframe,
+  onTimeframeChange,
+}: {
+  wallets: WalletRow[];
+  timeframe: Timeframe;
+  onTimeframeChange: (tf: Timeframe) => void;
+}) {
+  const oldestMs = useMemo(() => {
+    if (wallets.length === 0) return null;
+    let oldest = Infinity;
+    for (const w of wallets) {
+      const t = new Date(w.connected_at).getTime();
+      if (t < oldest) oldest = t;
+    }
+    return Number.isFinite(oldest) ? oldest : null;
+  }, [wallets]);
+  const days = resolveDays(timeframe, oldestMs);
+
+  const { bins, max, total, latest, peak } = useMemo(() => {
+    const now = Date.now();
+    const out: { v: number; daysAgo: number }[] = [];
+    for (let i = 0; i < days; i++) {
+      out.push({ v: 0, daysAgo: days - 1 - i });
+    }
+    let inWindow = 0;
+    for (const w of wallets) {
+      const daysAgo = Math.floor(
+        (now - new Date(w.connected_at).getTime()) / DAY_MS,
+      );
+      if (daysAgo >= 0 && daysAgo < days) {
+        out[days - 1 - daysAgo].v++;
+        inWindow++;
+      }
+    }
+    const m = Math.max(1, ...out.map((b) => b.v));
+    return {
+      bins: out,
+      max: m,
+      total: inWindow,
+      latest: out[out.length - 1]?.v ?? 0,
+      peak: m,
+    };
+  }, [wallets, days]);
+
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">
+            New wallets — last {days} days
+          </h2>
+          <span className="uni-hub-section-meta">
+            today {latest.toLocaleString("en-US")} · peak{" "}
+            {peak.toLocaleString("en-US")}/day
+          </span>
+        </div>
+        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
+      </header>
+      <div className="aq-chart-card">
+        <div className="aq-chart-bignum">
+          {total.toLocaleString("en-US")}
+        </div>
+        <div className="aq-chart-bignum-label">
+          first-time wallet connections in the trailing {days} days
+        </div>
+
+        <div className="aq-chart">
+          <div className="aq-chart-bars">
+            {bins.map((b, i) => {
+              const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
+              return (
+                <div
+                  key={i}
+                  className="aq-bar-col"
+                  title={`${b.v} new wallet${b.v === 1 ? "" : "s"} (${labelForDaysAgo(b.daysAgo)})`}
+                >
+                  <div className="aq-bar" style={{ height: `${heightPct}%` }} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="aq-chart-axis">
+            <span>{days}d ago</span>
+            <span>{Math.floor(days / 2)}d ago</span>
+            <span>today</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function labelForDaysAgo(d: number): string {
+  if (d === 0) return "today";
+  if (d === 1) return "yesterday";
+  return `${d} days ago`;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Funnel - cohort attribution for the selected timeframe. Four
+// counts (visits / clicks / new wallets / depositors) with three
+// step-conversion rates between them. No claim that a specific
+// visitor became a specific depositor; this is rate-level only and
+// honest about that until wallet_session_links is populated by the
+// app side.
+// ──────────────────────────────────────────────────────────────────
+
+function FunnelSection({
+  visits,
+  clicks,
+  wallets,
+  timeframe,
+}: {
+  visits: VisitRow[];
+  clicks: ClickRow[];
+  wallets: WalletRow[];
+  timeframe: Timeframe;
+}) {
+  const oldestMs = useMemo(() => {
+    if (visits.length === 0) return null;
+    let oldest = Infinity;
+    for (const v of visits) {
+      const t = new Date(v.created_at).getTime();
+      if (t < oldest) oldest = t;
+    }
+    return Number.isFinite(oldest) ? oldest : null;
+  }, [visits]);
+  const days = resolveDays(timeframe, oldestMs);
+
+  const cohort = useMemo(() => {
+    const now = Date.now();
+    const cutoff = now - days * DAY_MS;
+    let visitCount = 0;
+    let visitSessions = new Set<string>();
+    for (const v of visits) {
+      const t = new Date(v.created_at).getTime();
+      if (t >= cutoff) {
+        visitCount++;
+        visitSessions.add(v.session_id);
+      }
+    }
+    let clickCount = 0;
+    let clickSessions = new Set<string>();
+    for (const c of clicks) {
+      const t = new Date(c.created_at).getTime();
+      if (t >= cutoff) {
+        clickCount++;
+        clickSessions.add(c.session_id);
+      }
+    }
+    let newWallets = 0;
+    let depositors = 0;
+    let depositorTvl = 0;
+    for (const w of wallets) {
+      const t = new Date(w.connected_at).getTime();
+      if (t >= cutoff) {
+        newWallets++;
+        const b =
+          typeof w.harvest_balance === "number" ? w.harvest_balance : 0;
+        if (b > 0 && b < WALLET_OUTLIER_CAP) {
+          depositors++;
+          depositorTvl += b;
+        }
+      }
+    }
+    return {
+      visitCount,
+      uniqueVisitors: visitSessions.size,
+      clickCount,
+      clickSessions: clickSessions.size,
+      newWallets,
+      depositors,
+      depositorTvl,
+    };
+  }, [visits, clicks, wallets, days]);
+
+  const pct = (num: number, den: number): string =>
+    den === 0 ? "—" : `${((num / den) * 100).toFixed(1)}%`;
+
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">
+            Cohort funnel — last {days} days
+          </h2>
+          <span className="uni-hub-section-meta">
+            cohort rates, not individual attribution (pending
+            wallet_session_links)
+          </span>
+        </div>
+      </header>
+
+      <div className="aq-cohort-funnel">
+        <CohortStep
+          rank="01"
+          label="Visits"
+          value={cohort.visitCount.toLocaleString("en-US")}
+          sub={`${cohort.uniqueVisitors.toLocaleString("en-US")} unique sessions`}
+        />
+        <CohortArrow
+          rate={pct(cohort.clickCount, cohort.visitCount)}
+          caption="click-through"
+        />
+        <CohortStep
+          rank="02"
+          label="App clicks"
+          value={cohort.clickCount.toLocaleString("en-US")}
+          sub={`${cohort.clickSessions.toLocaleString("en-US")} sessions clicked`}
+        />
+        <CohortArrow
+          rate={pct(cohort.newWallets, cohort.clickSessions)}
+          caption="connect rate (clicks to new wallets)"
+        />
+        <CohortStep
+          rank="03"
+          label="New wallets"
+          value={cohort.newWallets.toLocaleString("en-US")}
+          sub="first-seen in this window"
+        />
+        <CohortArrow
+          rate={pct(cohort.depositors, cohort.newWallets)}
+          caption="deposit rate (new wallets to depositors)"
+        />
+        <CohortStep
+          rank="04"
+          label="Depositors"
+          value={cohort.depositors.toLocaleString("en-US")}
+          sub={`${formatUsd(cohort.depositorTvl)} TVL`}
+        />
+      </div>
+    </section>
+  );
+}
+
+function CohortStep({
+  rank,
+  label,
+  value,
+  sub,
+}: {
+  rank: string;
+  label: string;
+  value: string;
+  sub: string;
+}) {
+  return (
+    <div className="aq-cohort-step">
+      <div className="aq-cohort-rank">{rank}</div>
+      <div className="aq-cohort-label">{label}</div>
+      <div className="aq-cohort-value">{value}</div>
+      <div className="aq-cohort-sub">{sub}</div>
+    </div>
+  );
+}
+
+function CohortArrow({ rate, caption }: { rate: string; caption: string }) {
+  return (
+    <div className="aq-cohort-arrow">
+      <div className="aq-cohort-rate">{rate}</div>
+      <div className="aq-cohort-arrow-caption">{caption}</div>
+    </div>
   );
 }
 
