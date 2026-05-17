@@ -22,6 +22,7 @@ export const STALE_APY_DAYS = 14;
 export const BROKEN_TVL_THRESHOLD = 10_000;
 export const BROKEN_MIN_OBSERVATIONS = 14;
 export const HIDE_AERODROME = false;
+export const HIDE_LP_PAIR = true;
 
 export const RANKING_RULES: RankingRule[] = [
   {
@@ -47,11 +48,19 @@ export const RANKING_RULES: RankingRule[] = [
     source: "src/lib/data.ts → isBrokenLowTvlVault",
   },
   {
+    id: "hide-lp-pair",
+    name: "Hide LP-pair strategies",
+    enabled: HIDE_LP_PAIR,
+    rationale:
+      "Operator decision: LP-pair strategies are excluded from public rankings. Detection uses the same isLpPairVault helper that drives the [LP] badge - so every vault that would have rendered a badge is filtered out instead. Catches Aerodrome / Stake DAO OnlyBoost / Quickswap / Baseswap / Uniswap V3 / any future LP-pair platform without per-name maintenance. Product pages remain reachable by direct URL but are dropped from hub tables, market benchmarking, ecosystem context, Other opportunities, and the search dropdown.",
+    source: "src/lib/data.ts → isHiddenLpPairVault (uses isLpPairVault from src/lib/lp-pair.ts)",
+  },
+  {
     id: "hide-aerodrome",
-    name: "Hide Aerodrome strategies",
+    name: "Hide Aerodrome strategies (by name match)",
     enabled: HIDE_AERODROME,
     rationale:
-      "Operator decision: Aerodrome-routed strategies are excluded from public rankings. Match is a case-insensitive substring on productName/category, so any future Aerodrome listing is hidden automatically until this rule is flipped off.",
+      "Legacy operator decision: Aerodrome-routed strategies excluded by case-insensitive substring match on productName/category. Superseded by the broader 'Hide LP-pair strategies' rule above (which catches Aerodrome LP-pair vaults automatically). Kept off by default; enable only if a single-asset Aerodrome strategy ever lands in the index and needs hiding too.",
     source: "src/lib/data.ts → isAerodromeVault",
   },
 ];

@@ -3,7 +3,9 @@ import {
   RANKING_RULES,
   isAerodromeName,
   HIDE_AERODROME,
+  HIDE_LP_PAIR,
 } from "@/lib/admin-rules";
+import { isLpPairVault } from "@/lib/lp-pair";
 import { RuleStateBadge } from "@/components/admin/rule-state-badge";
 
 export const metadata = {
@@ -19,6 +21,7 @@ export default async function RankingRulesPage() {
   const totals = {
     all: vaults.length,
     aerodromeMatches: vaults.filter((v) => isAerodromeName(v.productName, v.category)).length,
+    lpPairMatches: vaults.filter((v) => isLpPairVault(v)).length,
   };
 
   return (
@@ -65,10 +68,27 @@ export default async function RankingRulesPage() {
                     {totals.all} indexed vaults.{" "}
                     {HIDE_AERODROME
                       ? "All hidden from public surfaces."
-                      : "All currently visible (rule is OFF)."}
+                      : "All currently visible (rule is OFF; the broader LP-pair rule above already hides their LP variants)."}
                   </>
                 ) : (
                   <>No Aerodrome strategies in the current index.</>
+                )}
+              </div>
+            )}
+
+            {rule.id === "hide-lp-pair" && (
+              <div className="mt-4 rounded-md bg-gray-50 px-4 py-3 text-xs text-gray-600">
+                {totals.lpPairMatches > 0 ? (
+                  <>
+                    Currently matching{" "}
+                    <strong>{totals.lpPairMatches}</strong> of{" "}
+                    {totals.all} indexed vaults.{" "}
+                    {HIDE_LP_PAIR
+                      ? "All hidden from public surfaces (product pages remain reachable by direct URL but are dropped from every ranking)."
+                      : "All currently visible (rule is OFF)."}
+                  </>
+                ) : (
+                  <>No LP-pair strategies in the current index.</>
                 )}
               </div>
             )}

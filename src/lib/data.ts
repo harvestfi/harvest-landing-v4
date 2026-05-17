@@ -161,8 +161,10 @@ import {
   BROKEN_MIN_OBSERVATIONS,
   STALE_APY_DAYS,
   HIDE_AERODROME,
+  HIDE_LP_PAIR,
   isAerodromeName,
 } from "./admin-rules";
+import { isLpPairVault } from "./lp-pair";
 
 export function isBrokenLowTvlVault(v: YieldVault): boolean {
   if (v.tvl <= 0 || v.tvl >= BROKEN_TVL_THRESHOLD) return false;
@@ -180,6 +182,13 @@ export function isBrokenLowTvlVault(v: YieldVault): boolean {
 
 function isAerodromeVault(v: YieldVault): boolean {
   return HIDE_AERODROME && isAerodromeName(v.productName, v.category);
+}
+
+// Catches every vault that would render the [LP] badge in rankings -
+// Aerodrome pairs, Stake DAO OnlyBoost, Quickswap, Baseswap, Uniswap V3,
+// any future LP-pair platform. Single rule, zero per-name maintenance.
+function isHiddenLpPairVault(v: YieldVault): boolean {
+  return HIDE_LP_PAIR && isLpPairVault(v);
 }
 
 function isStaleApyHistory(history: ApyHistoryPoint[]): boolean {
@@ -219,7 +228,8 @@ export async function getLiveVaults(): Promise<YieldVault[]> {
       isLiveVault(v) &&
       !stale.has(v.contractAddress.toLowerCase()) &&
       !isBrokenLowTvlVault(v) &&
-      !isAerodromeVault(v),
+      !isAerodromeVault(v) &&
+      !isHiddenLpPairVault(v),
   );
 }
 
