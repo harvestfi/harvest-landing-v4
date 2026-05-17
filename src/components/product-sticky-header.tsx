@@ -35,7 +35,7 @@ const QUICK_LINKS: { href: string; label: string }[] = [
   { href: "#faq", label: "FAQ" },
 ];
 
-export function TestStickyHeader({
+export function ProductStickyHeader({
   productName,
   asset,
   apyLabel,

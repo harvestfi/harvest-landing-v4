@@ -625,7 +625,7 @@ Fresh-vault suppression:
 
 Established vaults with sparse snapshots keep the score (the gate is AND,
 not OR).`}</CodeBlock>
-        <SourceLink path="src/components/test-stability-card.tsx" symbol="computeStability + TestStabilityCard" />
+        <SourceLink path="src/components/vault-stability-card.tsx" symbol="computeStability + VaultStabilityCard" />
       </Section>
 
       <Section id="long-term" title="11. Long-term performance">
@@ -846,7 +846,7 @@ Take first 6.
 
 Card content: asset icon, canonical name + [LP] badge if LP-pair, chain
 icon + chain name + stripped category, 24h APY, TVL.`}</CodeBlock>
-        <SourceLink path="src/components/test-similar.tsx" />
+        <SourceLink path="src/components/similar-vaults.tsx" />
       </Section>
 
       <Section id="footnote" title="17. Page footnote">
@@ -980,11 +980,11 @@ LP-pair:
             <tr><td className="py-2 pr-4">LP-pair FAQ</td><td className="py-2 font-mono text-xs">src/lib/lp-pair-faq.tsx</td></tr>
             <tr><td className="py-2 pr-4">Performance Overview + Yield Trajectory</td><td className="py-2 font-mono text-xs">src/lib/autopilot-sections.ts</td></tr>
             <tr><td className="py-2 pr-4">Market benchmarking + Ecosystem context</td><td className="py-2 font-mono text-xs">src/components/market-sections.tsx</td></tr>
-            <tr><td className="py-2 pr-4">Stability card</td><td className="py-2 font-mono text-xs">src/components/test-stability-card.tsx</td></tr>
+            <tr><td className="py-2 pr-4">Stability card</td><td className="py-2 font-mono text-xs">src/components/vault-stability-card.tsx</td></tr>
             <tr><td className="py-2 pr-4">Long-term performance</td><td className="py-2 font-mono text-xs">src/components/historical-narrative.tsx</td></tr>
             <tr><td className="py-2 pr-4">Historical statistics</td><td className="py-2 font-mono text-xs">src/components/historical-stats.tsx</td></tr>
             <tr><td className="py-2 pr-4">Historical Data table</td><td className="py-2 font-mono text-xs">src/components/vault-history-table.tsx</td></tr>
-            <tr><td className="py-2 pr-4">Other opportunities</td><td className="py-2 font-mono text-xs">src/components/test-similar.tsx</td></tr>
+            <tr><td className="py-2 pr-4">Other opportunities</td><td className="py-2 font-mono text-xs">src/components/similar-vaults.tsx</td></tr>
             <tr><td className="py-2 pr-4">LP-pair helpers + canonical name</td><td className="py-2 font-mono text-xs">src/lib/lp-pair.ts</td></tr>
             <tr><td className="py-2 pr-4">LP badge component</td><td className="py-2 font-mono text-xs">src/components/lp-badge.tsx</td></tr>
             <tr><td className="py-2 pr-4">SEO helpers + breadcrumb</td><td className="py-2 font-mono text-xs">src/lib/seo.ts</td></tr>

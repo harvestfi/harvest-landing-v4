@@ -18,7 +18,7 @@ interface Props {
   allVaults: YieldVault[];
 }
 
-export function TestSimilar({ vault, allVaults }: Props) {
+export function SimilarVaults({ vault, allVaults }: Props) {
   // Eligible: same asset, live numbers, not the current product.
   const eligible = allVaults.filter(
     (v) =>

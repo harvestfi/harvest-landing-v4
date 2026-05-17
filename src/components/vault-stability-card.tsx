@@ -102,7 +102,7 @@ function labelColorForScore(score: number): string {
   return "#27a567"; // Very consistent - green
 }
 
-export function TestStabilityCard({ history, asset }: Props) {
+export function VaultStabilityCard({ history, asset }: Props) {
   const s = computeStability(history);
 
   if (!s) {

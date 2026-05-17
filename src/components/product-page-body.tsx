@@ -35,11 +35,11 @@ import { VaultCommentary } from "@/components/vault-commentary";
 import { VaultHistoryTable } from "@/components/vault-history-table";
 import { VaultFaq } from "@/components/vault-faq";
 import { YieldTrajectory } from "@/components/yield-trajectory";
-import { TestChart, type ChartSeries } from "@/components/test-chart";
-import { TestJumpNav } from "@/components/test-jumpnav";
-import { TestStabilityCard } from "@/components/test-stability-card";
-import { TestStickyHeader } from "@/components/test-sticky-header";
-import { TestSimilar } from "@/components/test-similar";
+import { OverviewChart, type ChartSeries } from "@/components/vault-overview-chart";
+import { ProductJumpNav } from "@/components/product-jump-nav";
+import { VaultStabilityCard } from "@/components/vault-stability-card";
+import { ProductStickyHeader } from "@/components/product-sticky-header";
+import { SimilarVaults } from "@/components/similar-vaults";
 import { HomeCrumb } from "@/components/home-crumb";
 import type { YieldVault } from "@/lib/types";
 
@@ -221,7 +221,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
 
   return (
     <div className="uni-shell">
-      <TestStickyHeader
+      <ProductStickyHeader
         productName={displayName}
         asset={vault.asset}
         apyLabel={formatAPY(vault.apy24h)}
@@ -338,7 +338,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
       {/* Main grid: chart + sidebar stats */}
       <div className="uni-detail-grid">
         <div className="uni-detail-main">
-          <TestChart series={chartSeries} />
+          <OverviewChart series={chartSeries} />
         </div>
 
         <aside className="uni-detail-side">
@@ -427,7 +427,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         </aside>
       </div>
 
-      <TestJumpNav />
+      <ProductJumpNav />
 
       <div className="uni-below">
         {/* About */}
@@ -500,7 +500,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
           />
         )}
 
-        <TestStabilityCard history={history} asset={vault.asset} />
+        <VaultStabilityCard history={history} asset={vault.asset} />
 
         <HistoricalNarrative history={history} asset={vault.asset} />
 
@@ -642,7 +642,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
           faqItems={faqItems}
         />
 
-        <TestSimilar vault={vault} allVaults={allVaults} />
+        <SimilarVaults vault={vault} allVaults={allVaults} />
       </div>
 
       {/* Bottom links */}

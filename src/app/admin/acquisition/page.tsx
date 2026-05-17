@@ -136,7 +136,7 @@ function Stat({ label, value }: { label: string; value: number | undefined }) {
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Chart - matches the bar mode of TestChart from product pages:
+// Chart - matches the bar mode of OverviewChart from product pages:
 // white card, bignum headline, dotted plot background, gold bars
 // rooted at the baseline.
 // ──────────────────────────────────────────────────────────────────

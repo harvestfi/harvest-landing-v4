@@ -109,7 +109,7 @@ const ITEMS: Item[] = [
   },
 ];
 
-export function TestJumpNav() {
+export function ProductJumpNav() {
   return (
     <nav className="uni-jump" aria-label="Jump to section">
       {ITEMS.map((it) => (

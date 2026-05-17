@@ -462,7 +462,7 @@ Label from score (5-zone):
 Fresh-vault suppression: if tracked_days < 30 AND readings_indexed < 14,
   replace score/meter/label with the "Score not available" notice. Stats
   grid still renders.`}</CodeBlock>
-        <SourceLink path="src/components/test-stability-card.tsx" symbol="computeStability + TestStabilityCard" />
+        <SourceLink path="src/components/vault-stability-card.tsx" symbol="computeStability + VaultStabilityCard" />
       </Section>
 
       <Section id="long-term" title="11. Long-term performance">
@@ -629,7 +629,7 @@ Take first 6.
 
 Card content: asset icon, canonical name + [LP] badge if LP-pair, chain
 icon + chain name + stripped category, 24h APY, TVL.`}</CodeBlock>
-        <SourceLink path="src/components/test-similar.tsx" />
+        <SourceLink path="src/components/similar-vaults.tsx" />
       </Section>
 
       <Section id="lp-badge" title="17. LP badge rendering">
@@ -643,7 +643,7 @@ icon + chain name + stripped category, 24h APY, TVL.`}</CodeBlock>
   1. Asset ranking pages (/eth, /usdc, /usdt, /btc)         hub-table.tsx
   2. Market benchmarking ranking table                       market-sections.tsx
   3. Ecosystem context legend                                market-sections.tsx
-  4. "Other opportunities" cards                             test-similar.tsx
+  4. "Other opportunities" cards                             similar-vaults.tsx
   5. Header search dropdown                                  search-box.tsx
 
 NOT rendered on the destination page itself - the canonical name "ETH/VVV
@@ -755,11 +755,11 @@ generateMetadata):
             <tr><td className="py-2 pr-4">LP badge styling</td><td className="py-2 font-mono text-xs">src/app/_styles/product.css (.lp-badge)</td></tr>
             <tr><td className="py-2 pr-4">Performance Overview + Yield Trajectory</td><td className="py-2 font-mono text-xs">src/lib/autopilot-sections.ts</td></tr>
             <tr><td className="py-2 pr-4">Market benchmarking + Ecosystem context</td><td className="py-2 font-mono text-xs">src/components/market-sections.tsx</td></tr>
-            <tr><td className="py-2 pr-4">Stability card</td><td className="py-2 font-mono text-xs">src/components/test-stability-card.tsx</td></tr>
+            <tr><td className="py-2 pr-4">Stability card</td><td className="py-2 font-mono text-xs">src/components/vault-stability-card.tsx</td></tr>
             <tr><td className="py-2 pr-4">Long-term performance</td><td className="py-2 font-mono text-xs">src/components/historical-narrative.tsx</td></tr>
             <tr><td className="py-2 pr-4">Historical statistics</td><td className="py-2 font-mono text-xs">src/components/historical-stats.tsx</td></tr>
             <tr><td className="py-2 pr-4">Historical Data table</td><td className="py-2 font-mono text-xs">src/components/vault-history-table.tsx</td></tr>
-            <tr><td className="py-2 pr-4">Other opportunities</td><td className="py-2 font-mono text-xs">src/components/test-similar.tsx</td></tr>
+            <tr><td className="py-2 pr-4">Other opportunities</td><td className="py-2 font-mono text-xs">src/components/similar-vaults.tsx</td></tr>
             <tr><td className="py-2 pr-4">Hub table (renders LP badge)</td><td className="py-2 font-mono text-xs">src/components/hub-table.tsx</td></tr>
             <tr><td className="py-2 pr-4">Header search dropdown</td><td className="py-2 font-mono text-xs">src/components/search-box.tsx + header.tsx</td></tr>
             <tr><td className="py-2 pr-4">SEO helpers + breadcrumb</td><td className="py-2 font-mono text-xs">src/lib/seo.ts</td></tr>
