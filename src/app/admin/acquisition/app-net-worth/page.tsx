@@ -431,8 +431,8 @@ function TableSection({
           </code>
         </div>
       ) : (
-        <div className="hub-table-wrap">
-          <div className="hub-table aq-clicks-table">
+        <div className="hub-table-wrap aq-recent-wrap">
+          <div className="hub-table aq-clicks-table aq-recent-table">
             <div
               className="hub-thead"
               style={{ gridTemplateColumns: TABLE_COLS }}

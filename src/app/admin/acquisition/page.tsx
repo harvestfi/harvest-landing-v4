@@ -268,8 +268,8 @@ function TableSection({ visits }: { visits: Visit[] }) {
           table will populate.
         </div>
       ) : (
-        <div className="hub-table-wrap">
-          <div className="hub-table">
+        <div className="hub-table-wrap aq-recent-wrap">
+          <div className="hub-table aq-recent-table">
             <div
               className="hub-thead"
               style={{ gridTemplateColumns: TABLE_COLS }}
