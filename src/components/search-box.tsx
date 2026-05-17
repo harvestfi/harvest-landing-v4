@@ -12,7 +12,7 @@ export interface SearchItem {
   // Canonical name shown in the dropdown row. For LP-pair products
   // this expands the database "ETH Aerodrome" into "ETH/VVV
   // Aerodrome" so visually-identical names disambiguate without a
-  // click-through. Computed in header.tsx via getCanonicalDisplayName.
+  // click-through. Precomputed by scripts/build-search-index.mjs.
   displayName: string;
   isLpPair: boolean;
   asset: string;
@@ -21,10 +21,6 @@ export interface SearchItem {
   category: string;
   apy24h: number;
   tvl: number;
-}
-
-interface Props {
-  items: SearchItem[];
 }
 
 interface Scored extends SearchItem {
@@ -59,13 +55,33 @@ function scoreItem(item: SearchItem, q: string, tokens: string[]): number {
   return score;
 }
 
-export function SearchBox({ items }: Props) {
+// Lazy-loaded search index. The previous implementation passed every
+// indexed vault as a server prop on every page render. Now we fetch
+// /search-index.json once on first focus and cache it in module
+// scope so subsequent route changes reuse the same array.
+let _indexPromise: Promise<SearchItem[]> | null = null;
+function loadIndex(): Promise<SearchItem[]> {
+  if (_indexPromise) return _indexPromise;
+  _indexPromise = fetch("/search-index.json", { cache: "force-cache" })
+    .then((r) => (r.ok ? r.json() : []))
+    .catch(() => []);
+  return _indexPromise;
+}
+
+export function SearchBox() {
   const router = useRouter();
+  const [items, setItems] = useState<SearchItem[]>([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  function ensureLoaded() {
+    if (items.length === 0) {
+      void loadIndex().then((data) => setItems(data));
+    }
+  }
 
   const results = useMemo<Scored[]>(() => {
     const q = query.trim().toLowerCase();
@@ -88,6 +104,7 @@ export function SearchBox({ items }: Props) {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
+        ensureLoaded();
         inputRef.current?.focus();
         setOpen(true);
       }
@@ -98,6 +115,7 @@ export function SearchBox({ items }: Props) {
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -153,8 +171,9 @@ export function SearchBox({ items }: Props) {
           ref={inputRef}
           placeholder="Search pool, protocol, asset..."
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
+          onChange={(e) => { ensureLoaded(); setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => { ensureLoaded(); setOpen(true); }}
+          onPointerEnter={ensureLoaded}
           onKeyDown={onKeyDown}
           autoComplete="off"
           spellCheck={false}
@@ -166,7 +185,9 @@ export function SearchBox({ items }: Props) {
         <div className="search-pop" role="listbox">
           {results.length === 0 ? (
             <div className="search-empty">
-              No products match <b>{query}</b> in our index.
+              {items.length === 0
+                ? <>Loading index...</>
+                : <>No products match <b>{query}</b> in our index.</>}
             </div>
           ) : (
             <>

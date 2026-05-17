@@ -1,37 +1,20 @@
 import Link from "next/link";
-import { getLiveVaults } from "@/lib/data";
-import { getCanonicalDisplayName, isLpPairVault } from "@/lib/lp-pair";
-import { SearchBox, type SearchItem } from "./search-box";
+import { SearchBox } from "./search-box";
 import { AssetIcon } from "./token-icons";
 import { ThemeToggle } from "./theme-toggle";
 
-export async function Header() {
+// Synchronous server component. The search index is no longer
+// embedded in the rendered HTML - SearchBox fetches a static JSON
+// blob (/search-index.json, emitted at build time by
+// scripts/build-search-index.mjs) on first focus, so every page
+// render avoids the duplicate getLiveVaults() server fetch.
+export function Header() {
   const navItems = [
     { label: "USDC", href: "/usdc", asset: "USDC" },
     { label: "USDT", href: "/usdt", asset: "USDT" },
     { label: "ETH", href: "/eth", asset: "ETH" },
     { label: "BTC", href: "/btc", asset: "BTC" },
   ];
-
-  const vaults = await getLiveVaults();
-  // Precompute the canonical display name + LP discriminator here
-  // (the search box is a "use client" component and shouldn't pull
-  // in the lp-pair helpers indirectly through SearchItem). productName
-  // is still passed for the existing scoring function (which prefers
-  // raw productName tokens) and as a fallback if the derived name is
-  // ever empty.
-  const items: SearchItem[] = vaults.map((v) => ({
-    slug: v.slug,
-    productName: v.productName,
-    displayName: getCanonicalDisplayName(v),
-    isLpPair: isLpPairVault(v),
-    asset: v.asset,
-    chain: v.chain,
-    protocol: v.protocol.name,
-    category: v.category,
-    apy24h: v.apy24h,
-    tvl: v.tvl,
-  }));
 
   return (
     <header className="topnav">
@@ -49,7 +32,7 @@ export async function Header() {
           ))}
         </nav>
         <div className="nav-right">
-          <SearchBox items={items} />
+          <SearchBox />
           <ThemeToggle />
         </div>
       </div>
