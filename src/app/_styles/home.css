@@ -579,6 +579,17 @@ body:has(.uni-home-test) {
 .uni-home-test .uni-home-section-link:hover { border-color: var(--uni-gold); }
 @media (max-width: 700px) {
   .uni-home-test .uni-home-section-link { display: none; }
+  /* Shrink the section subtitle on mobile so the longer captions
+     ("Live ranking across every asset and network we index.") sit
+     on a single line instead of wrapping the last word onto its own
+     row. clamp keeps it from going microscopic on the narrowest
+     phones, and ellipsis is a last-resort guard. */
+  .uni-home-test .uni-home-section-sub {
+    font-size: clamp(11.5px, 3.2vw, 13px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* === Top yields ranking table ===================================== */

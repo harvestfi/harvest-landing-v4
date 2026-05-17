@@ -10,6 +10,7 @@ import type { YieldVault } from "./types";
 import type { FullVaultHistory } from "./history-api";
 import { formatAPY, formatTVL } from "./format";
 import { protocolInsertFor } from "./autopilot-about";
+import { getDisambiguatedDisplayName } from "./lp-pair";
 
 export interface AutopilotFaqItem {
   question: string;
@@ -36,8 +37,15 @@ export function buildAutopilotFaqItems(
   vault: YieldVault,
   history: FullVaultHistory,
   holderCount: number | null,
+  allVaults?: readonly YieldVault[],
 ): AutopilotFaqItem[] {
-  const productName = vault.productName;
+  // Single-asset Autopilots share a generic productName ("USDC
+  // Autopilot") across deployments on every chain, which makes the
+  // Q1/Q4/etc. copy read identically on every sibling page. When the
+  // caller passes the cohort, the helper appends " on {chain}" for
+  // products whose name collides, so the FAQ on each page reads
+  // "USDC Autopilot on Base" vs "USDC Autopilot on Polygon".
+  const productName = getDisambiguatedDisplayName(vault, allVaults);
   const apy24h = formatAPY(vault.apy24h);
   const apy30d = formatAPY(vault.apy30d);
   const tvl = formatTVL(vault.tvl);

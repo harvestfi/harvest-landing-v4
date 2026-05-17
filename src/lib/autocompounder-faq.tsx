@@ -9,6 +9,7 @@ import type { YieldVault } from "./types";
 import type { FullVaultHistory } from "./history-api";
 import { formatAPY, formatTVL } from "./format";
 import { underlyingVenueFor, rewardTokenLabel } from "./autocompounder-about";
+import { getDisambiguatedDisplayName } from "./lp-pair";
 
 export interface AutocompounderFaqItem {
   question: string;
@@ -30,8 +31,12 @@ export function buildAutocompounderFaqItems(
   vault: YieldVault,
   history: FullVaultHistory,
   holderCount: number | null,
+  allVaults?: readonly YieldVault[],
 ): AutocompounderFaqItem[] {
-  const productName = vault.productName;
+  // Same disambiguation as the Autopilot FAQ: when the database
+  // productName collides across sibling deployments, the helper
+  // appends " on {chain}" so each page's FAQ reads uniquely.
+  const productName = getDisambiguatedDisplayName(vault, allVaults);
   const ticker = vault.asset.toUpperCase();
   const apy24h = formatAPY(vault.apy24h);
   const apy30d = formatAPY(vault.apy30d);

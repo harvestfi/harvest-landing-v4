@@ -223,6 +223,7 @@ export default async function ProductPage({
   if (!vault) notFound();
 
   const history = await getVaultHistory(vault.contractAddress);
+  const allVaults = await getVaults();
 
   // FAQ items for JSON-LD: pull from the same builders that
   // ProductPageBody uses so the schema in <head> matches what
@@ -238,8 +239,8 @@ export default async function ProductPage({
   const typedFaq =
     lpFaq ??
     (vault.vaultType === "Autopilot"
-      ? buildAutopilotFaqItems(vault, history, holderCount)
-      : buildAutocompounderFaqItems(vault, history, holderCount));
+      ? buildAutopilotFaqItems(vault, history, holderCount, allVaults)
+      : buildAutocompounderFaqItems(vault, history, holderCount, allVaults));
   const faqItems: FaqItem[] = typedFaq.map((it) => ({
     question: it.question,
     answer: it.answerText,

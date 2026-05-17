@@ -158,9 +158,9 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   const typedFaqItems = isLpPair
     ? buildLpPairFaqItems(vault, history, holderCount)
     : vault.vaultType === "Autopilot"
-      ? buildAutopilotFaqItems(vault, history, holderCount)
+      ? buildAutopilotFaqItems(vault, history, holderCount, allVaults)
       : vault.vaultType === "Autocompounder"
-        ? buildAutocompounderFaqItems(vault, history, holderCount)
+        ? buildAutocompounderFaqItems(vault, history, holderCount, allVaults)
         : null;
 
   const faqItems = typedFaqItems ?? [

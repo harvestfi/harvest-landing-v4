@@ -132,3 +132,35 @@ export function getCanonicalDisplayName(vault: YieldVault): string {
   if (!counterpart || !platform) return vault.productName;
   return `${vault.asset.toUpperCase()}/${counterpart} ${platform}`;
 }
+
+// Display name used when FAQ / structured-data copy needs to
+// distinguish between siblings that share a productName. Single-
+// asset Autopilots in particular share generic names ("USDC
+// Autopilot") across five+ deployments, so the page-level "What's
+// the current APY for USDC Autopilot?" reads identically on every
+// one of them. This helper:
+//
+//   * For LP-pair vaults, delegates to getCanonicalDisplayName,
+//     which already produces "ASSET/COUNTERPART PLATFORM" - unique
+//     by construction.
+//   * For single-asset vaults, returns the productName as-is when
+//     it's unique across the supplied cohort. When it collides,
+//     appends " on {chain}" so each sibling page becomes
+//     "USDC Autopilot on Base" vs "USDC Autopilot on Polygon" etc.
+//
+// allVaults is the universe to dedupe against (typically every
+// indexed vault). When omitted, the function falls back to the
+// LP-pair canonical name and otherwise returns the raw productName
+// so callers without a cohort still work.
+export function getDisambiguatedDisplayName(
+  vault: YieldVault,
+  allVaults?: readonly YieldVault[],
+): string {
+  if (isLpPairVault(vault)) return getCanonicalDisplayName(vault);
+  if (!allVaults) return vault.productName;
+  const collisions = allVaults.filter(
+    (v) => v.productName === vault.productName,
+  ).length;
+  if (collisions <= 1) return vault.productName;
+  return `${vault.productName} on ${vault.chain}`;
+}

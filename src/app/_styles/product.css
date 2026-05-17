@@ -2248,7 +2248,12 @@ body:has(.uni-shell) {
   .uni-shell .pp-section p,
   .uni-shell .uni-soft-head p,
   .uni-shell .about-prose p { font-size: 16px; }
-  .uni-shell .bs-v { font-size: 26px; }
+  /* Benchmark stat tiles match the side-card stat scale on mobile
+     so the four KPI numbers don't dwarf everything else on the
+     page. Label sits a touch smaller too, mirroring the .uni-side
+     ramp. */
+  .uni-shell .bs-v { font-size: 18px; }
+  .uni-shell .bs-l { font-size: 12.5px; }
   .uni-shell .bt-row,
   .uni-shell .eco-legend-row { font-size: 15px; }
   .uni-shell .hist-table td { font-size: 16px; }
