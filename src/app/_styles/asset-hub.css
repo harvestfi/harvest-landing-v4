@@ -548,12 +548,20 @@ body:has(.uni-hub-test) {
   min-height: 280px;
 }
 .uni-hub-test .aq-chart-bars {
+  /* Mirror the canonical product-page chart layout exactly: parent
+     stretches children (NOT flex-end), each bar-col then uses
+     flex-end internally to anchor its bar to the bottom. The prior
+     align-items: flex-end here collapsed bar-cols to content height
+     so the % heights on .aq-bar resolved against 0px → no visible
+     bars. */
   flex: 1;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
   min-height: 240px;
-  padding: 12px 0 0;
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  overflow: hidden;
+  position: relative;
+  padding: 18px 0 0;
   background-image: radial-gradient(
     circle,
     rgba(25, 23, 23, 0.08) 1px,
