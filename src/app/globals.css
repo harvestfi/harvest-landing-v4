@@ -3175,6 +3175,404 @@ body:has(.admin-shell) .foot {
   .adm-col-md { display: none; }
 }
 
+/* ============================================================
+   SEO Overview - SERP preview + ranking table inside .uni-hub-test
+   shell. Mirrors the canonical hub chrome used by /eth, /usdc,
+   /admin/acquisition so the admin reads as one product, not a
+   patchwork of bespoke layouts.
+   ============================================================ */
+
+.uni-hub-test .serp-card {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: 20px;
+  background: var(--uni-card-2);
+  border: 1px solid var(--uni-line);
+  border-radius: var(--uni-radius);
+  padding: 20px;
+}
+.uni-hub-test .serp-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.uni-hub-test .serp-picker-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.uni-hub-test .serp-picker-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--uni-ink);
+}
+.uni-hub-test .serp-picker-count {
+  font-size: 11.5px;
+  color: var(--uni-ink-3);
+  letter-spacing: 0.02em;
+}
+.uni-hub-test .serp-picker-search {
+  width: 100%;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--uni-ink);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.uni-hub-test .serp-picker-search:focus {
+  border-color: var(--uni-ink);
+  box-shadow: 0 0 0 3px rgba(255, 185, 54, 0.18);
+}
+.uni-hub-test .serp-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line-2);
+  border-radius: 10px;
+}
+.uni-hub-test .serp-picker-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--uni-ink);
+  font: inherit;
+  transition: background-color 0.1s ease;
+}
+.uni-hub-test .serp-picker-item:hover {
+  background: rgba(255, 185, 54, 0.08);
+}
+.uni-hub-test .serp-picker-item.active {
+  background: rgba(255, 185, 54, 0.16);
+}
+.uni-hub-test .serp-picker-item-type {
+  font-size: 10.5px;
+  color: var(--uni-ink-3);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.uni-hub-test .serp-picker-item.active .serp-picker-item-type {
+  color: var(--uni-ink-2);
+}
+.uni-hub-test .serp-picker-item-slug {
+  font-size: 12.5px;
+  color: var(--uni-ink);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.uni-hub-test .serp-picker-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--uni-ink-3);
+}
+
+.uni-hub-test .serp-previews {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  min-width: 0;
+}
+.uni-hub-test .serp-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.uni-hub-test .serp-preview-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.uni-hub-test .serp-preview-device-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--uni-ink);
+}
+.uni-hub-test .serp-preview-device-meta {
+  font-size: 10.5px;
+  color: var(--uni-ink-3);
+  letter-spacing: 0.02em;
+}
+.uni-hub-test .serp-preview-frame {
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line-2);
+  border-radius: 12px;
+  padding: 16px 18px;
+  min-width: 0;
+  overflow: hidden;
+}
+.uni-hub-test .serp-preview-frame-mobile {
+  padding: 14px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.uni-hub-test .serp-result {
+  font-family: arial, sans-serif;
+  color: var(--uni-ink);
+  min-width: 0;
+}
+.uni-hub-test .serp-site {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  min-width: 0;
+}
+.uni-hub-test .serp-favicon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffb936;
+  color: #191717;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.uni-hub-test .serp-site-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.uni-hub-test .serp-site-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--uni-ink);
+  line-height: 1.2;
+}
+.uni-hub-test .serp-site-url {
+  font-size: 12px;
+  color: var(--uni-ink-3);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.uni-hub-test .serp-url-sep { color: var(--uni-ink-3); }
+.uni-hub-test .serp-result-desktop .serp-title {
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 400;
+  margin: 4px 0 4px;
+  color: #1a0dab;
+  font-family: arial, sans-serif;
+}
+.uni-hub-test .serp-result-mobile .serp-title {
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 400;
+  margin: 4px 0 4px;
+  color: #1a0dab;
+  font-family: arial, sans-serif;
+}
+.uni-hub-test .serp-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4d5156;
+  font-family: arial, sans-serif;
+}
+.uni-hub-test .serp-result-mobile .serp-desc {
+  font-size: 13.5px;
+}
+:root[data-theme="dark"] .uni-hub-test .serp-title {
+  color: #8ab4f8;
+}
+:root[data-theme="dark"] .uni-hub-test .serp-desc {
+  color: #bdc1c6;
+}
+:root[data-theme="dark"] .uni-hub-test .serp-site-name {
+  color: var(--uni-ink);
+}
+
+@media (max-width: 1100px) {
+  .uni-hub-test .serp-card { grid-template-columns: 1fr; }
+  .uni-hub-test .serp-previews {
+    grid-template-columns: 1fr;
+  }
+  .uni-hub-test .serp-preview-frame-mobile { margin: 0; }
+  .uni-hub-test .serp-picker-list { max-height: 220px; }
+}
+
+/* SEO inventory ranking - sits inside the canonical hub-table-wrap.
+   Sortable header buttons, per-cell character counts and the
+   index/noindex pill all read from the shared --hub-* and
+   --uni-* tokens so theming and dark mode flow through. */
+.uni-hub-test .hub-th-sort {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hub-ink-2);
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.12s ease;
+}
+.uni-hub-test .hub-th-sort:hover { color: var(--hub-ink); }
+.uni-hub-test .hub-th-sort.active { color: var(--hub-ink); }
+.uni-hub-test .hub-th-sort .hub-sort-ind {
+  font-size: 9px;
+  color: var(--hub-ink-3);
+  font-feature-settings: "tnum";
+}
+.uni-hub-test .hub-th-sort.active .hub-sort-ind { color: #ffb936; }
+.uni-hub-test .hub-th-right { justify-content: flex-end; text-align: right; }
+
+.uni-hub-test .seo-filter-input {
+  flex: 1 1 280px;
+  min-width: 0;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--uni-ink);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.uni-hub-test .seo-filter-input:focus {
+  border-color: var(--uni-ink);
+  box-shadow: 0 0 0 3px rgba(255, 185, 54, 0.18);
+}
+.uni-hub-test .seo-filter-input::placeholder { color: var(--uni-ink-3); }
+
+.uni-hub-test .seo-row {
+  align-items: flex-start;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.uni-hub-test .seo-text-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  line-height: 1.45;
+}
+.uni-hub-test .seo-title {
+  font-size: 13.5px;
+  color: var(--uni-ink);
+  font-weight: 500;
+}
+.uni-hub-test .seo-desc {
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+  line-height: 1.5;
+}
+.uni-hub-test .seo-slug-cell { min-width: 0; }
+.uni-hub-test .seo-slug-link {
+  color: var(--uni-ink);
+  font-size: 12.5px;
+  text-decoration: none;
+  border-bottom: 1px dotted var(--uni-line);
+  padding-bottom: 1px;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.uni-hub-test .seo-slug-link:hover {
+  color: #ffb936;
+  border-bottom-color: #ffb936;
+}
+
+.uni-hub-test .seo-type-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.uni-hub-test .seo-type-home {
+  background: rgba(255, 185, 54, 0.2);
+  color: #946208;
+}
+.uni-hub-test .seo-type-asset-hub {
+  background: rgba(31, 124, 77, 0.14);
+  color: #1f7c4d;
+}
+.uni-hub-test .seo-type-network-hub {
+  background: rgba(99, 102, 241, 0.14);
+  color: #4a4eb5;
+}
+.uni-hub-test .seo-type-product {
+  background: var(--uni-tint);
+  color: var(--uni-ink-2);
+}
+:root[data-theme="dark"] .uni-hub-test .seo-type-home { color: #ffd98a; }
+:root[data-theme="dark"] .uni-hub-test .seo-type-asset-hub { color: #6dd0a0; }
+:root[data-theme="dark"] .uni-hub-test .seo-type-network-hub { color: #a4a8ff; }
+
+.uni-hub-test .seo-index-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.uni-hub-test .seo-index-pill.ok {
+  background: rgba(39, 165, 103, 0.14);
+  color: #1f7c4d;
+}
+.uni-hub-test .seo-index-pill.no {
+  background: rgba(192, 50, 42, 0.12);
+  color: #b13129;
+}
+:root[data-theme="dark"] .uni-hub-test .seo-index-pill.ok { color: #6dd0a0; }
+:root[data-theme="dark"] .uni-hub-test .seo-index-pill.no { color: #ff8a82; }
+
+.uni-hub-test .adm-char-count {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--uni-ink-3);
+  font-feature-settings: "tnum";
+}
+.uni-hub-test .adm-char-count.over {
+  color: #c0322a;
+  font-weight: 600;
+}
+:root[data-theme="dark"] .uni-hub-test .adm-char-count.over { color: #ff8a82; }
+
 /* === Admin Products === */
 .adm-header { margin-bottom: 20px; }
 .adm-header h1 { font-size: 22px; font-weight: 600; color: var(--ink); }

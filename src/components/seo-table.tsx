@@ -28,7 +28,6 @@ type SortKey =
   | "indexed";
 type SortDir = "asc" | "desc";
 
-// Memo limits: 580px / ~58 chars on title, 130-155 on description.
 const TITLE_LIMIT = 58;
 const DESC_LIMIT = 155;
 
@@ -38,6 +37,12 @@ const TYPE_ORDER: Record<RowType, number> = {
   "Network hub": 2,
   Product: 3,
 };
+
+// Single ranking grid track. Matches the columnar look of the public
+// hub tables (/eth, /usdc, /admin/acquisition) so the SEO page sits
+// inside the same visual language as the rest of the admin.
+const COLS =
+  "48px 110px minmax(170px, 1.4fr) minmax(260px, 2fr) minmax(280px, 2.4fr) 90px 70px 80px 70px";
 
 function CharCount({ count, limit }: { count: number; limit: number }) {
   const over = count > limit;
@@ -63,32 +68,26 @@ function SortHeader({
 }) {
   const active = currentKey === sortKey;
   return (
-    <th
-      className={`adm-th adm-th-sort${active ? " active" : ""} ${className ?? ""}`.trim()}
+    <button
+      type="button"
+      className={`hub-th hub-th-sort${active ? " active" : ""} ${className ?? ""}`.trim()}
       onClick={() => onClick(sortKey)}
     >
       <span>{label}</span>
-      <span className="adm-sort-ind" aria-hidden="true">
+      <span className="hub-sort-ind" aria-hidden="true">
         {active ? (currentDir === "asc" ? "▲" : "▼") : "↕"}
       </span>
-    </th>
+    </button>
   );
 }
 
 export function SeoTable({
   rows,
-  vaultCount,
-  lastUpdated,
 }: {
   rows: SeoRow[];
-  vaultCount: number;
   siteOrigin?: string;
-  lastUpdated: string;
 }) {
   const [search, setSearch] = useState("");
-  // Default sort is "natural" — preserves the order rows arrive in
-  // (home -> asset hubs -> network hubs -> products) which matches
-  // how a user navigates the site.
   const [sortKey, setSortKey] = useState<SortKey>("natural");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
@@ -144,163 +143,146 @@ export function SeoTable({
     return copy;
   }, [filtered, sortKey, sortDir]);
 
-  const typeCounts = useMemo(() => {
-    const out: Record<RowType, number> = {
-      Home: 0,
-      "Asset hub": 0,
-      "Network hub": 0,
-      Product: 0,
-    };
-    for (const r of rows) out[r.type] += 1;
-    return out;
-  }, [rows]);
-
   return (
-    <div className="adm-seo">
-      <header className="adm-seo-head">
-        <h1>SEO Overview</h1>
-        <p className="adm-seo-meta">
-          {rows.length} pages · {vaultCount} vaults · last updated {lastUpdated}
-        </p>
-        <p className="adm-seo-tally">
-          {typeCounts.Home} home · {typeCounts["Asset hub"]} asset hubs ·{" "}
-          {typeCounts["Network hub"]} network hubs · {typeCounts.Product} product
-          pages
-        </p>
-      </header>
-
-      <div className="adm-seo-controls">
+    <>
+      <div className="hub-filterbar" role="group" aria-label="Filter pages">
         <input
-          type="text"
-          className="adm-input"
+          type="search"
+          className="seo-filter-input"
           placeholder="Filter by slug, title, type, or chain"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label="Filter pages"
         />
-        <span className="adm-seo-count">
-          Showing {sorted.length} of {rows.length}
+        <span className="hub-filter-meta">
+          {sorted.length} of {rows.length} pages
         </span>
       </div>
 
-      <div className="adm-table-wrap">
-        <table className="adm-table">
-          <thead>
-            <tr>
-              <th className="adm-th adm-th-rank">#</th>
-              <SortHeader
-                label="Type"
-                sortKey="type"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-              />
-              <SortHeader
-                label="Slug"
-                sortKey="slug"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-              />
-              <SortHeader
-                label="Meta title"
-                sortKey="title"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-              />
-              <SortHeader
-                label="Meta description"
-                sortKey="description"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-                className="adm-col-desc"
-              />
-              <SortHeader
-                label="Chain"
-                sortKey="chain"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-                className="adm-col-md"
-              />
-              <SortHeader
-                label="APY"
-                sortKey="apy"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-                className="adm-col-md adm-th-right"
-              />
-              <SortHeader
-                label="TVL"
-                sortKey="tvl"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-                className="adm-col-md adm-th-right"
-              />
-              <SortHeader
-                label="Index"
-                sortKey="indexed"
-                currentKey={sortKey}
-                currentDir={sortDir}
-                onClick={handleSort}
-              />
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((row, i) => {
+      <div className="hub-table-wrap">
+        <div className="hub-table" role="table" aria-label="SEO inventory">
+          <div
+            className="hub-thead"
+            role="row"
+            style={{ gridTemplateColumns: COLS }}
+          >
+            <span className="hub-th hub-th-rank">#</span>
+            <SortHeader
+              label="Type"
+              sortKey="type"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+            />
+            <SortHeader
+              label="Slug"
+              sortKey="slug"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+            />
+            <SortHeader
+              label="Meta title"
+              sortKey="title"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+            />
+            <SortHeader
+              label="Meta description"
+              sortKey="description"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+            />
+            <SortHeader
+              label="Chain"
+              sortKey="chain"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+            />
+            <SortHeader
+              label="APY"
+              sortKey="apy"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+              className="hub-th-right"
+            />
+            <SortHeader
+              label="TVL"
+              sortKey="tvl"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+              className="hub-th-right"
+            />
+            <SortHeader
+              label="Index"
+              sortKey="indexed"
+              currentKey={sortKey}
+              currentDir={sortDir}
+              onClick={handleSort}
+            />
+          </div>
+          {sorted.length === 0 ? (
+            <div className="hub-empty">No pages match those filters.</div>
+          ) : (
+            sorted.map((row, i) => {
               const titleLen = row.title.length;
               const descLen = row.description.length;
               const truncatedDesc =
                 row.description.length > 220
                   ? row.description.slice(0, 220) + "…"
                   : row.description;
-              const typeClass = row.type
-                .toLowerCase()
-                .replace(/\s+/g, "-");
+              const typeClass = row.type.toLowerCase().replace(/\s+/g, "-");
               return (
-                <tr key={`${row.type}-${row.slug}`} className="adm-row">
-                  <td className="adm-cell adm-rank">{i + 1}</td>
-                  <td className="adm-cell">
-                    <span className={`adm-type-pill adm-type-${typeClass}`}>
+                <div
+                  key={`${row.type}-${row.slug}`}
+                  className="hub-row seo-row"
+                  role="row"
+                  style={{ gridTemplateColumns: COLS }}
+                >
+                  <span className="hub-cell hub-rank">{i + 1}</span>
+                  <span className="hub-cell">
+                    <span className={`seo-type-pill seo-type-${typeClass}`}>
                       {row.type}
                     </span>
-                  </td>
-                  <td className="adm-cell adm-slug">
-                    <Link href={row.slug} className="adm-link">
+                  </span>
+                  <span className="hub-cell seo-slug-cell">
+                    <Link href={row.slug} className="seo-slug-link mono">
                       {row.slug}
                     </Link>
-                  </td>
-                  <td className="adm-cell">
-                    <span className="adm-title">{row.title}</span>
+                  </span>
+                  <span className="hub-cell seo-text-cell">
+                    <span className="seo-title">{row.title}</span>
                     <CharCount count={titleLen} limit={TITLE_LIMIT} />
-                  </td>
-                  <td className="adm-cell adm-col-desc">
-                    <span className="adm-desc">{truncatedDesc}</span>
+                  </span>
+                  <span className="hub-cell seo-text-cell">
+                    <span className="seo-desc">{truncatedDesc}</span>
                     <CharCount count={descLen} limit={DESC_LIMIT} />
-                  </td>
-                  <td className="adm-cell adm-col-md">{row.chain}</td>
-                  <td className="adm-cell adm-col-md adm-cell-right adm-num">
+                  </span>
+                  <span className="hub-cell hub-strategy">{row.chain}</span>
+                  <span className="hub-cell hub-num hub-th-right">
                     {row.apy}
-                  </td>
-                  <td className="adm-cell adm-col-md adm-cell-right adm-num">
+                  </span>
+                  <span className="hub-cell hub-num hub-th-right">
                     {row.tvl}
-                  </td>
-                  <td className="adm-cell">
+                  </span>
+                  <span className="hub-cell">
                     <span
-                      className={`adm-pill${row.indexed ? " ok" : " no"}`}
+                      className={`seo-index-pill${row.indexed ? " ok" : " no"}`}
                     >
                       {row.indexed ? "index" : "noindex"}
                     </span>
-                  </td>
-                </tr>
+                  </span>
+                </div>
               );
-            })}
-          </tbody>
-        </table>
+            })
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
