@@ -783,3 +783,54 @@ body:has(.uni-hub-test) {
   .uni-hub-test .aq-funnel-step { padding: 6px 12px; font-size: 13px; }
   .uni-hub-test .aq-step-title { font-size: 22px; }
 }
+
+/* === Acquisition clicks table ======================================
+   Uniform left-alignment across every column so header + cell text
+   line up visually. Override the hub-table's column-by-column
+   alignment quirks (right-aligned strategy, centred network) that
+   exist for the public asset-hub ranking but read as chaotic here. */
+.uni-hub-test .aq-clicks-table .hub-th,
+.uni-hub-test .aq-clicks-table .hub-cell {
+  text-align: left;
+  justify-self: start;
+  justify-content: flex-start;
+}
+.uni-hub-test .aq-cell-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--uni-ink);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.uni-hub-test .aq-cell-vault { min-width: 0; }
+.uni-hub-test .aq-vault-link {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--uni-ink);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
+}
+.uni-hub-test .aq-vault-link:hover {
+  color: #ffb936;
+}
+.uni-hub-test .aq-cell-page {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--uni-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-hub-test .aq-cell-session {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--uni-ink-3);
+  letter-spacing: 0.04em;
+}
+.uni-hub-test .aq-muted {
+  color: var(--uni-ink-3);
+}

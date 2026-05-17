@@ -220,12 +220,12 @@ function TableSection({ clicks }: { clicks: Click[] }) {
         </div>
       ) : (
         <div className="hub-table-wrap">
-          <div className="hub-table">
+          <div className="hub-table aq-clicks-table">
             <div
               className="hub-thead"
               style={{ gridTemplateColumns: TABLE_COLS }}
             >
-              <span className="hub-th hub-th-rank">Time</span>
+              <span className="hub-th">Time</span>
               <span className="hub-th">Vault</span>
               <span className="hub-th">CTA</span>
               <span className="hub-th">From page</span>
@@ -240,44 +240,24 @@ function TableSection({ clicks }: { clicks: Click[] }) {
                 className="hub-row"
                 style={{ gridTemplateColumns: TABLE_COLS }}
               >
-                <span className="hub-cell hub-rank">
+                <span className="hub-cell aq-cell-time">
                   {formatTime(c.created_at)}
                 </span>
-                <span className="hub-cell hub-vault">
+                <span className="hub-cell aq-cell-vault">
                   {c.vault_slug ? (
-                    <Link
-                      href={`/${c.vault_slug}`}
-                      className="hub-vault-name"
-                      style={{ fontFamily: "var(--mono)", fontSize: 13 }}
-                    >
+                    <Link href={`/${c.vault_slug}`} className="aq-vault-link">
                       {c.vault_slug}
                     </Link>
                   ) : (
-                    <span className="hub-vault-name" style={{ color: "var(--hub-ink-3)" }}>—</span>
+                    <span className="aq-muted">—</span>
                   )}
                 </span>
-                <span className="hub-cell hub-strategy">
-                  {labelForCta(c.source_cta)}
-                </span>
-                <span
-                  className="hub-cell hub-strategy"
-                  style={{ fontFamily: "var(--mono)", fontSize: 12 }}
-                >
-                  {c.source_page}
-                </span>
-                <span className="hub-cell hub-strategy">{c.source ?? "—"}</span>
-                <span className="hub-cell hub-strategy">{c.country ?? "—"}</span>
-                <span className="hub-cell hub-strategy">
-                  {c.device_type ?? "—"}
-                </span>
-                <span
-                  className="hub-cell"
-                  style={{
-                    fontFamily: "var(--mono)",
-                    fontSize: 11,
-                    color: "var(--hub-ink-3)",
-                  }}
-                >
+                <span className="hub-cell">{labelForCta(c.source_cta)}</span>
+                <span className="hub-cell aq-cell-page">{c.source_page}</span>
+                <span className="hub-cell">{c.source ?? "—"}</span>
+                <span className="hub-cell">{c.country ?? "—"}</span>
+                <span className="hub-cell">{c.device_type ?? "—"}</span>
+                <span className="hub-cell aq-cell-session">
                   {(c.session_id || "").slice(0, 8)}
                 </span>
               </div>
@@ -291,10 +271,12 @@ function TableSection({ clicks }: { clicks: Click[] }) {
 
 function labelForCta(cta: string | null): string {
   if (!cta) return "—";
-  // Map the internal CTA identifiers to friendlier labels.
-  if (cta === "sidebar-view-strategy") return "Sidebar — View Strategy";
-  if (cta === "sticky-view") return "Sticky — View";
-  if (cta === "bottom-open-in-app") return "Bottom — Open in app";
+  // Map internal CTA identifiers to display labels. Drop the
+  // location prefix (Sidebar/Sticky/Bottom) for compactness - the
+  // identifier is still in the row data for analytics.
+  if (cta === "sidebar-view-strategy") return "CTA - View Strategy";
+  if (cta === "sticky-view") return "CTA - View";
+  if (cta === "bottom-open-in-app") return "CTA - Open in app";
   return cta;
 }
 

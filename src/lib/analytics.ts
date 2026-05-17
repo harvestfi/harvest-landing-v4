@@ -9,9 +9,16 @@
 
 const CONSENT_KEY = "harvest_analytics_consent";
 
+// TEMP: testing-phase override. While CONSENT_REQUIRED is false, the
+// cookie banner is suppressed and every visitor is treated as
+// consented so tracking fires immediately. Flip to `true` before
+// shipping a public consent flow.
+const CONSENT_REQUIRED = false;
+
 export type Consent = "accepted" | "declined";
 
 export function getConsent(): Consent | null {
+  if (!CONSENT_REQUIRED) return "accepted";
   try {
     const v = localStorage.getItem(CONSENT_KEY);
     return v === "accepted" || v === "declined" ? v : null;
