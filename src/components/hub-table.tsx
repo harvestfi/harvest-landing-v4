@@ -326,7 +326,10 @@ function Row({
       >
         <ChainIcon chain={vault.chain} size={20} />
       </span>
-      <span className="hub-cell hub-spark" aria-hidden="true">
+      <span
+        className={`hub-cell hub-spark${trendUp ? " hub-spark-up" : " hub-spark-flat"}`}
+        aria-hidden="true"
+      >
         {sparkPath ? (
           <svg
             viewBox="0 0 100 100"
@@ -337,7 +340,7 @@ function Row({
             <path
               d={sparkPath}
               fill="none"
-              stroke={trendUp ? "#ffb936" : "#6e6c66"}
+              stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
