@@ -6,6 +6,12 @@
 // hub-table-wrap for the visits table. The only bespoke bit is the
 // gold-bars-on-dotted-bg chart card, styled to match the bar mode
 // of TestChart from product pages.
+//
+// CRITICAL: this stylesheet is import-scoped per page in this app.
+// Every hub page (/eth, /usdc, /btc, /polygon, ...) does the same
+// import. Without it the .uni-hub-test selectors don't apply and
+// the page renders as unstyled boxes.
+import "../../_styles/asset-hub.css";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabaseSelect } from "@/lib/supabase";
