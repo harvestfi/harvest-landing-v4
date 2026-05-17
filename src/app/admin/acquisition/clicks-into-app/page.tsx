@@ -31,9 +31,14 @@ const ROWS_FETCH_LIMIT = 1000;
 const ROWS_DISPLAY_LIMIT = 200;
 const CHART_DAYS = 30;
 
-// 8-column track for the clicks table.
+// 8-column track for the clicks table. Mirrors the Traffic page
+// rhythm exactly (150px time anchor + minmax(220px, 2fr) primary
+// content column + 1fr categorical columns + 0.7fr device + 110px
+// session id) and just slots an extra 130px CTA column in third
+// position so the visit + click tables read as siblings, not
+// cousins.
 const TABLE_COLS =
-  "150px minmax(180px, 1.6fr) 130px 1fr 1fr 0.9fr 0.7fr 110px";
+  "150px minmax(220px, 2fr) 130px 1fr 1fr 1fr 0.7fr 110px";
 
 export default function AppClicksPage() {
   const [clicks, setClicks] = useState<Click[] | null>(null);

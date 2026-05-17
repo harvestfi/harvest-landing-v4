@@ -1,4 +1,4 @@
-import { getVaults } from "@/lib/data";
+import { getVaults, isBrokenLowTvlVault, isStaleApyVault, hasMissingMetrics } from "@/lib/data";
 import { getCanonicalSlugs, getDuplicateGroupKey } from "@/lib/canonical-vaults";
 import { AdminProductsTable, type AdminRow } from "@/components/admin-products-table";
 import "../../_styles/asset-hub.css";
@@ -6,6 +6,12 @@ import "../../_styles/asset-hub.css";
 // Admin > Products. Sits inside the canonical .uni-hub-test shell
 // (the same one /eth, /usdc, /admin/acquisition, /admin SEO use)
 // so every admin surface speaks one visual language.
+//
+// The `indexed` flag matches what the slug-page generateMetadata
+// actually emits: a vault is indexable when it's the canonical slug
+// in its duplicate group AND not broken AND not stale (APY frozen
+// for 14+ days) AND has both 24h APY and TVL data. The table
+// surfaces the reason via the noindex pill + a Reason column.
 
 export default async function AdminProductsPage() {
   const vaults = await getVaults();
@@ -20,6 +26,15 @@ export default async function AdminProductsPage() {
   const rows: AdminRow[] = vaults
     .map((v) => {
       const groupKey = getDuplicateGroupKey(v.slug);
+      const isCanonical = canonical.has(v.slug);
+      const broken = isBrokenLowTvlVault(v);
+      const stale = isStaleApyVault(v);
+      const missing = hasMissingMetrics(v);
+      const reasons: AdminRow["noindexReasons"] = [];
+      if (!isCanonical) reasons.push("duplicate");
+      if (broken) reasons.push("broken");
+      if (stale) reasons.push("stale");
+      if (missing) reasons.push("no-data");
       return {
         slug: v.slug,
         productName: v.productName,
@@ -27,7 +42,8 @@ export default async function AdminProductsPage() {
         asset: v.asset,
         apy24h: v.apy24h,
         tvl: v.tvl,
-        indexed: canonical.has(v.slug),
+        indexed: reasons.length === 0,
+        noindexReasons: reasons,
         groupKey,
         groupSize: groupSizes.get(groupKey) ?? 1,
       };
@@ -48,10 +64,13 @@ export default async function AdminProductsPage() {
           <div>
             <h1 className="uni-hub-h1">Products</h1>
             <p className="uni-hub-sub">
-              Every vault returned by the indexer. When the API surfaces the
-              same product under multiple slugs ({"{slug}-1, {slug}-2"}), the
-              highest-TVL entry stays indexed and the rest are marked noindex
-              to protect crawl budget.
+              Every vault returned by the indexer. A product is marked
+              noindex (in code, not just visually) when it duplicates a
+              higher-TVL sibling, when its APY has been frozen for 14+ days
+              ({"stale"}), when its TVL is under $10K with a flat history
+              ({"broken"}), or when its 24h APY / TVL column shows no data.
+              The slug page emits robots noindex and the sitemap drops it,
+              so crawlers stop wasting budget.
             </p>
           </div>
         </div>
@@ -63,14 +82,8 @@ export default async function AdminProductsPage() {
           style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
         >
           <Stat label="Total products" value={rows.length.toLocaleString("en-US")} />
-          <Stat
-            label="Indexed"
-            value={indexedCount.toLocaleString("en-US")}
-          />
-          <Stat
-            label="Noindex"
-            value={noindexCount.toLocaleString("en-US")}
-          />
+          <Stat label="Indexed" value={indexedCount.toLocaleString("en-US")} />
+          <Stat label="Noindex" value={noindexCount.toLocaleString("en-US")} />
           <Stat
             label="Duplicate groups"
             value={duplicateGroups.toLocaleString("en-US")}

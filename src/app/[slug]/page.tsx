@@ -6,6 +6,8 @@ import {
   getAllSlugs,
   getVaultHistory,
   isBrokenLowTvlVault,
+  isStaleApyVault,
+  hasMissingMetrics,
 } from "@/lib/data";
 import { isCanonicalSlug } from "@/lib/canonical-vaults";
 import { formatAPY, formatTVL } from "@/lib/format";
@@ -86,7 +88,15 @@ export async function generateMetadata({
 
   const canonical = await isCanonicalSlug(slug);
   const broken = isBrokenLowTvlVault(vault);
-  const indexable = canonical && !broken;
+  // Two additional gates so we don't burn crawl budget on pages
+  // whose headline numbers are empty or whose APY has been frozen
+  // for 14+ days (which is our public-rankings staleness threshold).
+  // Both conditions mirror checks already used to drop the vault
+  // from the live ranking surface, so noindex + ranking-hide stay
+  // in lockstep.
+  const stale = isStaleApyVault(vault);
+  const missingMetrics = hasMissingMetrics(vault);
+  const indexable = canonical && !broken && !stale && !missingMetrics;
 
   return {
     title: { absolute: title },

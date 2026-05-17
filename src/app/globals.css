@@ -3700,6 +3700,46 @@ body:has(.admin-shell) .foot {
   text-overflow: ellipsis;
   vertical-align: middle;
 }
+.uni-hub-test .adm-empty {
+  color: var(--uni-ink-3);
+  font-family: var(--mono);
+}
+.uni-hub-test .adm-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.uni-hub-test .adm-reason {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+.uni-hub-test .adm-reason-duplicate {
+  background: rgba(99, 102, 241, 0.14);
+  color: #4a4eb5;
+}
+.uni-hub-test .adm-reason-broken {
+  background: rgba(192, 50, 42, 0.12);
+  color: #b13129;
+}
+.uni-hub-test .adm-reason-stale {
+  background: rgba(255, 185, 54, 0.2);
+  color: #946208;
+}
+.uni-hub-test .adm-reason-no-data {
+  background: var(--uni-tint);
+  color: var(--uni-ink-3);
+}
+:root[data-theme="dark"] .uni-hub-test .adm-reason-duplicate { color: #a4a8ff; }
+:root[data-theme="dark"] .uni-hub-test .adm-reason-broken { color: #ff8a82; }
+:root[data-theme="dark"] .uni-hub-test .adm-reason-stale { color: #ffd98a; }
 
 /* === Master Rules + Ranking Rules cards =========================
    Card grid used by both /admin/master-rules and /admin/ranking-rules.
@@ -3710,7 +3750,7 @@ body:has(.admin-shell) .foot {
 .uni-hub-test .rules-cards {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 .uni-hub-test .rules-card {
   display: block;

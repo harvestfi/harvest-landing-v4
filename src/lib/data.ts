@@ -205,6 +205,28 @@ function isStaleApyHistory(history: ApyHistoryPoint[]): boolean {
   return latest.timestamp - oldest.timestamp >= STALE_APY_DAYS * 86400;
 }
 
+// Per-vault wrapper around isStaleApyHistory that hits the cached
+// indexed history. Exported so the slug-page metadata builder and
+// the admin Products table can both consult the same staleness
+// signal that already drives the public rankings.
+export function isStaleApyVault(v: YieldVault): boolean {
+  if (!_historyCache) _historyCache = loadHistoryFromFile();
+  const h =
+    _historyCache?.[v.contractAddress] ??
+    _historyCache?.[v.contractAddress.toLowerCase()];
+  if (!h) return false;
+  return isStaleApyHistory(h.apyHistory);
+}
+
+// True when the public surface would render a "—" for either of the
+// two KPIs - useful both as a noindex signal (no point burning crawl
+// budget on a page whose headline numbers are empty) and as a flag
+// in the admin Products view so the operator sees which vaults are
+// effectively dead.
+export function hasMissingMetrics(v: YieldVault): boolean {
+  return !(v.apy24h > 0) || !(v.tvl > 0);
+}
+
 let _staleSetCache: Set<string> | null = null;
 
 function getStaleAddresses(): Set<string> {
