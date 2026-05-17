@@ -1,16 +1,15 @@
 "use client";
 
 // Acquisition funnel - step 03: User Networth.
-// Mirror of the Traffic + App Clicks layout but sourced from
-// wallet_connections_prod. Each row is one connection event of a
-// wallet to the Harvest app, snapshot-recorded with the wallet's
-// total balance and the portion currently held in Harvest vaults.
-// Last 5000 connections are pulled client-side; aggregates are
-// computed across that window with latest-per-wallet dedupe.
+// Sourced from wallet_connections_prod. Pulls the full table via
+// paginated REST calls and aggregates client-side. The daily-TVL
+// chart caps visible bars at $100M; rows beyond that are corrupt
+// snapshots (a few exceed $1B) and paint red so the operator can
+// spot them while the cap stops one outlier from flattening the
+// rest of the chart.
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { supabaseSelect } from "@/lib/supabase";
+import { supabaseSelectAll } from "@/lib/supabase";
 import { formatTVL } from "@/lib/format";
 
 interface WalletConnection {
@@ -21,9 +20,11 @@ interface WalletConnection {
   harvest_balance: number | null;
 }
 
-const ROWS_FETCH_LIMIT = 5000;
 const ROWS_DISPLAY_LIMIT = 200;
 const CHART_DAYS = 30;
+// Daily TVL above this is an outlier - the underlying row contains
+// a corrupt balance reading. Bars cap at this height and paint red.
+const TVL_OUTLIER_CAP = 100_000_000; // $100M
 // 5-column track for the connections table.
 const TABLE_COLS =
   "150px minmax(180px, 1.4fr) 1fr 1fr 110px";
@@ -38,8 +39,8 @@ export default function UserNetworthPage() {
     let cancelled = false;
     (async () => {
       try {
-        const params = `select=id,wallet_address,connected_at,balance,harvest_balance&order=connected_at.desc&limit=${ROWS_FETCH_LIMIT}`;
-        const data = await supabaseSelect<WalletConnection>(
+        const params = `select=id,wallet_address,connected_at,balance,harvest_balance&order=connected_at.desc`;
+        const data = await supabaseSelectAll<WalletConnection>(
           "wallet_connections_prod",
           params,
         );
@@ -58,8 +59,6 @@ export default function UserNetworthPage() {
     const now = Date.now();
     const dayMs = 86_400_000;
 
-    // Unique wallets per window. A wallet that connected 8 times in
-    // the last 24h is counted once.
     const uniquesIn = (days: number) => {
       const cutoff = now - days * dayMs;
       const set = new Set<string>();
@@ -70,10 +69,10 @@ export default function UserNetworthPage() {
       return set.size;
     };
 
-    // Aggregate net worth = sum of LATEST balance per wallet across
-    // the fetched window. Each wallet contributes the balance from
-    // its most recent connection event. Same logic for harvest
-    // balance.
+    // Aggregate net worth = latest balance per wallet, summed.
+    // Wallets with corrupt latest snapshots (harvest_balance >
+    // TVL_OUTLIER_CAP, balance > TVL_OUTLIER_CAP * 10) are excluded
+    // so one bad row doesn't trash the headline.
     const latestPerWallet = new Map<string, WalletConnection>();
     for (const c of connections) {
       if (!c.wallet_address) continue;
@@ -89,9 +88,16 @@ export default function UserNetworthPage() {
     }
     let sumBalance = 0;
     let sumHarvest = 0;
+    let outlierWallets = 0;
     for (const c of latestPerWallet.values()) {
-      sumBalance += Number(c.balance ?? 0);
-      sumHarvest += Number(c.harvest_balance ?? 0);
+      const bal = Number(c.balance ?? 0);
+      const hbal = Number(c.harvest_balance ?? 0);
+      if (hbal > TVL_OUTLIER_CAP || bal > TVL_OUTLIER_CAP * 10) {
+        outlierWallets++;
+        continue;
+      }
+      sumBalance += bal;
+      sumHarvest += hbal;
     }
 
     return {
@@ -101,6 +107,7 @@ export default function UserNetworthPage() {
       uniqueWallets: latestPerWallet.size,
       sumBalance,
       sumHarvest,
+      outlierWallets,
     };
   }, [connections]);
 
@@ -112,9 +119,11 @@ export default function UserNetworthPage() {
           Wallet connections to the Harvest app, snapshot-recorded with each
           wallet&apos;s total balance and the portion currently held in
           Harvest vaults. Sourced from <code>wallet_connections_prod</code>;
-          the latest 5,000 connection events are pulled client-side and
-          aggregated with latest-per-wallet dedupe so a wallet that reconnects
-          ten times still counts once in the totals.
+          the full table is paginated client-side and aggregated with
+          latest-per-wallet dedupe so a wallet that reconnects ten times
+          still counts once. Outlier rows (corrupt snapshots above $100M
+          daily) are marked red on the chart and excluded from the
+          aggregate totals.
         </p>
       </section>
 
@@ -151,8 +160,8 @@ export default function UserNetworthPage() {
 
       {connections && (
         <>
-          <NetworthCard stats={stats} totalConnections={connections.length} />
           <ChartSection connections={connections} days={CHART_DAYS} />
+          <NetworthCard stats={stats} totalConnections={connections.length} />
           <TableSection
             connections={connections.slice(0, ROWS_DISPLAY_LIMIT)}
           />
@@ -189,67 +198,19 @@ function Stat({
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Net-worth card — surfaces the three aggregate dollar values up
-// front so the operator sees the funnel-bottom number at a glance.
+// Chart — daily aggregate harvest_balance over the last 30 days.
+// Bars cap visually at TVL_OUTLIER_CAP ($100M); any day whose raw
+// sum exceeds the cap renders at full height in red and the
+// tooltip carries the real value. The scale-cap is what makes the
+// non-outlier days legible at all - one $1B bar otherwise crushes
+// every other day to a 1px stub.
 // ──────────────────────────────────────────────────────────────────
 
-function NetworthCard({
-  stats,
-  totalConnections,
-}: {
-  stats: {
-    uniqueWallets: number;
-    sumBalance: number;
-    sumHarvest: number;
-  } | null;
-  totalConnections: number;
-}) {
-  if (!stats) return null;
-  const share =
-    stats.sumBalance > 0
-      ? (stats.sumHarvest / stats.sumBalance) * 100
-      : null;
-
-  return (
-    <section className="uni-hub-section" style={{ marginTop: 0 }}>
-      <header className="uni-hub-section-head">
-        <h2 className="uni-hub-section-title">Net-worth aggregate</h2>
-        <span className="uni-hub-section-meta">
-          {totalConnections.toLocaleString("en-US")} connection events ·{" "}
-          {stats.uniqueWallets.toLocaleString("en-US")} unique wallets
-        </span>
-      </header>
-
-      <div className="aq-networth-grid">
-        <div className="aq-networth-tile aq-networth-tile-primary">
-          <div className="aq-networth-label">Total in Harvest</div>
-          <div className="aq-networth-value">{formatTVL(stats.sumHarvest)}</div>
-          <div className="aq-networth-meta">
-            sum of latest harvest_balance per wallet
-          </div>
-        </div>
-        <div className="aq-networth-tile">
-          <div className="aq-networth-label">Total wallet net worth</div>
-          <div className="aq-networth-value">{formatTVL(stats.sumBalance)}</div>
-          <div className="aq-networth-meta">
-            sum of latest balance per wallet
-          </div>
-        </div>
-        <div className="aq-networth-tile">
-          <div className="aq-networth-label">Share in Harvest</div>
-          <div className="aq-networth-value">
-            {share === null ? "—" : `${share.toFixed(1)}%`}
-          </div>
-          <div className="aq-networth-meta">harvest_balance ÷ balance</div>
-        </div>
-      </div>
-    </section>
-  );
+interface Bin {
+  v: number;
+  outlier: boolean;
+  daysAgo: number;
 }
-
-// ──────────────────────────────────────────────────────────────────
-// Chart — gold bars, daily unique-wallet connections.
-// ──────────────────────────────────────────────────────────────────
 
 function ChartSection({
   connections,
@@ -258,64 +219,79 @@ function ChartSection({
   connections: WalletConnection[];
   days: number;
 }) {
-  const { bins, max, total, latest, peak } = useMemo(() => {
+  const { bins, max, total, latest, peak, outlierDays } = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
-    // Bin holds a Set of wallet addresses connecting that day, so
-    // the bar represents unique wallets per day (not raw events).
-    const bins: { wallets: Set<string>; daysAgo: number }[] = [];
-    for (let i = 0; i < days; i++) {
-      bins.push({ wallets: new Set(), daysAgo: days - 1 - i });
-    }
+    const sums = new Array(days).fill(0) as number[];
     for (const c of connections) {
       const daysAgo = Math.floor(
         (now - new Date(c.connected_at).getTime()) / dayMs,
       );
-      if (daysAgo >= 0 && daysAgo < days && c.wallet_address) {
-        bins[days - 1 - daysAgo].wallets.add(c.wallet_address.toLowerCase());
-      }
+      if (daysAgo < 0 || daysAgo >= days) continue;
+      const hbal = Number(c.harvest_balance ?? 0);
+      if (!Number.isFinite(hbal) || hbal <= 0) continue;
+      sums[days - 1 - daysAgo] += hbal;
     }
-    const out = bins.map((b) => ({ v: b.wallets.size, daysAgo: b.daysAgo }));
-    const m = Math.max(1, ...out.map((b) => b.v));
-    const totalUniques = new Set<string>();
-    for (const b of bins) for (const w of b.wallets) totalUniques.add(w);
+    const bins: Bin[] = sums.map((v, i) => ({
+      v,
+      outlier: v > TVL_OUTLIER_CAP,
+      daysAgo: days - 1 - i,
+    }));
+    // Cap the visual ceiling at the outlier threshold so non-outlier
+    // days fill the plot area properly. A real $1B day still paints
+    // full height (red) but doesn't squash the rest.
+    const cappedMax = Math.max(
+      1,
+      ...bins.map((b) => Math.min(b.v, TVL_OUTLIER_CAP)),
+    );
+    const totalAll = sums.reduce((s, n) => s + n, 0);
     return {
-      bins: out,
-      max: m,
-      total: totalUniques.size,
-      latest: out[out.length - 1]?.v ?? 0,
-      peak: m,
+      bins,
+      max: cappedMax,
+      total: totalAll,
+      latest: bins[bins.length - 1]?.v ?? 0,
+      peak: Math.max(0, ...bins.filter((b) => !b.outlier).map((b) => b.v)),
+      outlierDays: bins.filter((b) => b.outlier).length,
     };
   }, [connections, days]);
 
   return (
-    <section className="uni-hub-section">
+    <section className="uni-hub-section" style={{ marginTop: 0 }}>
       <header className="uni-hub-section-head">
         <h2 className="uni-hub-section-title">
-          Daily unique wallets — last {days} days
+          Daily harvest balance — last {days} days
         </h2>
         <span className="uni-hub-section-meta">
-          today {latest.toLocaleString("en-US")} · peak{" "}
-          {peak.toLocaleString("en-US")}/day
+          today {formatTVL(latest)} · peak {formatTVL(peak)}/day
+          {outlierDays > 0 ? ` · ${outlierDays} outlier day(s)` : ""}
         </span>
       </header>
       <div className="aq-chart-card">
-        <div className="aq-chart-bignum">{total.toLocaleString("en-US")}</div>
+        <div className="aq-chart-bignum">{formatTVL(total)}</div>
         <div className="aq-chart-bignum-label">
-          unique wallets connected across the trailing {days} days
+          cumulative harvest_balance snapshots over the trailing {days} days
         </div>
 
         <div className="aq-chart">
           <div className="aq-chart-bars">
             {bins.map((b, i) => {
-              const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
+              // Render outlier bars at full plot height + red, all
+              // others scale against the $100M cap.
+              const visualHeight = b.outlier
+                ? 100
+                : b.v > 0
+                  ? Math.max((b.v / max) * 100, 4)
+                  : 0;
+              const labelDay = labelForDaysAgo(b.daysAgo);
+              const titleText = b.outlier
+                ? `${formatTVL(b.v)} (outlier, capped at $100M) — ${labelDay}`
+                : `${formatTVL(b.v)} — ${labelDay}`;
               return (
-                <div
-                  key={i}
-                  className="aq-bar-col"
-                  title={`${b.v} unique wallet${b.v === 1 ? "" : "s"} (${labelForDaysAgo(b.daysAgo)})`}
-                >
-                  <div className="aq-bar" style={{ height: `${heightPct}%` }} />
+                <div key={i} className="aq-bar-col" title={titleText}>
+                  <div
+                    className={`aq-bar${b.outlier ? " aq-bar-outlier" : ""}`}
+                    style={{ height: `${visualHeight}%` }}
+                  />
                 </div>
               );
             })}
@@ -335,6 +311,71 @@ function labelForDaysAgo(d: number): string {
   if (d === 0) return "today";
   if (d === 1) return "yesterday";
   return `${d} days ago`;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Net-worth aggregate — moved below the chart per request. Shows
+// the headline totals (Total in Harvest, Total wallet net worth,
+// Share in Harvest) with outliers already excluded by the parent
+// stats memo.
+// ──────────────────────────────────────────────────────────────────
+
+function NetworthCard({
+  stats,
+  totalConnections,
+}: {
+  stats: {
+    uniqueWallets: number;
+    sumBalance: number;
+    sumHarvest: number;
+    outlierWallets: number;
+  } | null;
+  totalConnections: number;
+}) {
+  if (!stats) return null;
+  const share =
+    stats.sumBalance > 0
+      ? (stats.sumHarvest / stats.sumBalance) * 100
+      : null;
+
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <h2 className="uni-hub-section-title">Net-worth aggregate</h2>
+        <span className="uni-hub-section-meta">
+          {totalConnections.toLocaleString("en-US")} connection events ·{" "}
+          {stats.uniqueWallets.toLocaleString("en-US")} unique wallets
+          {stats.outlierWallets > 0
+            ? ` · ${stats.outlierWallets} outlier wallet(s) excluded`
+            : ""}
+        </span>
+      </header>
+
+      <div className="aq-networth-grid">
+        <div className="aq-networth-tile aq-networth-tile-primary">
+          <div className="aq-networth-label">Total in Harvest</div>
+          <div className="aq-networth-value">{formatTVL(stats.sumHarvest)}</div>
+          <div className="aq-networth-meta">
+            sum of latest harvest_balance per wallet (outliers excluded)
+          </div>
+        </div>
+        <div className="aq-networth-tile">
+          <div className="aq-networth-label">Total wallet net worth</div>
+          <div className="aq-networth-value">{formatTVL(stats.sumBalance)}</div>
+          <div className="aq-networth-meta">
+            sum of latest balance per wallet (outliers excluded)
+          </div>
+        </div>
+        <div className="aq-networth-tile">
+          <div className="aq-networth-label">Share in Harvest</div>
+          <div className="aq-networth-value">
+            {share === null ? "—" : `${share.toFixed(1)}%`}
+          </div>
+          <div className="aq-networth-meta">harvest_balance ÷ balance</div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 // ──────────────────────────────────────────────────────────────────

@@ -55,3 +55,44 @@ export async function supabaseSelect<T>(
     return [];
   }
 }
+
+// Paginated full-table fetch. PostgREST hard-caps a single response
+// at 1000 rows, so for tables that have grown past that we need to
+// page through with the Range header. Caller passes the same
+// query-string they'd pass to supabaseSelect (select / order /
+// filters); pagination is handled here.
+//
+// hardLimit caps total rows pulled so a runaway table can't lock
+// the page. Defaults to 100k which is plenty for any analytics
+// surface and cheap to filter client-side.
+export async function supabaseSelectAll<T>(
+  table: string,
+  params: string = "",
+  chunk = 1000,
+  hardLimit = 100_000,
+): Promise<T[]> {
+  if (!configured()) return [];
+  const all: T[] = [];
+  for (let from = 0; from < hardLimit; from += chunk) {
+    const to = from + chunk - 1;
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/${table}${params ? "?" + params : ""}`;
+      const r = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          Range: `${from}-${to}`,
+          "Range-Unit": "items",
+        },
+      });
+      if (!r.ok) break;
+      const batch = (await r.json()) as T[];
+      if (!Array.isArray(batch) || batch.length === 0) break;
+      all.push(...batch);
+      if (batch.length < chunk) break;
+    } catch {
+      break;
+    }
+  }
+  return all;
+}

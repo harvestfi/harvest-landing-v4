@@ -892,3 +892,14 @@ body:has(.uni-hub-test) {
   .uni-hub-test .aq-networth-grid { grid-template-columns: 1fr; }
   .uni-hub-test .aq-networth-value { font-size: 24px; }
 }
+
+/* Outlier bar - red instead of gold so the operator instantly
+   spots days where the underlying snapshot is corrupt (e.g. a
+   $1B+ harvest_balance row). The bar is also capped to full plot
+   height by the renderer; the tooltip carries the real value. */
+.uni-hub-test .aq-bar.aq-bar-outlier {
+  background: #c0322a;
+}
+.uni-hub-test .aq-bar-col:hover .aq-bar.aq-bar-outlier {
+  filter: brightness(0.92);
+}
