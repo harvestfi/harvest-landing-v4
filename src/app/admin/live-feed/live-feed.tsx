@@ -91,6 +91,8 @@ type FeedItem =
       channel: string;
       country: string | null;
       pagePath: string;
+      hsid: string | null;
+      wallet: string | null;
     }
   | {
       kind: "click";
@@ -101,6 +103,8 @@ type FeedItem =
       vaultSlug: string | null;
       sourcePage: string;
       targetUrl: string;
+      hsid: string | null;
+      wallet: string | null;
     }
   | {
       kind: "event";
@@ -110,6 +114,7 @@ type FeedItem =
       country: string | null;
       attributed: boolean;
       upstream: string | null;
+      hsid: string | null;
       eventType: "deposit" | "withdraw";
       wallet: string;
       vaultSlug: string | null;
@@ -316,6 +321,23 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return m;
   }, [visits]);
 
+  // hsid (session_id) -> wallet that connected on that session. The
+  // reverse of walletSession: lets a visit/click row in the Stream show
+  // the wallet once the app persists the hsid on connect, even before
+  // any on-chain deposit. Earliest connect per session wins.
+  const sessionWallet = useMemo(() => {
+    const m = new Map<string, { wallet: string; t: number }>();
+    for (const w of connections ?? []) {
+      if (!w.session_id) continue;
+      const addr = (w.wallet_address || "").toLowerCase();
+      if (!addr) continue;
+      const t = new Date(w.connected_at).getTime();
+      const prev = m.get(w.session_id);
+      if (!prev || t < prev.t) m.set(w.session_id, { wallet: addr, t });
+    }
+    return m;
+  }, [connections]);
+
   // hsid -> earliest CTA click for that session. The "clicked into the
   // app" step, with the vault the CTA pointed at.
   const sessionClick = useMemo(() => {
@@ -335,17 +357,25 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     country: string | null;
     attributed: boolean;
     upstream: string | null;
+    hsid: string | null;
   } {
     const link = walletSession.get((wallet || "").toLowerCase());
     const ft = link?.session ? sessionFirstTouch.get(link.session) : undefined;
     if (!ft) {
-      return { channel: "External", country: null, attributed: false, upstream: null };
+      return {
+        channel: "External",
+        country: null,
+        attributed: false,
+        upstream: null,
+        hsid: link?.session ?? null,
+      };
     }
     return {
       channel: appChannel(ft.source),
       country: ft.country,
       attributed: true,
       upstream: classifyChannel(ft.source),
+      hsid: link?.session ?? null,
     };
   }
 
@@ -367,6 +397,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         channel: classifyChannel(v.source),
         country: v.country,
         pagePath: v.page,
+        hsid: `sample-hsid-v${i}`,
+        wallet: null,
       }));
       const sc: FeedItem[] = SAMPLE_CLICK_SEED.map((c, i) => ({
         kind: "click",
@@ -377,6 +409,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         vaultSlug: c.slug,
         sourcePage: `/${c.slug}`,
         targetUrl: "https://app.harvest.finance/",
+        hsid: `sample-hsid-c${i}`,
+        wallet: i === 0 ? "0xa56a2edcf9315e2cf98bd8d2b0a41a5eda3a09a2" : null,
       }));
       const se: FeedItem[] = SAMPLE_EVENT_SEED.map((s, i) => ({
         kind: "event",
@@ -386,6 +420,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         country: s.country,
         attributed: s.channel !== "External",
         upstream: s.channel,
+        hsid: s.channel === "External" ? null : `sample-hsid-e${i}`,
         eventType: s.type,
         wallet: s.wallet,
         vaultSlug: s.slug,
@@ -406,6 +441,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         channel: classifyChannel(v.source),
         country: v.country,
         pagePath: v.page_path || "/",
+        hsid: v.session_id || null,
+        wallet: v.session_id
+          ? sessionWallet.get(v.session_id)?.wallet ?? null
+          : null,
       })),
       ...(clicks ?? []).map((c, i) => ({
         kind: "click" as const,
@@ -416,6 +455,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         vaultSlug: c.vault_slug,
         sourcePage: c.source_page || "/",
         targetUrl: c.target_url,
+        hsid: c.session_id || null,
+        wallet: c.session_id
+          ? sessionWallet.get(c.session_id)?.wallet ?? null
+          : null,
       })),
       ...(events ?? []).map((e) => {
         const r = resolveWallet(e.wallet_address);
@@ -427,6 +470,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           country: r.country,
           attributed: r.attributed,
           upstream: r.upstream,
+          hsid: r.hsid,
           eventType: e.event_type as "deposit" | "withdraw",
           wallet: e.wallet_address,
           vaultSlug: e.vault_slug,
@@ -440,7 +484,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, DISPLAY_LIMIT);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visits, clicks, events, walletSession, sessionFirstTouch, loaded, realEmpty]);
+  }, [visits, clicks, events, walletSession, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
 
   const availableSources = useMemo(() => {
     const counts = new Map<string, number>();
@@ -724,17 +768,26 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                     </span>
                     <span className="uni-hub-cell" data-label="Event">
                       {item.kind === "visit" ? (
-                        <span className="lf-event lf-event-visit">
+                        <span
+                          className="lf-event lf-event-visit"
+                          title={item.hsid ? `hsid ${item.hsid}` : undefined}
+                        >
                           <VisitIcon />
                           Visit
                         </span>
                       ) : item.kind === "click" ? (
-                        <span className="lf-event lf-event-click">
+                        <span
+                          className="lf-event lf-event-click"
+                          title={item.hsid ? `hsid ${item.hsid}` : undefined}
+                        >
                           <ClickIcon />
                           App click
                         </span>
                       ) : (
-                        <span className={`lf-event lf-event-${item.eventType}`}>
+                        <span
+                          className={`lf-event lf-event-${item.eventType}`}
+                          title={item.hsid ? `hsid ${item.hsid}` : undefined}
+                        >
                           <EventIcon type={item.eventType} />
                           {item.eventType}
                         </span>
@@ -766,8 +819,17 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                       )}
                     </span>
                     <span className="uni-hub-cell" data-label="Wallet">
-                      {item.kind === "event" ? (
-                        <span className="lf-mono">{shortenAddress(item.wallet)}</span>
+                      {item.wallet ? (
+                        <span
+                          className="lf-mono"
+                          title={
+                            item.kind === "event"
+                              ? item.wallet
+                              : `${item.wallet} (connected this session)`
+                          }
+                        >
+                          {shortenAddress(item.wallet)}
+                        </span>
                       ) : (
                         <span className="lf-dim">—</span>
                       )}
