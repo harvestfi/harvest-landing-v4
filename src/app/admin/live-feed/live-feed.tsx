@@ -825,7 +825,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                           title={
                             item.kind === "event"
                               ? item.wallet
-                              : `${item.wallet} (connected this session)`
+                              : `${item.wallet} - linked to this session after the wallet connected in the app, not known at page-view time`
                           }
                         >
                           {shortenAddress(item.wallet)}
