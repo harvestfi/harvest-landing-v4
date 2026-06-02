@@ -89,11 +89,17 @@ export async function getVaults(): Promise<YieldVault[]> {
     vaults = live.length > 0 ? live : [FALLBACK_VAULT];
   }
 
-  // Reconcile each vault's headline APY with the cached daily history
-  // so the displayed 24h/30d numbers always match the chart on the
-  // product page. Upstream sometimes hands us a stale spot value (or
-  // falls back to a single shared "current" reading for both fields,
-  // which made the broken-vault detector trip on healthy entries).
+  // Reconcile TVL with cached daily history (see below). APY is taken
+  // straight from the listing API (vaults.json), which is the same
+  // source app.harvest.finance reads, so the headline 24h/30d numbers
+  // match the app. We previously overrode APY with a value derived from
+  // the cached apyHistory tail to match the chart, but for Autopilot /
+  // plasma vaults that history series swings day-to-day and diverges
+  // from the API (e.g. API 4.46% vs history tail 1.2%), which made the
+  // product page disagree with the app. History now drives the chart
+  // only; the API drives the headline. Fallback: if the API hands us no
+  // usable APY (0 / missing), derive from history so the field isn't
+  // blank.
   if (!_historyCache) _historyCache = loadHistoryFromFile();
   if (_historyCache) {
     const cache = _historyCache;
@@ -101,24 +107,11 @@ export async function getVaults(): Promise<YieldVault[]> {
       const h = cache[v.contractAddress] ?? cache[v.contractAddress.toLowerCase()];
       if (!h) return v;
       const next = { ...v };
-      if (h.apyHistory.length > 0) {
+      if (!(v.apy24h > 0) && h.apyHistory.length > 0) {
         const derived = deriveApyMetrics(h.apyHistory);
         if (derived) {
-          // Sanity check: the upstream indexer derives APY from realized
-          // share-price growth, so deposit/withdraw/migration spikes can
-          // pollute it for days. If the derived value is > 2.5x the
-          // protocol's published apyBreakdown sum, trust the breakdown
-          // (what the protocol UI itself shows) instead.
-          const breakdownSum = (v.apyBreakdown ?? []).reduce(
-            (s, b) => s + (Number.isFinite(b.apy) ? b.apy : 0),
-            0,
-          );
-          const trusted =
-            breakdownSum > 0 && derived.apy24h > breakdownSum * 2.5
-              ? { apy24h: breakdownSum, apy30d: breakdownSum }
-              : derived;
-          next.apy24h = trusted.apy24h;
-          next.apy30d = trusted.apy30d;
+          next.apy24h = derived.apy24h;
+          next.apy30d = derived.apy30d;
         }
       }
       // Same drift problem on TVL: the upstream value can lag what the
