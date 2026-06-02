@@ -51,17 +51,27 @@ function bucketByTime(sorted: Point[], range: Range): Point[] {
 
   if (range === "ALL") {
     if (sorted.length <= targetBars) return sorted;
-    const bucketSize = sorted.length / targetBars;
+    // Reserve the final slot for the latest point as its own discrete
+    // bar (real timestamp + value), then split the remaining history
+    // across the other bars. Without this, the index-split below buries
+    // today's reading inside the last slice's average and stamps the bar
+    // with that slice's MIDPOINT date (e.g. Jun 1), so "today" never
+    // shows on ALL the way it does on the time-window ranges below.
+    const latest = sorted[sorted.length - 1];
+    const head = sorted.slice(0, sorted.length - 1);
+    const headBars = targetBars - 1;
+    const bucketSize = head.length / headBars;
     const out: Point[] = [];
-    for (let i = 0; i < targetBars; i++) {
+    for (let i = 0; i < headBars; i++) {
       const start = Math.floor(i * bucketSize);
-      const end = Math.min(sorted.length, Math.floor((i + 1) * bucketSize));
+      const end = Math.min(head.length, Math.floor((i + 1) * bucketSize));
       if (start >= end) continue;
-      const slice = sorted.slice(start, end);
+      const slice = head.slice(start, end);
       const avgV = slice.reduce((s, p) => s + p.v, 0) / slice.length;
       const midT = slice[Math.floor(slice.length / 2)].t;
       out.push({ t: midT, v: avgV });
     }
+    out.push({ t: latest.t, v: latest.v });
     return out;
   }
 
@@ -271,15 +281,16 @@ export function OverviewChart({ series }: Props) {
     const downs = bucketByTime(sorted, range);
 
     // Pin the trailing bar to the latest raw observation (the live point
-    // appended by the page = vault.apy24h / vault.tvl), the same value
-    // the headline shows. Without this the final bucket is a time
-    // average that blends the latest reading with older points, so the
-    // last bar never matches the big number above it - e.g. a 4.46%
-    // headline over a ~2.8% trailing bar. Overriding only the last
-    // bucket keeps every earlier bar a true historical average.
+    // appended by the page = vault.apy24h / vault.tvl), both value and
+    // timestamp, so the last bar matches the big number above it and is
+    // dated today. Without the value pin the final bucket is a time
+    // average that blends the latest reading with older points (e.g. a
+    // 4.46% headline over a ~2.8% trailing bar); without the timestamp
+    // the ALL range labeled the last bar with a bucket midpoint date.
+    // Earlier bars stay true historical averages.
     if (downs.length > 0 && sorted.length > 0) {
-      const latestRaw = sorted[sorted.length - 1].v;
-      downs[downs.length - 1] = { ...downs[downs.length - 1], v: latestRaw };
+      const latest = sorted[sorted.length - 1];
+      downs[downs.length - 1] = { t: latest.t, v: latest.v };
     }
 
     // Manual min/max loop is faster than Math.min(...values) for
