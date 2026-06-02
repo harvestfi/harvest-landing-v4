@@ -330,7 +330,20 @@ async function fetchHarvestVaults() {
           (protocol ?? "").toLowerCase().includes("autopilot")
             ? "Autopilot"
             : "Autocompounder",
-        apy24h: history?.apy24h ?? currentApy,
+        // Headline APY must match what the user sees in
+        // app.harvest.finance ("Live APY"), which is the listing API's
+        // estimatedApy (= currentApy here). The app is the source of
+        // truth: a visitor must never see one APY on a product page and
+        // a different one after clicking through to the app. We used to
+        // take apy24h from the subgraph's apyAutoCompounds (a realized
+        // 24h return), but that diverges from the app's spot estimate -
+        // too high on some vaults (e.g. 28% vs app 1.48%), too low on
+        // others (1.2% vs app 4.46%). So the spot estimate drives the
+        // headline; the subgraph still feeds the 30d realized average
+        // (which the app also shows as a separate historical stat) and
+        // the on-page history chart. Fall back to the subgraph only when
+        // the listing API hands us no usable estimate.
+        apy24h: currentApy > 0 ? currentApy : history?.apy24h ?? currentApy,
         apy30d: history?.apy30d ?? currentApy,
         tvl,
         description: `${productName} on ${protocol} (${chain}). Yield strategy indexed by Harvest.`,
