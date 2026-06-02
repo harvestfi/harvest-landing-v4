@@ -270,6 +270,18 @@ export function OverviewChart({ series }: Props) {
     const sorted = [...all].sort((a, b) => a.t - b.t);
     const downs = bucketByTime(sorted, range);
 
+    // Pin the trailing bar to the latest raw observation (the live point
+    // appended by the page = vault.apy24h / vault.tvl), the same value
+    // the headline shows. Without this the final bucket is a time
+    // average that blends the latest reading with older points, so the
+    // last bar never matches the big number above it - e.g. a 4.46%
+    // headline over a ~2.8% trailing bar. Overriding only the last
+    // bucket keeps every earlier bar a true historical average.
+    if (downs.length > 0 && sorted.length > 0) {
+      const latestRaw = sorted[sorted.length - 1].v;
+      downs[downs.length - 1] = { ...downs[downs.length - 1], v: latestRaw };
+    }
+
     // Manual min/max loop is faster than Math.min(...values) for
     // arrays larger than a few hundred entries (no spread overhead).
     let minV = Infinity;
