@@ -104,29 +104,28 @@ export function VaultCommentary({
     }
   }
 
-  // 3. APY Percentile: is now a good time?
-  if (vault.apy24h > 0 && history.apyHistory.length >= 30) {
+  // 3. APY history range: where recent realized yield has sat. We
+  // describe the realized-history distribution on its own terms and do
+  // NOT compare it to vault.apy24h: that headline number is a spot
+  // estimate from the listing feed (what the app shows as "Live APY"),
+  // while apyHistory is realized return from the indexer. Mixing the
+  // two produced false verdicts like "1.48% sits at the 2nd percentile,
+  // below the vault's typical range" whenever the spot and realized
+  // series diverged. The two are different measures, not a good/bad
+  // signal, so we keep this purely descriptive.
+  if (history.apyHistory.length >= 30) {
     const allValid = history.apyHistory
       .filter((p) => p.apy >= 0)
       .map((p) => p.apy);
     if (allValid.length >= 30) {
-      const below = allValid.filter((v) => v < vault.apy24h).length;
-      const percentile = Math.round((below / allValid.length) * 100);
+      const avg = allValid.reduce((s, v) => s + v, 0) / allValid.length;
+      const lo = Math.min(...allValid);
+      const hi = Math.max(...allValid);
       const timeframe =
         allValid.length > 180 ? "its lifetime" : `its ${allValid.length}-day history`;
-      if (percentile >= 75) {
-        paragraphs.push(
-          `Current APY of ${formatAPY(vault.apy24h)} sits at the ${percentile}th percentile of ${timeframe}, performing well above typical levels for this vault.`,
-        );
-      } else if (percentile <= 25) {
-        paragraphs.push(
-          `Current APY of ${formatAPY(vault.apy24h)} sits at the ${percentile}th percentile of ${timeframe}, below the vault's typical range.`,
-        );
-      } else {
-        paragraphs.push(
-          `Current APY of ${formatAPY(vault.apy24h)} sits at the ${percentile}th percentile of ${timeframe}.`,
-        );
-      }
+      paragraphs.push(
+        `Across ${timeframe}, realized APY has averaged ${formatAPY(avg)}, ranging from ${formatAPY(lo)} to ${formatAPY(hi)}.`,
+      );
     }
   }
 

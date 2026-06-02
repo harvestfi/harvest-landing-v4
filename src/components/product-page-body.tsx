@@ -186,8 +186,8 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
     {
       question: "How stable has the APY been?",
       answer:
-        vault.apy24h > 0 && vault.apy30d > 0
-          ? `${formatAPY(vault.apy24h)} over the last 24 hours vs ${formatAPY(vault.apy30d)} over 30 days. ${Math.abs(vault.apy24h - vault.apy30d) < 1 ? "Spread is small, suggesting the rate has been steady." : "Notable drift between the short and longer window, common in DeFi."}`
+        vault.apy24h > 0
+          ? `The current 24-hour APY is ${formatAPY(vault.apy24h)}. The Strategy stability section above scores how much the realized yield has moved over the last 30 days, and the Historical statistics show its full range. DeFi yields are variable and move with market conditions, liquidity, and the underlying protocol's incentives.`
           : "APY history is too short to call stability one way or the other.",
     },
     {

@@ -299,26 +299,23 @@ export function buildPerformanceOverview(
     );
   }
 
-  // Line 03: current APY vs lifetime average. The percentile
-  // framing it replaced (e.g. "Xth percentile of its lifetime") was
-  // statistically correct but read as a financial report; comparing
-  // to the lifetime average (same number shown in Historical
-  // statistics) is something the user can hold in their head.
-  // Threshold: ±0.5 percentage points = "roughly in line".
+  // Line 03: lifetime realized APY, stated on its own terms. We do NOT
+  // compare it to vault.apy24h here. apy24h is a spot estimate from the
+  // listing feed (the app's "Live APY"); this lifetime average is
+  // realized return from the indexer. When the two series diverge,
+  // "current APY is below this vault's lifetime average" reads as a
+  // collapse that is not real, it is just two different measures. So we
+  // describe the realized history alone; the spot headline stands on
+  // its own above.
   const lifetime = history.apyHistory
     .filter((p) => Number.isFinite(p.apy) && p.apy >= 0)
     .map((p) => p.apy);
-  if (lifetime.length >= 5 && vault.apy24h > 0) {
+  if (lifetime.length >= 5) {
     const avg = lifetime.reduce((s, v) => s + v, 0) / lifetime.length;
-    const delta = vault.apy24h - avg;
-    const verb =
-      delta < -0.5
-        ? "is below"
-        : delta > 0.5
-          ? "is above"
-          : "is roughly in line with";
+    const lo = Math.min(...lifetime);
+    const hi = Math.max(...lifetime);
     lines.push(
-      `Current APY of ${formatAPY(vault.apy24h)} ${verb} this vault's lifetime average of ${formatAPY(avg)}.`,
+      `Over its tracked history, this vault's realized APY has averaged ${formatAPY(avg)}, ranging from ${formatAPY(lo)} to ${formatAPY(hi)}.`,
     );
   }
 

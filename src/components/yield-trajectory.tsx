@@ -20,7 +20,7 @@ function formatDate(ts: number): string {
   });
 }
 
-export function YieldTrajectory({ history, productName, apy24h, asset }: Props) {
+export function YieldTrajectory({ history, productName, asset }: Props) {
   const ref = depositRef(asset);
   const isNativeAsset = asset === "ETH" || asset === "BTC";
 
@@ -98,10 +98,6 @@ export function YieldTrajectory({ history, productName, apy24h, asset }: Props) 
     }
   }
 
-  // vs 30d average
-  const avg30d = mean(recent30d.map((p) => p.apy));
-  const vs30d = avg30d > 0 ? ((apy24h - avg30d) / avg30d) * 100 : 0;
-
   const sentences: string[] = [];
 
   // #8 Streak sentence - only meaningful when there's an actual
@@ -167,12 +163,12 @@ export function YieldTrajectory({ history, productName, apy24h, asset }: Props) 
     sentences.push(windowSentence);
   }
 
-  if (Math.abs(vs30d) > 5) {
-    const dir = vs30d > 0 ? "above" : "below";
-    sentences.push(
-      `Current 24h APY of ${formatAPY(apy24h)} is ${Math.abs(vs30d).toFixed(1)}% ${dir} the product's own 30-day average.`,
-    );
-  }
+  // Deliberately no "current 24h APY vs its own 30-day average"
+  // sentence here: apy24h is a spot estimate from the listing feed
+  // while the 30-day average is realized return from the indexer.
+  // Comparing the two produced false "X% below its 30-day average"
+  // verdicts when the series diverged. The headline already shows the
+  // spot number; this section stays within the realized history.
 
   return (
     <section className="pp-section" id="trajectory">
