@@ -304,7 +304,21 @@ export function OverviewChart({ series }: Props) {
     if (!Number.isFinite(minV)) minV = 0;
     if (!Number.isFinite(maxV)) maxV = 0;
     const span = maxV - minV;
+    // TVL bars are rooted at zero so their heights are proportional to
+    // the dollar value, the way the app renders them. With the min/max
+    // zoom used for the other metrics, a small move reads as a huge one:
+    // a window low of $1.25M and high of $1.42M (a 15% change) maps to
+    // 8% vs 100% bar height and looks like TVL doubled. APY and share
+    // price keep the zoom on purpose: there the user wants to see
+    // relative movement (volatility, compounding slope), not magnitude
+    // against zero, and values can legitimately sit near 0.
     const heightFor = (v: number): number => {
+      if (metric === "tvl") {
+        if (maxV <= 0) return 0;
+        // Proportional to zero; floor a hair above 0 so any real
+        // position still shows a sliver of bar.
+        return Math.max((v / maxV) * 100, v > 0 ? 1.5 : 0);
+      }
       if (span <= 0) return 60;
       return ((v - minV) / span) * 92 + 8;
     };
