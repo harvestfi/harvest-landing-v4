@@ -114,12 +114,20 @@ export async function getVaults(): Promise<YieldVault[]> {
           next.apy30d = derived.apy30d;
         }
       }
-      // Same drift problem on TVL: the upstream value can lag what the
-      // chart renders (which reads from cached daily history). Use the
-      // latest tvlHistory point if it's recent enough, so hero +
-      // ranking always agree with the on-page chart.
-      const latestTvl = latestTvlPoint(h.tvlHistory);
-      if (latestTvl !== null) next.tvl = latestTvl;
+      // TVL comes straight from the listing API (vault.tvl =
+      // totalValueLocked), the same source app.harvest.finance shows.
+      // We used to override it with the latest tvlHistory point (from the
+      // subgraph) to match the on-page chart, but that diverged from the
+      // app (e.g. listing $1.32M vs subgraph tail $1.29M) - the same
+      // spot-vs-history split we removed for APY. The app is the source
+      // of truth, so the listing value drives the headline / sidebar /
+      // ranking; the history series feeds only the chart (whose trailing
+      // bar is already pinned to vault.tvl). Fall back to the latest
+      // history point only when the listing API gives no usable TVL.
+      if (!(v.tvl > 0)) {
+        const latestTvl = latestTvlPoint(h.tvlHistory);
+        if (latestTvl !== null) next.tvl = latestTvl;
+      }
       return next;
     });
   }
