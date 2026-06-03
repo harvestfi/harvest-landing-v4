@@ -22,8 +22,18 @@ interface Props {
   country: string | null | undefined;
 }
 
+// Temporary display-layer country remaps. Swaps one ISO code for
+// another at render time without touching the stored analytics data, so
+// it's fully reversible. Currently: PL -> DE (show the German flag for
+// Polish-geolocated rows for now). Note "GER" isn't an ISO code; the
+// system uses ISO 3166-1 alpha-2, where Germany is "DE".
+const COUNTRY_REMAP: Record<string, string> = {
+  PL: "DE",
+};
+
 export function CountryFlag({ country }: Props) {
-  const iso = (country ?? "").trim();
+  const raw = (country ?? "").trim();
+  const iso = COUNTRY_REMAP[raw.toUpperCase()] ?? raw;
   const isValid = /^[A-Za-z]{2}$/.test(iso);
 
   return (
