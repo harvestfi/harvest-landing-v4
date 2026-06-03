@@ -28,6 +28,11 @@ jobs:
           node-version: '20'
 
       - name: Fetch data from APIs
+        env:
+          # Read-only: syncs the operator hide-list (hidden_products)
+          # into data/hidden.json so the build can drop hidden products.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: node scripts/fetch-data.mjs
 
       - name: Fetch holder counts (Blockscout)
@@ -40,6 +45,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/vaults.json data/history.json data/slugs.json
           if [ -f data/holders.json ]; then git add data/holders.json; fi
+          if [ -f data/hidden.json ]; then git add data/hidden.json; fi
           if git diff --cached --quiet; then
             echo "No data changes detected."
             exit 0

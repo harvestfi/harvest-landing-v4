@@ -207,6 +207,7 @@ export function buildPerformanceOverview(
   vault: YieldVault,
   history: FullVaultHistory,
   allVaults: YieldVault[],
+  hideRank = false,
 ): PerformanceOverviewResult {
   const lines: string[] = [];
   const ticker = vault.asset.toUpperCase();
@@ -250,7 +251,7 @@ export function buildPerformanceOverview(
   // Suppress the rank line on dead vaults (TVL <= $1): claiming a
   // ghost pool with no capital "ranks #1 / top quarter" is misleading.
   const deadVault = !(vault.tvl > 1);
-  if (idx >= 0 && total > 1 && vault.apy24h > 0 && !deadVault) {
+  if (idx >= 0 && total > 1 && vault.apy24h > 0 && !deadVault && !hideRank) {
     const rank = idx + 1;
     const ratio = rank / total;
     const head = `This vault's ${formatAPY(vault.apy24h)} APY ranks #${rank} among the ${total} ${ticker} vaults we monitor`;

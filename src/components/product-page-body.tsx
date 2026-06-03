@@ -8,6 +8,7 @@ import {
   getLiveVaults,
   getVaultHistory,
   getHoldersMap,
+  isHiddenProduct,
 } from "@/lib/data";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { isLowLiquidityTvl, LOW_LIQUIDITY_TVL_THRESHOLD } from "@/lib/admin-rules";
@@ -64,6 +65,13 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
     getLiveVaults(),
     getHoldersMap(),
   ]);
+
+  // A hidden product has opted out of every ranking surface, so it
+  // doesn't rank itself against peers on its own page either: the
+  // Market benchmarking, Ecosystem, and cohort-rank prose are suppressed
+  // (the page stays live and indexable; only the comparative ranking
+  // sections are dropped).
+  const hidden = isHiddenProduct(vault);
 
   const holderCount = holdersMap[vault.contractAddress.toLowerCase()] ?? null;
   const explorerUrl = CHAIN_EXPLORERS[vault.chain]
@@ -480,6 +488,7 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             vault={vault}
             history={history}
             allVaults={allVaults}
+            hideRank={hidden}
           />
         ) : (
           <VaultCommentary
@@ -487,12 +496,13 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
             allVaults={allVaults}
             history={history}
             numbered
+            hideRank={hidden}
           />
         )}
 
-        <MarketBenchmark vault={vault} allVaults={allVaults} />
+        {!hidden && <MarketBenchmark vault={vault} allVaults={allVaults} />}
 
-        <EcosystemContext vault={vault} allVaults={allVaults} />
+        {!hidden && <EcosystemContext vault={vault} allVaults={allVaults} />}
 
         {vault.vaultType === "Autopilot" || vault.vaultType === "Autocompounder" ? (
           <AutopilotYieldTrajectoryBlock vault={vault} history={history} />
@@ -819,12 +829,14 @@ function AutopilotPerformanceOverviewBlock({
   vault,
   history,
   allVaults,
+  hideRank = false,
 }: {
   vault: YieldVault;
   history: FullVaultHistory;
   allVaults: YieldVault[];
+  hideRank?: boolean;
 }) {
-  const { lines } = buildPerformanceOverview(vault, history, allVaults);
+  const { lines } = buildPerformanceOverview(vault, history, allVaults, hideRank);
   if (lines.length === 0) return null;
   return (
     <section className="pp-section" id="performance-overview">

@@ -18,6 +18,47 @@ const ROOT = join(__dirname, "..");
 const VAULTS_FILE = join(ROOT, "data", "vaults.json");
 const HISTORY_FILE = join(ROOT, "data", "history.json");
 const SLUGS_FILE = join(ROOT, "data", "slugs.json");
+const HIDDEN_FILE = join(ROOT, "data", "hidden.json");
+
+// Sync the operator hide-list from Supabase (table `hidden_products`,
+// one row per hidden slug) into data/hidden.json, which the build reads
+// to drop hidden products from every ranking. Best-effort: on any error
+// we leave the existing file untouched so a Supabase blip can't wipe the
+// hide-list. Uses the public anon key (read-only select), same config
+// the client already ships.
+async function syncHiddenList() {
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    log("[hidden] no Supabase env; leaving data/hidden.json as-is");
+    return;
+  }
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/hidden_products?select=slug`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+    );
+    if (!res.ok) {
+      log(`[hidden] fetch failed: ${res.status}; leaving file as-is`);
+      return;
+    }
+    const rows = await res.json();
+    const slugs = [
+      ...new Set(
+        (Array.isArray(rows) ? rows : [])
+          .map((r) => (r && typeof r.slug === "string" ? r.slug.trim().toLowerCase() : ""))
+          .filter(Boolean),
+      ),
+    ].sort();
+    writeFileSync(HIDDEN_FILE, JSON.stringify(slugs, null, 2) + "\n");
+    log(`[hidden] wrote ${HIDDEN_FILE} (${slugs.length} hidden)`);
+  } catch (err) {
+    log(`[hidden] error: ${err}; leaving file as-is`);
+  }
+}
 
 // Load persisted slug map (contractAddress -> slug) so URLs never change
 function loadSlugMap() {
@@ -759,6 +800,8 @@ async function main() {
 
   saveSlugMap(slugMap);
   log(`Wrote ${SLUGS_FILE} (${Object.keys(slugMap).length} slugs persisted)`);
+
+  await syncHiddenList();
 
   log("\nDone!");
 }

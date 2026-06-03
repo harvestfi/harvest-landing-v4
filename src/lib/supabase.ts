@@ -36,6 +36,28 @@ export async function supabaseInsert(
   }
 }
 
+// Delete rows matching a PostgREST filter (e.g. "slug=eq.foo"). Used by
+// the admin Hide panel to un-hide a product. Best-effort, like insert.
+export async function supabaseDelete(
+  table: string,
+  filter: string,
+): Promise<boolean> {
+  if (!configured()) return false;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: "return=minimal",
+      },
+    });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function supabaseSelect<T>(
   table: string,
   params: string = "",

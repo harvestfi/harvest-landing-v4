@@ -13,6 +13,39 @@ import { join } from "path";
 const VAULTS_FILE = join(process.cwd(), "data", "vaults.json");
 const HISTORY_FILE = join(process.cwd(), "data", "history.json");
 const HOLDERS_FILE = join(process.cwd(), "data", "holders.json");
+const HIDDEN_FILE = join(process.cwd(), "data", "hidden.json");
+
+// Operator hide-list. Slugs the admin Hide panel has marked as hidden;
+// synced from the Supabase `hidden_products` table into data/hidden.json
+// by the hourly cron (scripts/fetch-data.mjs). A hidden product is
+// removed from every ranking surface (homepage, /asset, /network, and
+// the cohort comparisons on other product pages) but keeps its own page
+// indexable - this is a ranking opt-out, NOT a noindex. Mirrors the
+// getStaleAddresses() exclusion-set pattern below.
+let _hiddenSetCache: Set<string> | null = null;
+
+export function getHiddenSlugs(): Set<string> {
+  if (_hiddenSetCache) return _hiddenSetCache;
+  const set = new Set<string>();
+  try {
+    if (existsSync(HIDDEN_FILE)) {
+      const raw = JSON.parse(readFileSync(HIDDEN_FILE, "utf-8"));
+      if (Array.isArray(raw)) {
+        for (const s of raw) {
+          if (typeof s === "string" && s.trim()) set.add(s.trim().toLowerCase());
+        }
+      }
+    }
+  } catch {
+    // missing / malformed file = nothing hidden; never break the build.
+  }
+  _hiddenSetCache = set;
+  return set;
+}
+
+export function isHiddenProduct(v: YieldVault): boolean {
+  return getHiddenSlugs().has(v.slug.toLowerCase());
+}
 
 const FALLBACK_VAULT: YieldVault = {
   id: "fallback",
@@ -272,7 +305,8 @@ export async function getLiveVaults(): Promise<YieldVault[]> {
       !stale.has(v.contractAddress.toLowerCase()) &&
       !isBrokenLowTvlVault(v) &&
       !isAerodromeVault(v) &&
-      !isHiddenLpPairVault(v),
+      !isHiddenLpPairVault(v) &&
+      !isHiddenProduct(v),
   );
 }
 

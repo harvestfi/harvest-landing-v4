@@ -42,6 +42,7 @@ const SECTIONS: Section[] = [
     label: "Products",
     items: [
       { label: "View All", href: "/admin/products" },
+      { label: "Hide", href: "/admin/hide" },
       { label: "SEO Overview", href: "/admin", exact: true },
     ],
   },

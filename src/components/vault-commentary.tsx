@@ -8,6 +8,9 @@ interface VaultCommentaryProps {
   allVaults: YieldVault[];
   history: FullVaultHistory;
   numbered?: boolean;
+  // When true (hidden product) the cohort-rank paragraph is dropped; the
+  // history-derived commentary still renders.
+  hideRank?: boolean;
 }
 
 function stdDev(values: number[]): number {
@@ -29,6 +32,7 @@ export function VaultCommentary({
   allVaults,
   history,
   numbered,
+  hideRank = false,
 }: VaultCommentaryProps) {
   // Self-include if excluded from allVaults (getLiveVaults drops
   // Aerodrome / LP-pair / stale / broken vaults), so the rank sentence
@@ -59,8 +63,8 @@ export function VaultCommentary({
   // capital). Headline numbers still render.
   const deadVault = !(vault.tvl > 1);
 
-  // 1. APY Ranking: is this competitive?
-  if (vault.apy24h > 0 && sameAssetVaults.length > 1 && !deadVault) {
+  // 1. APY Ranking: is this competitive? (dropped for hidden products)
+  if (vault.apy24h > 0 && sameAssetVaults.length > 1 && !deadVault && !hideRank) {
     const sorted = [...sameAssetVaults]
       .filter((v) => v.apy24h > 0)
       .sort((a, b) => b.apy24h - a.apy24h);
