@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   supabaseSelect,
-  supabaseInsert,
-  supabaseDelete,
+  supabaseInsertChecked,
+  supabaseDeleteChecked,
 } from "@/lib/supabase";
 
 export interface HideItem {
@@ -23,21 +23,21 @@ interface HiddenRow {
 
 const COLS = "minmax(220px, 2fr) 90px 110px 120px 90px";
 
-export function HideManager({ items }: { items: HideItem[] }) {
-  // Live hidden set from Supabase (the source of truth the cron syncs).
-  // Starts from the build-time set so the table is correct on first
-  // paint, then reconciles with Supabase once it loads.
-  const [hidden, setHidden] = useState<Set<string>>(
-    () =>
-      new Set(
-        items.filter((i) => i.hiddenAtBuild).map((i) => i.slug.toLowerCase()),
-      ),
-  );
-  const [loaded, setLoaded] = useState(false);
-  const [pending, setPending] = useState<Set<string>>(new Set());
-  const [query, setQuery] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+type LoadState = "loading" | "ready" | "error";
 
+export function HideManager({ items }: { items: HideItem[] }) {
+  // `saved` = the hidden set as it actually exists in Supabase (the
+  // source of truth the cron syncs). `draft` = what the operator has
+  // toggled in the UI but not yet saved. Save reconciles draft -> saved.
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [draft, setDraft] = useState<Set<string>>(new Set());
+  const [loadState, setLoadState] = useState<LoadState>("loading");
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [query, setQuery] = useState("");
+
+  // Load the live hidden set from Supabase on mount.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -47,18 +47,16 @@ export function HideManager({ items }: { items: HideItem[] }) {
           "select=slug",
         );
         if (cancelled) return;
-        setHidden(
-          new Set(
-            rows
-              .map((r) => (r.slug || "").toLowerCase())
-              .filter(Boolean),
-          ),
+        const set = new Set(
+          rows.map((r) => (r.slug || "").toLowerCase()).filter(Boolean),
         );
-        setLoaded(true);
+        setSaved(set);
+        setDraft(new Set(set));
+        setLoadState("ready");
       } catch (e) {
         if (!cancelled) {
-          setErr(String(e));
-          setLoaded(true);
+          setLoadErr(String(e));
+          setLoadState("error");
         }
       }
     })();
@@ -67,47 +65,73 @@ export function HideManager({ items }: { items: HideItem[] }) {
     };
   }, []);
 
-  async function toggle(slug: string) {
+  function toggle(slug: string) {
     const key = slug.toLowerCase();
-    if (pending.has(key)) return;
-    const willHide = !hidden.has(key);
-
-    setPending((p) => new Set(p).add(key));
-    // Optimistic update.
-    setHidden((h) => {
-      const next = new Set(h);
-      if (willHide) next.add(key);
-      else next.delete(key);
+    setSaveMsg(null);
+    setDraft((d) => {
+      const next = new Set(d);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
+  }
 
-    let ok = false;
-    if (willHide) {
-      // Best-effort insert; duplicates are harmless if slug is the PK.
-      await supabaseInsert("hidden_products", { slug: key });
-      ok = true;
-    } else {
-      ok = await supabaseDelete("hidden_products", `slug=eq.${encodeURIComponent(key)}`);
+  // Diff draft vs saved into the actual writes needed.
+  const { toHide, toUnhide, dirty } = useMemo(() => {
+    const toHide: string[] = [];
+    const toUnhide: string[] = [];
+    for (const k of draft) if (!saved.has(k)) toHide.push(k);
+    for (const k of saved) if (!draft.has(k)) toUnhide.push(k);
+    return { toHide, toUnhide, dirty: toHide.length + toUnhide.length };
+  }, [draft, saved]);
+
+  async function save() {
+    if (saving || dirty === 0) return;
+    setSaving(true);
+    setSaveMsg(null);
+
+    const failures: string[] = [];
+    for (const slug of toHide) {
+      const res = await supabaseInsertChecked("hidden_products", { slug });
+      if (!res.ok) failures.push(`hide ${slug}: ${res.error ?? res.status}`);
+    }
+    for (const slug of toUnhide) {
+      const res = await supabaseDeleteChecked(
+        "hidden_products",
+        `slug=eq.${encodeURIComponent(slug)}`,
+      );
+      if (!res.ok) failures.push(`unhide ${slug}: ${res.error ?? res.status}`);
     }
 
-    setPending((p) => {
-      const next = new Set(p);
-      next.delete(key);
-      return next;
-    });
+    // Re-read Supabase so the UI reflects what actually persisted, not
+    // what we hoped happened.
+    let confirmed: Set<string> | null = null;
+    try {
+      const rows = await supabaseSelect<HiddenRow>("hidden_products", "select=slug");
+      confirmed = new Set(rows.map((r) => (r.slug || "").toLowerCase()).filter(Boolean));
+    } catch {
+      confirmed = null;
+    }
 
-    if (!ok) {
-      // Roll back on failure.
-      setErr("Could not save the change. Check Supabase connection.");
-      setHidden((h) => {
-        const next = new Set(h);
-        if (willHide) next.delete(key);
-        else next.add(key);
-        return next;
+    if (confirmed) {
+      setSaved(confirmed);
+      setDraft(new Set(confirmed));
+    }
+    setSaving(false);
+
+    if (failures.length > 0) {
+      setSaveMsg({
+        kind: "err",
+        text: `Could not save ${failures.length} change(s). ${failures[0]}${failures.length > 1 ? ` (+${failures.length - 1} more)` : ""}`,
       });
     } else {
-      setErr(null);
+      setSaveMsg({ kind: "ok", text: `Saved. ${dirty} change(s) written to Supabase.` });
     }
+  }
+
+  function discard() {
+    setDraft(new Set(saved));
+    setSaveMsg(null);
   }
 
   const filtered = useMemo(() => {
@@ -122,7 +146,7 @@ export function HideManager({ items }: { items: HideItem[] }) {
     );
   }, [items, query]);
 
-  const hiddenCount = hidden.size;
+  const hiddenCount = draft.size;
 
   return (
     <>
@@ -133,9 +157,59 @@ export function HideManager({ items }: { items: HideItem[] }) {
         style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginBottom: 24 }}
       >
         <Stat label="Total products" value={items.length.toLocaleString("en-US")} />
-        <Stat label="Hidden" value={hiddenCount.toLocaleString("en-US")} />
-        <Stat label="Visible" value={(items.length - hiddenCount).toLocaleString("en-US")} />
+        <Stat label="Hidden (draft)" value={hiddenCount.toLocaleString("en-US")} />
+        <Stat label="Unsaved changes" value={dirty.toLocaleString("en-US")} />
       </div>
+
+      {/* Save bar */}
+      <div
+        className="lf-filterbar"
+        style={{ marginBottom: 16, gap: 12, alignItems: "center", flexWrap: "wrap" }}
+      >
+        <button
+          type="button"
+          className="uni-cta"
+          style={{ minWidth: 120, opacity: dirty === 0 || saving ? 0.5 : 1 }}
+          disabled={dirty === 0 || saving || loadState !== "ready"}
+          onClick={save}
+        >
+          {saving ? "Saving…" : dirty > 0 ? `Save ${dirty} change${dirty === 1 ? "" : "s"}` : "Saved"}
+        </button>
+        {dirty > 0 && !saving && (
+          <button type="button" className="aq-timeframe-tab" onClick={discard}>
+            Discard
+          </button>
+        )}
+        <span className="uni-hub-section-meta">
+          {loadState === "loading" && "loading live state…"}
+          {loadState === "ready" && (dirty > 0 ? "unsaved changes" : "in sync with Supabase")}
+          {loadState === "error" && "could not load from Supabase"}
+        </span>
+      </div>
+
+      {loadState === "error" && (
+        <div className="uni-hub-empty" style={{ color: "#b91c1c" }}>
+          Could not load the hidden list from Supabase: {loadErr}. Toggling is
+          disabled until the connection works. Check that the{" "}
+          <code>hidden_products</code> table exists and anon SELECT is allowed.
+        </div>
+      )}
+
+      {saveMsg && (
+        <div
+          className="uni-hub-empty"
+          style={{ color: saveMsg.kind === "ok" ? "#15803d" : "#b91c1c", marginBottom: 8 }}
+        >
+          {saveMsg.text}
+          {saveMsg.kind === "err" && (
+            <>
+              {" "}
+              The <code>hidden_products</code> table likely needs an anon
+              INSERT/DELETE policy (or doesn{"'"}t exist yet).
+            </>
+          )}
+        </div>
+      )}
 
       <div className="lf-filterbar" style={{ marginBottom: 16 }}>
         <input
@@ -147,18 +221,8 @@ export function HideManager({ items }: { items: HideItem[] }) {
           style={{ minWidth: 280 }}
           aria-label="Search products"
         />
-        <span className="uni-hub-section-meta">
-          {loaded ? "synced with Supabase" : "loading live state…"}
-          {" · "}
-          {filtered.length} shown
-        </span>
+        <span className="uni-hub-section-meta">{filtered.length} shown</span>
       </div>
-
-      {err && (
-        <div className="uni-hub-empty" style={{ color: "#b91c1c" }}>
-          {err}
-        </div>
-      )}
 
       <div className="hub-table-wrap aq-recent-wrap">
         <div className="hub-table aq-recent-table">
@@ -175,8 +239,8 @@ export function HideManager({ items }: { items: HideItem[] }) {
           ) : (
             filtered.map((i) => {
               const key = i.slug.toLowerCase();
-              const isHidden = hidden.has(key);
-              const isPending = pending.has(key);
+              const isHidden = draft.has(key);
+              const isDirty = isHidden !== saved.has(key);
               return (
                 <div
                   key={i.slug}
@@ -192,10 +256,9 @@ export function HideManager({ items }: { items: HideItem[] }) {
                   <span className="hub-cell aq-cell-text">{i.asset}</span>
                   <span className="hub-cell aq-cell-text">{i.chain}</span>
                   <span className="hub-cell">
-                    <span
-                      className={`lf-badge lf-badge-${isHidden ? "external" : "owned"}`}
-                    >
+                    <span className={`lf-badge lf-badge-${isHidden ? "external" : "owned"}`}>
                       {isHidden ? "Hidden" : "Visible"}
+                      {isDirty ? " *" : ""}
                     </span>
                   </span>
                   <span className="hub-cell">
@@ -203,10 +266,10 @@ export function HideManager({ items }: { items: HideItem[] }) {
                       type="button"
                       className="aq-timeframe-tab"
                       aria-pressed={isHidden}
-                      disabled={isPending}
+                      disabled={loadState !== "ready"}
                       onClick={() => toggle(i.slug)}
                     >
-                      {isPending ? "…" : isHidden ? "Unhide" : "Hide"}
+                      {isHidden ? "Unhide" : "Hide"}
                     </button>
                   </span>
                 </div>
