@@ -28,11 +28,6 @@ jobs:
           node-version: '20'
 
       - name: Fetch data from APIs
-        env:
-          # Read-only: syncs the operator hide-list (hidden_products)
-          # into data/hidden.json so the build can drop hidden products.
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: node scripts/fetch-data.mjs
 
       - name: Fetch holder counts (Blockscout)

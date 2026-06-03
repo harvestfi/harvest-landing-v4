@@ -2,11 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  supabaseSelect,
-  supabaseInsertChecked,
-  supabaseDeleteChecked,
-} from "@/lib/supabase";
+import { readHiddenSlugs, writeHiddenSlugs } from "@/lib/hidden-products-client";
 
 export interface HideItem {
   slug: string;
@@ -17,52 +13,24 @@ export interface HideItem {
   hiddenAtBuild: boolean;
 }
 
-interface HiddenRow {
-  slug: string;
-}
-
 const COLS = "minmax(220px, 2fr) 90px 110px 120px 90px";
 
-type LoadState = "loading" | "ready" | "error";
-
 export function HideManager({ items }: { items: HideItem[] }) {
-  // `saved` = the hidden set as it actually exists in Supabase (the
-  // source of truth the cron syncs). `draft` = what the operator has
-  // toggled in the UI but not yet saved. Save reconciles draft -> saved.
+  // `saved` = what's persisted in localStorage. `draft` = the operator's
+  // in-progress edits. Save commits draft -> localStorage. No backend.
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState<Set<string>>(new Set());
-  const [loadState, setLoadState] = useState<LoadState>("loading");
-  const [loadErr, setLoadErr] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [ready, setReady] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
-  // Load the live hidden set from Supabase on mount.
+  // localStorage is only available client-side; read after mount so SSR
+  // markup matches (everything starts visible, then we reconcile).
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const rows = await supabaseSelect<HiddenRow>(
-          "hidden_products",
-          "select=slug",
-        );
-        if (cancelled) return;
-        const set = new Set(
-          rows.map((r) => (r.slug || "").toLowerCase()).filter(Boolean),
-        );
-        setSaved(set);
-        setDraft(new Set(set));
-        setLoadState("ready");
-      } catch (e) {
-        if (!cancelled) {
-          setLoadErr(String(e));
-          setLoadState("error");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    const current = readHiddenSlugs();
+    setSaved(current);
+    setDraft(new Set(current));
+    setReady(true);
   }, []);
 
   function toggle(slug: string) {
@@ -76,56 +44,19 @@ export function HideManager({ items }: { items: HideItem[] }) {
     });
   }
 
-  // Diff draft vs saved into the actual writes needed.
-  const { toHide, toUnhide, dirty } = useMemo(() => {
-    const toHide: string[] = [];
-    const toUnhide: string[] = [];
-    for (const k of draft) if (!saved.has(k)) toHide.push(k);
-    for (const k of saved) if (!draft.has(k)) toUnhide.push(k);
-    return { toHide, toUnhide, dirty: toHide.length + toUnhide.length };
+  const dirty = useMemo(() => {
+    if (draft.size !== saved.size) return true;
+    for (const k of draft) if (!saved.has(k)) return true;
+    return false;
   }, [draft, saved]);
 
-  async function save() {
-    if (saving || dirty === 0) return;
-    setSaving(true);
-    setSaveMsg(null);
-
-    const failures: string[] = [];
-    for (const slug of toHide) {
-      const res = await supabaseInsertChecked("hidden_products", { slug });
-      if (!res.ok) failures.push(`hide ${slug}: ${res.error ?? res.status}`);
-    }
-    for (const slug of toUnhide) {
-      const res = await supabaseDeleteChecked(
-        "hidden_products",
-        `slug=eq.${encodeURIComponent(slug)}`,
-      );
-      if (!res.ok) failures.push(`unhide ${slug}: ${res.error ?? res.status}`);
-    }
-
-    // Re-read Supabase so the UI reflects what actually persisted, not
-    // what we hoped happened.
-    let confirmed: Set<string> | null = null;
-    try {
-      const rows = await supabaseSelect<HiddenRow>("hidden_products", "select=slug");
-      confirmed = new Set(rows.map((r) => (r.slug || "").toLowerCase()).filter(Boolean));
-    } catch {
-      confirmed = null;
-    }
-
-    if (confirmed) {
-      setSaved(confirmed);
-      setDraft(new Set(confirmed));
-    }
-    setSaving(false);
-
-    if (failures.length > 0) {
-      setSaveMsg({
-        kind: "err",
-        text: `Could not save ${failures.length} change(s). ${failures[0]}${failures.length > 1 ? ` (+${failures.length - 1} more)` : ""}`,
-      });
+  function save() {
+    const ok = writeHiddenSlugs(draft);
+    if (ok) {
+      setSaved(new Set(draft));
+      setSaveMsg(`Saved. ${draft.size} product${draft.size === 1 ? "" : "s"} hidden in this browser.`);
     } else {
-      setSaveMsg({ kind: "ok", text: `Saved. ${dirty} change(s) written to Supabase.` });
+      setSaveMsg("Could not write to this browser's storage.");
     }
   }
 
@@ -146,8 +77,6 @@ export function HideManager({ items }: { items: HideItem[] }) {
     );
   }, [items, query]);
 
-  const hiddenCount = draft.size;
-
   return (
     <>
       <div
@@ -157,8 +86,8 @@ export function HideManager({ items }: { items: HideItem[] }) {
         style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginBottom: 24 }}
       >
         <Stat label="Total products" value={items.length.toLocaleString("en-US")} />
-        <Stat label="Hidden (draft)" value={hiddenCount.toLocaleString("en-US")} />
-        <Stat label="Unsaved changes" value={dirty.toLocaleString("en-US")} />
+        <Stat label="Hidden" value={draft.size.toLocaleString("en-US")} />
+        <Stat label="Unsaved changes" value={dirty ? "yes" : "no"} />
       </div>
 
       {/* Save bar */}
@@ -168,46 +97,32 @@ export function HideManager({ items }: { items: HideItem[] }) {
       >
         <button
           type="button"
-          className="uni-cta"
-          style={{ minWidth: 120, opacity: dirty === 0 || saving ? 0.5 : 1 }}
-          disabled={dirty === 0 || saving || loadState !== "ready"}
+          className="hide-save-cta"
+          disabled={!dirty || !ready}
           onClick={save}
         >
-          {saving ? "Saving…" : dirty > 0 ? `Save ${dirty} change${dirty === 1 ? "" : "s"}` : "Saved"}
+          {dirty ? "Save changes" : "Saved"}
         </button>
-        {dirty > 0 && !saving && (
+        {dirty && (
           <button type="button" className="aq-timeframe-tab" onClick={discard}>
             Discard
           </button>
         )}
         <span className="uni-hub-section-meta">
-          {loadState === "loading" && "loading live state…"}
-          {loadState === "ready" && (dirty > 0 ? "unsaved changes" : "in sync with Supabase")}
-          {loadState === "error" && "could not load from Supabase"}
+          {!ready
+            ? "loading…"
+            : dirty
+              ? "unsaved changes"
+              : "all changes saved in this browser"}
         </span>
       </div>
-
-      {loadState === "error" && (
-        <div className="uni-hub-empty" style={{ color: "#b91c1c" }}>
-          Could not load the hidden list from Supabase: {loadErr}. Toggling is
-          disabled until the connection works. Check that the{" "}
-          <code>hidden_products</code> table exists and anon SELECT is allowed.
-        </div>
-      )}
 
       {saveMsg && (
         <div
           className="uni-hub-empty"
-          style={{ color: saveMsg.kind === "ok" ? "#15803d" : "#b91c1c", marginBottom: 8 }}
+          style={{ color: "#a16207", marginBottom: 8 }}
         >
-          {saveMsg.text}
-          {saveMsg.kind === "err" && (
-            <>
-              {" "}
-              The <code>hidden_products</code> table likely needs an anon
-              INSERT/DELETE policy (or doesn{"'"}t exist yet).
-            </>
-          )}
+          {saveMsg}
         </div>
       )}
 
@@ -266,7 +181,7 @@ export function HideManager({ items }: { items: HideItem[] }) {
                       type="button"
                       className="aq-timeframe-tab"
                       aria-pressed={isHidden}
-                      disabled={loadState !== "ready"}
+                      disabled={!ready}
                       onClick={() => toggle(i.slug)}
                     >
                       {isHidden ? "Unhide" : "Hide"}

@@ -1446,3 +1446,29 @@ body:has(.uni-hub-test) {
   /* Country cell keeps the flag + code together on the right. */
   .uni-hub-test .lf-table .country-cell { justify-content: flex-end; }
 }
+
+/* Hide panel: the Save CTA. Brand gold, prominent, with a clear
+   disabled (nothing-to-save) state. */
+.uni-hub-test .hide-save-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--uni-gold);
+  background: var(--uni-gold);
+  color: #1a1205;
+  font-weight: 650;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: filter 0.12s ease, opacity 0.12s ease;
+}
+.uni-hub-test .hide-save-cta:hover:not(:disabled) { filter: brightness(1.05); }
+.uni-hub-test .hide-save-cta:active:not(:disabled) { filter: brightness(0.96); }
+.uni-hub-test .hide-save-cta:disabled {
+  background: var(--uni-gold-bg);
+  border-color: var(--uni-gold-soft);
+  color: #9a8a5e;
+  cursor: default;
+}

@@ -7,6 +7,7 @@ import { formatAPY, stripChainSuffix } from "@/lib/format";
 import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
 import { LpBadge } from "./lp-badge";
+import { readHiddenSlugs, HIDDEN_CHANGED_EVENT } from "@/lib/hidden-products-client";
 
 type SortKey = "apy24h";
 type SortDir = "asc" | "desc";
@@ -71,22 +72,46 @@ export function HubTable({
   const [chain, setChain] = useState<string>("all");
   const [page, setPage] = useState(0);
 
+  // Operator hide-list (per-browser, localStorage). Empty on the server
+  // and on first client render so SSR markup matches; populated after
+  // mount and refreshed whenever the admin Hide panel saves in this tab.
+  const [hiddenSlugs, setHiddenSlugs] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const refresh = () => setHiddenSlugs(readHiddenSlugs());
+    refresh();
+    window.addEventListener(HIDDEN_CHANGED_EVENT, refresh);
+    // storage event fires when another tab changes it.
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(HIDDEN_CHANGED_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
+  const visibleVaults = useMemo(
+    () =>
+      hiddenSlugs.size === 0
+        ? vaults
+        : vaults.filter((v) => !hiddenSlugs.has(v.slug.toLowerCase())),
+    [vaults, hiddenSlugs],
+  );
+
   const allAssets = useMemo(
-    () => Array.from(new Set(vaults.map((v) => v.asset))).sort(),
-    [vaults],
+    () => Array.from(new Set(visibleVaults.map((v) => v.asset))).sort(),
+    [visibleVaults],
   );
   const allChains = useMemo(
-    () => Array.from(new Set(vaults.map((v) => v.chain))).sort(),
-    [vaults],
+    () => Array.from(new Set(visibleVaults.map((v) => v.chain))).sort(),
+    [visibleVaults],
   );
 
   const filtered = useMemo(() => {
-    return vaults.filter((v) => {
+    return visibleVaults.filter((v) => {
       if (showAssetFilter && asset !== "all" && v.asset !== asset) return false;
       if (chain !== "all" && v.chain !== chain) return false;
       return true;
     });
-  }, [vaults, asset, chain, showAssetFilter]);
+  }, [visibleVaults, asset, chain, showAssetFilter]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -173,7 +198,7 @@ export function HubTable({
         </div>
         <span className="hub-filter-meta">
           {scopeLabel
-            ? `${sorted.length} of ${vaults.length} ${scopeLabel}`
+            ? `${sorted.length} of ${visibleVaults.length} ${scopeLabel}`
             : `${sorted.length} ${sorted.length === 1 ? "result" : "results"}`}
         </span>
       </div>
