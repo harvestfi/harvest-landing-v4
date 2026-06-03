@@ -161,6 +161,16 @@ export function isLiveVault(v: YieldVault): boolean {
   return v.apy24h > 0 && v.tvl > 0;
 }
 
+// A vault with effectively zero TVL is dead: no real capital, so rank
+// superlatives ("ranks #1, top quarter") and per-deposit earnings
+// projections on it are misleading (you cannot meaningfully deposit).
+// Prose generators suppress those claims when this is true; the headline
+// APY/TVL numbers still render. Threshold is a dollar or less, which
+// covers $0 / $1 dust balances without touching small-but-real pools.
+export function isDeadVault(v: YieldVault): boolean {
+  return !(v.tvl > 1);
+}
+
 // Sub-$10k TVL with a flat 30-day APY history is a strong signal the
 // vault is broken (paused harvest, oracle stuck, or never bootstrapped).
 // We require at least 14 distinct daily observations so brand-new

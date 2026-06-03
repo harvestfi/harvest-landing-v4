@@ -97,9 +97,16 @@ export function buildAutocompounderFaqItems(
   const q4Text = rewardSameAsTicker
     ? `Yield is sourced from ${venue}. The income stream is interest paid by the underlying market, added back to the vault on a recurring basis. The rate moves with the underlying venue's utilisation.`
     : `Yield is sourced from ${venue}. The income stream is a combination of interest paid by the underlying market and reward emissions in ${reward}, which the strategy claims and converts back into ${ticker} on a recurring basis. The rate moves with the underlying venue's utilisation and incentive schedule.`;
-  const q5Text = has30d
-    ? `${rangeWindow}, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
-    : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
+  // 0-safe percentage: formatAPY renders exactly 0 as "-" (a no-data
+  // placeholder), which misreads as "ranged from - to 8%" when the low
+  // is a genuine 0%. Also require hi > 0 so a flatlined / dead vault
+  // (all-zero realized history) falls through to the no-data copy
+  // instead of "ranged from 0.00% to 0.00%".
+  const pct = (v: number) => `${v.toFixed(2)}%`;
+  const q5Text =
+    has30d && hi! >= 0.005
+      ? `${rangeWindow}, this vault's APY has ranged from ${pct(lo!)} to ${pct(hi!)}, averaging ${pct(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
+      : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
   const q6Text =
     holderCount && holderCount > 0
       ? `The vault currently holds ${tvl} in TVL across ${holderCount} holders. The Historical statistics section above shows how this compares to the vault's ${rangeRef} and lifetime peak.`

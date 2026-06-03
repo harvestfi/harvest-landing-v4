@@ -18,6 +18,9 @@ export function apyToMonthly(apy: number, depositAmount: number): number {
 // ETH/BTC: 4 significant figures.
 export function fmtEarnings(val: number, asset: string): string {
   if (asset === "ETH" || asset === "BTC") {
+    // Below ~1e-4 the value is dust; toPrecision would emit scientific
+    // notation ("4.261e-17 ETH"), which reads as broken. Show "~0".
+    if (Math.abs(val) < 1e-4) return `~0 ${asset}`;
     return `~${parseFloat(val.toPrecision(4))} ${asset}`;
   }
   if (val < 10) return `~$${val.toFixed(2)}`;

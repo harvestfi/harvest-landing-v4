@@ -234,12 +234,23 @@ export function buildPerformanceOverview(
   //                     the data point).
   // Avoids "outperforming X%" / "ranking above X%" which read as
   // judgment when the vault sits below the cohort midpoint.
-  const cohort = allVaults
+  // Self-include if excluded from allVaults (Aerodrome / LP-pair /
+  // stale / broken are dropped from rankings) so the rank line renders
+  // on those pages too instead of being silently skipped. Dedup by id.
+  const cohortBase =
+    vault.apy24h > 0 &&
+    !allVaults.some((v) => v.contractAddress === vault.contractAddress)
+      ? [...allVaults, vault]
+      : allVaults;
+  const cohort = cohortBase
     .filter((v) => v.asset === vault.asset && v.apy24h > 0)
     .sort((a, b) => b.apy24h - a.apy24h);
   const idx = cohort.findIndex((v) => v.contractAddress === vault.contractAddress);
   const total = cohort.length;
-  if (idx >= 0 && total > 1 && vault.apy24h > 0) {
+  // Suppress the rank line on dead vaults (TVL <= $1): claiming a
+  // ghost pool with no capital "ranks #1 / top quarter" is misleading.
+  const deadVault = !(vault.tvl > 1);
+  if (idx >= 0 && total > 1 && vault.apy24h > 0 && !deadVault) {
     const rank = idx + 1;
     const ratio = rank / total;
     const head = `This vault's ${formatAPY(vault.apy24h)} APY ranks #${rank} among the ${total} ${ticker} vaults we monitor`;
@@ -272,7 +283,12 @@ export function buildPerformanceOverview(
         p.apy >= 0,
     )
     .map((p) => p.apy);
-  if (trailing.length >= 2) {
+  // Skip the range + per-deposit earnings line on dead vaults: an
+  // earnings projection on a pool with no capital is misleading.
+  // hi >= 0.005 (rounds to >= 0.01%) rather than > 0: an all-dust
+  // history (max ~5e-14) is technically > 0 but renders "0.00%", which
+  // reads as a broken "ranged from 0.00% to 0.00%".
+  if (trailing.length >= 2 && Math.max(...trailing) >= 0.005 && !deadVault) {
     const lo = Math.min(...trailing);
     const hi = Math.max(...trailing);
     const avg = trailing.reduce((s, v) => s + v, 0) / trailing.length;
@@ -289,13 +305,17 @@ export function buildPerformanceOverview(
       : trackedDays >= 2
         ? `Over the ${trackedDays} days since launch`
         : "Since launch";
+    // Use a 0-safe percentage here: formatAPY renders exactly 0 as "-"
+    // (a "no data" placeholder in stat tables), which would misread as
+    // "ranged from - to 12%" when the low is a genuine 0%.
+    const pct = (v: number) => `${v.toFixed(2)}%`;
     lines.push(
-      `${windowPhrase}, APY has ranged from ${formatAPY(lo)} to ${formatAPY(hi)}, averaging ${formatAPY(
+      `${windowPhrase}, APY has ranged from ${pct(lo)} to ${pct(hi)}, averaging ${pct(
         avg,
-      )}. At the ${formatAPY(hi)} high, ${ref.label} would earn ${fmtEarnings(
+      )}. At the ${pct(hi)} high, ${ref.label} would earn ${fmtEarnings(
         earnHigh,
         vault.asset,
-      )} per month; at the ${formatAPY(lo)} low, ${fmtEarnings(earnLow, vault.asset)}.`,
+      )} per month; at the ${pct(lo)} low, ${fmtEarnings(earnLow, vault.asset)}.`,
     );
   }
 
@@ -310,12 +330,13 @@ export function buildPerformanceOverview(
   const lifetime = history.apyHistory
     .filter((p) => Number.isFinite(p.apy) && p.apy >= 0)
     .map((p) => p.apy);
-  if (lifetime.length >= 5) {
+  if (lifetime.length >= 5 && Math.max(...lifetime) >= 0.005) {
     const avg = lifetime.reduce((s, v) => s + v, 0) / lifetime.length;
     const lo = Math.min(...lifetime);
     const hi = Math.max(...lifetime);
+    const pct = (v: number) => `${v.toFixed(2)}%`;
     lines.push(
-      `Over its tracked history, this vault's realized APY has averaged ${formatAPY(avg)}, ranging from ${formatAPY(lo)} to ${formatAPY(hi)}.`,
+      `Over its tracked history, this vault's realized APY has averaged ${pct(avg)}, ranging from ${pct(lo)} to ${pct(hi)}.`,
     );
   }
 

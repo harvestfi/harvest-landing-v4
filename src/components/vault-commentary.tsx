@@ -30,7 +30,13 @@ export function VaultCommentary({
   history,
   numbered,
 }: VaultCommentaryProps) {
-  const sameAssetVaults = allVaults.filter((v) => v.asset === vault.asset);
+  // Self-include if excluded from allVaults (getLiveVaults drops
+  // Aerodrome / LP-pair / stale / broken vaults), so the rank sentence
+  // renders with a real rank instead of being silently dropped on those
+  // pages. Dedup by id.
+  const cohortBase =
+    !allVaults.some((v) => v.id === vault.id) ? [...allVaults, vault] : allVaults;
+  const sameAssetVaults = cohortBase.filter((v) => v.asset === vault.asset);
 
   const paragraphs: string[] = [];
 
@@ -48,8 +54,13 @@ export function VaultCommentary({
   const apyThirtyDaysAgo = apyLatestTs - 30 * 86400;
   const tvlThirtyDaysAgo = tvlLatestTs - 30 * 86400;
 
+  // Dead vault = effectively zero TVL: suppress rank superlatives and
+  // per-deposit earnings projections (misleading on a pool with no
+  // capital). Headline numbers still render.
+  const deadVault = !(vault.tvl > 1);
+
   // 1. APY Ranking: is this competitive?
-  if (vault.apy24h > 0 && sameAssetVaults.length > 1) {
+  if (vault.apy24h > 0 && sameAssetVaults.length > 1 && !deadVault) {
     const sorted = [...sameAssetVaults]
       .filter((v) => v.apy24h > 0)
       .sort((a, b) => b.apy24h - a.apy24h);
@@ -76,7 +87,10 @@ export function VaultCommentary({
     const validApy = history.apyHistory.filter((p) => p.apy >= 0);
     const recent30d = validApy.filter((p) => p.timestamp >= apyThirtyDaysAgo);
 
-    if (recent30d.length >= 5) {
+    // max >= 0.005 (rounds to >= 0.01%): an all-dust window (max ~5e-14)
+    // is technically positive but renders "averaging 0.00% with a range
+    // of 0.00% to 0.00%", which reads as broken. Skip it then.
+    if (recent30d.length >= 5 && Math.max(...recent30d.map((p) => p.apy)) >= 0.005) {
       const apyValues = recent30d.map((p) => p.apy);
       const avg = apyValues.reduce((s, v) => s + v, 0) / apyValues.length;
       const sd = stdDev(apyValues);
@@ -86,8 +100,10 @@ export function VaultCommentary({
 
       let sentence = `Over the past 30 days, APY has been ${label}, averaging ${avg.toFixed(2)}% with a range of ${min.toFixed(2)}% to ${max.toFixed(2)}%.`;
 
-      // Contextualization: requires >= 14 data points
-      if (recent30d.length >= 14) {
+      // Contextualization: requires >= 14 data points, and skipped on
+      // dead vaults (a per-deposit earnings figure on a pool with no
+      // capital is misleading).
+      if (recent30d.length >= 14 && !deadVault) {
         const ref = depositRef(vault.asset);
         const lowMonthly = apyToMonthly(min, ref.amount);
         const highMonthly = apyToMonthly(max, ref.amount);
@@ -117,14 +133,15 @@ export function VaultCommentary({
     const allValid = history.apyHistory
       .filter((p) => p.apy >= 0)
       .map((p) => p.apy);
-    if (allValid.length >= 30) {
+    if (allValid.length >= 30 && Math.max(...allValid) >= 0.005) {
       const avg = allValid.reduce((s, v) => s + v, 0) / allValid.length;
       const lo = Math.min(...allValid);
       const hi = Math.max(...allValid);
+      const pct = (v: number) => `${v.toFixed(2)}%`;
       const timeframe =
         allValid.length > 180 ? "its lifetime" : `its ${allValid.length}-day history`;
       paragraphs.push(
-        `Across ${timeframe}, realized APY has averaged ${formatAPY(avg)}, ranging from ${formatAPY(lo)} to ${formatAPY(hi)}.`,
+        `Across ${timeframe}, realized APY has averaged ${pct(avg)}, ranging from ${pct(lo)} to ${pct(hi)}.`,
       );
     }
   }

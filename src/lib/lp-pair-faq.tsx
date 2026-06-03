@@ -89,9 +89,12 @@ export function buildLpPairFaqItems(
   const q3Text =
     "There are no withdrawal periods or lockups. If the underlying pool holds enough liquidity to satisfy the request, exits are instant. During periods of low pool liquidity, withdrawal capacity can be limited until liquidity returns. See the risk page for details on how this works.";
   const q4Text = `Yield comes from two sources. First, trading fees on the ${ticker}/${counterpart} pool on ${platform}: every swap between the two assets pays a fee, a share of which accrues to liquidity providers. Second, ${reward} emissions distributed by ${platform} to incentivise liquidity in the pool, which the strategy claims and adds back into the position. Both move with conditions: trading fees scale with volume, and emissions scale with the platform's emission schedule.`;
-  const q5Text = has30d
-    ? `${rangeWindow}, this vault's APY has ranged from ${formatAPY(lo!)} to ${formatAPY(hi!)}, averaging ${formatAPY(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
-    : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
+  // 0-safe percentage + require hi > 0 (see autocompounder-faq).
+  const pct = (v: number) => `${v.toFixed(2)}%`;
+  const q5Text =
+    has30d && hi! >= 0.005
+      ? `${rangeWindow}, this vault's APY has ranged from ${pct(lo!)} to ${pct(hi!)}, averaging ${pct(avg!)}, with measured volatility of ±${vol!.toFixed(2)}%. The Strategy stability section above shows where this falls on the scale from very volatile to very consistent.`
+      : "There isn't yet enough 30-day APY history to score stability for this vault. The Strategy stability section above will populate once a meaningful window of records is available.";
   const q6Text =
     holderCount && holderCount > 0
       ? `The vault currently holds ${tvl} in TVL across ${holderCount} holders. The Historical statistics section above shows how this compares to the vault's ${rangeRef} and lifetime peak.`

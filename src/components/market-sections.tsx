@@ -14,13 +14,25 @@ interface Props {
 }
 
 export function MarketBenchmark({ vault, allVaults }: Props) {
-  const sameAsset = allVaults
+  // The current vault may be excluded from allVaults (getLiveVaults
+  // drops Aerodrome / LP-pair / stale / broken vaults from rankings),
+  // yet its own product page still ranks it. Inject it into the cohort
+  // (dedup by id) so it's always present: otherwise findIndex returns
+  // -1, rank becomes 0, and the prose reads "#0 of N" and even "top
+  // quarter of the cohort" (ratio 0/total <= 0.25). Self-inclusion keeps
+  // the rank honest for every vault type.
+  const cohortBase =
+    vault.apy24h > 0 && !allVaults.some((v) => v.id === vault.id)
+      ? [...allVaults, vault]
+      : allVaults;
+  const sameAsset = cohortBase
     .filter((v) => v.asset === vault.asset && v.apy24h > 0)
     .sort((a, b) => b.apy24h - a.apy24h);
 
   if (sameAsset.length < 2) return null;
 
   const rank = sameAsset.findIndex((v) => v.id === vault.id) + 1;
+  if (rank < 1) return null;
   // Average over funded strategies only: a near-empty pool (e.g. $4 TVL
   // at 51% APY) otherwise drags the cohort mean and makes well-funded
   // products look worse than they are. Rankings and counts still span
@@ -247,6 +259,21 @@ function ClosingBenchmark({
   // the same displayed value, report "roughly in line with" instead of a
   // sub-percent relative delta that contradicts the visible numbers (and
   // drop the per-month-delta clause, which would read "~0 per month").
+  // Dead vault (TVL <= $1): drop the "top quarter" superlative and the
+  // per-deposit earnings projection (both misleading with no capital).
+  // Keep the factual rank + TVL standing.
+  const deadVault = !(vault.tvl > 1);
+  if (deadVault) {
+    return (
+      <p style={{ marginTop: 14 }}>
+        Among the {total} {vault.asset} strategies we currently monitor,
+        this product ranks <strong>#{rank}</strong> by APY. It currently
+        holds {formatTVL(vault.tvl)} in TVL, ranking #{tvlRank} of {total}{" "}
+        by TVL.
+      </p>
+    );
+  }
+
   const sameRounded = vault.apy24h.toFixed(2) === avgApy.toFixed(2);
   return (
     <p style={{ marginTop: 14 }}>
@@ -276,7 +303,13 @@ function ClosingBenchmark({
 }
 
 export function EcosystemContext({ vault, allVaults }: Props) {
-  const sameChain = allVaults
+  // Self-include when excluded from allVaults (see MarketBenchmark) so
+  // rank is never #0 for Aerodrome / LP-pair / stale / broken vaults.
+  const cohortBase =
+    vault.apy24h > 0 && !allVaults.some((v) => v.id === vault.id)
+      ? [...allVaults, vault]
+      : allVaults;
+  const sameChain = cohortBase
     .filter((v) => v.asset === vault.asset && v.chain === vault.chain && v.apy24h > 0)
     .sort((a, b) => b.apy24h - a.apy24h);
 
@@ -402,7 +435,16 @@ function EcosystemChart({
             <ChainIcon chain={vault.chain} size={14} />
             {vault.asset} on {vault.chain}
           </span>
-          <span className="mono dim">#{sameChainAll.findIndex((s) => s.id === vault.id) + 1} of {sameChainAll.length}</span>
+          {(() => {
+            // Vault with apy24h = 0 is absent from the APY cohort, so its
+            // index is -1. Show the cohort size alone instead of "#0 of N".
+            const selfRank = sameChainAll.findIndex((s) => s.id === vault.id) + 1;
+            return (
+              <span className="mono dim">
+                {selfRank >= 1 ? `#${selfRank} of ${sameChainAll.length}` : `${sameChainAll.length} tracked`}
+              </span>
+            );
+          })()}
         </div>
         {legendRows.map((v, i) => {
           const isYou = v.id === vault.id;
@@ -482,6 +524,21 @@ function EcosystemIntro({
   // BTC vaults both shown at 0.41%), a sub-percent relative delta like
   // "0.3% higher" contradicts the visibly-equal numbers. Say "roughly in
   // line with" instead so the prose matches what's on screen.
+  // A vault with no current APY (apy24h = 0) is not in the APY-sorted
+  // cohort, so rank is 0. Don't assert an APY position or a relative-to-
+  // average delta (both meaningless at 0%); show only the network-average
+  // context so the paragraph stays factual instead of reading "#0 of N".
+  if (rank < 1) {
+    return (
+      <p>
+        On <Link href={`/${chainToSlug(vault.chain)}`}>{vault.chain}</Link>,
+        yields for {vault.asset} have averaged {networkAvg.toFixed(2)}% across
+        the {sameChainCount} strategies we monitor in our index. This product
+        is not reporting a current APY.
+      </p>
+    );
+  }
+
   const sameRounded = vault.apy24h.toFixed(2) === networkAvg.toFixed(2);
   return (
     <p>
@@ -512,13 +569,24 @@ function ClosingEcosystem({
   sameChain: YieldVault[];
   rank: number;
 }) {
-  const tvlSorted = [...sameChain].sort((a, b) => b.tvl - a.tvl);
+  // The vault may be absent from sameChain (which requires apy24h > 0),
+  // e.g. a vault reporting 0% APY but real TVL. Include it in the TVL
+  // cohort so the TVL rank is honest instead of "#0".
+  const tvlCohort = sameChain.some((v) => v.id === vault.id)
+    ? sameChain
+    : [...sameChain, vault];
+  const tvlSorted = [...tvlCohort].sort((a, b) => b.tvl - a.tvl);
   const tvlRank = tvlSorted.findIndex((v) => v.id === vault.id) + 1;
 
-  const isTop = rank === 1;
+  // "Top-yielding opportunity" is an overstatement on a dead vault
+  // (TVL <= $1): no real capital, so fall back to the neutral TVL-rank
+  // line instead of crowning a ghost pool. A vault with no APY rank
+  // (rank < 1, apy24h = 0) can never be "top-yielding" either.
+  const deadVault = !(vault.tvl > 1);
+  const isTop = rank === 1 && !deadVault;
   const topLabel = isTop
     ? `Currently the top-yielding ${vault.asset} opportunity on ${vault.chain} across the ${sameChain.length} products we monitor.`
-    : `By TVL, this product ranks #${tvlRank} of ${sameChain.length} ${vault.asset} strategies on ${vault.chain} in our index.`;
+    : `By TVL, this product ranks #${tvlRank} of ${tvlCohort.length} ${vault.asset} strategies on ${vault.chain} in our index.`;
 
   // Single-sentence closer. The previous trailing sentence
   // ("This strategy is operated by X and competes against N other...")
