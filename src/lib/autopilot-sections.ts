@@ -379,7 +379,15 @@ export function buildPerformanceOverview(
       const TVL_PCT_THRESHOLD = 50_000;
       const bothEndpointsSmall =
         current < TVL_PCT_THRESHOLD && past.value < TVL_PCT_THRESHOLD;
-      const pct = ((current - past.value) / past.value) * 100;
+      // Derive the displayed % from the SAME values shown, at the
+      // comparison precision (2 decimals in millions). With the 1-decimal
+      // macro format the endpoints' cross-rounding amplified the gap
+      // (e.g. $1.37M -> "$1.4M" and $1.14M -> "$1.1M" turned a real 16%
+      // move into a "21%" a reader would compute from the page). Now the
+      // sentence reconciles: ($1.37M - $1.14M) / $1.37M = the % shown.
+      const curR = tvlCompareNum(current);
+      const pastR = tvlCompareNum(past.value);
+      const pct = pastR > 0 ? ((curR - pastR) / pastR) * 100 : 0;
       if (bothEndpointsSmall) {
         lines.push(
           `TVL stands at ${formatTvlShort(current)}, compared to ${formatTvlShort(past.value)} ${pastLabel}.`,
@@ -387,14 +395,14 @@ export function buildPerformanceOverview(
       } else if (Math.abs(pct) >= 1000) {
         const verb = current >= past.value ? "grown" : "fallen";
         lines.push(
-          `TVL has ${verb} from ${formatTvlShort(past.value)} ${pastLabel} to ${formatTvlShort(current)}.`,
+          `TVL has ${verb} from ${tvlCompareStr(past.value)} ${pastLabel} to ${tvlCompareStr(current)}.`,
         );
       } else {
         const direction = pct >= 0 ? "increased" : "decreased";
         lines.push(
-          `TVL has ${direction} ${Math.abs(pct).toFixed(1)}% ${windowLabel}, from ${formatTvlShort(
+          `TVL has ${direction} ${Math.abs(pct).toFixed(1)}% ${windowLabel}, from ${tvlCompareStr(
             past.value,
-          )} to ${formatTvlShort(current)}.`,
+          )} to ${tvlCompareStr(current)}.`,
         );
       }
     }
@@ -413,4 +421,23 @@ function formatTvlShort(v: number): string {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `$${Math.round(v / 1000)}K`;
   return `$${Math.round(v)}`;
+}
+
+// Higher-precision TVL pair used only in the "from $A to $B, X%"
+// comparison sentence, so the displayed percentage reconciles with the
+// displayed endpoints. tvlCompareNum rounds to the value the string
+// shows (nearest $10K in the millions, nearest $1K in the thousands);
+// the percentage is computed from these, and tvlCompareStr renders them.
+function tvlCompareNum(v: number): number {
+  if (!Number.isFinite(v) || v < 0) return 0;
+  if (v >= 1_000_000) return Math.round(v / 10_000) * 10_000; // 2 decimals in M
+  if (v >= 1_000) return Math.round(v / 1_000) * 1_000; // nearest $1K
+  return Math.round(v);
+}
+function tvlCompareStr(v: number): string {
+  const n = tvlCompareNum(v);
+  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${Math.round(n / 1000)}K`;
+  return `$${n}`;
 }

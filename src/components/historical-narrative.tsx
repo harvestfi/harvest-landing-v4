@@ -11,6 +11,11 @@ import type { FullVaultHistory } from "@/lib/history-api";
 interface Props {
   history: FullVaultHistory;
   asset: string;
+  // Listing TVL (vault.tvl) - the canonical "current" value shown in the
+  // headline / app. Used for the "currently stands at" figure so it
+  // doesn't disagree with the top of the page; peak / trough stay from
+  // history.
+  currentTvl?: number;
 }
 
 // Drawdown percentages have a misleading rounding edge case: a vault
@@ -40,7 +45,7 @@ function computeTrackedDays(history: FullVaultHistory): number {
   return Math.max(0, ...spans);
 }
 
-export function HistoricalNarrative({ history, asset }: Props) {
+export function HistoricalNarrative({ history, asset, currentTvl: liveTvl }: Props) {
   // Fresh-vault gate: skip the whole section for vaults with under
   // 30 days of tracking. Annualised CAGR, best/worst month, and
   // peak/trough framing all need more history than that to be
@@ -159,7 +164,10 @@ export function HistoricalNarrative({ history, asset }: Props) {
         Math.round((troughTs - peakTs) / 86400),
         trackedDays > 0 ? trackedDays : Number.POSITIVE_INFINITY,
       );
-      const currentTvl = sorted[sorted.length - 1].value;
+      const currentTvl =
+        typeof liveTvl === "number" && liveTvl > 0
+          ? liveTvl
+          : sorted[sorted.length - 1].value;
       const atPeak = currentTvl >= peakVal * 0.9;
       const currentVsPeakPct = peakVal > 0
         ? Math.round((currentTvl / peakVal) * 100)

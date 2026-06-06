@@ -60,7 +60,12 @@ function tooltipFor(label: string, kind: "apy" | "tvl"): string | undefined {
   return kind === "apy" ? APY_LABEL_TOOLTIPS[key] : TVL_LABEL_TOOLTIPS[key];
 }
 
-export function HistoricalStats({ history, asset }: { history: FullVaultHistory; asset: string }) {
+export function HistoricalStats({ history, asset, currentTvl }: { history: FullVaultHistory; asset: string; currentTvl?: number }) {
+  // "Current TVL" must be the listing value (vault.tvl, what the headline
+  // and the app show), not the subgraph history tail - otherwise the
+  // same metric reads $1.1M up top and $1.2M here. Time-series stats
+  // (low/high/avg/peak) still come from history.
+  const liveTvl = typeof currentTvl === "number" && currentTvl > 0 ? currentTvl : null;
   // Anchor the 30-day window to the latest indexed reading per series,
   // not wall-clock now. The stability card, hero KPIs and yield
   // trajectory all anchor this way; anchoring here to build-time now
@@ -74,9 +79,18 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
     0,
   );
   const apy30d = allApy.filter((p) => p.timestamp >= apyLatestTs - 30 * 86400);
-  const tvl30d = history.tvlHistory.filter(
+  const tvl30dRaw = history.tvlHistory.filter(
     (p) => p.timestamp >= tvlLatestTs - 30 * 86400,
   );
+  // Fold the live listing TVL (vault.tvl) in as the most-recent point so
+  // the 30-day low / high / worst / best / current all include it and
+  // stay self-consistent with the headline. Without this, a live value
+  // just outside the indexed range (and on the far side of a $ rounding
+  // boundary) produced "Current $1.1M" below "30D Low $1.2M".
+  const tvl30d =
+    liveTvl !== null
+      ? [...tvl30dRaw, { value: liveTvl, timestamp: tvlLatestTs + 1 }]
+      : tvl30dRaw;
 
   if (allApy.length < 3 && tvl30d.length < 3) return null;
 
@@ -129,7 +143,7 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
     avg: tvlValues.reduce((s, v) => s + v, 0) / tvlValues.length,
     lifetimeAvg: allTvlValues.length > 0 ? allTvlValues.reduce((s, v) => s + v, 0) / allTvlValues.length : 0,
     med: median(tvlValues),
-    current: tvl30d[tvl30d.length - 1]?.value || 0,
+    current: liveTvl ?? (tvl30d[tvl30d.length - 1]?.value || 0),
     largestChange: tvlLargestChange,
     bestDay: tvl30d.filter((p) => p.value > 0).reduce((best, p) => p.value > best.value ? p : best, tvl30d[0]),
     worstDay: tvl30d.filter((p) => p.value > 0).reduce((worst, p) => p.value < worst.value ? p : worst, tvl30d[0]),
@@ -248,7 +262,9 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
       // length-only gate was silently hiding it on freshly indexed
       // LP-pair vaults that had < 10 positive TVL snapshots.
       const first = sorted[0].value;
-      const last = sorted[sorted.length - 1].value;
+      // "Current" TVL is the listing value (matches the headline / app);
+      // peak / first / dates stay from the indexed history.
+      const cur = liveTvl ?? sorted[sorted.length - 1].value;
       const peak = sorted.reduce(
         (best, p) => (p.value > best.value ? p : best),
         sorted[0],
@@ -267,12 +283,12 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
       if (
         sorted.length >= 10 &&
         peak.value > 0 &&
-        last >= 0.8 * peak.value &&
+        cur >= 0.8 * peak.value &&
         !erratic
       ) {
         // Narrative A: growth-since-inception (no %, just endpoints).
         narratives.push(
-          `Total value locked currently sits at ${formatTVL(last)}, up from ${formatTVL(first)} at the start of tracking. The vault has been live for ${days} days.`,
+          `Total value locked currently sits at ${formatTVL(cur)}, up from ${formatTVL(first)} at the start of tracking. The vault has been live for ${days} days.`,
         );
       } else if (sorted.length >= 10 && peak.value > 0 && !erratic) {
         // Narrative B: peak-and-current. Peak date is derived from
@@ -280,8 +296,8 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
         // the timestamp is missing or unparseable, drop the date
         // clause as graceful degradation rather than rendering "on
         // Invalid Date".
-        const pctRaw = Math.round((last / peak.value) * 100);
-        const pct = pctRaw < 1 && last > 0 ? "<1" : `${pctRaw}`;
+        const pctRaw = Math.round((cur / peak.value) * 100);
+        const pct = pctRaw < 1 && cur > 0 ? "<1" : `${pctRaw}`;
         let peakDate: string | null = null;
         if (Number.isFinite(peak.timestamp) && peak.timestamp > 0) {
           const d = new Date(peak.timestamp * 1000);
@@ -294,14 +310,14 @@ export function HistoricalStats({ history, asset }: { history: FullVaultHistory;
         }
         narratives.push(
           peakDate
-            ? `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)} reached on ${peakDate}.`
-            : `Total value locked currently sits at ${formatTVL(last)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)}.`,
+            ? `Total value locked currently sits at ${formatTVL(cur)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)} reached on ${peakDate}.`
+            : `Total value locked currently sits at ${formatTVL(cur)}, which is ${pct}% of its all-time peak of ${formatTVL(peak.value)}.`,
         );
       } else {
         // Fallback: minimal but always-present sentence for vaults
         // with < 10 positive TVL points or missing peak data.
         narratives.push(
-          `Total value locked currently sits at ${formatTVL(last)}. The vault has been live for ${days} days.`,
+          `Total value locked currently sits at ${formatTVL(cur)}. The vault has been live for ${days} days.`,
         );
       }
     }

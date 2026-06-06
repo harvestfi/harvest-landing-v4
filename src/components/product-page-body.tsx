@@ -532,9 +532,9 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
           </div>
         )}
 
-        <HistoricalNarrative history={history} asset={vault.asset} />
+        <HistoricalNarrative history={history} asset={vault.asset} currentTvl={vault.tvl} />
 
-        <HistoricalStats history={history} asset={vault.asset} />
+        <HistoricalStats history={history} asset={vault.asset} currentTvl={vault.tvl} />
 
         <VaultHistoryTable history={history} />
 
