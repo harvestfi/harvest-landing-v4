@@ -6,6 +6,7 @@ import {
   isErraticTvl,
 } from "@/lib/contextualize";
 import type { FullVaultHistory } from "@/lib/history-api";
+import { freshness } from "@/lib/freshness";
 
 function median(arr: number[]): number {
   const sorted = [...arr].sort((a, b) => a - b);
@@ -73,18 +74,19 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
   // any vault whose newest reading is a few days stale (the 15.59% vs
   // 16.58% / 17.33% vs 25.53% split that read as conflicting facts).
   const allApy = history.apyHistory.filter((p) => p.apy >= 0);
-  const apyLatestTs = allApy.reduce((m, p) => Math.max(m, p.timestamp), 0);
-  const tvlLatestTs = history.tvlHistory.reduce(
-    (m, p) => Math.max(m, p.timestamp),
-    0,
+  // Anchor BOTH 30-day windows to the freshest reading across ALL series
+  // (incl. share price), not each series' own tail. When one feed (APY or
+  // TVL) goes stale while another stays fresh, anchoring to the stale tail
+  // dates "30D Low/High/Best/Worst" months/years ago. With the freshest
+  // anchor those stale points fall out, and the stale series gets the
+  // minimal grid. Shared helper so this matches the stability card,
+  // Performance Overview and the sidebar 30d-average freshness logic.
+  const { freshestTs } = freshness(history);
+  const apyWindowReal = allApy.filter(
+    (p) => p.timestamp >= freshestTs - 30 * 86400,
   );
-  const apy30d = allApy.filter((p) => p.timestamp >= apyLatestTs - 30 * 86400);
-  // Anchor the TVL window to the freshest reading across BOTH series, not
-  // the TVL tail alone. On tiny vaults TVL is indexed only on rebalances
-  // and can lag the APY series by months; anchoring to the TVL tail made
-  // a "30D" window dated ~2 months ago (best/worst day on Apr 11 when
-  // today is Jun). Using the freshest reading drops those stale points.
-  const freshestTs = Math.max(apyLatestTs, tvlLatestTs);
+  const hasWindowApy = apyWindowReal.length >= 2;
+  const apy30d = apyWindowReal;
   const tvl30dRaw = history.tvlHistory.filter(
     (p) => p.timestamp >= freshestTs - 30 * 86400,
   );
@@ -116,17 +118,20 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
   const apyValues = apy30d.map((p) => p.apy);
   const allApyValues = allApy.map((p) => p.apy);
 
-  const apyStats = apyValues.length >= 2 ? {
-    low: Math.min(...apyValues),
-    high: Math.max(...apyValues),
-    avg: apyValues.reduce((s, v) => s + v, 0) / apyValues.length,
-    lifetimeAvg: allApyValues.reduce((s, v) => s + v, 0) / allApyValues.length,
-    med: median(apyValues),
-    bestDay: apy30d.reduce((best, p) => p.apy > best.apy ? p : best, apy30d[0]),
-    worstDay: apy30d.reduce((worst, p) => p.apy < worst.apy ? p : worst, apy30d[0]),
-    vol: stdDev(apyValues),
+  // Compute when there's a real recent window OR any lifetime history, so
+  // a stale-APY vault still shows the lifetime avg (the window-specific
+  // rows are gated on hasWindowApy in apyRows below).
+  const apyStats = apyValues.length >= 2 || allApyValues.length > 0 ? {
+    low: apyValues.length ? Math.min(...apyValues) : 0,
+    high: apyValues.length ? Math.max(...apyValues) : 0,
+    avg: apyValues.length ? apyValues.reduce((s, v) => s + v, 0) / apyValues.length : 0,
+    lifetimeAvg: allApyValues.length ? allApyValues.reduce((s, v) => s + v, 0) / allApyValues.length : 0,
+    med: apyValues.length ? median(apyValues) : 0,
+    bestDay: apy30d.length ? apy30d.reduce((best, p) => p.apy > best.apy ? p : best, apy30d[0]) : null,
+    worstDay: apy30d.length ? apy30d.reduce((worst, p) => p.apy < worst.apy ? p : worst, apy30d[0]) : null,
+    vol: apyValues.length ? stdDev(apyValues) : 0,
     dataPoints: allApy.length,
-    range: Math.max(...apyValues) - Math.min(...apyValues),
+    range: apyValues.length ? Math.max(...apyValues) - Math.min(...apyValues) : 0,
   } : null;
 
   const tvlValues = tvl30d.filter((p) => p.value > 0).map((p) => p.value);
@@ -202,19 +207,26 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
   // label ("30D Low-30D High").
   const apyPct = (v: number) => (Number.isFinite(v) ? `${v.toFixed(2)}%` : "-");
 
-  const apyRows = apyStats
-    ? [
-        { label: `${win} Low`, value: apyPct(apyStats.low) },
-        { label: `${win} High`, value: apyPct(apyStats.high) },
-        { label: `${win} Average`, value: apyPct(apyStats.avg) },
-        { label: `Lifetime avg (${apyTrackedDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
-        { label: "Median APY", value: apyPct(apyStats.med) },
-        { label: "Best day", value: `${apyPct(apyStats.bestDay.apy)} · ${formatDate(apyStats.bestDay.timestamp)}` },
-        { label: "Worst day", value: `${apyPct(apyStats.worstDay.apy)} · ${formatDate(apyStats.worstDay.timestamp)}` },
-        { label: "Volatility", value: `${apyStats.vol.toFixed(2)} ${apyStats.vol > 5 ? "High" : apyStats.vol > 2 ? "Medium" : "Low"}` },
-        { label: "APY range", value: `${apyStats.range.toFixed(2)}pp` },
-      ]
-    : [];
+  const apyRows = !apyStats
+    ? []
+    : hasWindowApy && apyStats.bestDay && apyStats.worstDay
+      ? [
+          { label: `${win} Low`, value: apyPct(apyStats.low) },
+          { label: `${win} High`, value: apyPct(apyStats.high) },
+          { label: `${win} Average`, value: apyPct(apyStats.avg) },
+          { label: `Lifetime avg (${apyTrackedDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
+          { label: "Median APY", value: apyPct(apyStats.med) },
+          { label: "Best day", value: `${apyPct(apyStats.bestDay.apy)} · ${formatDate(apyStats.bestDay.timestamp)}` },
+          { label: "Worst day", value: `${apyPct(apyStats.worstDay.apy)} · ${formatDate(apyStats.worstDay.timestamp)}` },
+          { label: "Volatility", value: `${apyStats.vol.toFixed(2)} ${apyStats.vol > 5 ? "High" : apyStats.vol > 2 ? "Medium" : "Low"}` },
+          { label: "APY range", value: `${apyStats.range.toFixed(2)}pp` },
+        ]
+      : // Stale / no recent APY: drop the year-old "30D" + best/worst rows;
+        // show only the lifetime average (the header already carries the
+        // live 24h APY).
+        [
+          { label: `Lifetime avg (${apyTrackedDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
+        ];
 
   const tvlRows = !tvlStats
     ? []

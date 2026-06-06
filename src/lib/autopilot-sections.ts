@@ -6,6 +6,7 @@
 
 import type { YieldVault } from "./types";
 import type { FullVaultHistory } from "./history-api";
+import { freshness } from "./freshness";
 import { formatAPY } from "./format";
 import {
   depositRef,
@@ -271,11 +272,11 @@ export function buildPerformanceOverview(
   // stability card and hero KPIs) so "averaging X%" agrees with the
   // rest of the page instead of drifting on vaults whose newest
   // reading is a few days stale.
-  const apyLatestTs = history.apyHistory.reduce(
-    (m, p) => (Number.isFinite(p.timestamp) ? Math.max(m, p.timestamp) : m),
-    0,
-  );
-  const thirtyDaysAgo = apyLatestTs - 30 * 86400;
+  // Anchor to the freshest reading across series. If the APY feed is
+  // stale, the trailing window holds no APY points and this 30-day-range
+  // line is skipped (Line 03 lifetime still renders), instead of citing a
+  // year-old "past 30 days" range.
+  const thirtyDaysAgo = freshness(history).freshestTs - 30 * 86400;
   const trailing = history.apyHistory
     .filter(
       (p) =>

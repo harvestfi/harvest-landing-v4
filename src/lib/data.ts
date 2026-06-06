@@ -7,6 +7,7 @@ import {
   type ApyHistoryPoint,
 } from "./history-api";
 import { sanitizeTvlSeries } from "./contextualize";
+import { freshness } from "./freshness";
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 
@@ -147,13 +148,14 @@ export async function getVaults(): Promise<YieldVault[]> {
           // only fall back to the history-latest when the feed gives
           // nothing usable.
           if (!(v.apy24h > 0)) next.apy24h = derived.apy24h;
-          // apy30d ALWAYS comes from the realized trailing-30d mean of
-          // the same history the page's Strategy stability / Performance
-          // Overview use. The listing feed has no real 30d figure for
-          // Autopilot vaults and falls back to the spot value, which
-          // then disagreed with the page (sidebar "30d avg APY" 8.76%
-          // vs the page's own 30-day mean 9.46%). Single source now.
-          next.apy30d = derived.apy30d;
+          // apy30d comes from the realized trailing-30d mean of the same
+          // history the page's Strategy stability / Performance Overview
+          // use, so every "30d average" agrees. BUT when the APY feed has
+          // gone stale (its latest reading lags the freshest series by
+          // weeks), that mean is a year-old figure; showing it as the
+          // "30d avg" alongside a fresh 24h would present stale data as
+          // current. Fall back to the live value then.
+          next.apy30d = freshness(h).apyStale ? next.apy24h : derived.apy30d;
         }
       }
       // TVL comes straight from the listing API (vault.tvl =

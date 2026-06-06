@@ -6,6 +6,7 @@
 // horizontal block with a clean White Smoke surface.
 
 import type { FullVaultHistory } from "@/lib/history-api";
+import { freshness } from "@/lib/freshness";
 import { formatAPY } from "@/lib/format";
 import { AssetIcon } from "./token-icons";
 
@@ -20,8 +21,12 @@ function computeStability(history: FullVaultHistory) {
   const valid = history.apyHistory.filter((p) => p.apy >= 0);
   if (valid.length === 0) return null;
 
-  const latestTs = valid[valid.length - 1].timestamp;
-  const windowStart = latestTs - 30 * DAY;
+  // Anchor to the freshest reading across series, not the APY tail. If
+  // the APY feed has gone stale while another series stays fresh, the
+  // recent window holds no APY points and the card suppresses itself -
+  // rather than scoring "last 30 days" stability from year-old data.
+  const { freshestTs } = freshness(history);
+  const windowStart = freshestTs - 30 * DAY;
   const recent = valid.filter((p) => p.timestamp >= windowStart);
   if (recent.length < 5) return null;
 
