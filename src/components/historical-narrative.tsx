@@ -172,6 +172,13 @@ export function HistoricalNarrative({ history, asset, currentTvl: liveTvl }: Pro
       const currentVsPeakPct = peakVal > 0
         ? Math.round((currentTvl / peakVal) * 100)
         : 0;
+      // The live current value (vault.tvl) can dip just below the indexed
+      // historical trough (live spot vs subgraph history, often across a
+      // $ rounding boundary). Clamp the displayed trough to current so
+      // "bottoming at $123 ... currently stands at $122" can't render.
+      const effTrough = Math.min(troughVal, currentTvl);
+      const effDrawdownPct =
+        peakVal > 0 ? ((peakVal - effTrough) / peakVal) * 100 : maxDrawdownPct;
 
       let text: string;
       let trajectory: "up" | "down" | "sideways";
@@ -214,7 +221,7 @@ export function HistoricalNarrative({ history, asset, currentTvl: liveTvl }: Pro
           daysDown >= 1 ? ` over ${daysDown} day${daysDown === 1 ? "" : "s"}` : "";
         const pctVsPeakStr =
           currentVsPeakPct < 1 && currentTvl > 0 ? "<1" : `${currentVsPeakPct}`;
-        text = `TVL experienced a ${formatDrawdownPct(maxDrawdownPct, troughVal)}% drawdown from its ${formatTVL(peakVal)} peak, bottoming at ${formatTVL(troughVal)}${daysClause}. It currently stands at ${formatTVL(currentTvl)}, ${pctVsPeakStr}% of the peak value.`;
+        text = `TVL experienced a ${formatDrawdownPct(effDrawdownPct, effTrough)}% drawdown from its ${formatTVL(peakVal)} peak, bottoming at ${formatTVL(effTrough)}${daysClause}. It currently stands at ${formatTVL(currentTvl)}, ${pctVsPeakStr}% of the peak value.`;
         trajectory = "down";
       }
 

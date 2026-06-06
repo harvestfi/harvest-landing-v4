@@ -79,17 +79,24 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
     0,
   );
   const apy30d = allApy.filter((p) => p.timestamp >= apyLatestTs - 30 * 86400);
+  // Anchor the TVL window to the freshest reading across BOTH series, not
+  // the TVL tail alone. On tiny vaults TVL is indexed only on rebalances
+  // and can lag the APY series by months; anchoring to the TVL tail made
+  // a "30D" window dated ~2 months ago (best/worst day on Apr 11 when
+  // today is Jun). Using the freshest reading drops those stale points.
+  const freshestTs = Math.max(apyLatestTs, tvlLatestTs);
   const tvl30dRaw = history.tvlHistory.filter(
-    (p) => p.timestamp >= tvlLatestTs - 30 * 86400,
+    (p) => p.timestamp >= freshestTs - 30 * 86400,
   );
   // Fold the live listing TVL (vault.tvl) in as the most-recent point so
   // the 30-day low / high / worst / best / current all include it and
-  // stay self-consistent with the headline. Without this, a live value
-  // just outside the indexed range (and on the far side of a $ rounding
-  // boundary) produced "Current $1.1M" below "30D Low $1.2M".
+  // stay self-consistent with the headline. Dated at the freshest
+  // reading - it's the current value, not an Apr-dated one. Without this,
+  // a live value just outside the indexed range (and on the far side of
+  // a $ rounding boundary) produced "Current $1.1M" below "30D Low $1.2M".
   const tvl30d =
     liveTvl !== null
-      ? [...tvl30dRaw, { value: liveTvl, timestamp: tvlLatestTs + 1 }]
+      ? [...tvl30dRaw, { value: liveTvl, timestamp: freshestTs }]
       : tvl30dRaw;
 
   if (allApy.length < 3 && tvl30d.length < 3) return null;
@@ -137,18 +144,47 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
     }
   }
 
-  const tvlStats = tvlValues.length >= 2 ? {
-    low: Math.min(...tvlValues),
-    high: Math.max(...tvlValues),
-    avg: tvlValues.reduce((s, v) => s + v, 0) / tvlValues.length,
-    lifetimeAvg: allTvlValues.length > 0 ? allTvlValues.reduce((s, v) => s + v, 0) / allTvlValues.length : 0,
-    med: median(tvlValues),
-    current: liveTvl ?? (tvl30d[tvl30d.length - 1]?.value || 0),
-    largestChange: tvlLargestChange,
-    bestDay: tvl30d.filter((p) => p.value > 0).reduce((best, p) => p.value > best.value ? p : best, tvl30d[0]),
-    worstDay: tvl30d.filter((p) => p.value > 0).reduce((worst, p) => p.value < worst.value ? p : worst, tvl30d[0]),
-    dataPoints: allTvl.length,
-  } : null;
+  // ≥2 REAL indexed TVL points in the freshest 30-day window. When false
+  // (sparse / stale TVL, common on tiny vaults whose TVL is only indexed
+  // on rebalances), the window-specific rows (30D Low/High/Best/Worst)
+  // would be either a single degenerate value or dated months ago, so we
+  // drop them and show only Current TVL + Lifetime avg, which stay honest.
+  const hasWindowTvl = tvl30dRaw.length >= 2;
+  const windowTvlVals = tvlValues.length > 0 ? tvlValues : null;
+  const tvlStats =
+    windowTvlVals || allTvlValues.length > 0
+      ? {
+          low: windowTvlVals ? Math.min(...windowTvlVals) : 0,
+          high: windowTvlVals ? Math.max(...windowTvlVals) : 0,
+          avg: windowTvlVals
+            ? windowTvlVals.reduce((s, v) => s + v, 0) / windowTvlVals.length
+            : 0,
+          lifetimeAvg:
+            allTvlValues.length > 0
+              ? allTvlValues.reduce((s, v) => s + v, 0) / allTvlValues.length
+              : 0,
+          med: windowTvlVals ? median(windowTvlVals) : 0,
+          current:
+            liveTvl ??
+            (tvl30d[tvl30d.length - 1]?.value ||
+              allTvl[allTvl.length - 1]?.value ||
+              0),
+          largestChange: tvlLargestChange,
+          bestDay:
+            tvl30d.length > 0
+              ? tvl30d
+                  .filter((p) => p.value > 0)
+                  .reduce((best, p) => (p.value > best.value ? p : best), tvl30d[0])
+              : null,
+          worstDay:
+            tvl30d.length > 0
+              ? tvl30d
+                  .filter((p) => p.value > 0)
+                  .reduce((worst, p) => (p.value < worst.value ? p : worst), tvl30d[0])
+              : null,
+          dataPoints: allTvl.length,
+        }
+      : null;
 
   // Window prefix for the range rows. On vaults with under a month of
   // history "30D" overstates the window, so we show the real span
@@ -159,33 +195,47 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
   // "248d" side by side reads as a data-integrity fault to YMYL crawlers.
   const win = apyTrackedDays > 0 && apyTrackedDays < 30 ? `${apyTrackedDays}D` : "30D";
 
+  // These rows are real measured observations, so a genuine 0% low must
+  // read "0.00%", not the "-" that formatAPY emits for 0 (its 0 = "no
+  // data" placeholder makes sense in ranking cells, not here). Without
+  // this, "30D Low -" rendered and the dash even glued to the next
+  // label ("30D Low-30D High").
+  const apyPct = (v: number) => (Number.isFinite(v) ? `${v.toFixed(2)}%` : "-");
+
   const apyRows = apyStats
     ? [
-        { label: `${win} Low`, value: formatAPY(apyStats.low) },
-        { label: `${win} High`, value: formatAPY(apyStats.high) },
-        { label: `${win} Average`, value: formatAPY(apyStats.avg) },
-        { label: `Lifetime avg (${apyTrackedDays}d)`, value: formatAPY(apyStats.lifetimeAvg) },
-        { label: "Median APY", value: formatAPY(apyStats.med) },
-        { label: "Best day", value: `${formatAPY(apyStats.bestDay.apy)} · ${formatDate(apyStats.bestDay.timestamp)}` },
-        { label: "Worst day", value: `${formatAPY(apyStats.worstDay.apy)} · ${formatDate(apyStats.worstDay.timestamp)}` },
+        { label: `${win} Low`, value: apyPct(apyStats.low) },
+        { label: `${win} High`, value: apyPct(apyStats.high) },
+        { label: `${win} Average`, value: apyPct(apyStats.avg) },
+        { label: `Lifetime avg (${apyTrackedDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
+        { label: "Median APY", value: apyPct(apyStats.med) },
+        { label: "Best day", value: `${apyPct(apyStats.bestDay.apy)} · ${formatDate(apyStats.bestDay.timestamp)}` },
+        { label: "Worst day", value: `${apyPct(apyStats.worstDay.apy)} · ${formatDate(apyStats.worstDay.timestamp)}` },
         { label: "Volatility", value: `${apyStats.vol.toFixed(2)} ${apyStats.vol > 5 ? "High" : apyStats.vol > 2 ? "Medium" : "Low"}` },
         { label: "APY range", value: `${apyStats.range.toFixed(2)}pp` },
       ]
     : [];
 
-  const tvlRows = tvlStats
-    ? [
-        { label: `${win} Low`, value: formatTVL(tvlStats.low) },
-        { label: `${win} High`, value: formatTVL(tvlStats.high) },
-        { label: `${win} Average`, value: formatTVL(tvlStats.avg) },
-        { label: `Lifetime avg (${apyTrackedDays}d)`, value: formatTVL(tvlStats.lifetimeAvg) },
-        { label: "Median TVL", value: formatTVL(tvlStats.med) },
-        { label: "Best day", value: `${formatTVL(tvlStats.bestDay.value)} · ${formatDate(tvlStats.bestDay.timestamp)}` },
-        { label: "Worst day", value: `${formatTVL(tvlStats.worstDay.value)} · ${formatDate(tvlStats.worstDay.timestamp)}` },
-        { label: "Current TVL", value: formatTVL(tvlStats.current) },
-        { label: "Largest daily change", value: formatTVL(tvlStats.largestChange) },
-      ]
-    : [];
+  const tvlRows = !tvlStats
+    ? []
+    : hasWindowTvl && tvlStats.bestDay && tvlStats.worstDay
+      ? [
+          { label: `${win} Low`, value: formatTVL(tvlStats.low) },
+          { label: `${win} High`, value: formatTVL(tvlStats.high) },
+          { label: `${win} Average`, value: formatTVL(tvlStats.avg) },
+          { label: `Lifetime avg (${apyTrackedDays}d)`, value: formatTVL(tvlStats.lifetimeAvg) },
+          { label: "Median TVL", value: formatTVL(tvlStats.med) },
+          { label: "Best day", value: `${formatTVL(tvlStats.bestDay.value)} · ${formatDate(tvlStats.bestDay.timestamp)}` },
+          { label: "Worst day", value: `${formatTVL(tvlStats.worstDay.value)} · ${formatDate(tvlStats.worstDay.timestamp)}` },
+          { label: "Current TVL", value: formatTVL(tvlStats.current) },
+          { label: "Largest daily change", value: formatTVL(tvlStats.largestChange) },
+        ]
+      : // Sparse / stale TVL: no meaningful 30-day window, so only the
+        // unambiguous current + lifetime figures (no stale-dated rows).
+        [
+          { label: "Current TVL", value: formatTVL(tvlStats.current) },
+          { label: `Lifetime avg (${apyTrackedDays}d)`, value: formatTVL(tvlStats.lifetimeAvg) },
+        ];
 
   // Split a single block into two columns when the other block is absent
   // so the section fills the full width.
