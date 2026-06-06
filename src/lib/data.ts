@@ -140,10 +140,19 @@ export async function getVaults(): Promise<YieldVault[]> {
       const h = cache[v.contractAddress] ?? cache[v.contractAddress.toLowerCase()];
       if (!h) return v;
       const next = { ...v };
-      if (!(v.apy24h > 0) && h.apyHistory.length > 0) {
+      if (h.apyHistory.length > 0) {
         const derived = deriveApyMetrics(h.apyHistory);
         if (derived) {
-          next.apy24h = derived.apy24h;
+          // apy24h stays the listing spot value (the app's Live APY);
+          // only fall back to the history-latest when the feed gives
+          // nothing usable.
+          if (!(v.apy24h > 0)) next.apy24h = derived.apy24h;
+          // apy30d ALWAYS comes from the realized trailing-30d mean of
+          // the same history the page's Strategy stability / Performance
+          // Overview use. The listing feed has no real 30d figure for
+          // Autopilot vaults and falls back to the spot value, which
+          // then disagreed with the page (sidebar "30d avg APY" 8.76%
+          // vs the page's own 30-day mean 9.46%). Single source now.
           next.apy30d = derived.apy30d;
         }
       }
@@ -177,8 +186,11 @@ function latestTvlPoint(history: { value: number; timestamp: number }[]): number
 }
 
 function deriveApyMetrics(history: ApyHistoryPoint[]): { apy24h: number; apy30d: number } | null {
-  if (history.length === 0) return null;
-  const sorted = [...history].sort((a, b) => b.timestamp - a.timestamp);
+  // Filter apy >= 0 so the 30-day mean matches the Strategy stability
+  // card and Performance Overview, which both drop negative readings.
+  const valid = history.filter((p) => Number.isFinite(p.apy) && p.apy >= 0);
+  if (valid.length === 0) return null;
+  const sorted = [...valid].sort((a, b) => b.timestamp - a.timestamp);
   const latest = sorted[0];
   const apy24h = latest.apy;
   const cutoff = latest.timestamp - 30 * 86400;
