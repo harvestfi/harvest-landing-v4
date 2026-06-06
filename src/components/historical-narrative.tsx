@@ -21,11 +21,14 @@ interface Props {
 // Drawdown percentages have a misleading rounding edge case: a vault
 // that fell from $746K to $169 has a 99.977% drawdown, which rounds
 // to 100% and reads as "TVL went to zero" even though $169 remained.
-// Cap at 99 whenever trough is non-zero; reserve 100 for true zero.
+// Reserve "100" for a true-zero trough; clamp only the rounds-to-100
+// case down to 99 so a non-zero balance never reads as total loss.
+// Everything else rounds honestly: a $10,128 -> $306 fall is a 96.97%
+// drawdown and must render "97", not be inflated to "99".
 function formatDrawdownPct(pct: number, troughValue: number): string {
   if (troughValue <= 0) return "100";
-  if (pct >= 95) return "99";
-  return Math.round(pct).toString();
+  const rounded = Math.round(pct);
+  return rounded >= 100 ? "99" : rounded.toString();
 }
 
 // Total span of indexed history in days, across the longest of the
@@ -99,7 +102,20 @@ export function HistoricalNarrative({ history, asset, currentTvl: liveTvl }: Pro
       const totalReturn = (last - first) / first;
       const cagr = (Math.pow(1 + totalReturn, 365 / daySpan) - 1) * 100;
 
-      let text = `Share price has compounded at an annualized rate of ${cagr.toFixed(2)}% over ${Math.round(daySpan)} days, growing from ${first.toFixed(4)} to ${last.toFixed(4)}.`;
+      // Annualizing a short window extrapolates a few weeks of often
+      // lumpy reward accrual across a full year and badly overstates the
+      // realized yield (a 21.5% share-price gain over 87 days annualizes
+      // to ~126% while the indexed APY reads ~10%). For vaults under ~90
+      // days of tracking, state the realized total return over the actual
+      // window instead, so this sentence can't contradict the APY shown
+      // everywhere else on the page. The CAGR figure is only meaningful
+      // once there's a quarter-plus of history to annualize from.
+      const annualize = daySpan >= 90;
+      const cagrTrajectory = (annualize ? cagr : totalReturn * 100) >= 0;
+
+      let text = annualize
+        ? `Share price has compounded at an annualized rate of ${cagr.toFixed(2)}% over ${Math.round(daySpan)} days, growing from ${first.toFixed(4)} to ${last.toFixed(4)}.`
+        : `Share price has grown ${(totalReturn * 100).toFixed(2)}% over ${Math.round(daySpan)} days, from ${first.toFixed(4)} to ${last.toFixed(4)}.`;
 
       // Contextualization: omit if tracked < 90 days. Per-underlying-
       // unit accounting (gain measured in the same ticker as the
@@ -122,7 +138,7 @@ export function HistoricalNarrative({ history, asset, currentTvl: liveTvl }: Pro
         }
       }
 
-      items.push({ text, trajectory: cagr >= 0 ? "up" : "down" });
+      items.push({ text, trajectory: cagrTrajectory ? "up" : "down" });
     }
   }
 
