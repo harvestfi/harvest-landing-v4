@@ -19,7 +19,7 @@
 // visit and the front-end product name (mapped from slug/address) for a
 // click or on-chain event.
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelect } from "@/lib/supabase";
 import { CountryFlag } from "@/components/admin/country-flag";
@@ -132,6 +132,11 @@ const ACTIVITY_OPTIONS: ReadonlyArray<{ value: ActivityFilter; label: string }> 
   { value: "withdrawals", label: "Withdrawals" },
 ];
 
+// Tolerance for matching a wallet connection to a later on-chain event:
+// the connect is written client-side moments before the deposit, while
+// the deposit time comes from the chain block, so allow a little slack
+// when deciding which connect "precedes" the event.
+const CONNECT_SKEW_MS = 90_000;
 const DISPLAY_LIMIT = 200; // rows rendered
 const FETCH_LIMIT = 500; // visits/clicks/events pulled for merge + map
 const MAP_LIMIT = 2000; // connections pulled for the attribution map only
@@ -279,25 +284,51 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return m;
   }, [visits, clicks]);
 
-  // wallet (lowercased) -> earliest connection { session_id (hsid),
-  // net worth }. First-touch: the connection that first tied this wallet
-  // to an index session wins, and we carry its DeBank balance for the
-  // journey row.
-  const walletSession = useMemo(() => {
+  // wallet (lowercased) -> every connection it made, ascending by time.
+  // A wallet can connect across many sessions (different tabs, days, or
+  // re-tests), so we keep the full list and pick per-event rather than
+  // collapsing to one. Each entry carries the session_id (hsid) and the
+  // DeBank balance captured at that connect.
+  const walletConnections = useMemo(() => {
     const m = new Map<
       string,
-      { session: string | null; t: number; balance: number | null }
+      Array<{ session: string | null; t: number; balance: number | null }>
     >();
     for (const w of connections ?? []) {
       const a = (w.wallet_address || "").toLowerCase();
       if (!a) continue;
       const t = new Date(w.connected_at).getTime();
-      const prev = m.get(a);
-      if (!prev || t < prev.t)
-        m.set(a, { session: w.session_id, t, balance: w.balance });
+      if (!Number.isFinite(t)) continue;
+      const entry = { session: w.session_id, t, balance: w.balance };
+      const arr = m.get(a);
+      if (arr) arr.push(entry);
+      else m.set(a, [entry]);
     }
+    for (const arr of m.values()) arr.sort((x, y) => x.t - y.t);
     return m;
   }, [connections]);
+
+  // Pick the connection that best explains an event at time `atMs`: the
+  // latest connect at or just before the event (last touch before the
+  // conversion), falling back to the earliest connect when every connect
+  // post-dates the event. This replaces a global earliest-connect join,
+  // which pinned every deposit from a reused wallet to the very first
+  // session that wallet ever appeared in - so a deposit driven by a fresh
+  // Google session read as whatever channel drove the wallet's first-ever
+  // visit. CONNECT_SKEW_MS absorbs the small clock skew between the chain
+  // block timestamp and the app-written connected_at.
+  const pickConnection = useCallback(
+    (wallet: string, atMs: number) => {
+      const conns = walletConnections.get((wallet || "").toLowerCase());
+      if (!conns || conns.length === 0) return null;
+      let chosen: (typeof conns)[number] | null = null;
+      for (const c of conns) {
+        if (c.t <= atMs + CONNECT_SKEW_MS) chosen = c;
+      }
+      return chosen ?? conns[0];
+    },
+    [walletConnections],
+  );
 
   // hsid -> first landing page (earliest visit for that session). The
   // landing step of the journey.
@@ -322,7 +353,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   }, [visits]);
 
   // hsid (session_id) -> wallet that connected on that session. The
-  // reverse of walletSession: lets a visit/click row in the Stream show
+  // reverse of walletConnections: lets a visit/click row in the Stream show
   // the wallet once the app persists the hsid on connect, even before
   // any on-chain deposit. Earliest connect per session wins.
   const sessionWallet = useMemo(() => {
@@ -352,14 +383,14 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   }, [clicks]);
 
   // Resolve an on-chain event's wallet back to its acquisition source.
-  function resolveWallet(wallet: string): {
+  function resolveWallet(wallet: string, atMs: number): {
     channel: string;
     country: string | null;
     attributed: boolean;
     upstream: string | null;
     hsid: string | null;
   } {
-    const link = walletSession.get((wallet || "").toLowerCase());
+    const link = pickConnection(wallet, atMs);
     const ft = link?.session ? sessionFirstTouch.get(link.session) : undefined;
     if (!ft) {
       return {
@@ -461,7 +492,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           : null,
       })),
       ...(events ?? []).map((e) => {
-        const r = resolveWallet(e.wallet_address);
+        const r = resolveWallet(
+          e.wallet_address,
+          new Date(e.block_timestamp).getTime(),
+        );
         return {
           kind: "event" as const,
           id: `e-${e.tx_hash}-${e.log_index}`,
@@ -484,7 +518,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, DISPLAY_LIMIT);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visits, clicks, events, walletSession, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
+  }, [visits, clicks, events, pickConnection, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
 
   const availableSources = useMemo(() => {
     const counts = new Map<string, number>();
@@ -515,10 +549,13 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   );
 
   // ── Journeys: one row per attributed deposit, hsid-stitched ─────────
-  // Spine: deposit.wallet -> walletSession (wallet_connections_prod) ->
-  // session_id (hsid) -> sessionLanding / sessionClick / sessionFirstTouch.
-  // Every step shares the same hsid; only the wallet -> session hop is
-  // address-based, because on-chain events carry no hsid of their own.
+  // Spine: deposit.wallet -> pickConnection (wallet_connections_prod, the
+  // connect closest before this deposit) -> session_id (hsid) ->
+  // sessionLanding / sessionClick / sessionFirstTouch. Every step shares
+  // the same hsid; only the wallet -> session hop is address-based,
+  // because on-chain events carry no hsid of their own. Picking per-deposit
+  // (not the wallet's first-ever connect) keeps each deposit attributed to
+  // the session that actually drove it when a wallet is reused over time.
   const journeys = useMemo<JourneyRow[]>(() => {
     if (!loaded) return [];
     const now = Date.now();
@@ -567,7 +604,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     const rows: JourneyRow[] = [];
     for (const e of events ?? []) {
       if (e.event_type !== "deposit") continue;
-      const link = walletSession.get((e.wallet_address || "").toLowerCase());
+      const link = pickConnection(
+        e.wallet_address,
+        new Date(e.block_timestamp).getTime(),
+      );
       const hsid = link?.session ?? null;
       const landing = hsid ? sessionLanding.get(hsid) : undefined;
       const click = hsid ? sessionClick.get(hsid) : undefined;
@@ -598,7 +638,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       .slice(0, DISPLAY_LIMIT);
   }, [
     events,
-    walletSession,
+    pickConnection,
     sessionLanding,
     sessionClick,
     sessionFirstTouch,
