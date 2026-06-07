@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf public/_next && node scripts/build-network-tvl.mjs && next build && rm -rf public && mv out public && node scripts/build-search-index.mjs && node scripts/build-design-system.mjs && npm run check-banned-words",
+    "build": "rm -rf public/_next && node scripts/build-network-tvl.mjs && next build && rm -rf public && mv out public && node scripts/build-search-index.mjs && node scripts/build-design-system.mjs && npm run check-banned-words && npm run check-consistency",
     "check-banned-words": "node scripts/check-banned-words.mjs",
+    "check-consistency": "node scripts/check-page-consistency.mjs",
     "start": "next start",
     "lint": "eslint"
   },
