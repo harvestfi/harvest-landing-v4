@@ -27,7 +27,10 @@ interface Section {
 const SECTIONS: Section[] = [
   {
     label: null,
-    items: [{ label: "Live Feed", href: "/admin/live-feed" }],
+    items: [
+      { label: "Live Feed", href: "/admin/live-feed" },
+      { label: "SEO Summary", href: "/admin/seo" },
+    ],
   },
   {
     label: "Acquisition",
