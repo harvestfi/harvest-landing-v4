@@ -3,19 +3,25 @@ name: Index Vault Events (Subgraph)
 # Subgraph-driven companion to the RPC indexer. Pulls deposit /
 # withdraw rows from the Harvest subgraph (one endpoint per chain,
 # {chainId} substituted at the URL placeholder) and upserts them
-# into vault_events_prod. Picks up where the existing rows leave
-# off; first run per chain back-fills the trailing 30 days.
+# into vault_events_prod.
+#
+# SCHEDULE DISABLED: the RPC indexer (index-vault-events.yml) is the
+# authoritative source of deposit/withdraw rows for the funnel. It
+# resolves the signing EOA (tx.from) so aggregator-routed deposits
+# (Portals, 1inch, Zapper, ...) attribute to the user, not the router
+# contract. The subgraph's `sender` is the router in that case and uses
+# a different log_index, so running it on cron would write a second,
+# router-attributed row for the same deposit that reads "External" in
+# the feed. Kept here for manual / schema-probe use only (run via the
+# Actions "Run workflow" button, or `--probe` locally); re-enable the
+# cron below only if the RPC indexer is ever retired.
 #
 # Runs in a single job (not per-chain matrix) - the subgraph
-# handles all chains in one HTTP roundtrip per page, so parallel
-# matrix would just hit the same host harder for no benefit.
-#
-# Runs every 15 minutes on main, offset by 5 minutes from the RPC
-# indexer so the two never collide on Supabase writes.
+# handles all chains in one HTTP roundtrip per page.
 
 on:
-  schedule:
-    - cron: '5-59/15 * * * *'
+  # schedule:
+  #   - cron: '5-59/15 * * * *'
   workflow_dispatch: {}
 
 jobs:
