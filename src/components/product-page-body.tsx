@@ -573,7 +573,12 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
               <div className="cd-row">
                 <span className="cd-label">Rewards</span>
                 <span className="cd-val">
-                  {vault.rewardTokens.map((r) => r.symbol).join(", ")}
+                  {/* Dedupe by symbol: the upstream feed can surface the
+                      same reward token twice (e.g. two sub-vaults both
+                      paying WETH), which otherwise renders "WETH, WETH".
+                      A genuinely multi-token vault keeps every distinct
+                      symbol because only exact repeats collapse. */}
+                  {[...new Set(vault.rewardTokens.map((r) => r.symbol))].join(", ")}
                 </span>
               </div>
             )}

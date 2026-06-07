@@ -307,9 +307,21 @@ async function fetchHarvestVaults() {
         : null;
 
       const iconUrls = v.apyIconUrls || [];
+      // Collapse duplicate reward symbols at the source: the upstream feed
+      // can list the same token more than once (e.g. two sub-vaults both
+      // paying WETH), which otherwise renders "WETH, WETH" in Strategy
+      // details and "WETH and other reward tokens" in prose. Keep the first
+      // occurrence so a genuinely multi-token vault still carries every
+      // distinct reward.
+      const seenRewardSymbols = new Set();
       const rewardTokens = tokenSymbols
         .map((sym, i) => ({ symbol: sym, logoUrl: iconUrls[i] || "" }))
-        .filter((r) => r.symbol && r.logoUrl);
+        .filter((r) => {
+          if (!r.symbol || !r.logoUrl) return false;
+          if (seenRewardSymbols.has(r.symbol)) return false;
+          seenRewardSymbols.add(r.symbol);
+          return true;
+        });
 
       return {
         id: v.vaultAddress,
