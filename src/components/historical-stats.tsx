@@ -331,12 +331,22 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
         (best, p) => (p.value > best.value ? p : best),
         sorted[0],
       );
-      const days = Math.max(
+      // "The vault has been live for N days" must equal the canonical
+      // "Tracked for N days" age shown in the header / Strategy details,
+      // which is the APY-history span (apyTrackedDays, computed above).
+      // The TVL series usually starts indexing a few days after APY, so
+      // deriving this count from the TVL span alone printed a shorter age
+      // (e.g. 549 against the header's 554) that read as a longevity
+      // contradiction. Fall back to the TVL span only when there is no
+      // APY history - the header shows no "Tracked for" line in that
+      // case, so there is nothing for it to disagree with.
+      const tvlSpanDays = Math.max(
         0,
         Math.round(
           (sorted[sorted.length - 1].timestamp - sorted[0].timestamp) / 86400,
         ),
       );
+      const days = apyTrackedDays > 0 ? apyTrackedDays : tvlSpanDays;
       // When the TVL series is erratic (transient index spikes), the
       // "peak" is noise. Fall through to the minimal fallback so we
       // never cite a $932K all-time peak that the vault never really
