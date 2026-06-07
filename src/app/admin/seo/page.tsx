@@ -132,9 +132,11 @@ export default function SeoSummaryPage() {
   const loaded =
     visits !== null && clicks !== null && conns !== null && events !== null;
 
-  // First-occurrence timestamp per unique session, per funnel stage. Counting
-  // each session once by its first touch keeps the funnel "people"-based, and
-  // the daily chart reads as new-visitors / new-clickers / new-depositors.
+  // SEO-scoped funnel. A session counts as SEO when its first-touch source is
+  // a search engine; every stage (and the chart) is restricted to that same
+  // population, so the headline numbers and the SEO activity table below read
+  // off the same set instead of disagreeing (all-traffic chart vs SEO table).
+  // Counting each session once by first touch keeps the funnel "people"-based.
   const { acquiredTs, reachedTs, depositedTs, oldestMs } = useMemo(() => {
     if (!loaded)
       return {
@@ -144,25 +146,33 @@ export default function SeoSummaryPage() {
         oldestMs: null as number | null,
       };
 
-    const firstBy = (
-      rows: ReadonlyArray<{ session_id: string | null; created_at: string }>,
-    ) => {
-      const m = new Map<string, number>();
-      for (const r of rows) {
-        if (!r.session_id) continue;
-        const t = new Date(r.created_at).getTime();
-        if (!Number.isFinite(t)) continue;
-        const prev = m.get(r.session_id);
-        if (prev === undefined || t < prev) m.set(r.session_id, t);
-      }
-      return m;
-    };
+    // session -> earliest visit { ms, source }, then the SEO subset.
+    const firstVisit = new Map<string, { t: number; source: string | null }>();
+    for (const v of visits!) {
+      if (!v.session_id) continue;
+      const t = new Date(v.created_at).getTime();
+      if (!Number.isFinite(t)) continue;
+      const prev = firstVisit.get(v.session_id);
+      if (!prev || t < prev.t)
+        firstVisit.set(v.session_id, { t, source: v.source });
+    }
+    const seoSessions = new Set<string>();
+    for (const [sid, info] of firstVisit) {
+      if (channelGroup(classifyChannel(info.source)) === "SEO")
+        seoSessions.add(sid);
+    }
 
-    const firstVisit = firstBy(visits!);
-    const firstClick = firstBy(clicks!);
-    const visitedSessions = new Set(firstVisit.keys());
+    // session -> earliest click ms.
+    const firstClick = new Map<string, number>();
+    for (const c of clicks!) {
+      if (!c.session_id) continue;
+      const t = new Date(c.created_at).getTime();
+      if (!Number.isFinite(t)) continue;
+      const prev = firstClick.get(c.session_id);
+      if (prev === undefined || t < prev) firstClick.set(c.session_id, t);
+    }
 
-    // wallet -> earliest session that connected it (the SEO attribution spine).
+    // wallet -> earliest session that connected it (the attribution spine).
     const walletSession = new Map<string, string>();
     const walletSessionT = new Map<string, number>();
     for (const w of conns!) {
@@ -179,8 +189,7 @@ export default function SeoSummaryPage() {
     }
 
     // Attributed deposits: a deposit whose wallet ties back (via a connect) to
-    // a session that visited the index. Autopilot vaults and behaviourally
-    // detected allocators are excluded so internal reallocations don't count.
+    // an SEO session. Autopilot vaults and detected allocators are excluded.
     const rebalancers = detectRebalancerActors(events!);
     const firstDeposit = new Map<string, number>(); // session -> earliest deposit ms
     for (const e of events!) {
@@ -188,19 +197,27 @@ export default function SeoSummaryPage() {
       const a = (e.wallet_address || "").toLowerCase();
       if (isMutedActor(a) || rebalancers.has(a)) continue;
       const sid = walletSession.get(a);
-      if (!sid || !visitedSessions.has(sid)) continue;
+      if (!sid || !seoSessions.has(sid)) continue;
       const t = new Date(e.block_timestamp).getTime();
       if (!Number.isFinite(t)) continue;
       const prev = firstDeposit.get(sid);
       if (prev === undefined || t < prev) firstDeposit.set(sid, t);
     }
 
+    const acquiredTs: number[] = [];
+    const reachedTs: number[] = [];
     let oldest = Infinity;
-    for (const t of firstVisit.values()) if (t < oldest) oldest = t;
+    for (const sid of seoSessions) {
+      const fv = firstVisit.get(sid)!;
+      acquiredTs.push(fv.t);
+      if (fv.t < oldest) oldest = fv.t;
+      const fc = firstClick.get(sid);
+      if (fc !== undefined) reachedTs.push(fc);
+    }
 
     return {
-      acquiredTs: [...firstVisit.values()],
-      reachedTs: [...firstClick.values()],
+      acquiredTs,
+      reachedTs,
       depositedTs: [...firstDeposit.values()],
       oldestMs: Number.isFinite(oldest) ? oldest : null,
     };
@@ -344,11 +361,12 @@ export default function SeoSummaryPage() {
           <div style={{ width: "100%" }}>
             <h1 className="uni-hub-h1">SEO Summary</h1>
             <p className="uni-hub-sub aq-sub-full">
-              The whole SEO funnel at a glance: how many people the index site
-              acquired, how many crossed into app.harvest.finance, and how many
-              completed a deposit. Each stage is a unique session over the
-              selected window; deposits are attributed back to the session that
-              drove them.
+              The search funnel at a glance: of the people the index acquired
+              from a search engine (Google, Bing, DuckDuckGo), how many crossed
+              into app.harvest.finance and how many completed a deposit. Every
+              stage, the chart, and the activity table below are scoped to the
+              same SEO sessions; deposits are attributed back to the session
+              that drove them.
             </p>
           </div>
         </div>
@@ -375,9 +393,9 @@ export default function SeoSummaryPage() {
             }}
           >
             <FunnelStat
-              label="Acquired to site"
+              label="Acquired via search"
               value={acquired}
-              sub={`unique sessions, last ${days}d`}
+              sub={`SEO sessions, last ${days}d`}
             />
             <FunnelStat
               label="Reached app"
