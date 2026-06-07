@@ -14,10 +14,11 @@
 //                -> frontpage_visits/outbound_clicks.session_id -> source
 // A funnel-linked app event whose session reached us directly reads
 // "Homepage" (owned); one that arrived via Google/Reddit/etc. keeps that
-// channel; an event from a wallet that never touched the index reads
-// "External". The "Product / Page" column shows the visited URL for a
-// visit and the front-end product name (mapped from slug/address) for a
-// click or on-chain event.
+// channel; an event from a wallet that never touched the index has no
+// identifiable acquisition source and reads "Direct" (GA-style). The
+// "Product / Page" column shows the visited URL for a visit and the
+// front-end product name (mapped from slug/address) for a click or
+// on-chain event.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -194,8 +195,28 @@ function classifyChannel(raw: string | null): string {
   if (s.includes("discord")) return "Discord";
   if (s.includes("medium")) return "Medium";
   if (s.includes("harvest.finance")) return "Homepage";
-  if (s === "direct" || s === "(direct)" || s === "(none)") return "Direct";
-  return "Referral";
+  // No identifiable acquisition source -> Direct, matching GA's treatment of
+  // a typed URL, bookmark, or stripped / self referrer. Covers an explicit
+  // "direct"/"(none)", our own site (self-referral / internal navigation),
+  // an in-app webview scheme that carries no real origin, and a literal
+  // "unknown". This is the bucket the operator should read as "came on their
+  // own", not a mysterious one.
+  if (
+    s === "direct" ||
+    s === "(direct)" ||
+    s === "(none)" ||
+    s === "internal" ||
+    s === "unknown" ||
+    s.includes("harvest") ||
+    s.startsWith("android-app") ||
+    s.startsWith("ios-app")
+  ) {
+    return "Direct";
+  }
+  // A real external site we don't have a named channel for: surface the
+  // referrer itself (GA-style "Referral / <source>") rather than a blank
+  // "Referral" bucket, so the operator can see where it actually came from.
+  return raw;
 }
 
 // App-side events (clicks, deposits, withdrawals) entered the app from
@@ -235,7 +256,7 @@ const SAMPLE_VISIT_SEED: ReadonlyArray<{ page: string; source: string; country: 
 const SAMPLE_EVENT_SEED: ReadonlyArray<{ slug: string; chain: string; type: "deposit" | "withdraw"; wallet: string; channel: string; country: string; minsAgo: number }> = [
   { slug: "weth-autopilot-base", chain: "Base", type: "deposit", wallet: "0x417c8e123e5d0f3e0a0c0ee171606e61ccb637df", channel: "Homepage", country: "PL", minsAgo: 3 },
   { slug: "usdc-aerodrome-aero-base", chain: "Base", type: "deposit", wallet: "0x8a3fce21b9d47a0c6f5e2d18b4c7a90e3f1d6b24", channel: "Google", country: "US", minsAgo: 28 },
-  { slug: "usdc-hypurr-hyperevm", chain: "HyperEVM", type: "withdraw", wallet: "0xa07f3c91e6b2d8540c19a3f7b08e2d45c6019e8b", channel: "External", country: "DE", minsAgo: 96 },
+  { slug: "usdc-hypurr-hyperevm", chain: "HyperEVM", type: "withdraw", wallet: "0xa07f3c91e6b2d8540c19a3f7b08e2d45c6019e8b", channel: "Direct", country: "DE", minsAgo: 96 },
 ];
 const SAMPLE_CLICK_SEED: ReadonlyArray<{ slug: string; source: string; country: string; minsAgo: number }> = [
   { slug: "weth-autopilot-base", source: "(direct)", country: "PL", minsAgo: 4 },
@@ -454,8 +475,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     const link = pickConnection(wallet, atMs);
     const ft = link?.session ? sessionFirstTouch.get(link.session) : undefined;
     if (!ft) {
+      // No web session ties this wallet to us: no identifiable acquisition
+      // source, which reads as Direct (GA), not a mysterious "External".
       return {
-        channel: "External",
+        channel: "Direct",
         country: null,
         attributed: false,
         upstream: null,
@@ -510,9 +533,9 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         time: new Date(now - s.minsAgo * 60_000).toISOString(),
         channel: s.channel,
         country: s.country,
-        attributed: s.channel !== "External",
+        attributed: s.channel !== "Direct",
         upstream: s.channel,
-        hsid: s.channel === "External" ? null : `sample-hsid-e${i}`,
+        hsid: s.channel === "Direct" ? null : `sample-hsid-e${i}`,
         eventType: s.type,
         wallet: s.wallet,
         vaultSlug: s.slug,
@@ -718,7 +741,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       };
       return SAMPLE_EVENT_SEED.filter((s) => s.type === "deposit").map(
         (s, i) => {
-          const ext = s.channel === "External";
+          const ext = s.channel === "Direct";
           return {
             id: `sj-${i}`,
             time: new Date(now - s.minsAgo * 60_000).toISOString(),
@@ -757,7 +780,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       rows.push({
         id: `j-${e.tx_hash}-${e.log_index}`,
         time: e.block_timestamp,
-        channel: attributed ? appChannel(source) : "External",
+        channel: attributed ? appChannel(source) : "Direct",
         country: landing?.country ?? ft?.country ?? null,
         attributed,
         hsid,
@@ -813,7 +836,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               [View strategy] clicks into the app, and on-chain deposits and
               withdrawals. On-chain events are attributed back to the session
               that drove them, so a deposit from a wallet that connected
-              through the index reads as Homepage rather than External.
+              through the index reads as Homepage; one with no tracked session
+              reads as Direct.
             </p>
           </div>
         </div>
