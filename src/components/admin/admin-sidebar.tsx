@@ -57,6 +57,7 @@ const SECTIONS: Section[] = [
     label: "Settings",
     items: [
       { label: "Master Rules", href: "/admin/master-rules" },
+      { label: "Master Config", href: "/admin/master-config" },
       { label: "Ranking Rules", href: "/admin/ranking-rules" },
       { label: "Design System", href: "/admin/design-system" },
     ],
