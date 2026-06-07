@@ -571,6 +571,15 @@ body:has(.uni-shell) {
 .uni-shell .uni-cta:hover .uni-cta-icon {
   transform: translate(1px, -1px);
 }
+/* The gold CTA fill stays bright in both themes (brand anchor), so the
+   label + icon must stay onyx. In dark mode --uni-ink flips to near-white,
+   which washed the text out on the gold. Pin the primary and sticky
+   "View Strategy" CTAs to onyx. */
+:root[data-theme="dark"] .uni-shell .uni-cta,
+:root[data-theme="dark"] .uni-shell .uni-cta-icon,
+:root[data-theme="dark"] .uni-shell .uni-sticky-cta {
+  color: #191717;
+}
 .uni-shell .uni-side-card {
   background: var(--uni-card);
   border-radius: var(--uni-radius);
