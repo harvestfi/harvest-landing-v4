@@ -269,6 +269,27 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     clicks!.length === 0 &&
     events!.length === 0;
 
+  // Collapse multiple on-chain logs that belong to the same deposit (or
+  // withdraw) into a single row. One user deposit can emit several mints
+  // on the vault token - the user's shares plus a fee/dust mint - and a
+  // row may also have been written by both event sources before the
+  // subgraph cron was retired, each with a different log_index. All of
+  // those share the transaction hash, so we key on tx + vault + type and
+  // keep the largest share amount (the real deposit; the dust mints drop
+  // out). Genuine separate deposits live in different transactions, and
+  // deposits into different vaults differ on vault_address, so both stay
+  // as distinct rows.
+  const dedupedEvents = useMemo(() => {
+    if (!events) return events;
+    const byKey = new Map<string, VaultEventRow>();
+    for (const e of events) {
+      const key = `${(e.tx_hash || "").toLowerCase()}|${(e.vault_address || "").toLowerCase()}|${e.event_type}`;
+      const prev = byKey.get(key);
+      if (!prev || sharesBig(e) > sharesBig(prev)) byKey.set(key, e);
+    }
+    return [...byKey.values()];
+  }, [events]);
+
   // session_id -> earliest-touch { source, country } from visits, then
   // clicks as a backfill for sessions that never logged a page view.
   const sessionFirstTouch = useMemo(() => {
@@ -491,7 +512,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           ? sessionWallet.get(c.session_id)?.wallet ?? null
           : null,
       })),
-      ...(events ?? []).map((e) => {
+      ...(dedupedEvents ?? []).map((e) => {
         const r = resolveWallet(
           e.wallet_address,
           new Date(e.block_timestamp).getTime(),
@@ -518,7 +539,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, DISPLAY_LIMIT);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visits, clicks, events, pickConnection, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
+  }, [visits, clicks, dedupedEvents, pickConnection, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
 
   const availableSources = useMemo(() => {
     const counts = new Map<string, number>();
@@ -602,7 +623,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     }
 
     const rows: JourneyRow[] = [];
-    for (const e of events ?? []) {
+    for (const e of dedupedEvents ?? []) {
       if (e.event_type !== "deposit") continue;
       const link = pickConnection(
         e.wallet_address,
@@ -637,7 +658,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, DISPLAY_LIMIT);
   }, [
-    events,
+    dedupedEvents,
     pickConnection,
     sessionLanding,
     sessionClick,
@@ -1051,6 +1072,16 @@ function formatUsd(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
   return `$${n.toFixed(0)}`;
+}
+
+// Raw share amount as a BigInt for comparison, 0n when missing/unparseable.
+// Used to pick the largest mint when collapsing same-transaction duplicates.
+function sharesBig(e: { amount_shares: string | null }): bigint {
+  try {
+    return e.amount_shares ? BigInt(e.amount_shares) : BigInt(0);
+  } catch {
+    return BigInt(0);
+  }
 }
 
 // Raw uint256 share units -> human number. Vault tokens are ~all 18-dec;
