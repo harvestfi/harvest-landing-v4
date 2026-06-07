@@ -62,6 +62,14 @@ const AUDITS: Audit[] = [
     summary:
       "No new findings beyond issues already disclosed or remediated at the time of engagement. The review also covered the proposed vault redesign and informed subsequent architectural direction.",
   },
+  {
+    id: "halborn",
+    firm: "Halborn",
+    reportUrl:
+      "https://github.com/harvestfi/audits/blob/main/Halborn-Harvest-2025.pdf",
+    summary:
+      "January 2025 review of Harvest's core vault infrastructure. The full report is published on GitHub.",
+  },
 ];
 
 export default function SecurityPage() {

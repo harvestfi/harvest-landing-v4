@@ -252,7 +252,7 @@ export async function Footer() {
           <div className="foot-trust-row">
             <span className="foot-trust-label">Audited by</span>
             <ul className="foot-trust-list">
-              {["Least Authority", "Haechi Audit", "PeckShield", "Certik"].map(
+              {["Least Authority", "Haechi Audit", "PeckShield", "Certik", "Halborn"].map(
                 (name) => (
                   <li key={name} className="foot-trust-item">
                     {name}
