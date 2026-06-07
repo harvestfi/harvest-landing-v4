@@ -404,10 +404,79 @@ function checkDaysTracked(text, report) {
     const canon = ages.find((a) => a.label === "Tracked for")?.n ?? ages[0].n;
     for (const a of ages) {
       if (Math.abs(a.n - canon) >= 2) {
-        report("review", "age.disagree",
+        // Every day-count on the page derives from the same APY-history
+        // span on the same history object, so a >=2-day disagreement is a
+        // real cross-section contradiction (the "longevity" class a YMYL
+        // crawler flags), not rounding. Hard-fail.
+        report("contradiction", "age.disagree",
           `"${a.label}" says ${a.n} days vs ${canon} elsewhere`, a.idx, a.len);
       }
     }
+  }
+}
+
+// Hard leaks of a failed computation. A bare "-" is a legitimate no-data
+// placeholder in the stat grids, so it is intentionally NOT matched here.
+function checkNullLeak(text, report) {
+  const re = /\$NaN|\bNaN%|\bNaN\b|\bundefined\b|Invalid Date|\$Infinity|\bInfinity\b/g;
+  for (const m of allMatches(text, re)) {
+    report("contradiction", "leak.null-or-nan",
+      `rendered "${m[0]}" - a failed format/compute leaked to the page`,
+      m.index, m[0].length);
+  }
+}
+
+// YMYL unfalsifiability (AGENTS.md): a section comparing this product to a
+// population must signal the population is "what we track", not the whole
+// market. If the page makes a cohort/market/network comparison, at least
+// one scope signal must appear somewhere on the page.
+function checkScopeSignal(text, report) {
+  const comparisonAt = text.search(
+    /cohort average|network average|market average|delivering higher APY|ranks #\d+ (?:of|among)/i,
+  );
+  if (comparisonAt < 0) return;
+  const hasSignal =
+    /\bwe (?:currently )?(?:monitor|track|follow)\b|in our index|strategies we monitor|products we follow|in that set|\bthe cohort\b/i.test(
+      text,
+    );
+  if (!hasSignal) {
+    report("contradiction", "scope.missing-signal",
+      "population comparison present but no scope signal (we monitor / in our index / the cohort)",
+      comparisonAt, 24);
+  }
+}
+
+// Market-benchmarking internal arithmetic: the higher/lower counts must
+// reconcile with rank and total, and the "vs. Average" stat sign must
+// match the closing "X% higher/lower than the cohort average" wording.
+function checkBenchmark(text, report) {
+  const mHL = text.match(
+    /(\d+) strateg\w+ in the cohort are currently delivering higher APY; (\d+) are delivering lower/,
+  );
+  const mRank = text.match(/this product ranks #(\d+)\b/);
+  const mTotal = text.match(/Among the (\d+) [\w.]+ strategies we currently monitor/);
+  if (mHL && mRank) {
+    const above = +mHL[1], below = +mHL[2], rank = +mRank[1];
+    const at = text.indexOf(mHL[0]);
+    if (above !== rank - 1)
+      report("contradiction", "bench.higher-count",
+        `${above} delivering higher but rank #${rank} implies ${rank - 1}`, at, mHL[0].length);
+    if (mTotal && below !== +mTotal[1] - rank)
+      report("contradiction", "bench.lower-count",
+        `${below} delivering lower but ${mTotal[1]}-#${rank} implies ${+mTotal[1] - rank}`, at, mHL[0].length);
+  }
+  const mVs = text.match(/vs\.\s*Average\s*([+-]?\d+(?:\.\d+)?)%/);
+  const mDir = text.match(/(\d+(?:\.\d+)?)% (higher|lower) than the cohort average/);
+  if (mVs && mDir) {
+    const vs = parseFloat(mVs[1]);
+    const dir = mDir[2];
+    const at = text.indexOf(mDir[0]);
+    if ((dir === "higher" && vs < 0) || (dir === "lower" && vs > 0))
+      report("contradiction", "bench.sign",
+        `vs. Average ${mVs[1]}% contradicts "${dir} than the cohort average"`, at, mDir[0].length);
+    else if (Math.abs(Math.abs(vs) - parseFloat(mDir[1])) > 0.2)
+      report("review", "bench.magnitude",
+        `vs. Average ${mVs[1]}% vs closing "${mDir[1]}% ${dir}"`, at, mDir[0].length);
   }
 }
 
@@ -420,6 +489,9 @@ const CHECKS = [
   checkRanks,
   checkCurrentTvlAgreement,
   checkDaysTracked,
+  checkNullLeak,
+  checkScopeSignal,
+  checkBenchmark,
 ];
 
 // ---------- self-test (recall + precision) --------------------------------
