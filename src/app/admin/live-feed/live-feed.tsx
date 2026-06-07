@@ -124,6 +124,24 @@ type FeedItem =
       tx: string;
     };
 
+type VisitItem = Extract<FeedItem, { kind: "visit" }>;
+
+// One visitor's whole browsing session folded into a single stream row.
+interface VisitGroup {
+  sessionId: string;
+  time: string; // most recent visit in the session
+  channel: string;
+  country: string | null;
+  wallet: string | null;
+  pages: VisitItem[]; // newest first
+}
+
+// A row in the Stream is either a standalone activity item or a collapsed
+// multi-page visit session.
+type StreamRow =
+  | { kind: "item"; item: FeedItem }
+  | { kind: "group"; group: VisitGroup };
+
 type ActivityFilter = "all" | "visits" | "clicks" | "deposits" | "withdrawals";
 const ACTIVITY_OPTIONS: ReadonlyArray<{ value: ActivityFilter; label: string }> = [
   { value: "all", label: "All" },
@@ -581,6 +599,63 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     [items, activity, sourceFilter],
   );
 
+  // Sessions the operator has expanded to see the individual page views.
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const toggleSession = (sid: string) =>
+    setExpandedSessions((prev) => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid);
+      else next.add(sid);
+      return next;
+    });
+
+  // Collapse a single visitor's page views into one master row. A person
+  // touring the site fires a Visit per page; rendered flat they look like a
+  // wave of traffic from one channel. Group visits that share an hsid into a
+  // session row carrying the page count; everything else (clicks, deposits,
+  // withdrawals, and lone/anonymous visits) stays its own row. Sorted newest
+  // first by the session's most recent visit.
+  const streamRows = useMemo<StreamRow[]>(() => {
+    const visitsBySession = new Map<string, VisitItem[]>();
+    const rows: StreamRow[] = [];
+    for (const it of filtered) {
+      if (it.kind === "visit" && it.hsid) {
+        const arr = visitsBySession.get(it.hsid);
+        if (arr) arr.push(it);
+        else visitsBySession.set(it.hsid, [it]);
+      } else {
+        rows.push({ kind: "item", item: it });
+      }
+    }
+    for (const [sid, visits] of visitsBySession) {
+      if (visits.length === 1) {
+        rows.push({ kind: "item", item: visits[0] });
+        continue;
+      }
+      const sorted = [...visits].sort(
+        (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
+      );
+      rows.push({
+        kind: "group",
+        group: {
+          sessionId: sid,
+          time: sorted[0].time,
+          channel: sorted[0].channel,
+          country: sorted[0].country,
+          wallet: sorted.find((v) => v.wallet)?.wallet ?? null,
+          pages: sorted,
+        },
+      });
+    }
+    return rows.sort((a, b) => {
+      const ta = a.kind === "item" ? a.item.time : a.group.time;
+      const tb = b.kind === "item" ? b.item.time : b.group.time;
+      return new Date(tb).getTime() - new Date(ta).getTime();
+    });
+  }, [filtered]);
+
   // ── Journeys: one row per attributed deposit, hsid-stitched ─────────
   // Spine: deposit.wallet -> pickConnection (wallet_connections_prod, the
   // connect closest before this deposit) -> session_id (hsid) ->
@@ -808,127 +883,295 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 <span className="uni-hub-th">Tx</span>
               </div>
               <div className="uni-hub-tbody">
-                {filtered.length === 0 && (
+                {streamRows.length === 0 && (
                   <div className="uni-hub-empty">No activity matches this filter.</div>
                 )}
-                {filtered.map((item) => (
-                  <div
-                    key={item.id}
-                    className="uni-hub-row"
-                    style={{ gridTemplateColumns: FEED_COLS }}
-                  >
-                    <span
-                      className="uni-hub-cell lf-time"
-                      data-label="Time"
-                      title={formatTime(item.time)}
-                    >
-                      {relativeTime(item.time)}
-                    </span>
-                    <span className="uni-hub-cell" data-label="Source">
-                      <span
-                        className={`lf-badge lf-badge-${channelTone(item.channel)}`}
-                        title={
-                          item.kind === "event" && item.attributed && item.upstream && item.upstream !== item.channel
-                            ? `first touch: ${item.upstream}`
-                            : undefined
-                        }
-                      >
-                        {item.channel}
-                      </span>
-                    </span>
-                    <span className="uni-hub-cell" data-label="Country">
-                      {item.country ? <CountryFlag country={item.country} /> : <span className="lf-dim">—</span>}
-                    </span>
-                    <span className="uni-hub-cell" data-label="Event">
-                      {item.kind === "visit" ? (
-                        <span
-                          className="lf-event lf-event-visit"
-                          title={item.hsid ? `hsid ${item.hsid}` : undefined}
-                        >
-                          <VisitIcon />
-                          Visit
-                        </span>
-                      ) : item.kind === "click" ? (
-                        <span
-                          className="lf-event lf-event-click"
-                          title={item.hsid ? `hsid ${item.hsid}` : undefined}
-                        >
-                          <ClickIcon />
-                          App click
-                        </span>
-                      ) : (
-                        <span
-                          className={`lf-event lf-event-${item.eventType}`}
-                          title={item.hsid ? `hsid ${item.hsid}` : undefined}
-                        >
-                          <EventIcon type={item.eventType} />
-                          {item.eventType}
-                        </span>
-                      )}
-                    </span>
-                    <span className="uni-hub-cell lf-product" data-label="Product / Page">
-                      {item.kind === "visit" ? (
-                        <Link href={item.pagePath} className="lf-product-link">
-                          {item.pagePath}
-                        </Link>
-                      ) : item.kind === "click" ? (
-                        item.vaultSlug ? (
-                          <Link href={`/${item.vaultSlug}`} className="lf-product-link">
-                            {productLabel(item.vaultSlug)}
-                          </Link>
-                        ) : (
-                          <Link href={item.sourcePage} className="lf-product-link">
-                            {item.sourcePage}
-                          </Link>
-                        )
-                      ) : item.vaultSlug ? (
-                        <Link href={`/${item.vaultSlug}`} className="lf-product-link">
-                          {productLabel(item.vaultSlug, item.vaultAddress)}
-                        </Link>
-                      ) : (
-                        <span className="lf-product-link">
-                          {productLabel(item.vaultSlug, item.vaultAddress)}
-                        </span>
-                      )}
-                    </span>
-                    <span className="uni-hub-cell" data-label="Wallet">
-                      {item.wallet ? (
-                        <span
-                          className="lf-mono"
-                          title={
-                            item.kind === "event"
-                              ? item.wallet
-                              : `${item.wallet} - linked to this session after the wallet connected in the app, not known at page-view time`
-                          }
-                        >
-                          {shortenAddress(item.wallet)}
-                        </span>
-                      ) : (
-                        <span className="lf-dim">—</span>
-                      )}
-                    </span>
-                    <span className="uni-hub-cell" data-label="Tx">
-                      {item.kind === "event" ? (
-                        <a
-                          href={txLink(item.chain, item.tx)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="lf-tx"
-                        >
-                          view
-                        </a>
-                      ) : (
-                        <span className="lf-dim">—</span>
-                      )}
-                    </span>
-                  </div>
-                ))}
+                {streamRows.map((row) =>
+                  row.kind === "item" ? (
+                    <FeedRow
+                      key={row.item.id}
+                      item={row.item}
+                      productLabel={productLabel}
+                    />
+                  ) : (
+                    <SessionGroupRow
+                      key={`session-${row.group.sessionId}`}
+                      group={row.group}
+                      expanded={expandedSessions.has(row.group.sessionId)}
+                      onToggle={() => toggleSession(row.group.sessionId)}
+                    />
+                  ),
+                )}
               </div>
             </div>
           </div>
         )}
       </section>
     </div>
+  );
+}
+
+// ── Stream rows ─────────────────────────────────────────────────────
+
+type ProductLabel = (slug: string | null, address?: string) => string;
+
+// A single activity row (visit, click, deposit or withdraw). Extracted so
+// the same markup renders both top-level items and the expanded page rows
+// inside a collapsed session.
+function FeedRow({
+  item,
+  productLabel,
+}: {
+  item: FeedItem;
+  productLabel: ProductLabel;
+}) {
+  return (
+    <div className="uni-hub-row" style={{ gridTemplateColumns: FEED_COLS }}>
+      <span
+        className="uni-hub-cell lf-time"
+        data-label="Time"
+        title={formatTime(item.time)}
+      >
+        {relativeTime(item.time)}
+      </span>
+      <span className="uni-hub-cell" data-label="Source">
+        <span
+          className={`lf-badge lf-badge-${channelTone(item.channel)}`}
+          title={
+            item.kind === "event" && item.attributed && item.upstream && item.upstream !== item.channel
+              ? `first touch: ${item.upstream}`
+              : undefined
+          }
+        >
+          {item.channel}
+        </span>
+      </span>
+      <span className="uni-hub-cell" data-label="Country">
+        {item.country ? <CountryFlag country={item.country} /> : <span className="lf-dim">—</span>}
+      </span>
+      <span className="uni-hub-cell" data-label="Event">
+        {item.kind === "visit" ? (
+          <span
+            className="lf-event lf-event-visit"
+            title={item.hsid ? `hsid ${item.hsid}` : undefined}
+          >
+            <VisitIcon />
+            Visit
+          </span>
+        ) : item.kind === "click" ? (
+          <span
+            className="lf-event lf-event-click"
+            title={item.hsid ? `hsid ${item.hsid}` : undefined}
+          >
+            <ClickIcon />
+            App click
+          </span>
+        ) : (
+          <span
+            className={`lf-event lf-event-${item.eventType}`}
+            title={item.hsid ? `hsid ${item.hsid}` : undefined}
+          >
+            <EventIcon type={item.eventType} />
+            {item.eventType}
+          </span>
+        )}
+      </span>
+      <span className="uni-hub-cell lf-product" data-label="Product / Page">
+        {item.kind === "visit" ? (
+          <Link href={item.pagePath} className="lf-product-link">
+            {item.pagePath}
+          </Link>
+        ) : item.kind === "click" ? (
+          item.vaultSlug ? (
+            <Link href={`/${item.vaultSlug}`} className="lf-product-link">
+              {productLabel(item.vaultSlug)}
+            </Link>
+          ) : (
+            <Link href={item.sourcePage} className="lf-product-link">
+              {item.sourcePage}
+            </Link>
+          )
+        ) : item.vaultSlug ? (
+          <Link href={`/${item.vaultSlug}`} className="lf-product-link">
+            {productLabel(item.vaultSlug, item.vaultAddress)}
+          </Link>
+        ) : (
+          <span className="lf-product-link">
+            {productLabel(item.vaultSlug, item.vaultAddress)}
+          </span>
+        )}
+      </span>
+      <span className="uni-hub-cell" data-label="Wallet">
+        {item.wallet ? (
+          <span
+            className="lf-mono"
+            title={
+              item.kind === "event"
+                ? item.wallet
+                : `${item.wallet} - linked to this session after the wallet connected in the app, not known at page-view time`
+            }
+          >
+            {shortenAddress(item.wallet)}
+          </span>
+        ) : (
+          <span className="lf-dim">—</span>
+        )}
+      </span>
+      <span className="uni-hub-cell" data-label="Tx">
+        {item.kind === "event" ? (
+          <a
+            href={txLink(item.chain, item.tx)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="lf-tx"
+          >
+            view
+          </a>
+        ) : (
+          <span className="lf-dim">—</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+// Collapsed session: one master row for a visitor's whole page tour, with a
+// page-count pill and a chevron. Clicking the row reveals each page visit as
+// an indented child row.
+function SessionGroupRow({
+  group,
+  expanded,
+  onToggle,
+}: {
+  group: VisitGroup;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      <div
+        className="uni-hub-row lf-session-row"
+        style={{ gridTemplateColumns: FEED_COLS }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+      >
+        <span
+          className="uni-hub-cell lf-time"
+          data-label="Time"
+          title={formatTime(group.time)}
+        >
+          {relativeTime(group.time)}
+        </span>
+        <span className="uni-hub-cell" data-label="Source">
+          <span className={`lf-badge lf-badge-${channelTone(group.channel)}`}>
+            {group.channel}
+          </span>
+        </span>
+        <span className="uni-hub-cell" data-label="Country">
+          {group.country ? (
+            <CountryFlag country={group.country} />
+          ) : (
+            <span className="lf-dim">—</span>
+          )}
+        </span>
+        <span className="uni-hub-cell" data-label="Event">
+          <span
+            className="lf-session-toggle"
+            title={`hsid ${group.sessionId}`}
+          >
+            <Chevron />
+            <span className="lf-event lf-event-visit">
+              <VisitIcon />
+              Session
+            </span>
+          </span>
+        </span>
+        <span className="uni-hub-cell lf-product" data-label="Product / Page">
+          <span className="lf-session-count">
+            {group.pages.length} pages
+          </span>
+        </span>
+        <span className="uni-hub-cell" data-label="Wallet">
+          {group.wallet ? (
+            <span className="lf-mono" title={group.wallet}>
+              {shortenAddress(group.wallet)}
+            </span>
+          ) : (
+            <span className="lf-dim">—</span>
+          )}
+        </span>
+        <span className="uni-hub-cell" data-label="Tx">
+          <span className="lf-dim">—</span>
+        </span>
+      </div>
+      {expanded &&
+        group.pages.map((p) => (
+          <div
+            key={p.id}
+            className="uni-hub-row lf-row-child"
+            style={{ gridTemplateColumns: FEED_COLS }}
+          >
+            <span
+              className="uni-hub-cell lf-time"
+              data-label="Time"
+              title={formatTime(p.time)}
+            >
+              {relativeTime(p.time)}
+            </span>
+            <span className="uni-hub-cell" data-label="Source">
+              <span className="lf-dim">—</span>
+            </span>
+            <span className="uni-hub-cell" data-label="Country">
+              <span className="lf-dim">—</span>
+            </span>
+            <span className="uni-hub-cell" data-label="Event">
+              <span className="lf-event lf-event-visit">
+                <VisitIcon />
+                Visit
+              </span>
+            </span>
+            <span className="uni-hub-cell lf-product" data-label="Product / Page">
+              <Link href={p.pagePath} className="lf-product-link">
+                {p.pagePath}
+              </Link>
+            </span>
+            <span className="uni-hub-cell" data-label="Wallet">
+              <span className="lf-dim">—</span>
+            </span>
+            <span className="uni-hub-cell" data-label="Tx">
+              <span className="lf-dim">—</span>
+            </span>
+          </div>
+        ))}
+    </>
+  );
+}
+
+// Right-pointing chevron; rotates to down via CSS when the row is expanded.
+function Chevron() {
+  return (
+    <svg
+      className="lf-chevron"
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m9 6 6 6-6 6" />
+    </svg>
   );
 }
 

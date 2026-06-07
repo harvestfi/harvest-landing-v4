@@ -1049,6 +1049,43 @@ body:has(.uni-hub-test) {
 /* Placeholder dash for columns that don't apply to a visit/click row. */
 .uni-hub-test .lf-dim { color: var(--uni-ink-3); }
 
+/* Collapsed session master row: many page views from one visitor fold
+   into a single clickable row so the feed isn't drowned by one person's
+   tour. The row toggles its child page rows open. */
+.uni-hub-test .lf-session-row { cursor: pointer; }
+.uni-hub-test .lf-session-row:hover { background: var(--uni-tint); }
+.uni-hub-test .lf-session-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.uni-hub-test .lf-chevron {
+  transition: transform 0.15s ease;
+  color: var(--uni-ink-3);
+  flex-shrink: 0;
+}
+.uni-hub-test .lf-session-row[aria-expanded="true"] .lf-chevron {
+  transform: rotate(90deg);
+}
+/* "8 pages" pill on the master row. */
+.uni-hub-test .lf-session-count {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--uni-radius-pill);
+  background: var(--uni-tint);
+  color: var(--uni-ink-2);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+}
+/* Expanded child page rows: indented and tinted so they read as belonging
+   to the session above them. */
+.uni-hub-test .lf-row-child {
+  background: var(--uni-tint);
+  border-left: 2px solid var(--uni-line);
+}
+.uni-hub-test .lf-row-child .lf-product { padding-left: 6px; }
+
 /* Source badges: the pill background is the standout, not the font.
    Search engines read blue, AI assistants purple, Direct plain
    (outlined onyx), everything else neutral. */
