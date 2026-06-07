@@ -149,13 +149,16 @@ const MAP_LIMIT = 2000; // connections pulled for the attribution map only
 const FEED_COLS = "132px 132px 92px 104px minmax(170px, 1.7fr) 128px 54px";
 
 // Source-group toggle for the Stream filter. Collapses the many per-channel
-// names into the four buckets an operator reasons about.
-type SourceGroup = "all" | "SEO" | "AI" | "Social" | "Direct";
+// names into the buckets an operator reasons about. "Referral" isolates real
+// external sites we don't have a named channel for (aggregators like
+// CoinMarketCap, blogs, etc.) - their row badge shows the domain itself.
+type SourceGroup = "all" | "SEO" | "AI" | "Social" | "Referral" | "Direct";
 const SOURCE_GROUPS: ReadonlyArray<{ value: SourceGroup; label: string }> = [
   { value: "all", label: "All" },
   { value: "SEO", label: "SEO" },
   { value: "AI", label: "AI" },
   { value: "Social", label: "Social" },
+  { value: "Referral", label: "Referral" },
   { value: "Direct", label: "Direct" },
 ];
 
@@ -213,7 +216,7 @@ function appChannel(raw: string | null): string {
 
 function channelTone(
   name: string,
-): "search" | "ai" | "social" | "owned" | "direct" | "external" | "neutral" {
+): "search" | "ai" | "social" | "owned" | "direct" | "referral" | "neutral" {
   if (name === "Google" || name === "Bing" || name === "DuckDuckGo") return "search";
   if (name === "ChatGPT" || name === "Perplexity" || name === "Claude" || name === "Gemini") return "ai";
   if (
@@ -222,20 +225,23 @@ function channelTone(
   )
     return "social";
   if (name === "Homepage") return "owned";
-  if (name === "External") return "external";
   if (name === "Direct") return "direct";
-  return "neutral";
+  // Anything left is a real external site we don't have a named channel for
+  // (an aggregator, blog, ...) - the badge shows its domain. Distinct tone so
+  // these referral sources stand out instead of blending into neutral.
+  return "referral";
 }
 
 // Map a per-row channel name to its Stream source-filter group. Search, AI
-// and social engines map to their bucket; everything else - owned Homepage
-// traffic, a named referrer domain, or Direct - falls under Direct, the
-// "came on their own / no tracked channel" reading.
+// and social engines map to their bucket; a real external referrer domain
+// maps to Referral; owned Homepage and Direct fall under Direct ("came on
+// their own / no tracked channel").
 function channelGroup(channel: string): Exclude<SourceGroup, "all"> {
   const tone = channelTone(channel);
   if (tone === "search") return "SEO";
   if (tone === "ai") return "AI";
   if (tone === "social") return "Social";
+  if (tone === "referral") return "Referral";
   return "Direct";
 }
 
@@ -708,19 +714,6 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         </header>
 
         <div className="lf-filterbar">
-          <div className="aq-timeframe" role="group" aria-label="Activity filter">
-            {ACTIVITY_OPTIONS.map((o) => (
-              <button
-                key={o.value}
-                type="button"
-                className={`aq-timeframe-tab${activity === o.value ? " active" : ""}`}
-                aria-pressed={activity === o.value}
-                onClick={() => setActivity(o.value)}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
           <div className="aq-timeframe" role="group" aria-label="Source filter">
             {SOURCE_GROUPS.map((o) => (
               <button
@@ -729,6 +722,19 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 className={`aq-timeframe-tab${sourceFilter === o.value ? " active" : ""}`}
                 aria-pressed={sourceFilter === o.value}
                 onClick={() => setSourceFilter(o.value)}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          <div className="aq-timeframe" role="group" aria-label="Activity filter">
+            {ACTIVITY_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                className={`aq-timeframe-tab${activity === o.value ? " active" : ""}`}
+                aria-pressed={activity === o.value}
+                onClick={() => setActivity(o.value)}
               >
                 {o.label}
               </button>
@@ -938,10 +944,11 @@ function SessionGroupRow({
         }}
       >
         <span
-          className="uni-hub-cell lf-time"
+          className="uni-hub-cell lf-time lf-time-session"
           data-label="Time"
           title={formatTime(group.time)}
         >
+          <Chevron />
           {relativeTime(group.time)}
         </span>
         <span className="uni-hub-cell" data-label="Source">
@@ -958,14 +965,11 @@ function SessionGroupRow({
         </span>
         <span className="uni-hub-cell" data-label="Event">
           <span
-            className="lf-session-toggle"
+            className="lf-event lf-event-visit"
             title={`hsid ${group.sessionId}`}
           >
-            <Chevron />
-            <span className="lf-event lf-event-visit">
-              <VisitIcon />
-              Session
-            </span>
+            <VisitIcon />
+            Session
           </span>
         </span>
         <span className="uni-hub-cell lf-product" data-label="Product / Page">

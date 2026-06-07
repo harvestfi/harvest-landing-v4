@@ -1054,10 +1054,13 @@ body:has(.uni-hub-test) {
    tour. The row toggles its child page rows open. */
 .uni-hub-test .lf-session-row { cursor: pointer; }
 .uni-hub-test .lf-session-row:hover { background: var(--uni-tint); }
-.uni-hub-test .lf-session-toggle {
+/* Chevron lives at the left edge in the Time cell (tree-row convention) so
+   it never shifts the Event / Source columns out of vertical alignment with
+   the rows around it. */
+.uni-hub-test .lf-time-session {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 .uni-hub-test .lf-chevron {
   transition: transform 0.15s ease;
@@ -1112,6 +1115,11 @@ body:has(.uni-hub-test) {
   border: 1px solid var(--uni-line);
   color: var(--uni-ink-2);
 }
+/* Referral: a real external site (aggregator like CoinMarketCap, a blog,
+   ...) whose domain is shown verbatim. Teal so these stand out as their own
+   acquisition source, distinct from search / AI / social / direct. */
+.uni-hub-test .lf-badge-referral { background: rgba(13, 148, 136, 0.13); color: #0f766e; }
+:root[data-theme="dark"] .uni-hub-test .lf-badge-referral { background: rgba(45, 212, 191, 0.16); color: #5eead4; }
 /* External: an on-chain event from a wallet that never touched the
    index. Muted + dashed so it reads as "not our funnel", not an error. */
 .uni-hub-test .lf-badge-external {
