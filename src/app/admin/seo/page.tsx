@@ -22,7 +22,6 @@ import { supabaseSelect, supabaseSelectAll } from "@/lib/supabase";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
-  appChannel,
   channelTone,
   channelGroup,
 } from "@/lib/channels";
@@ -132,118 +131,72 @@ export default function SeoSummaryPage() {
   const loaded =
     visits !== null && clicks !== null && conns !== null && events !== null;
 
-  // SEO-scoped funnel. A session counts as SEO when its first-touch source is
-  // a search engine; every stage (and the chart) is restricted to that same
-  // population, so the headline numbers and the SEO activity table below read
-  // off the same set instead of disagreeing (all-traffic chart vs SEO table).
-  // Counting each session once by first touch keeps the funnel "people"-based.
-  const { acquiredTs, reachedTs, depositedTs, oldestMs } = useMemo(() => {
-    if (!loaded)
-      return {
-        acquiredTs: [] as number[],
-        reachedTs: [] as number[],
-        depositedTs: [] as number[],
-        oldestMs: null as number | null,
-      };
+  // Unified SEO model. A session is "SEO" if ANY of its visits came from a
+  // search engine - robust to a long-lived hsid whose earliest visit predates
+  // the search entry (strict first-touch would drop a polluted session even
+  // though it clearly arrived via Google). Every funnel stage, the chart, and
+  // the activity table read off this one session set, so the headline numbers
+  // and the table can't disagree. Each session carries the channel of its
+  // first search visit for the row badge; deposits are deduped by transaction
+  // and exclude autopilot / allocator reallocations.
+  const { acquiredTs, reachedTs, depositedTs, oldestMs, seoRows } = useMemo(() => {
+    const empty = {
+      acquiredTs: [] as number[],
+      reachedTs: [] as number[],
+      depositedTs: [] as number[],
+      oldestMs: null as number | null,
+      seoRows: [] as SeoRow[],
+    };
+    if (!loaded) return empty;
 
-    // session -> earliest visit { ms, source }, then the SEO subset.
-    const firstVisit = new Map<string, { t: number; source: string | null }>();
+    interface Sess {
+      firstVisitMs: number;
+      firstClickMs: number;
+      country: string | null;
+      seoName: string | null; // channel of the earliest search visit
+      seoMs: number;
+    }
+    const sess = new Map<string, Sess>();
+    const getSess = (id: string): Sess => {
+      let s = sess.get(id);
+      if (!s) {
+        s = {
+          firstVisitMs: Infinity,
+          firstClickMs: Infinity,
+          country: null,
+          seoName: null,
+          seoMs: Infinity,
+        };
+        sess.set(id, s);
+      }
+      return s;
+    };
     for (const v of visits!) {
       if (!v.session_id) continue;
       const t = new Date(v.created_at).getTime();
       if (!Number.isFinite(t)) continue;
-      const prev = firstVisit.get(v.session_id);
-      if (!prev || t < prev.t)
-        firstVisit.set(v.session_id, { t, source: v.source });
+      const s = getSess(v.session_id);
+      if (t < s.firstVisitMs) s.firstVisitMs = t;
+      const ch = classifyChannel(v.source);
+      if (channelGroup(ch) === "SEO" && t < s.seoMs) {
+        s.seoMs = t;
+        s.seoName = ch;
+      }
+      if (s.country === null && v.country) s.country = v.country;
     }
-    const seoSessions = new Set<string>();
-    for (const [sid, info] of firstVisit) {
-      if (channelGroup(classifyChannel(info.source)) === "SEO")
-        seoSessions.add(sid);
-    }
-
-    // session -> earliest click ms.
-    const firstClick = new Map<string, number>();
     for (const c of clicks!) {
       if (!c.session_id) continue;
       const t = new Date(c.created_at).getTime();
       if (!Number.isFinite(t)) continue;
-      const prev = firstClick.get(c.session_id);
-      if (prev === undefined || t < prev) firstClick.set(c.session_id, t);
+      const s = getSess(c.session_id);
+      if (t < s.firstClickMs) s.firstClickMs = t;
+      if (s.country === null && c.country) s.country = c.country;
     }
 
-    // wallet -> earliest session that connected it (the attribution spine).
-    const walletSession = new Map<string, string>();
-    const walletSessionT = new Map<string, number>();
-    for (const w of conns!) {
-      if (!w.session_id) continue;
-      const a = (w.wallet_address || "").toLowerCase();
-      if (!a) continue;
-      const t = new Date(w.connected_at).getTime();
-      if (!Number.isFinite(t)) continue;
-      const prev = walletSessionT.get(a);
-      if (prev === undefined || t < prev) {
-        walletSessionT.set(a, t);
-        walletSession.set(a, w.session_id);
-      }
-    }
+    const seoSessions = new Set<string>();
+    for (const [id, s] of sess) if (s.seoName !== null) seoSessions.add(id);
 
-    // Attributed deposits: a deposit whose wallet ties back (via a connect) to
-    // an SEO session. Autopilot vaults and detected allocators are excluded.
-    const rebalancers = detectRebalancerActors(events!);
-    const firstDeposit = new Map<string, number>(); // session -> earliest deposit ms
-    for (const e of events!) {
-      if (e.event_type !== "deposit") continue;
-      const a = (e.wallet_address || "").toLowerCase();
-      if (isMutedActor(a) || rebalancers.has(a)) continue;
-      const sid = walletSession.get(a);
-      if (!sid || !seoSessions.has(sid)) continue;
-      const t = new Date(e.block_timestamp).getTime();
-      if (!Number.isFinite(t)) continue;
-      const prev = firstDeposit.get(sid);
-      if (prev === undefined || t < prev) firstDeposit.set(sid, t);
-    }
-
-    const acquiredTs: number[] = [];
-    const reachedTs: number[] = [];
-    let oldest = Infinity;
-    for (const sid of seoSessions) {
-      const fv = firstVisit.get(sid)!;
-      acquiredTs.push(fv.t);
-      if (fv.t < oldest) oldest = fv.t;
-      const fc = firstClick.get(sid);
-      if (fc !== undefined) reachedTs.push(fc);
-    }
-
-    return {
-      acquiredTs,
-      reachedTs,
-      depositedTs: [...firstDeposit.values()],
-      oldestMs: Number.isFinite(oldest) ? oldest : null,
-    };
-  }, [loaded, visits, clicks, conns, events]);
-
-  // SEO-sourced activity stream: visits, clicks and deposits/withdrawals whose
-  // per-row source classifies into the SEO group (Google / Bing / DuckDuckGo).
-  // Mirrors the Live Feed stream's per-row channel logic, then keeps only SEO.
-  const seoRows = useMemo<SeoRow[]>(() => {
-    if (!loaded) return [];
-
-    // session -> first-touch source/country (earliest visit).
-    const firstTouch = new Map<
-      string,
-      { source: string | null; country: string | null; t: number }
-    >();
-    for (const v of visits!) {
-      if (!v.session_id) continue;
-      const t = new Date(v.created_at).getTime();
-      if (!Number.isFinite(t)) continue;
-      const prev = firstTouch.get(v.session_id);
-      if (!prev || t < prev.t)
-        firstTouch.set(v.session_id, { source: v.source, country: v.country, t });
-    }
-
-    // session -> earliest-connected wallet, and wallet -> earliest session.
+    // session <-> wallet, earliest connect each way (the attribution spine).
     const sessionWallet = new Map<string, string>();
     const sessionWalletT = new Map<string, number>();
     const walletSession = new Map<string, string>();
@@ -266,56 +219,83 @@ export default function SeoSummaryPage() {
       }
     }
 
+    // Deposit / withdraw events tied to an SEO session, deduped by tx+vault.
     const rebalancers = detectRebalancerActors(events!);
-    const rows: SeoRow[] = [];
-
-    for (const v of visits!) {
-      const channel = classifyChannel(v.source);
-      if (channelGroup(channel) !== "SEO") continue;
-      rows.push({
-        id: `v-${v.session_id}-${v.created_at}`,
-        time: v.created_at,
-        channel,
-        country: v.country,
-        kind: "visit",
-        page: v.page_path || "/",
-        vaultSlug: null,
-        wallet: v.session_id ? sessionWallet.get(v.session_id) ?? null : null,
-        chain: null,
-        tx: null,
-      });
-    }
-
-    for (const c of clicks!) {
-      const channel = appChannel(c.source);
-      if (channelGroup(channel) !== "SEO") continue;
-      rows.push({
-        id: `c-${c.session_id}-${c.created_at}`,
-        time: c.created_at,
-        channel,
-        country: c.country,
-        kind: "click",
-        page: c.source_page || "/",
-        vaultSlug: c.vault_slug,
-        wallet: c.session_id ? sessionWallet.get(c.session_id) ?? null : null,
-        chain: null,
-        tx: null,
-      });
-    }
-
+    const seoEvents: Array<{ e: EventRow; sid: string }> = [];
+    const seenEvent = new Set<string>();
+    const firstDeposit = new Map<string, number>(); // SEO session -> earliest deposit ms
     for (const e of events!) {
       if (e.event_type !== "deposit" && e.event_type !== "withdraw") continue;
       const a = (e.wallet_address || "").toLowerCase();
       if (isMutedActor(a) || rebalancers.has(a)) continue;
       const sid = walletSession.get(a);
-      const ft = sid ? firstTouch.get(sid) : undefined;
-      const channel = ft ? appChannel(ft.source) : "Direct";
-      if (channelGroup(channel) !== "SEO") continue;
+      if (!sid || !seoSessions.has(sid)) continue;
+      const ms = new Date(e.block_timestamp).getTime();
+      if (!Number.isFinite(ms)) continue;
+      const key = `${(e.tx_hash || "").toLowerCase()}|${(e.vault_address || "").toLowerCase()}|${e.event_type}`;
+      if (seenEvent.has(key)) continue;
+      seenEvent.add(key);
+      seoEvents.push({ e, sid });
+      if (e.event_type === "deposit") {
+        const prev = firstDeposit.get(sid);
+        if (prev === undefined || ms < prev) firstDeposit.set(sid, ms);
+      }
+    }
+
+    // Funnel series, all restricted to the SEO session set.
+    const acquiredTs: number[] = [];
+    const reachedTs: number[] = [];
+    let oldest = Infinity;
+    for (const id of seoSessions) {
+      const s = sess.get(id)!;
+      acquiredTs.push(s.firstVisitMs);
+      if (s.firstVisitMs < oldest) oldest = s.firstVisitMs;
+      if (Number.isFinite(s.firstClickMs)) reachedTs.push(s.firstClickMs);
+    }
+    const depositedTs = [...firstDeposit.values()];
+
+    // Activity table: every action of an SEO session, badged with the session's
+    // search source so the Source column reads as the acquisition channel.
+    const rows: SeoRow[] = [];
+    for (const v of visits!) {
+      if (!v.session_id || !seoSessions.has(v.session_id)) continue;
+      const s = sess.get(v.session_id)!;
       rows.push({
-        id: `e-${e.tx_hash}`,
+        id: `v-${v.session_id}-${v.created_at}`,
+        time: v.created_at,
+        channel: s.seoName ?? "Google",
+        country: v.country ?? s.country,
+        kind: "visit",
+        page: v.page_path || "/",
+        vaultSlug: null,
+        wallet: sessionWallet.get(v.session_id) ?? null,
+        chain: null,
+        tx: null,
+      });
+    }
+    for (const c of clicks!) {
+      if (!c.session_id || !seoSessions.has(c.session_id)) continue;
+      const s = sess.get(c.session_id)!;
+      rows.push({
+        id: `c-${c.session_id}-${c.created_at}`,
+        time: c.created_at,
+        channel: s.seoName ?? "Google",
+        country: c.country ?? s.country,
+        kind: "click",
+        page: c.source_page || "/",
+        vaultSlug: c.vault_slug,
+        wallet: sessionWallet.get(c.session_id) ?? null,
+        chain: null,
+        tx: null,
+      });
+    }
+    for (const { e, sid } of seoEvents) {
+      const s = sess.get(sid)!;
+      rows.push({
+        id: `e-${e.tx_hash}-${e.vault_address}-${e.event_type}`,
         time: e.block_timestamp,
-        channel,
-        country: ft?.country ?? null,
+        channel: s.seoName ?? "Google",
+        country: s.country,
         kind: e.event_type as "deposit" | "withdraw",
         page: null,
         vaultSlug: e.vault_slug,
@@ -324,10 +304,15 @@ export default function SeoSummaryPage() {
         tx: e.tx_hash,
       });
     }
+    rows.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
 
-    return rows
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, SEO_DISPLAY_LIMIT);
+    return {
+      acquiredTs,
+      reachedTs,
+      depositedTs,
+      oldestMs: Number.isFinite(oldest) ? oldest : null,
+      seoRows: rows.slice(0, SEO_DISPLAY_LIMIT),
+    };
   }, [loaded, visits, clicks, conns, events]);
 
   const days = resolveDays(timeframe, oldestMs);
@@ -434,8 +419,8 @@ function SeoActivityTable({ rows }: { rows: SeoRow[] }) {
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">SEO activity</h2>
           <span className="uni-hub-section-meta">
-            {rows.length.toLocaleString("en-US")} most recent · visits, clicks
-            and deposits whose source is a search engine
+            {rows.length.toLocaleString("en-US")} most recent · every action of
+            sessions acquired via search
           </span>
         </div>
       </header>
