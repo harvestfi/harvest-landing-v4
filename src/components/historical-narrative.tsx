@@ -146,8 +146,18 @@ export function HistoricalNarrative({ history, asset, currentTvl: liveTvl }: Pro
   // erratic: a "peak" that is a one-day index spike surrounded by
   // sub-$100 readings is noise, and the drawdown / days-down / percent
   // computed from it are meaningless.
-  if (history.tvlHistory.length >= 10 && !isErraticTvl(history.tvlHistory)) {
-    const sorted = [...history.tvlHistory].sort(
+  //
+  // Scan positives only. A $0 / null TVL snapshot is an indexer dropout,
+  // not a real "all capital left" event, and every sibling TVL stat (the
+  // Historical-statistics grid's 30D low/high, lifetime avg, best/worst
+  // day, and its peak/current narrative) already filters value > 0.
+  // Leaving zeros in here alone let a single dropped reading become the
+  // trough and print "100% drawdown, bottoming at $0" on a vault that is
+  // demonstrably operating - its 30-day low and current TVL are both well
+  // above zero - flatly contradicting the rest of the page.
+  const positiveTvl = history.tvlHistory.filter((p) => p.value > 0);
+  if (positiveTvl.length >= 10 && !isErraticTvl(history.tvlHistory)) {
+    const sorted = [...positiveTvl].sort(
       (a, b) => a.timestamp - b.timestamp,
     );
     let peakVal = 0;
