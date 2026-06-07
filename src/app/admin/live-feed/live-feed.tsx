@@ -22,7 +22,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelect } from "@/lib/supabase";
-import { isMutedActor } from "@/lib/muted-actors";
+import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import { CountryFlag } from "@/components/admin/country-flag";
 import "../../_styles/asset-hub.css";
 
@@ -282,12 +282,19 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   // as distinct rows.
   const dedupedEvents = useMemo(() => {
     if (!events) return events;
+    // Behaviourally-detected rebalancer wallets (allocators not in the
+    // static denylist) computed over the full loaded window before slicing.
+    const rebalancers = detectRebalancerActors(events);
     const byKey = new Map<string, VaultEventRow>();
     for (const e of events) {
       // Drop protocol-internal autopilot / allocator reallocations - they
       // are not real users or net inflows, so they have no place in the
       // stream, journeys, or any source ranking.
-      if (isMutedActor(e.wallet_address)) continue;
+      if (
+        isMutedActor(e.wallet_address) ||
+        rebalancers.has((e.wallet_address || "").toLowerCase())
+      )
+        continue;
       const key = `${(e.tx_hash || "").toLowerCase()}|${(e.vault_address || "").toLowerCase()}|${e.event_type}`;
       const prev = byKey.get(key);
       if (!prev || sharesBig(e) > sharesBig(prev)) byKey.set(key, e);

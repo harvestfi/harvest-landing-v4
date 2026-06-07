@@ -20,10 +20,10 @@
 // conversion-rate cohort framing until we wire onchain Deposit-event
 // timestamps from the subgraph.
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelectAll } from "@/lib/supabase";
-import { isMutedActor } from "@/lib/muted-actors";
+import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   TimeframeSelector,
   resolveDays,
@@ -105,6 +105,18 @@ export default function DepositsPage() {
     };
   }, []);
 
+  // Allocator / rebalancer wallets detected from event behaviour, plus the
+  // static autopilot denylist - excluded everywhere on this page so internal
+  // reallocations don't inflate depositor counts, TVL, or the event feed.
+  const rebalancers = useMemo(
+    () => (events ? detectRebalancerActors(events) : new Set<string>()),
+    [events],
+  );
+  const isInternalActor = useCallback(
+    (addr: string) => isMutedActor(addr) || rebalancers.has(addr.toLowerCase()),
+    [rebalancers],
+  );
+
   // Earliest-connect per wallet, deduped, capped at the outlier
   // threshold. Used by both the daily new-wallets chart and the
   // funnel "new connects" count.
@@ -116,14 +128,14 @@ export default function DepositsPage() {
       if (!addr) continue;
       // Exclude autopilot / allocator contracts: their reallocations are
       // not real depositors and would inflate the wallet counts and TVL.
-      if (isMutedActor(addr)) continue;
+      if (isInternalActor(addr)) continue;
       const prev = earliest.get(addr);
       if (!prev || w.connected_at < prev.connected_at) {
         earliest.set(addr, w);
       }
     }
     return [...earliest.values()];
-  }, [wallets]);
+  }, [wallets, isInternalActor]);
 
   const walletStats = useMemo(() => {
     if (!uniqueWallets) return null;
@@ -210,7 +222,7 @@ export default function DepositsPage() {
           <RecentDepositorsSection wallets={uniqueWallets} />
           <VaultEventsSection
             events={(events ?? []).filter(
-              (e) => !isMutedActor(e.wallet_address),
+              (e) => !isInternalActor(e.wallet_address || ""),
             )}
           />
         </>

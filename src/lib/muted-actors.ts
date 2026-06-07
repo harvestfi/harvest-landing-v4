@@ -41,9 +41,53 @@ const MUTED = new Set<string>(
 );
 
 // True when an on-chain actor (the depositor/withdrawer wallet on an event)
-// is a protocol-internal autopilot or allocator and should be hidden from
-// every activity feed and ranking.
+// is a known protocol-internal autopilot or allocator and should be hidden
+// from every activity feed and ranking.
 export function isMutedActor(address: string | null | undefined): boolean {
   if (!address) return false;
   return MUTED.has(address.toLowerCase());
+}
+
+// Behavioural detection of allocator / rebalancer contracts that are not in
+// the static denylist (they are not vault tokens, so they never appear in
+// vaults.json). An autopilot rebalancer cycles liquidity *out of* some
+// underlying vaults and *into* others, so within any window it shows both
+// deposits and withdrawals spread across several distinct vaults. A real
+// user deposits into one or a few vaults and rarely both deposits and
+// withdraws across many in the same window, so this signature separates the
+// two without needing the address. Tunable via REBALANCER_MIN_VAULTS.
+const REBALANCER_MIN_VAULTS = 3;
+
+export interface ActorEvent {
+  wallet_address: string | null;
+  vault_address: string | null;
+  event_type: string;
+}
+
+export function detectRebalancerActors(
+  events: ReadonlyArray<ActorEvent>,
+): Set<string> {
+  const agg = new Map<
+    string,
+    { vaults: Set<string>; deposited: boolean; withdrew: boolean }
+  >();
+  for (const e of events) {
+    const w = (e.wallet_address || "").toLowerCase();
+    if (!w) continue;
+    let a = agg.get(w);
+    if (!a) {
+      a = { vaults: new Set<string>(), deposited: false, withdrew: false };
+      agg.set(w, a);
+    }
+    a.vaults.add((e.vault_address || "").toLowerCase());
+    if (e.event_type === "deposit") a.deposited = true;
+    else if (e.event_type === "withdraw") a.withdrew = true;
+  }
+  const rebalancers = new Set<string>();
+  for (const [w, a] of agg) {
+    if (a.deposited && a.withdrew && a.vaults.size >= REBALANCER_MIN_VAULTS) {
+      rebalancers.add(w);
+    }
+  }
+  return rebalancers;
 }
