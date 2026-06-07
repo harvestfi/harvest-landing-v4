@@ -1,6 +1,7 @@
 import { formatAPY } from "@/lib/format";
 import { depositRef, apyToMonthly, fmtEarnings } from "@/lib/contextualize";
 import type { FullVaultHistory } from "@/lib/history-api";
+import { ProximityNote } from "@/components/proximity-note";
 
 interface Props {
   history: FullVaultHistory;
@@ -176,6 +177,7 @@ export function YieldTrajectory({ history, productName, asset }: Props) {
       <div className="about-prose">
         <p>{sentences.join(" ")}</p>
       </div>
+      <ProximityNote />
     </section>
   );
 }

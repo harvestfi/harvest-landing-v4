@@ -1207,6 +1207,18 @@ body:has(.uni-shell) {
 }
 .uni-shell .pp-footnote a:hover { color: var(--uni-ink); }
 
+/* Per-section proximity buffer: muted micro-copy under the analytics
+   blocks (Performance Overview, Yield trajectory). Tertiary ink, smaller
+   than the footnote, no box/icon so it reads as a local orientation note
+   rather than a banner. */
+.uni-shell .pp-proximity-note {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--uni-ink-3);
+}
+
 .uni-shell .uni-bottom-links-title {
   font-family: var(--mono);
   font-size: 11.5px;

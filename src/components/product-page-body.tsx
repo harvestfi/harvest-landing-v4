@@ -17,6 +17,7 @@ import { productPageCrumbs } from "@/lib/seo";
 import { SITE_URL } from "@/lib/constants";
 import { harvestAppUrl } from "@/lib/harvest-app";
 import { TrackedAppLink } from "@/components/tracked-app-link";
+import { ProximityNote } from "@/components/proximity-note";
 import { buildAutopilotAbout } from "@/lib/autopilot-about";
 import { buildAutocompounderAbout } from "@/lib/autocompounder-about";
 import { buildLpPairAbout } from "@/lib/lp-pair-about";
@@ -823,6 +824,7 @@ function AutopilotYieldTrajectoryBlock({
     <section className="pp-section" id="yield-trajectory">
       <h2>Yield trajectory</h2>
       <NumberedFactList items={lines} />
+      <ProximityNote />
     </section>
   );
 }
@@ -847,6 +849,7 @@ function AutopilotPerformanceOverviewBlock({
     <section className="pp-section" id="performance-overview">
       <h2>Performance Overview</h2>
       <NumberedFactList items={lines} />
+      <ProximityNote />
     </section>
   );
 }

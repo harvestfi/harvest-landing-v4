@@ -53,6 +53,16 @@ const BANNED = [
   { name: "trend framing", regex: /\b(upward trend|downward trend|trending up|trending down)\b/i, scope: "always" },
   { name: "soft-judgment phrasing", regex: /\b(well above|significantly below|far higher|notably ahead|solidly outperforming)\b/i, scope: "always" },
   { name: "second-person possession", regex: /\byour (funds|capital|deposit|investment|earnings|balance|returns)\b/i, scope: "always" },
+  // Forward-looking / deterministic financial phrasing (YMYL). The copy
+  // engine is observational by design ("would earn", "realised yield",
+  // "not a forward guarantee"); these patterns make that permanent by
+  // failing the build on any predictive or guaranteed-return claim. Kept
+  // narrow on purpose: "risk-free" is NOT banned because the risk section
+  // legitimately states "No DeFi yield strategy is risk-free."
+  { name: "forward-looking: will/you'll earn", regex: /\b(?:will|you'll|you\s+will)\s+earn\b/i, scope: "always" },
+  { name: "forward-looking: guaranteed return/yield", regex: /\bguarantee[ds]?\s+(?:returns?|yields?|profits?|apy|gains?)\b/i, scope: "always" },
+  { name: "forward-looking: expected/projected return", regex: /\b(?:expected|projected|forecasted)\s+(?:returns?|yields?|apy|profits?|gains?)\b/i, scope: "always" },
+  { name: "forward-looking: 'at this rate' projection", regex: /\bat this rate\b/i, scope: "always" },
   { name: "em dash", regex: /—/, scope: "always" },
 ];
 

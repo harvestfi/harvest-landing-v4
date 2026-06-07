@@ -32,7 +32,7 @@ export function financialProductSchema(vault: YieldVault): object {
     "@type": "FinancialProduct",
     name: vault.productName,
     url: `${SITE_URL}/${vault.slug}`,
-    description: vault.description,
+    description: `${vault.description} Historical onchain yield analytics for ${vault.productName} on ${vault.chain}, indexed by ${SITE_NAME}. Informational data tool, not financial advice.`,
     inLanguage: "en",
     provider: {
       "@type": "Organization",
@@ -148,7 +148,7 @@ export function datasetSchema(
     "@context": "https://schema.org",
     "@type": "Dataset",
     name: `${vault.productName} historical APY, TVL and share-price data`,
-    description: `Daily APY (${history.apyHistory.length} points), TVL (${history.tvlHistory.length} points) and share-price (${history.sharePriceHistory.length} points) history for the ${vault.productName} vault on ${vault.chain}, indexed by ${SITE_NAME}.`,
+    description: `Daily APY (${history.apyHistory.length} points), TVL (${history.tvlHistory.length} points) and share-price (${history.sharePriceHistory.length} points) history for the ${vault.productName} vault on ${vault.chain}, indexed by ${SITE_NAME} from onchain vault-contract events. Historical analytics for research, not financial advice.`,
     url: `${SITE_URL}/${vault.slug}#history`,
     creator: {
       "@type": "Organization",
