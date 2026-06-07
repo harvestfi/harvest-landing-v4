@@ -126,10 +126,13 @@ type FeedItem =
 
 type VisitItem = Extract<FeedItem, { kind: "visit" }>;
 
-// One visitor's whole browsing session folded into a single stream row.
+// One browsing cluster (visits sharing an hsid with no >1h gap) folded into a
+// single stream row. One hsid can yield several clusters when the visitor
+// returns hours later, so clusterId - not sessionId - is the unique key.
 interface VisitGroup {
-  sessionId: string;
-  time: string; // most recent visit in the session
+  clusterId: string; // unique per cluster (the master visit's id)
+  sessionId: string; // the hsid (shown on hover); may repeat across clusters
+  time: string; // most recent visit in the cluster
   channel: string;
   country: string | null;
   wallet: string | null;
@@ -156,6 +159,13 @@ const ACTIVITY_OPTIONS: ReadonlyArray<{ value: ActivityFilter; label: string }> 
 // the deposit time comes from the chain block, so allow a little slack
 // when deciding which connect "precedes" the event.
 const CONNECT_SKEW_MS = 90_000;
+// An hsid lives in per-tab sessionStorage, so it can persist for many hours
+// across a kept-open tab - the same visitor returning hours apart shares one
+// hsid. Split a session into separate clusters whenever the gap between
+// consecutive page views exceeds this inactivity window, so a 20-hour-old
+// tab doesn't collapse a day of return visits into one row. (GA uses 30m;
+// 1h is a touch more forgiving for slow reading.)
+const SESSION_GAP_MS = 60 * 60 * 1000;
 const DISPLAY_LIMIT = 200; // rows rendered
 const FETCH_LIMIT = 500; // visits/clicks/events pulled for merge + map
 const MAP_LIMIT = 2000; // connections pulled for the attribution map only
@@ -599,24 +609,26 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     [items, activity, sourceFilter],
   );
 
-  // Sessions the operator has expanded to see the individual page views.
-  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
+  // Clusters the operator has expanded to see the individual page views.
+  const [expandedClusters, setExpandedClusters] = useState<Set<string>>(
     () => new Set(),
   );
-  const toggleSession = (sid: string) =>
-    setExpandedSessions((prev) => {
+  const toggleCluster = (id: string) =>
+    setExpandedClusters((prev) => {
       const next = new Set(prev);
-      if (next.has(sid)) next.delete(sid);
-      else next.add(sid);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 
   // Collapse a single visitor's page views into one master row. A person
   // touring the site fires a Visit per page; rendered flat they look like a
-  // wave of traffic from one channel. Group visits that share an hsid into a
-  // session row carrying the page count; everything else (clicks, deposits,
-  // withdrawals, and lone/anonymous visits) stays its own row. Sorted newest
-  // first by the session's most recent visit.
+  // wave of traffic from one channel. Visits sharing an hsid are split into
+  // clusters on any >1h gap (a kept-open tab keeps the hsid alive for hours,
+  // so one hsid spans several real return visits), and each cluster with two
+  // or more pages becomes a session row carrying the page count. Everything
+  // else (clicks, deposits, withdrawals, and lone/anonymous visits) stays its
+  // own row. Sorted newest first by the cluster's most recent visit.
   const streamRows = useMemo<StreamRow[]>(() => {
     const visitsBySession = new Map<string, VisitItem[]>();
     const rows: StreamRow[] = [];
@@ -629,25 +641,45 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         rows.push({ kind: "item", item: it });
       }
     }
-    for (const [sid, visits] of visitsBySession) {
-      if (visits.length === 1) {
-        rows.push({ kind: "item", item: visits[0] });
-        continue;
+    const pushCluster = (sid: string, cluster: VisitItem[]) => {
+      if (cluster.length === 0) return;
+      if (cluster.length === 1) {
+        rows.push({ kind: "item", item: cluster[0] });
+        return;
       }
-      const sorted = [...visits].sort(
+      const desc = [...cluster].sort(
         (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
       );
       rows.push({
         kind: "group",
         group: {
+          clusterId: `cluster-${desc[0].id}`,
           sessionId: sid,
-          time: sorted[0].time,
-          channel: sorted[0].channel,
-          country: sorted[0].country,
-          wallet: sorted.find((v) => v.wallet)?.wallet ?? null,
-          pages: sorted,
+          time: desc[0].time,
+          channel: desc[0].channel,
+          country: desc[0].country,
+          wallet: desc.find((v) => v.wallet)?.wallet ?? null,
+          pages: desc,
         },
       });
+    };
+    for (const [sid, visits] of visitsBySession) {
+      // Ascending by time so an inactivity gap splits the session.
+      const asc = [...visits].sort(
+        (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+      );
+      let cluster: VisitItem[] = [];
+      let prevTime = 0;
+      for (const v of asc) {
+        const t = new Date(v.time).getTime();
+        if (cluster.length > 0 && t - prevTime > SESSION_GAP_MS) {
+          pushCluster(sid, cluster);
+          cluster = [];
+        }
+        cluster.push(v);
+        prevTime = t;
+      }
+      pushCluster(sid, cluster);
     }
     return rows.sort((a, b) => {
       const ta = a.kind === "item" ? a.item.time : a.group.time;
@@ -895,10 +927,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                     />
                   ) : (
                     <SessionGroupRow
-                      key={`session-${row.group.sessionId}`}
+                      key={row.group.clusterId}
                       group={row.group}
-                      expanded={expandedSessions.has(row.group.sessionId)}
-                      onToggle={() => toggleSession(row.group.sessionId)}
+                      expanded={expandedClusters.has(row.group.clusterId)}
+                      onToggle={() => toggleCluster(row.group.clusterId)}
                     />
                   ),
                 )}
