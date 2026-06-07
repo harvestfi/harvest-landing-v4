@@ -366,9 +366,23 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
         cur >= 0.8 * peak.value &&
         !erratic
       ) {
-        // Narrative A: growth-since-inception (no %, just endpoints).
+        // Narrative A: near peak, so frame the current value against the
+        // inception value. The gate above is "within 20% of peak", which
+        // does NOT imply growth since inception: a vault that peaked near
+        // launch and has since drifted down still passes it. So derive the
+        // direction word from the actual current-vs-first comparison rather
+        // than hardcoding "up from" (which printed "$1.9M, up from $2.0M"
+        // when the vault had in fact shrunk). When both endpoints round to
+        // the same display value, say "little changed" instead of a
+        // spurious up/down on equal-looking numbers.
+        const firstStr = formatTVL(first);
+        const curStr = formatTVL(cur);
+        const tvlVsFirst =
+          curStr === firstStr
+            ? "little changed since the start of tracking"
+            : `${cur > first ? "up from" : "down from"} ${firstStr} at the start of tracking`;
         narratives.push(
-          `Total value locked currently sits at ${formatTVL(cur)}, up from ${formatTVL(first)} at the start of tracking. The vault has been live for ${days} days.`,
+          `Total value locked currently sits at ${curStr}, ${tvlVsFirst}. The vault has been live for ${days} days.`,
         );
       } else if (sorted.length >= 10 && peak.value > 0 && !erratic) {
         // Narrative B: peak-and-current. Peak date is derived from
