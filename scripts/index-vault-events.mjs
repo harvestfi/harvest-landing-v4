@@ -222,6 +222,29 @@ async function main() {
     return ts;
   }
 
+  // tx_hash -> initiating EOA (tx.from), cached so multiple mints/burns
+  // that share one transaction only cost a single lookup. Used to
+  // attribute deposits/withdrawals to the wallet that *signed* the tx
+  // rather than the share recipient/burner in the Transfer log. When a
+  // deposit is routed through an aggregator (Portals, 1inch, Zapper, ...)
+  // the vault mints shares to the router contract, which then forwards
+  // them to the user in a second transfer; the mint's `to` is the router,
+  // not the depositor. tx.from is the user's EOA in both the direct and
+  // routed cases, and is the exact key wallet_connections_prod joins on.
+  const txFromCache = new Map();
+  async function txFrom(txHash) {
+    if (txFromCache.has(txHash)) return txFromCache.get(txHash);
+    let from = null;
+    try {
+      const tx = await rpcCall("eth_getTransactionByHash", [txHash]);
+      if (tx && typeof tx.from === "string") from = tx.from.toLowerCase();
+    } catch {
+      // Leave null; caller keeps the log-derived address as a fallback.
+    }
+    txFromCache.set(txHash, from);
+    return from;
+  }
+
   let totalWritten = 0;
 
   for (const vault of vaults) {
@@ -287,6 +310,19 @@ async function main() {
           } else {
             event_type = "transfer";
             wallet_address = fromAddr; // sender
+          }
+          // Re-attribute deposits/withdrawals to the signing EOA. The
+          // log-derived address is the share recipient (mint) or burner
+          // (burn), which for an aggregator-routed deposit is the router
+          // contract that held the shares mid-transaction, not the user.
+          // tx.from is the wallet the user connected in the app, so this
+          // is what lets a Portals/1inch/Zapper deposit stitch back to its
+          // session instead of reading "External". Direct deposits are
+          // unaffected (there tx.from already equals the log address).
+          // Plain user-to-user transfers keep the log `from`.
+          if (event_type === "deposit" || event_type === "withdraw") {
+            const signer = await txFrom(log.transactionHash);
+            if (signer) wallet_address = signer;
           }
           const blockNumber = Number(hexToBigInt(log.blockNumber));
           const ts = await blockTimestamp(blockNumber);
