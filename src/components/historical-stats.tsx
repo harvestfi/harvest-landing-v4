@@ -218,7 +218,15 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
           { label: "Median APY", value: apyPct(apyStats.med) },
           { label: "Best day", value: `${apyPct(apyStats.bestDay.apy)} · ${formatDate(apyStats.bestDay.timestamp)}` },
           { label: "Worst day", value: `${apyPct(apyStats.worstDay.apy)} · ${formatDate(apyStats.worstDay.timestamp)}` },
-          { label: "Volatility", value: `${apyStats.vol.toFixed(2)} ${apyStats.vol > 5 ? "High" : apyStats.vol > 2 ? "Medium" : "Low"}` },
+          // Report the raw 30-day APY std dev as a signed percent, mirroring
+          // the Strategy stability card's Volatility stat exactly. The old
+          // absolute Low/Medium/High bucket (thresholds 2/5) contradicted
+          // that card's coefficient-of-variation verdict: a low-APY vault
+          // with a 0.20pp std dev on a 0.42% mean reads "Highly variable" up
+          // top (high relative variation) yet "0.20 Low" here. The card owns
+          // the qualitative stability verdict; this row reports the number,
+          // like every other row in the grid.
+          { label: "Volatility", value: `±${apyStats.vol.toFixed(2)}%` },
           { label: "APY range", value: `${apyStats.range.toFixed(2)}pp` },
         ]
       : // Stale / no recent APY: drop the year-old "30D" + best/worst rows;
