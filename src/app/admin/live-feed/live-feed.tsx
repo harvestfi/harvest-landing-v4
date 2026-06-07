@@ -22,6 +22,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelect } from "@/lib/supabase";
+import { isMutedActor } from "@/lib/muted-actors";
 import { CountryFlag } from "@/components/admin/country-flag";
 import "../../_styles/asset-hub.css";
 
@@ -283,6 +284,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     if (!events) return events;
     const byKey = new Map<string, VaultEventRow>();
     for (const e of events) {
+      // Drop protocol-internal autopilot / allocator reallocations - they
+      // are not real users or net inflows, so they have no place in the
+      // stream, journeys, or any source ranking.
+      if (isMutedActor(e.wallet_address)) continue;
       const key = `${(e.tx_hash || "").toLowerCase()}|${(e.vault_address || "").toLowerCase()}|${e.event_type}`;
       const prev = byKey.get(key);
       if (!prev || sharesBig(e) > sharesBig(prev)) byKey.set(key, e);

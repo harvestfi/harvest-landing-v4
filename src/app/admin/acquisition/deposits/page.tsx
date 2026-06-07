@@ -23,6 +23,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelectAll } from "@/lib/supabase";
+import { isMutedActor } from "@/lib/muted-actors";
 import {
   TimeframeSelector,
   resolveDays,
@@ -113,6 +114,9 @@ export default function DepositsPage() {
     for (const w of wallets) {
       const addr = (w.wallet_address || "").toLowerCase();
       if (!addr) continue;
+      // Exclude autopilot / allocator contracts: their reallocations are
+      // not real depositors and would inflate the wallet counts and TVL.
+      if (isMutedActor(addr)) continue;
       const prev = earliest.get(addr);
       if (!prev || w.connected_at < prev.connected_at) {
         earliest.set(addr, w);
@@ -204,7 +208,11 @@ export default function DepositsPage() {
             onTimeframeChange={setTimeframe}
           />
           <RecentDepositorsSection wallets={uniqueWallets} />
-          <VaultEventsSection events={events ?? []} />
+          <VaultEventsSection
+            events={(events ?? []).filter(
+              (e) => !isMutedActor(e.wallet_address),
+            )}
+          />
         </>
       )}
 
