@@ -97,7 +97,7 @@ function fireClick(opts: {
 }): void {
   try {
     if (typeof window === "undefined") return;
-    if (window.location.pathname.startsWith("/admin")) return;
+    if (window.location.pathname.startsWith("/control-room")) return;
     if (getConsent() !== "accepted") return;
 
     const sessionId = getSessionId();

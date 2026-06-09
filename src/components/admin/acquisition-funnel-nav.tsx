@@ -14,22 +14,22 @@ const STEPS = [
   {
     num: "01",
     label: "Traffic",
-    href: "/admin/acquisition",
+    href: "/control-room/acquisition",
   },
   {
     num: "02",
     label: "Clicks into App",
-    href: "/admin/acquisition/clicks-into-app",
+    href: "/control-room/acquisition/clicks-into-app",
   },
   {
     num: "03",
     label: "User Networth",
-    href: "/admin/acquisition/app-net-worth",
+    href: "/control-room/acquisition/app-net-worth",
   },
   {
     num: "04",
     label: "Deposits (TVL)",
-    href: "/admin/acquisition/deposits",
+    href: "/control-room/acquisition/deposits",
   },
 ] as const;
 
@@ -44,9 +44,9 @@ export function AcquisitionFunnelNav() {
       {STEPS.map((step, i) => {
         // Exact match for the index path; startsWith for nested.
         const active =
-          step.href === "/admin/acquisition"
-            ? pathname === "/admin/acquisition" ||
-              pathname === "/admin/acquisition/"
+          step.href === "/control-room/acquisition"
+            ? pathname === "/control-room/acquisition" ||
+              pathname === "/control-room/acquisition/"
             : pathname.startsWith(step.href);
         const last = i === STEPS.length - 1;
         return (

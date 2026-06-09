@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         // The analytics panel is noindex per-page already; keep crawlers out
         // of it entirely so private dashboards never surface in search.
-        disallow: ["/admin", "/admin/"],
+        disallow: ["/control-room", "/control-room/"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

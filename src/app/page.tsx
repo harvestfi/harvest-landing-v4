@@ -10,6 +10,7 @@ import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/constants";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { HubTable } from "@/components/hub-table";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
+import { TrackedAppLink } from "@/components/tracked-app-link";
 import "./_styles/home.css";
 
 export const metadata: Metadata = {
@@ -81,15 +82,14 @@ export default async function HomePage() {
               Browse <span className="uni-home-cta-extra">top </span>yields
               <span aria-hidden="true">↓</span>
             </a>
-            <a
+            <TrackedAppLink
               href="https://app.harvest.finance"
-              target="_blank"
-              rel="noopener noreferrer"
+              cta="hero-open-app"
               className="uni-home-cta-secondary"
             >
               Open the App
               <span aria-hidden="true">↗</span>
-            </a>
+            </TrackedAppLink>
           </div>
         </div>
       </section>

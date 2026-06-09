@@ -28,38 +28,39 @@ const SECTIONS: Section[] = [
   {
     label: null,
     items: [
-      { label: "Live Feed", href: "/admin/live-feed" },
-      { label: "SEO Summary", href: "/admin/seo" },
+      { label: "Live Feed", href: "/control-room/live-feed" },
+      { label: "SEO Summary", href: "/control-room/seo" },
     ],
   },
   {
     label: "Acquisition",
     items: [
-      { label: "Traffic", href: "/admin/acquisition", exact: true },
-      { label: "App Clicks", href: "/admin/acquisition/clicks-into-app" },
-      { label: "User Networth", href: "/admin/acquisition/app-net-worth" },
-      { label: "Deposits (TVL)", href: "/admin/acquisition/deposits" },
+      { label: "Traffic", href: "/control-room/acquisition", exact: true },
+      { label: "App Clicks", href: "/control-room/acquisition/clicks-into-app" },
+      { label: "User Networth", href: "/control-room/acquisition/app-net-worth" },
+      { label: "Deposits (TVL)", href: "/control-room/acquisition/deposits" },
     ],
   },
   {
     label: "Products",
     items: [
-      { label: "View All", href: "/admin/products" },
-      { label: "Hide", href: "/admin/hide" },
-      { label: "SEO Overview", href: "/admin", exact: true },
+      { label: "View All", href: "/control-room/products" },
+      { label: "Hide", href: "/control-room/hide" },
+      { label: "SEO Overview", href: "/control-room", exact: true },
     ],
   },
   {
     label: "Marketing",
-    items: [{ label: "Studio", href: "/admin/studio" }],
+    items: [{ label: "Studio", href: "/control-room/studio" }],
   },
   {
     label: "Settings",
     items: [
-      { label: "Master Rules", href: "/admin/master-rules" },
-      { label: "Master Config", href: "/admin/master-config" },
-      { label: "Ranking Rules", href: "/admin/ranking-rules" },
-      { label: "Design System", href: "/admin/design-system" },
+      { label: "Master Rules", href: "/control-room/master-rules" },
+      // Master Config (/control-room/master-config) is intentionally not
+      // listed here - the route stays in the repo, just hidden from the nav.
+      { label: "Ranking Rules", href: "/control-room/ranking-rules" },
+      { label: "Design System", href: "/control-room/design-system" },
     ],
   },
 ];

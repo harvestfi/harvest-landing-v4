@@ -43,7 +43,7 @@ export function Analytics() {
     if (!mounted) return;
     if (consent !== "accepted") return;
     if (!pathname) return;
-    if (pathname.startsWith("/admin")) return;
+    if (pathname.startsWith("/control-room")) return;
     const run = () => {
       void trackVisit(pathname);
     };
@@ -73,7 +73,7 @@ export function Analytics() {
   // internal - showing a consent banner there is misleading since
   // those pages aren't tracked anyway).
   if (!mounted) return null;
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/control-room")) return null;
   if (consent === "accepted" || consent === "declined") return null;
   return <CookieBanner onAccept={accept} onDecline={decline} />;
 }
