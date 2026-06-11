@@ -742,7 +742,7 @@ if applicable, chain icon + chain name + stripped category, 24h APY, TVL.`}</Cod
         </h3>
         <CodeBlock>{`Autopilot:
   <title>            {productPageTitle(vault, isUniqueCombo)}
-  <description>      {productPageDescription(vault, trackedDays)}
+  <description>      {productPageDescription(vault)}
 
 The helpers handle Autopilot products generically - no special template.
 The title disambiguator slot drops when the asset+protocol+chain combo

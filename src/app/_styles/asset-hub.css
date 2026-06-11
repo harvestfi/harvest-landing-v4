@@ -1206,6 +1206,57 @@ body:has(.uni-hub-test) {
   font-weight: 600;
 }
 
+/* Manual refresh control above the Live Feed / SEO Summary tables.
+   Bordered chip in the same register as .lf-select / .aq-timeframe so
+   it reads as one of the dashboard controls; the icon spins while a
+   fetch is in flight. */
+.uni-hub-test .lf-refresh {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--uni-ink-2);
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 10px;
+  padding: 7px 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.uni-hub-test .lf-refresh:hover {
+  border-color: var(--uni-ink-3);
+  color: var(--uni-ink);
+}
+.uni-hub-test .lf-refresh:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+.uni-hub-test .lf-refresh-icon {
+  display: block;
+}
+.uni-hub-test .lf-refresh-icon.spinning {
+  animation: lf-spin 0.7s linear infinite;
+}
+@keyframes lf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Groups the refresh chip beside another header control (e.g. the SEO
+   chart's timeframe selector) on the right of a section head. */
+.uni-hub-test .aq-head-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 /* === Cohort funnel on the Deposits page ============================ */
 /* Four-step horizontal funnel: 01 Visits -> 02 App clicks -> 03 New */
 /* wallets -> 04 Depositors. Steps are equal-width cards; between */

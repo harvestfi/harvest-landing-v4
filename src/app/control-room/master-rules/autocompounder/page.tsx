@@ -898,14 +898,17 @@ icon + chain name + stripped category, 24h APY, TVL.`}</CodeBlock>
         </h3>
         <CodeBlock>{`Single-asset:
   <title>            {productPageTitle(vault, isUniqueCombo)}
-  <description>      {productPageDescription(vault, trackedDays)}
+  <description>      {productPageDescription(vault)}
 
 LP-pair:
   <title>            {ASSET}/{COUNTERPART} {PLATFORM} Yield on {CHAIN} | Harvest
   <description>      Autocompounding LP yield on the {ASSET}/{COUNTERPART}
                      pair on {PLATFORM} ({CHAIN}). {REWARD} rewards are claimed
-                     and added back to the position automatically. Tracked
-                     continuously by Harvest.`}</CodeBlock>
+                     and added back to the position automatically.
+
+Titles and descriptions carry no APY %, TVL, or month/year - every
+product's SEO copy is stable across the hourly rebuilds, so a cached
+SERP snippet never drifts from the live page.`}</CodeBlock>
 
         <h3 className="mt-6 mb-2 text-sm font-semibold uppercase tracking-wide text-gray-700">
           JSON-LD schemas (emitted in &lt;head&gt;)

@@ -38,8 +38,6 @@ export default async function AdminPage() {
   const vaults = await getVaults();
   const canonical = await getCanonicalSlugs();
 
-  const now = Date.now();
-
   const homeRow = {
     type: "Home" as const,
     slug: "/",
@@ -89,18 +87,12 @@ export default async function AdminPage() {
     comboTally.set(k, (comboTally.get(k) ?? 0) + 1);
   }
   const productRows = vaults.map((vault) => {
-    const trackedDays = vault.launchDate
-      ? Math.max(
-          0,
-          Math.floor((now - new Date(vault.launchDate).getTime()) / 86_400_000),
-        )
-      : 0;
     const isUniqueCombo = (comboTally.get(comboKey(vault)) ?? 0) === 1;
     return {
       type: "Product" as const,
       slug: `/${vault.slug}`,
       title: productPageTitle(vault, isUniqueCombo),
-      description: productPageDescription(vault, trackedDays),
+      description: productPageDescription(vault),
       chain: vault.chain,
       apy: formatAPY(vault.apy24h),
       tvl: formatTVL(vault.tvl),

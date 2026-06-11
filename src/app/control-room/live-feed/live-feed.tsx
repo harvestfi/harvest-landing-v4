@@ -32,6 +32,7 @@ import {
   type SourceGroup,
 } from "@/lib/channels";
 import { CountryFlag } from "@/components/admin/country-flag";
+import { RefreshButton } from "@/components/admin/refresh-button";
 import "../../_styles/asset-hub.css";
 
 interface VaultEventRow {
@@ -202,29 +203,38 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   const [events, setEvents] = useState<VaultEventRow[] | null>(null);
   const [connections, setConnections] = useState<ConnectionRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // The four Supabase pulls that back the stream, in one place so both
+  // the mount load and the manual Refresh button run the exact same
+  // query set.
+  const fetchAll = useCallback(async () => {
+    const [v, c, e, w] = await Promise.all([
+      supabaseSelect<VisitRow>(
+        "frontpage_visits",
+        `select=created_at,session_id,page_path,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
+      ),
+      supabaseSelect<ClickRow>(
+        "outbound_clicks",
+        `select=created_at,session_id,vault_slug,source_page,target_url,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
+      ),
+      supabaseSelect<VaultEventRow>(
+        "vault_events_prod",
+        `select=tx_hash,log_index,block_timestamp,chain,vault_address,vault_slug,event_type,wallet_address,amount_shares&event_type=in.(deposit,withdraw)&order=block_timestamp.desc&limit=${FETCH_LIMIT}`,
+      ),
+      supabaseSelect<ConnectionRow>(
+        "wallet_connections_prod",
+        `select=wallet_address,connected_at,session_id,balance&order=connected_at.desc&limit=${MAP_LIMIT}`,
+      ),
+    ]);
+    return { v, c, e, w };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [v, c, e, w] = await Promise.all([
-          supabaseSelect<VisitRow>(
-            "frontpage_visits",
-            `select=created_at,session_id,page_path,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
-          ),
-          supabaseSelect<ClickRow>(
-            "outbound_clicks",
-            `select=created_at,session_id,vault_slug,source_page,target_url,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
-          ),
-          supabaseSelect<VaultEventRow>(
-            "vault_events_prod",
-            `select=tx_hash,log_index,block_timestamp,chain,vault_address,vault_slug,event_type,wallet_address,amount_shares&event_type=in.(deposit,withdraw)&order=block_timestamp.desc&limit=${FETCH_LIMIT}`,
-          ),
-          supabaseSelect<ConnectionRow>(
-            "wallet_connections_prod",
-            `select=wallet_address,connected_at,session_id,balance&order=connected_at.desc&limit=${MAP_LIMIT}`,
-          ),
-        ]);
+        const { v, c, e, w } = await fetchAll();
         if (cancelled) return;
         setVisits(v);
         setClicks(c);
@@ -237,7 +247,23 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fetchAll]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setErr(null);
+    try {
+      const { v, c, e, w } = await fetchAll();
+      setVisits(v);
+      setClicks(c);
+      setEvents(e);
+      setConnections(w);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchAll]);
 
   const loaded =
     visits !== null && clicks !== null && events !== null && connections !== null;
@@ -638,6 +664,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 : " · source attributed first-touch via the wallet-session join"}
             </span>
           </div>
+          <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
         </header>
 
         <div className="lf-filterbar">

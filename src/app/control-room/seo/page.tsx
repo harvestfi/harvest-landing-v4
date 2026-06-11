@@ -13,7 +13,7 @@
 // pick Reached app / Deposited to narrow both the chart and the table to the
 // sessions that got that far. Expand a row to see that session's actions.
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   TimeframeSelector,
@@ -21,6 +21,7 @@ import {
   type Timeframe,
 } from "@/components/admin/timeframe-selector";
 import { CountryFlag } from "@/components/admin/country-flag";
+import { RefreshButton } from "@/components/admin/refresh-button";
 import { supabaseSelect, supabaseSelectAll } from "@/lib/supabase";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import { classifyChannel, channelTone, channelGroup } from "@/lib/channels";
@@ -106,6 +107,7 @@ export default function SeoSummaryPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
   const [metric, setMetric] = useState<Metric>("acquired");
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [refreshing, setRefreshing] = useState(false);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -115,28 +117,35 @@ export default function SeoSummaryPage() {
       return next;
     });
 
+  // The four Supabase pulls behind the funnel, in one place so the
+  // mount load and the manual Refresh button issue the same queries.
+  const fetchAll = useCallback(async () => {
+    const [v, c, w, e] = await Promise.all([
+      supabaseSelect<VisitRow>(
+        "frontpage_visits",
+        `select=created_at,session_id,page_path,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
+      ),
+      supabaseSelect<ClickRow>(
+        "outbound_clicks",
+        `select=created_at,session_id,vault_slug,source_page,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
+      ),
+      supabaseSelectAll<ConnRow>(
+        "wallet_connections_prod",
+        "select=wallet_address,connected_at,session_id&order=connected_at.desc",
+      ),
+      supabaseSelect<EventRow>(
+        "vault_events_prod",
+        `select=block_timestamp,event_type,wallet_address,vault_address,vault_slug,chain,tx_hash&event_type=in.(deposit,withdraw)&order=block_timestamp.desc&limit=${FETCH_LIMIT}`,
+      ),
+    ]);
+    return { v, c, w, e };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [v, c, w, e] = await Promise.all([
-          supabaseSelect<VisitRow>(
-            "frontpage_visits",
-            `select=created_at,session_id,page_path,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
-          ),
-          supabaseSelect<ClickRow>(
-            "outbound_clicks",
-            `select=created_at,session_id,vault_slug,source_page,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
-          ),
-          supabaseSelectAll<ConnRow>(
-            "wallet_connections_prod",
-            "select=wallet_address,connected_at,session_id&order=connected_at.desc",
-          ),
-          supabaseSelect<EventRow>(
-            "vault_events_prod",
-            `select=block_timestamp,event_type,wallet_address,vault_address,vault_slug,chain,tx_hash&event_type=in.(deposit,withdraw)&order=block_timestamp.desc&limit=${FETCH_LIMIT}`,
-          ),
-        ]);
+        const { v, c, w, e } = await fetchAll();
         if (cancelled) return;
         setVisits(v);
         setClicks(c);
@@ -149,7 +158,23 @@ export default function SeoSummaryPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fetchAll]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setErr(null);
+    try {
+      const { v, c, w, e } = await fetchAll();
+      setVisits(v);
+      setClicks(c);
+      setConns(w);
+      setEvents(e);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchAll]);
 
   const loaded =
     visits !== null && clicks !== null && conns !== null && events !== null;
@@ -426,6 +451,8 @@ export default function SeoSummaryPage() {
             onTimeframeChange={setTimeframe}
             metric={metric}
             onMetricChange={setMetric}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
           />
 
           <SeoSessionTable
@@ -468,6 +495,8 @@ function ChartSection({
   onTimeframeChange,
   metric,
   onMetricChange,
+  onRefresh,
+  refreshing,
 }: {
   series: number[];
   days: number;
@@ -476,6 +505,8 @@ function ChartSection({
   onTimeframeChange: (tf: Timeframe) => void;
   metric: Metric;
   onMetricChange: (m: Metric) => void;
+  onRefresh: () => void;
+  refreshing: boolean;
 }) {
   const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
     null,
@@ -522,7 +553,10 @@ function ChartSection({
             {peak.toLocaleString("en-US")}/day
           </span>
         </div>
-        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
+        <div className="aq-head-controls">
+          <RefreshButton onClick={onRefresh} refreshing={refreshing} />
+          <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
+        </div>
       </header>
 
       <div

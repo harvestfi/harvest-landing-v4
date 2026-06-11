@@ -417,8 +417,14 @@ body:has(.uni-home-test) {
   }
 }
 @media (max-width: 540px) {
+  /* Phones: shrink the headline so each half of the line (split by the
+     hard <br>) fits on one row. At the old size "...ETH," and "more."
+     spilled onto rows of their own, stacking the two-line headline into
+     four. The gentler clamp keeps "Best USDC, USDT, ETH," and "Bitcoin
+     yields, and more." each on a single line down to ~330px, so the
+     headline reads as two rows (three at the very narrowest). */
   .uni-home-test .uni-home-h1 {
-    font-size: clamp(22px, 7.5vw, 30px);
+    font-size: clamp(20px, 5.8vw, 26px);
   }
   .uni-home-test .uni-home-sub {
     font-size: 14px;

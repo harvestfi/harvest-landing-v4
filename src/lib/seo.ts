@@ -1,5 +1,5 @@
 import { YieldVault } from "./types";
-import { SITE_NAME, SITE_URL } from "./constants";
+import { SITE_NAME, SITE_URL, TRACKED_STRATEGIES_LABEL } from "./constants";
 import { getSubAsset, getSubAssetFamilyName, isUmbrellaAsset } from "./sub-asset";
 import { stripChainSuffix } from "./format";
 import { getCanonicalDisplayName } from "./lp-pair";
@@ -17,14 +17,6 @@ function clampTitle(full: string): string {
   return full.replace(/ \| Harvest$/, "");
 }
 
-// Build-time freshness stamp ("May 2026"). Because the site is a static
-// export rebuilt by the vault-data cron roughly hourly, this is always
-// the current month at deploy time - the Google-endorsed freshness
-// signal, and genuinely accurate rather than cosmetic.
-function currentMonthYear(): string {
-  return new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
-}
-
 // "ETH Aerodrome" style lead: ticker + product name, without doubling
 // the asset when the product name already carries it (e.g. "USDC Aave"
 // stays "USDC Aave", not "USDC USDC Aave").
@@ -39,18 +31,6 @@ function tickerProduct(vault: YieldVault): string {
     return name;
   }
   return `${subAsset} ${name}`;
-}
-
-// Direction word for the yield, derived from the live 24h rate against
-// the 30-day average (the same comparison the product page makes). A
-// >5% band counts as a move; smaller is "holding steady". Returns a
-// leading-comma fragment, or "" when there's no live rate to judge.
-function apyTrendPhrase(apy24h: number, apy30d: number): string {
-  if (apy24h <= 0 || apy30d <= 0) return "";
-  const diff = (apy24h - apy30d) / apy30d;
-  if (diff > 0.05) return ", trending up";
-  if (diff < -0.05) return ", trending down";
-  return ", holding steady";
 }
 
 // ─── Asset hub ────────────────────────────────────────────────────────────────
@@ -155,6 +135,14 @@ export function comboKey(vault: YieldVault): string {
 // isUniqueCombo=true in that case. When the slot is dropped, the
 // title appends "Stats" so two-word strategies still produce a
 // distinct, descriptive title.
+//
+// The title carries no month/year (and no APY): every product title
+// is intentionally STABLE across builds. A freshness stamp made half
+// the index read "... TVL - June 2026" while longer titles dropped it
+// for width, so two near-identical pages disagreed on format. A fixed
+// title also keeps Google's cached SERP entry accurate between the
+// hourly static rebuilds instead of pinning it to a month that turns
+// stale the moment the calendar rolls over.
 export function productPageTitle(
   vault: YieldVault,
   isUniqueCombo: boolean = false,
@@ -172,51 +160,25 @@ export function productPageTitle(
     ? `${subAsset} on ${protocol}: Yield, APY & TVL Stats`
     : `${subAsset} on ${protocol}: ${disambig} Yield, APY & TVL`;
 
-  // Freshness stamp last, before the brand suffix. APY stays out of the
-  // title on purpose (it is what Google caches between crawls and is the
-  // most volatile field); the month/year is always true and signals an
-  // actively-maintained page. Only keep the stamp when the core still
-  // fits the SERP width with it - for long disambiguated titles the
-  // keyword-complete core matters more than the month, so we drop the
-  // stamp rather than let it truncate.
-  const stamped = `${core} - ${currentMonthYear()}`;
-  const finalCore = stamped.length <= MAX_TITLE_CHARS ? stamped : core;
-  return clampTitle(`${finalCore} | ${SITE_NAME}`);
+  return clampTitle(`${core} | ${SITE_NAME}`);
 }
 
 export function productPageH1(vault: YieldVault): string {
   return vault.productName;
 }
 
-export function productPageDescription(
-  vault: YieldVault,
-  trackedDays: number,
-): string {
-  const subAsset = getSubAsset(vault);
+// Stable product-page description: no APY %, no month/year, no live
+// count. Those all drift between the hourly static rebuilds, so a SERP
+// snippet Google cached at the last crawl would misstate the live page
+// (a YMYL liability). Instead the copy states only durable facts — the
+// product, its protocol, its network, and that it sits inside the
+// index we track — and closes by inviting a comparison against the
+// platform-wide strategy floor (TRACKED_STRATEGIES_LABEL). "X Network"
+// reads naturally for every chain ("Base Network", "Ethereum Network").
+export function productPageDescription(vault: YieldVault): string {
   const protocol = getProtocolLabel(vault);
-  const network = vault.chain;
-  const lead = `${tickerProduct(vault)} on ${protocol} (${network})`;
-  const monthYear = currentMonthYear();
-
-  // Lead with the live number whenever the 30-day rate is positive.
-  // apy30d is the exact figure rendered in the page's "30-day" stat, so
-  // the snippet stays aligned with what the visitor lands on (Google's
-  // YMYL bar), and the 30-day window barely moves between hourly builds,
-  // so a cached SERP snippet does not drift from the live page. Instead
-  // of a TVL dollar figure (volatile, and a bare number reads as noise
-  // in a snippet) we describe the rate's direction in words. The closing
-  // sentence signals the population is what we track, not the market.
-  if (vault.apy30d > 0) {
-    const trend = apyTrendPhrase(vault.apy24h, vault.apy30d);
-    return `${lead}: ${vault.apy30d.toFixed(1)}% 30-day APY${trend}, as of ${monthYear}. Among the ${subAsset} yield strategies we track on ${network}. Live APY, TVL & risk.`;
-  }
-
-  // No usable rate to state: stay honest, lean on freshness + scope and
-  // surface tracking longevity when we have it, rather than printing a
-  // 0% APY the page would contradict.
-  const longevity =
-    trackedDays >= 30 ? ` tracked for ${trackedDays}+ days,` : "";
-  return `${lead}: one of the ${subAsset} yield strategies we track on ${network},${longevity} with live APY, TVL, performance history & risk benchmarks. Updated ${monthYear}.`;
+  const lead = tickerProduct(vault);
+  return `Explore the performance of ${lead} on ${protocol}, which is among the strategies we track on ${vault.chain} Network, and compare it against ${TRACKED_STRATEGIES_LABEL} strategies tracked.`;
 }
 
 // ─── Breadcrumb data helpers ──────────────────────────────────────────────────

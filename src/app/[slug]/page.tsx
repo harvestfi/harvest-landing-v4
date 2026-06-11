@@ -39,14 +39,6 @@ export async function generateMetadata({
   if (!vault) return {};
 
   const history = await getVaultHistory(vault.contractAddress);
-  const validApy = history.apyHistory.filter((p) => p.apy >= 0);
-  let trackedDays = 0;
-  if (validApy.length > 0) {
-    const sorted = [...validApy].sort((a, b) => a.timestamp - b.timestamp);
-    trackedDays = Math.round(
-      (sorted[sorted.length - 1].timestamp - sorted[0].timestamp) / 86400,
-    );
-  }
 
   // The asset+protocol+network combo decides whether the vault-name
   // disambiguator stays in the title. Counted across the full vault
@@ -67,24 +59,15 @@ export async function generateMetadata({
   // snapshots accurate. Single-asset vaults use the existing
   // productPageTitle / productPageDescription helpers.
   const lpPair = getLpPair(vault);
-  const inception = (() => {
-    const stamps = [
-      ...history.tvlHistory.map((p) => p.timestamp),
-      ...history.sharePriceHistory.map((p) => p.timestamp),
-      ...history.apyHistory.map((p) => p.timestamp),
-    ].filter((t) => Number.isFinite(t) && t > 0);
-    if (stamps.length === 0) return null;
-    return new Date(Math.min(...stamps) * 1000).toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
-  })();
   const title = lpPair
     ? `${vault.asset}/${lpPair.counterpart} ${lpPair.platform} Yield on ${vault.chain} | ${SITE_NAME}`
     : productPageTitle(vault, isUniqueCombo);
+  // Both branches stay free of dynamic data (no APY %, no month/year)
+  // so the indexed snippet never drifts from the live page between the
+  // hourly static rebuilds.
   const description = lpPair
-    ? `Autocompounding LP yield on the ${vault.asset}/${lpPair.counterpart} pair on ${lpPair.platform} (${vault.chain}). ${lpPair.rewardToken ?? "Platform-native"} rewards are claimed and added back to the position automatically.${inception ? ` Tracked continuously since ${inception}.` : ""}`
-    : productPageDescription(vault, trackedDays);
+    ? `Autocompounding LP yield on the ${vault.asset}/${lpPair.counterpart} pair on ${lpPair.platform} (${vault.chain}). ${lpPair.rewardToken ?? "Platform-native"} rewards are claimed and added back to the position automatically.`
+    : productPageDescription(vault);
 
   const canonical = await isCanonicalSlug(slug);
   const broken = isBrokenLowTvlVault(vault);

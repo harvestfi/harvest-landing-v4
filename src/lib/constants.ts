@@ -9,6 +9,14 @@ export const ASSET_COLORS: Record<Asset, string> = {
 };
 
 export const SITE_NAME = "Harvest";
+
+// Stable, platform-wide floor for "strategies tracked" copy used in
+// product-page meta descriptions. Hardcoded as a round floor (the
+// index currently carries 150+ products) so the description never
+// drifts between the hourly static rebuilds the way a live count
+// would: Google caches the snippet, and a fixed figure keeps it
+// accurate without re-crawls. Bump the floor when the index grows.
+export const TRACKED_STRATEGIES_LABEL = "100+";
 // 140-160 char floor per Google's recommended description length.
 // Mentions the four anchor assets + the hourly-refresh cadence so the
 // snippet that appears in search results carries the value prop on
