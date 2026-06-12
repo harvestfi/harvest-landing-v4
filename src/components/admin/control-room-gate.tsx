@@ -13,6 +13,44 @@ import { useEffect, useState, type FormEvent } from "react";
 const SESSION_KEY = "cr_auth";
 const EXPECTED =
   "5873102fa0951713a81154785217660a3a116274481a19fb2eea5c56182f4860";
+// Remembered logins live in localStorage so the operator isn't asked
+// for the passphrase on every visit (sessionStorage died with the
+// tab). The stored record carries the passphrase HASH + a timestamp:
+// rotating the passphrase invalidates every remembered session, and
+// the record self-expires after 30 days.
+const REMEMBER_MS = 30 * 24 * 60 * 60 * 1000;
+
+function readRemembered(): boolean {
+  try {
+    // Legacy per-tab flag from the sessionStorage era.
+    if (sessionStorage.getItem(SESSION_KEY) === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+    const rec = JSON.parse(raw) as { h?: string; t?: number };
+    return (
+      rec.h === EXPECTED &&
+      typeof rec.t === "number" &&
+      Date.now() - rec.t < REMEMBER_MS
+    );
+  } catch {
+    return false;
+  }
+}
+
+function writeRemembered(): void {
+  try {
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ h: EXPECTED, t: Date.now() }),
+    );
+  } catch {
+    /* ignore - fall back to in-memory auth for this view */
+  }
+}
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest(
@@ -31,11 +69,7 @@ export function ControlRoomGate({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    try {
-      if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
-    } catch {
-      /* sessionStorage unavailable - stay locked */
-    }
+    if (readRemembered()) setAuthed(true);
     setReady(true);
   }, []);
 
@@ -44,11 +78,7 @@ export function ControlRoomGate({ children }: { children: React.ReactNode }) {
     setError(false);
     const hex = await sha256Hex(value);
     if (hex === EXPECTED) {
-      try {
-        sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {
-        /* ignore */
-      }
+      writeRemembered();
       setAuthed(true);
     } else {
       setError(true);

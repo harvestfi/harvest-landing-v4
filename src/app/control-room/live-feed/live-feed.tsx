@@ -29,10 +29,14 @@ import {
   appChannel,
   channelTone,
   channelGroup,
+  shortChannelLabel,
+  sourceDomain,
   type SourceGroup,
 } from "@/lib/channels";
 import { CountryFlag } from "@/components/admin/country-flag";
+import { DeviceIcon } from "@/components/admin/device-icon";
 import { RefreshButton } from "@/components/admin/refresh-button";
+import { WalletLabel } from "@/components/admin/wallet-label";
 import "../../_styles/asset-hub.css";
 
 interface VaultEventRow {
@@ -52,6 +56,8 @@ interface VisitRow {
   page_path: string;
   source: string | null;
   country: string | null;
+  device_type: string | null;
+  referrer: string | null;
 }
 interface ClickRow {
   created_at: string;
@@ -61,6 +67,7 @@ interface ClickRow {
   target_url: string;
   source: string | null;
   country: string | null;
+  device_type: string | null;
 }
 interface ConnectionRow {
   wallet_address: string;
@@ -76,6 +83,8 @@ type FeedItem =
       time: string;
       channel: string;
       country: string | null;
+      device: string | null;
+      srcDomain: string | null;
       pagePath: string;
       hsid: string | null;
       wallet: string | null;
@@ -86,6 +95,8 @@ type FeedItem =
       time: string;
       channel: string;
       country: string | null;
+      device: string | null;
+      srcDomain: string | null;
       vaultSlug: string | null;
       sourcePage: string;
       targetUrl: string;
@@ -98,6 +109,8 @@ type FeedItem =
       time: string;
       channel: string;
       country: string | null;
+      device: string | null;
+      srcDomain: string | null;
       attributed: boolean;
       upstream: string | null;
       hsid: string | null;
@@ -120,6 +133,8 @@ interface VisitGroup {
   time: string; // most recent visit in the cluster
   channel: string;
   country: string | null;
+  device: string | null;
+  srcDomain: string | null;
   wallet: string | null;
   pages: VisitItem[]; // newest first
 }
@@ -154,7 +169,7 @@ const SESSION_GAP_MS = 60 * 60 * 1000;
 const DISPLAY_LIMIT = 200; // rows rendered
 const FETCH_LIMIT = 500; // visits/clicks/events pulled for merge + map
 const MAP_LIMIT = 2000; // connections pulled for the attribution map only
-const FEED_COLS = "132px 132px 92px 104px minmax(170px, 1.7fr) 128px 54px";
+const FEED_COLS = "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 54px";
 
 // Source-group toggle for the Stream filter. Collapses the many per-channel
 // names into the buckets an operator reasons about. "Referral" isolates real
@@ -174,10 +189,14 @@ const SOURCE_GROUPS: ReadonlyArray<{ value: SourceGroup; label: string }> = [
 // @/lib/channels so both feeds bucket sources identically.
 
 // ── Sample fallback (only when every real source is empty) ──────────
-const SAMPLE_VISIT_SEED: ReadonlyArray<{ page: string; source: string; country: string; minsAgo: number }> = [
+// The three `sid: "sample-hsid-tour"` visits share one session id, so
+// the demo stream shows a collapsed "Session · 3 pages" row that
+// expands into its visited URLs - the same grouping live data gets.
+const SAMPLE_VISIT_SEED: ReadonlyArray<{ page: string; source: string; country: string; minsAgo: number; sid?: string }> = [
   { page: "/", source: "https://www.google.com/", country: "US", minsAgo: 1 },
-  { page: "/usdc", source: "chatgpt.com", country: "GB", minsAgo: 5 },
-  { page: "/eth", source: "(direct)", country: "DE", minsAgo: 14 },
+  { page: "/weth-autopilot-base", source: "chatgpt.com", country: "GB", minsAgo: 5, sid: "sample-hsid-tour" },
+  { page: "/usdc", source: "chatgpt.com", country: "GB", minsAgo: 7, sid: "sample-hsid-tour" },
+  { page: "/eth", source: "chatgpt.com", country: "GB", minsAgo: 9, sid: "sample-hsid-tour" },
   { page: "/arbitrum", source: "https://t.co/", country: "BR", minsAgo: 33 },
   { page: "/btc", source: "https://www.reddit.com/", country: "IN", minsAgo: 70 },
   { page: "/methodology", source: "perplexity.ai", country: "CA", minsAgo: 150 },
@@ -212,11 +231,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     const [v, c, e, w] = await Promise.all([
       supabaseSelect<VisitRow>(
         "frontpage_visits",
-        `select=created_at,session_id,page_path,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        `select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc&limit=${FETCH_LIMIT}`,
       ),
       supabaseSelect<ClickRow>(
         "outbound_clicks",
-        `select=created_at,session_id,vault_slug,source_page,target_url,source,country&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        `select=created_at,session_id,vault_slug,source_page,target_url,source,country,device_type&order=created_at.desc&limit=${FETCH_LIMIT}`,
       ),
       supabaseSelect<VaultEventRow>(
         "vault_events_prod",
@@ -305,18 +324,46 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return [...byKey.values()];
   }, [events]);
 
-  // session_id -> earliest-touch { source, country } from visits, then
-  // clicks as a backfill for sessions that never logged a page view.
+  // session_id -> earliest-touch { source, country, device, domain } from
+  // visits, then clicks as a backfill for sessions that never logged a
+  // page view. device + domain ride along so a click/event row can show
+  // the device and referring domain of the session that drove it (only
+  // visits carry a referrer, so domain is null for click-only sessions).
   const sessionFirstTouch = useMemo(() => {
-    const m = new Map<string, { source: string | null; country: string | null; t: number }>();
-    const consider = (sid: string | null, source: string | null, country: string | null, iso: string) => {
+    const m = new Map<
+      string,
+      {
+        source: string | null;
+        country: string | null;
+        device: string | null;
+        domain: string | null;
+        t: number;
+      }
+    >();
+    const consider = (
+      sid: string | null,
+      source: string | null,
+      country: string | null,
+      device: string | null,
+      domain: string | null,
+      iso: string,
+    ) => {
       if (!sid) return;
       const t = new Date(iso).getTime();
       const prev = m.get(sid);
-      if (!prev || t < prev.t) m.set(sid, { source, country, t });
+      if (!prev || t < prev.t) m.set(sid, { source, country, device, domain, t });
     };
-    for (const v of visits ?? []) consider(v.session_id, v.source, v.country, v.created_at);
-    for (const c of clicks ?? []) consider(c.session_id, c.source, c.country, c.created_at);
+    for (const v of visits ?? [])
+      consider(
+        v.session_id,
+        v.source,
+        v.country,
+        v.device_type,
+        sourceDomain(v.referrer),
+        v.created_at,
+      );
+    for (const c of clicks ?? [])
+      consider(c.session_id, c.source, c.country, c.device_type, null, c.created_at);
     return m;
   }, [visits, clicks]);
 
@@ -387,6 +434,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   function resolveWallet(wallet: string, atMs: number): {
     channel: string;
     country: string | null;
+    device: string | null;
+    srcDomain: string | null;
     attributed: boolean;
     upstream: string | null;
     hsid: string | null;
@@ -399,6 +448,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       return {
         channel: "Direct",
         country: null,
+        device: null,
+        srcDomain: null,
         attributed: false,
         upstream: null,
         hsid: link?.session ?? null,
@@ -407,6 +458,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return {
       channel: appChannel(ft.source),
       country: ft.country,
+      device: ft.device,
+      srcDomain: ft.domain,
       attributed: true,
       upstream: classifyChannel(ft.source),
       hsid: link?.session ?? null,
@@ -423,14 +476,19 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     if (realEmpty) {
       // Demo stream so the page isn't blank in a credential-less or
       // brand-new environment. Marked "sample" in the header.
+      const sampleDevices = ["desktop", "mobile", "tablet"];
       const sv: FeedItem[] = SAMPLE_VISIT_SEED.map((v, i) => ({
         kind: "visit",
         id: `sv-${i}`,
         time: new Date(now - v.minsAgo * 60_000).toISOString(),
         channel: classifyChannel(v.source),
         country: v.country,
+        // Visits sharing a sid keep one device so the grouped session
+        // row reads coherently.
+        device: v.sid ? "mobile" : sampleDevices[i % sampleDevices.length],
+        srcDomain: sourceDomain(v.source),
         pagePath: v.page,
-        hsid: `sample-hsid-v${i}`,
+        hsid: v.sid ?? `sample-hsid-v${i}`,
         wallet: null,
       }));
       const sc: FeedItem[] = SAMPLE_CLICK_SEED.map((c, i) => ({
@@ -439,6 +497,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         time: new Date(now - c.minsAgo * 60_000).toISOString(),
         channel: appChannel(c.source),
         country: c.country,
+        device: sampleDevices[i % sampleDevices.length],
+        srcDomain: sourceDomain(c.source),
         vaultSlug: c.slug,
         sourcePage: `/${c.slug}`,
         targetUrl: "https://app.harvest.finance/",
@@ -451,6 +511,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         time: new Date(now - s.minsAgo * 60_000).toISOString(),
         channel: s.channel,
         country: s.country,
+        device: sampleDevices[i % sampleDevices.length],
+        srcDomain: null,
         attributed: s.channel !== "Direct",
         upstream: s.channel,
         hsid: s.channel === "Direct" ? null : `sample-hsid-e${i}`,
@@ -473,6 +535,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         time: v.created_at,
         channel: classifyChannel(v.source),
         country: v.country,
+        device: v.device_type,
+        srcDomain: sourceDomain(v.referrer),
         pagePath: v.page_path || "/",
         hsid: v.session_id || null,
         wallet: v.session_id
@@ -485,6 +549,12 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         time: c.created_at,
         channel: appChannel(c.source),
         country: c.country,
+        device: c.device_type,
+        // Clicks carry no referrer; fall back to the session's first
+        // visit domain so a click row still shows where it came from.
+        srcDomain: c.session_id
+          ? sessionFirstTouch.get(c.session_id)?.domain ?? null
+          : null,
         vaultSlug: c.vault_slug,
         sourcePage: c.source_page || "/",
         targetUrl: c.target_url,
@@ -504,6 +574,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           time: e.block_timestamp,
           channel: r.channel,
           country: r.country,
+          device: r.device,
+          srcDomain: r.srcDomain,
           attributed: r.attributed,
           upstream: r.upstream,
           hsid: r.hsid,
@@ -592,6 +664,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           time: desc[0].time,
           channel: desc[0].channel,
           country: desc[0].country,
+          device: desc.find((v) => v.device)?.device ?? null,
+          srcDomain: desc.find((v) => v.srcDomain)?.srcDomain ?? null,
           wallet: desc.find((v) => v.wallet)?.wallet ?? null,
           pages: desc,
         },
@@ -664,36 +738,45 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 : " · source attributed first-touch via the wallet-session join"}
             </span>
           </div>
-          <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
         </header>
 
+        {/* One compact control row: Refresh + the two filters as iconed
+            dropdowns (globe = acquisition source, pulse = activity
+            type) instead of two full-width pill bars. */}
         <div className="lf-filterbar">
-          <div className="aq-timeframe" role="group" aria-label="Source filter">
-            {SOURCE_GROUPS.map((o) => (
-              <button
-                key={o.value}
-                type="button"
-                className={`aq-timeframe-tab${sourceFilter === o.value ? " active" : ""}`}
-                aria-pressed={sourceFilter === o.value}
-                onClick={() => setSourceFilter(o.value)}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
-          <div className="aq-timeframe" role="group" aria-label="Activity filter">
-            {ACTIVITY_OPTIONS.map((o) => (
-              <button
-                key={o.value}
-                type="button"
-                className={`aq-timeframe-tab${activity === o.value ? " active" : ""}`}
-                aria-pressed={activity === o.value}
-                onClick={() => setActivity(o.value)}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
+          <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+          <label className="lf-filter" aria-label="Source filter">
+            <span className="lf-filter-icon" aria-hidden="true">
+              <SourceFilterIcon />
+            </span>
+            <select
+              className="lf-select lf-select-iconed"
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value as SourceGroup)}
+            >
+              {SOURCE_GROUPS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.value === "all" ? "All sources" : o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="lf-filter" aria-label="Activity filter">
+            <span className="lf-filter-icon" aria-hidden="true">
+              <ActivityFilterIcon />
+            </span>
+            <select
+              className="lf-select lf-select-iconed"
+              value={activity}
+              onChange={(e) => setActivity(e.target.value as ActivityFilter)}
+            >
+              {ACTIVITY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.value === "all" ? "All activity" : o.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         {err && (
@@ -713,6 +796,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 <span className="uni-hub-th">Country</span>
                 <span className="uni-hub-th">Event</span>
                 <span className="uni-hub-th">Product / Page</span>
+                <span className="uni-hub-th">Device</span>
                 <span className="uni-hub-th">Wallet</span>
                 <span className="uni-hub-th">Tx</span>
               </div>
@@ -752,6 +836,12 @@ type ProductLabel = (slug: string | null, address?: string) => string;
 // A single activity row (visit, click, deposit or withdraw). Extracted so
 // the same markup renders both top-level items and the expanded page rows
 // inside a collapsed session.
+//
+// On mobile the product / page is NOT shown inline - the activity cell
+// renders a count pill ("1") and tapping the row expands a detail line
+// with the page / product link, mirroring how session rows expand into
+// their visited URLs. On desktop the product stays inline and the
+// detail line never renders visibly.
 function FeedRow({
   item,
   productLabel,
@@ -759,8 +849,42 @@ function FeedRow({
   item: FeedItem;
   productLabel: ProductLabel;
 }) {
+  const [open, setOpen] = useState(false);
+  const productNode =
+    item.kind === "visit" ? (
+      <Link href={item.pagePath} className="lf-product-link">
+        {item.pagePath}
+      </Link>
+    ) : item.kind === "click" ? (
+      item.vaultSlug ? (
+        <Link href={`/${item.vaultSlug}`} className="lf-product-link">
+          {productLabel(item.vaultSlug)}
+        </Link>
+      ) : (
+        <Link href={item.sourcePage} className="lf-product-link">
+          {item.sourcePage}
+        </Link>
+      )
+    ) : item.vaultSlug ? (
+      <Link href={`/${item.vaultSlug}`} className="lf-product-link">
+        {productLabel(item.vaultSlug, item.vaultAddress)}
+      </Link>
+    ) : (
+      <span className="lf-product-link">
+        {productLabel(item.vaultSlug, item.vaultAddress)}
+      </span>
+    );
   return (
-    <div className="uni-hub-row" style={{ gridTemplateColumns: FEED_COLS }}>
+    <>
+    <div
+      className="uni-hub-row lf-item-row"
+      style={{ gridTemplateColumns: FEED_COLS }}
+      onClick={(e) => {
+        // Links inside the row (product, tx) keep their own behaviour.
+        if ((e.target as HTMLElement).closest("a")) return;
+        setOpen((o) => !o);
+      }}
+    >
       <span
         className="uni-hub-cell lf-time"
         data-label="Time"
@@ -773,11 +897,12 @@ function FeedRow({
           className={`lf-badge lf-badge-${channelTone(item.channel)}`}
           title={
             item.kind === "event" && item.attributed && item.upstream && item.upstream !== item.channel
-              ? `first touch: ${item.upstream}`
-              : undefined
+              ? `first touch: ${item.upstream}${item.srcDomain ? ` · ${item.srcDomain}` : ""}`
+              : item.srcDomain ?? undefined
           }
         >
-          {item.channel}
+          <span className="lf-lbl-full">{item.channel}</span>
+          <span className="lf-lbl-short">{shortChannelLabel(item.channel)}</span>
         </span>
       </span>
       <span className="uni-hub-cell" data-label="Country">
@@ -790,7 +915,7 @@ function FeedRow({
             title={item.hsid ? `hsid ${item.hsid}` : undefined}
           >
             <VisitIcon />
-            Visit
+            <span className="lf-lbl-full">Visit</span>
           </span>
         ) : item.kind === "click" ? (
           <span
@@ -798,7 +923,8 @@ function FeedRow({
             title={item.hsid ? `hsid ${item.hsid}` : undefined}
           >
             <ClickIcon />
-            App click
+            <span className="lf-lbl-full">App click</span>
+            <span className="lf-lbl-short">App</span>
           </span>
         ) : (
           <span
@@ -806,47 +932,30 @@ function FeedRow({
             title={item.hsid ? `hsid ${item.hsid}` : undefined}
           >
             <EventIcon type={item.eventType} />
-            {item.eventType}
+            <span className="lf-lbl-full">{item.eventType}</span>
+            <span className="lf-lbl-short">
+              {item.eventType === "deposit" ? "Dep" : "With"}
+            </span>
           </span>
         )}
       </span>
       <span className="uni-hub-cell lf-product" data-label="Product / Page">
-        {item.kind === "visit" ? (
-          <Link href={item.pagePath} className="lf-product-link">
-            {item.pagePath}
-          </Link>
-        ) : item.kind === "click" ? (
-          item.vaultSlug ? (
-            <Link href={`/${item.vaultSlug}`} className="lf-product-link">
-              {productLabel(item.vaultSlug)}
-            </Link>
-          ) : (
-            <Link href={item.sourcePage} className="lf-product-link">
-              {item.sourcePage}
-            </Link>
-          )
-        ) : item.vaultSlug ? (
-          <Link href={`/${item.vaultSlug}`} className="lf-product-link">
-            {productLabel(item.vaultSlug, item.vaultAddress)}
-          </Link>
-        ) : (
-          <span className="lf-product-link">
-            {productLabel(item.vaultSlug, item.vaultAddress)}
-          </span>
-        )}
+        <span className="lf-lbl-full lf-product-full">{productNode}</span>
+        <span className="lf-lbl-short lf-count-pill">1</span>
+      </span>
+      <span className="uni-hub-cell lf-device-cell" data-label="Device">
+        <DeviceIcon device={item.device} />
       </span>
       <span className="uni-hub-cell" data-label="Wallet">
         {item.wallet ? (
-          <span
-            className="lf-mono"
+          <WalletLabel
+            address={item.wallet}
             title={
               item.kind === "event"
                 ? item.wallet
                 : `${item.wallet} - linked to this session after the wallet connected in the app, not known at page-view time`
             }
-          >
-            {shortenAddress(item.wallet)}
-          </span>
+          />
         ) : (
           <span className="lf-dim">—</span>
         )}
@@ -859,13 +968,22 @@ function FeedRow({
             rel="noopener noreferrer"
             className="lf-tx"
           >
-            view
+            <span className="lf-lbl-full">view</span>
+            <ExternalLinkIcon className="lf-lbl-short" />
           </a>
         ) : (
           <span className="lf-dim">—</span>
         )}
       </span>
     </div>
+    {open && (
+      <div className="uni-hub-row lf-row-child lf-detail-row">
+        <span className="uni-hub-cell lf-product" data-label="Product / Page">
+          {productNode}
+        </span>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -906,8 +1024,12 @@ function SessionGroupRow({
           {relativeTime(group.time)}
         </span>
         <span className="uni-hub-cell" data-label="Source">
-          <span className={`lf-badge lf-badge-${channelTone(group.channel)}`}>
-            {group.channel}
+          <span
+            className={`lf-badge lf-badge-${channelTone(group.channel)}`}
+            title={group.srcDomain ?? undefined}
+          >
+            <span className="lf-lbl-full">{group.channel}</span>
+            <span className="lf-lbl-short">{shortChannelLabel(group.channel)}</span>
           </span>
         </span>
         <span className="uni-hub-cell" data-label="Country">
@@ -923,19 +1045,22 @@ function SessionGroupRow({
             title={`hsid ${group.sessionId}`}
           >
             <VisitIcon />
-            Session
+            <span className="lf-lbl-full">Session</span>
+            <span className="lf-lbl-short">Sess</span>
           </span>
         </span>
         <span className="uni-hub-cell lf-product" data-label="Product / Page">
           <span className="lf-session-count">
-            {group.pages.length} pages
+            <span className="lf-lbl-full">{group.pages.length} pages</span>
+            <span className="lf-lbl-short lf-count-pill">{group.pages.length}</span>
           </span>
+        </span>
+        <span className="uni-hub-cell lf-device-cell" data-label="Device">
+          <DeviceIcon device={group.device} />
         </span>
         <span className="uni-hub-cell" data-label="Wallet">
           {group.wallet ? (
-            <span className="lf-mono" title={group.wallet}>
-              {shortenAddress(group.wallet)}
-            </span>
+            <WalletLabel address={group.wallet} />
           ) : (
             <span className="lf-dim">—</span>
           )}
@@ -967,13 +1092,16 @@ function SessionGroupRow({
             <span className="uni-hub-cell" data-label="Event">
               <span className="lf-event lf-event-visit">
                 <VisitIcon />
-                Visit
+                <span className="lf-lbl-full">Visit</span>
               </span>
             </span>
             <span className="uni-hub-cell lf-product" data-label="Product / Page">
               <Link href={p.pagePath} className="lf-product-link">
                 {p.pagePath}
               </Link>
+            </span>
+            <span className="uni-hub-cell lf-device-cell" data-label="Device">
+              <DeviceIcon device={p.device} />
             </span>
             <span className="uni-hub-cell" data-label="Wallet">
               <span className="lf-dim">—</span>
@@ -1083,6 +1211,37 @@ function EventIcon({ type }: { type: "deposit" | "withdraw" }) {
           <path d="m19 12-7 7-7-7" />
         </>
       )}
+    </svg>
+  );
+}
+
+// External-link glyph: replaces the "view" tx label on mobile.
+function ExternalLinkIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-label="View transaction">
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </svg>
+  );
+}
+
+// Globe glyph for the source filter dropdown.
+function SourceFilterIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  );
+}
+
+// Pulse glyph for the activity-type filter dropdown.
+function ActivityFilterIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
     </svg>
   );
 }

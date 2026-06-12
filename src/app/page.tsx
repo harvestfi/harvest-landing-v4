@@ -10,6 +10,7 @@ import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/constants";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { HubTable } from "@/components/hub-table";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
+import { RankingDataNote } from "@/components/ranking-data-note";
 import { TrackedAppLink } from "@/components/tracked-app-link";
 import "./_styles/home.css";
 
@@ -219,6 +220,8 @@ export default async function HomePage() {
             deliberately leave out.
           </p>
         </section>
+
+        <RankingDataNote />
       </main>
     </div>
   );

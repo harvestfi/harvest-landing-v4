@@ -15,6 +15,7 @@ import {
 import { breadcrumbSchema, itemListSchema } from "@/lib/jsonld";
 import { getSubAsset } from "@/lib/sub-asset";
 import { HubTable } from "@/components/hub-table";
+import { RankingDataNote } from "@/components/ranking-data-note";
 import { HomeCrumb } from "@/components/home-crumb";
 
 interface AssetCopy {
@@ -446,6 +447,8 @@ export async function AssetHubBody({ asset }: Props) {
           ))}
         </div>
       </section>
+
+      <RankingDataNote />
     </div>
   );
 }

@@ -91,3 +91,39 @@ export function channelGroup(channel: string): Exclude<SourceGroup, "all"> {
   if (tone === "referral") return "Referral";
   return "Direct";
 }
+
+// Compact channel names for the one-line mobile feed rows, where the
+// full label ("X / Twitter", "Homepage") eats column width for no extra
+// information. Channels without an entry keep their full name.
+const SHORT_CHANNEL: Record<string, string> = {
+  Homepage: "Home",
+  "X / Twitter": "X",
+  DuckDuckGo: "DDG",
+  Perplexity: "Pplx",
+  ChatGPT: "GPT",
+  Telegram: "TG",
+};
+
+export function shortChannelLabel(channel: string): string {
+  return SHORT_CHANNEL[channel] ?? channel;
+}
+
+// Best-effort full domain for the Source-column tooltip, derived from a
+// referrer URL or a bare host. "https://www.coingecko.com/x" and
+// "coingecko.com" both return "coingecko.com". Returns null when there's
+// no usable host (Direct, internal, or a utm label with no dot), so the
+// caller can simply omit the tooltip.
+export function sourceDomain(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const s = raw.trim();
+  if (!s) return null;
+  try {
+    const url = /^[a-z][a-z0-9+.-]*:\/\//i.test(s)
+      ? new URL(s)
+      : new URL("https://" + s);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    return host.includes(".") ? host : null;
+  } catch {
+    return null;
+  }
+}

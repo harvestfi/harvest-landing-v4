@@ -195,6 +195,17 @@ body:has(.uni-hub-test) {
   color: var(--uni-ink-2);
   letter-spacing: 0.04em;
 }
+/* Compliance disclaimer (see components/ranking-data-note.tsx),
+   anchored at the bottom of the hub page so the top stays clean. Same
+   muted footnote treatment as the homepage note. */
+.uni-hub-test .uni-data-note {
+  margin: 32px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--uni-line);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--uni-ink-3);
+}
 
 /* === Ranking table ==================================================
    CSS grid pattern: thead defines the column track, every row is a
@@ -986,6 +997,40 @@ body:has(.uni-hub-test) {
   font-variant-numeric: tabular-nums;
   color: var(--uni-ink);
 }
+/* The public ranking table drops its Strategy / Network / trend columns
+   at smaller widths via nth-child display:none rules. Those selectors
+   also match the feed tables (same .uni-hub-row/.uni-hub-cell classes)
+   and were silently deleting the Country / Event / Product cells on
+   phones. Re-assert visibility inside .lf-table at higher specificity;
+   the feeds manage their own responsive layout below. */
+.uni-hub-test .lf-table .uni-hub-thead .uni-hub-th:nth-child(n) {
+  display: inline-flex;
+}
+.uni-hub-test .lf-table .uni-hub-row .uni-hub-cell:nth-child(n) {
+  display: inline-flex;
+  align-items: center;
+}
+/* Inside the now-flex cells the product link must be allowed to
+   shrink, or long product names refuse to ellipsise and push the row. */
+.uni-hub-test .lf-table .lf-product .lf-product-link {
+  min-width: 0;
+  max-width: 100%;
+}
+/* Wrapper that carries the inline product on desktop (hidden on mobile
+   via the lf-lbl toggle); block + min-width:0 keeps the ellipsis chain
+   intact through the extra span. */
+.uni-hub-test .lf-table .lf-product-full {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+/* Single-row mobile detail line: never rendered visibly on desktop,
+   where the product is already inline in the row. */
+.uni-hub-test .lf-table .uni-hub-row.lf-detail-row { display: none; }
+/* Full/short label pairs (event chips, wallet, tx, session counts):
+   desktop shows the full text, the one-line mobile rows swap to the
+   abbreviated variant. */
+.uni-hub-test .lf-lbl-short { display: none; }
 .uni-hub-test .lf-time,
 .uni-hub-test .lf-mono { white-space: nowrap; }
 .uni-hub-test .lf-product-link {
@@ -1048,6 +1093,13 @@ body:has(.uni-hub-test) {
 :root[data-theme="dark"] .uni-hub-test .lf-event-click { color: var(--uni-gold-soft); }
 /* Placeholder dash for columns that don't apply to a visit/click row. */
 .uni-hub-test .lf-dim { color: var(--uni-ink-3); }
+
+/* Device column: muted outline glyph, centered in its cell. */
+.uni-hub-test .lf-device {
+  display: inline-flex;
+  align-items: center;
+  color: var(--uni-ink-2);
+}
 
 /* Collapsed session master row: many page views from one visitor fold
    into a single clickable row so the feed isn't drowned by one person's
@@ -1137,10 +1189,50 @@ body:has(.uni-hub-test) {
 .uni-hub-test .lf-filterbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   margin: 0 0 16px;
+}
+/* Iconed filter dropdown: the glyph (globe = sources, pulse = activity
+   types) sits inside the select's left padding so the two filters are
+   distinguishable at a glance. The select typography matches the
+   Refresh chip (mono 11.5) so the control row reads as one family.
+   Selectors are .lf-filter-qualified to outrank the .lf-select base
+   rule that sits later in this file. */
+.uni-hub-test .lf-filter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.uni-hub-test .lf-filter-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  color: var(--uni-ink-3);
+  pointer-events: none;
+}
+.uni-hub-test .lf-filter .lf-select-iconed {
+  padding: 8px 30px 8px 32px;
+  width: 100%;
+  min-width: 148px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--uni-ink-2);
+}
+/* Mobile: Refresh keeps its size, the two filters split the leftover
+   row width equally so their text starts at the same x. */
+@media (max-width: 900px) {
+  .uni-hub-test .lf-filterbar .lf-filter {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .uni-hub-test .lf-filter .lf-select-iconed { min-width: 0; }
 }
 .uni-hub-test .lf-source-filter {
   display: inline-flex;
@@ -1492,55 +1584,168 @@ body:has(.uni-hub-test) {
 }
 
 /* ====================================================================
-   Live Feed: reflow the ranking-style table to stacked, labelled cards
-   on mobile so the feed never scrolls sideways. Hide the header row,
-   turn each .uni-hub-row into a card, and surface the column name from
-   data-label so every value stays readable in one column. Scoped to
-   .lf-table so the public ranking tables are untouched.
+   Live Feed / SEO Summary on mobile: every record collapses to ONE
+   tight line spread across the full row width, homepage-ranking style:
+
+     [time] [source] [device] [country] [event] [activity] [wallet] [tx]
+
+   Labels swap to their abbreviated variants (.lf-lbl-short), the
+   country code drops to flag-only, the wallet tightens to 0x12…ab and
+   the tx link becomes an external-link glyph. The activity slot is the
+   flexible middle: a bare page-count for session rows, an ellipsised
+   page/product label for single rows — it absorbs the leftover width
+   so the line always spans edge to edge. Empty (—) cells are dropped.
+   Scoped to .lf-table so the public ranking tables are untouched.
    ==================================================================== */
 @media (max-width: 900px) {
+  /* Full-bleed: pull the table out of the shell's side padding (18px
+     at this width, 16px under 540px below) - that's ~10% extra row
+     width for free on a phone. */
   .uni-hub-test .lf-scroll {
     overflow-x: visible;
+    margin-left: -18px;
+    margin-right: -18px;
   }
   .uni-hub-test .lf-table .uni-hub-thead {
     display: none;
   }
+  /* Military grid: FIXED column tracks, identical in every row (each
+     row is its own grid container, so `auto` tracks sized per row and
+     the columns drifted between rows - the previous mess). Fixed px
+     tracks + justify-content:space-between spreading the leftover
+     evenly = every value sits dead under the one above it, regardless
+     of neighbours' widths. !important because the desktop template is
+     an inline style on the row. Products / pages are NOT inline here -
+     the activity column is a bare count pill and the details appear
+     only when the row is expanded. */
   .uni-hub-test .lf-table .uni-hub-row {
-    display: block !important;
-    padding: 14px 16px;
-  }
-  .uni-hub-test .lf-table .uni-hub-cell {
-    display: flex;
+    display: grid;
+    grid-template-columns: 38px 64px 16px 14px 24px 32px 56px 16px !important;
     justify-content: space-between;
-    align-items: baseline;
-    gap: 16px;
-    padding: 4px 0;
+    gap: 0;
+    align-items: center;
+    padding: 10px 12px;
     min-width: 0;
+    cursor: pointer;
   }
-  .uni-hub-test .lf-table .uni-hub-cell::before {
-    content: attr(data-label);
-    flex: 0 0 auto;
-    color: var(--uni-ink-3);
-    font-family: var(--mono);
+  .uni-hub-test .lf-table .uni-hub-row .uni-hub-cell {
+    padding: 0;
+    min-width: 0;
+    justify-self: center;
+    justify-content: center;
+  }
+  /* Swap full labels for the abbreviated set. */
+  .uni-hub-test .lf-table .lf-lbl-full { display: none; }
+  .uni-hub-test .lf-table .lf-lbl-short { display: inline-flex; }
+
+  /* Column order per the operator spec (order-modified auto-placement):
+     time | source | device | country | event | activity | wallet | tx */
+  .uni-hub-test .lf-table .lf-time { order: 1; }
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Source"] { order: 2; }
+  .uni-hub-test .lf-table .lf-device-cell { order: 3; justify-content: center; }
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Country"] { order: 4; justify-content: center; }
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Event"],
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Stage"] { order: 5; }
+  .uni-hub-test .lf-table .lf-product { order: 6; }
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { order: 7; }
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Tx"] { order: 8; justify-content: center; }
+
+  .uni-hub-test .lf-table .lf-time {
     font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    color: var(--uni-ink-3);
   }
-  /* Value side hugs the right and may wrap (long product slugs). */
-  .uni-hub-test .lf-table .uni-hub-cell > * {
-    text-align: right;
+  /* Source badge: one line, capped at its column track so long
+     referral domains can't push the grid. */
+  .uni-hub-test .lf-table .lf-badge {
+    font-size: 10.5px;
+    padding: 2px 7px;
+    max-width: 64px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+  }
+  /* Country: flag only (ISO code drops), shrunk ~40%. */
+  .uni-hub-test .lf-table .country-cell .country-code { display: none; }
+  .uni-hub-test .lf-table .country-flag {
+    width: 12px;
+    height: 9px;
+  }
+  /* Event / stage chip collapses to icon-only - the colour + glyph
+     carry the meaning (eye = visit, pointer = app click, green down
+     arrow = deposit, red up arrow = withdraw). */
+  .uni-hub-test .lf-table .lf-event {
+    padding: 4px;
+    gap: 0;
+  }
+  .uni-hub-test .lf-table .lf-event > :not(svg) { display: none; }
+  /* The interactions pill: bare count, every row. The page / product
+     details only show once the row is expanded. */
+  .uni-hub-test .lf-table .lf-count-pill {
+    padding: 1px 8px;
+    border: 1px solid var(--uni-line);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--uni-ink-2);
+    background: var(--uni-bg);
+  }
+  .uni-hub-test .lf-table .lf-mono { font-size: 11px; }
+  /* Placeholder dashes recede so filled cells carry the eye. */
+  .uni-hub-test .lf-table .lf-dim { opacity: 0.45; }
+  /* Session chevron stays compact next to the time. */
+  .uni-hub-test .lf-table .lf-time-session { gap: 4px; }
+
+  /* Expanded detail lines (session pages + single-row details): a
+     simple indented flex line - time, icon chip, then the page /
+     product link. Empty dash cells drop out entirely here; the
+     military grid only governs the collapsed stream rows. */
+  .uni-hub-test .lf-table .uni-hub-row.lf-row-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px 8px 24px;
+    opacity: 0.85;
+    cursor: default;
+  }
+  .uni-hub-test .lf-table .lf-row-child .uni-hub-cell { justify-content: flex-start; }
+  .uni-hub-test .lf-table .uni-hub-row.lf-row-child .uni-hub-cell:has(> .lf-dim) {
+    display: none;
+  }
+  .uni-hub-test .lf-table .lf-row-child .lf-product {
+    flex: 1 1 auto;
     min-width: 0;
-    overflow-wrap: anywhere;
-    word-break: break-word;
   }
-  .uni-hub-test .lf-table .lf-product-link {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
+  .uni-hub-test .lf-table .lf-row-child .lf-product .lf-product-link {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11.5px;
+    text-align: left;
   }
-  /* Country cell keeps the flag + code together on the right. */
-  .uni-hub-test .lf-table .country-cell { justify-content: flex-end; }
+  /* Single-row detail line renders only on mobile (desktop already
+     shows the product inline). */
+  .uni-hub-test .lf-table .uni-hub-row.lf-detail-row { display: flex; }
+}
+/* Under 540px the shell padding drops to 16px - keep the full-bleed
+   pull in sync. */
+@media (max-width: 540px) {
+  .uni-hub-test .lf-scroll {
+    margin-left: -16px;
+    margin-right: -16px;
+  }
+}
+/* Very narrow phones: shave the gaps and the source-badge cap so the
+   fixed tracks + activity still fit a 320px viewport. */
+@media (max-width: 380px) {
+  .uni-hub-test .lf-table .uni-hub-row {
+    gap: 4px;
+    padding: 10px 8px;
+  }
+  .uni-hub-test .lf-table .lf-badge { max-width: 60px; }
 }
 
 /* Hide panel: the Save CTA. Brand gold, prominent, with a clear

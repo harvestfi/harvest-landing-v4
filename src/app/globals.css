@@ -2914,20 +2914,95 @@ body:has(.admin-shell) .foot {
   background: #ffffff;
 }
 
-/* Mobile: stack the sidebar above the content. Sidebar collapses
-   to a horizontal scrollable rail; full vertical scroll behaviour
-   stays sane. */
+/* Hamburger top bar, drawer backdrop and the in-drawer close button are
+   mobile-only; hidden on desktop where the rail is always visible. */
+.admin-mobilebar { display: none; }
+.admin-backdrop { display: none; }
+.admin-sidebar-close { display: none; }
+
+/* Mobile: the rail becomes an off-canvas drawer opened by the hamburger
+   in a sticky top bar, dimmed by a backdrop. Content takes the full
+   width underneath. */
 @media (max-width: 900px) {
   .admin-shell { flex-direction: column; }
-  .admin-sidebar {
-    width: 100%;
-    height: auto;
-    position: static;
-    border-right: 0;
+
+  .admin-mobilebar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 10px 14px;
+    background: var(--panel);
     border-bottom: 1px solid var(--line);
-    padding: 14px;
   }
-  .admin-sidebar-nav { gap: 14px; }
+  .admin-hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--bg-2);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .admin-mobilebar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 264px;
+    max-width: 82vw;
+    height: 100vh;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    padding: 20px 14px;
+  }
+  .admin-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 2px 0 28px rgba(0, 0, 0, 0.22);
+  }
+
+  .admin-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .admin-sidebar-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 14px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+  }
+  .admin-sidebar-close:hover { color: var(--ink); }
 }
 
 /* Tailwind colour utilities used in /admin/ranking-rules and
