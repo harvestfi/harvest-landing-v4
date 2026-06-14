@@ -1063,6 +1063,9 @@ body:has(.uni-hub-test) {
   text-transform: capitalize;
 }
 .uni-hub-test .lf-event svg { flex-shrink: 0; }
+/* "Reached app" / "App click" icon: near-black for punch against the
+   teal chip (the label stays teal). */
+.uni-hub-test .lf-event-click svg { stroke: #131518; }
 .uni-hub-test .lf-event-deposit {
   background: rgba(31, 124, 77, 0.12);
   color: #1f7c4d;
@@ -1209,9 +1212,9 @@ body:has(.uni-hub-test) {
 :root[data-theme="dark"] .uni-hub-test .lf-badge-referral { background: rgba(45, 212, 191, 0.16); color: #5eead4; }
 /* New / Existing user status. New = purple, Existing = orange. */
 .uni-hub-test .lf-badge-new { background: rgba(37, 99, 235, 0.14); color: #1d4ed8; }
-.uni-hub-test .lf-badge-existing { background: rgba(249, 145, 23, 0.16); color: #b45309; }
+.uni-hub-test .lf-badge-existing { background: rgba(31, 124, 77, 0.13); color: #1f7c4d; }
 :root[data-theme="dark"] .uni-hub-test .lf-badge-new { background: rgba(96, 165, 250, 0.18); color: #93c5fd; }
-:root[data-theme="dark"] .uni-hub-test .lf-badge-existing { background: rgba(255, 185, 54, 0.18); color: var(--uni-gold-soft); }
+:root[data-theme="dark"] .uni-hub-test .lf-badge-existing { background: rgba(109, 208, 160, 0.16); color: #6dd0a0; }
 .uni-hub-test .lf-wallet-link { text-decoration: none; }
 .uni-hub-test .lf-wallet-link:hover { color: var(--uni-gold); }
 /* External: an on-chain event from a wallet that never touched the
