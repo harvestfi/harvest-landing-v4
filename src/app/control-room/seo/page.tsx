@@ -236,7 +236,10 @@ export default function SeoSummaryPage() {
   const [conns, setConns] = useState<ConnRow[] | null>(null);
   const [events, setEvents] = useState<EventRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
+  // Default to the full history (matching the full-depth, paginated
+  // table) so the funnel boxes count every session, not just the last
+  // 30 days. The timeframe selector can still narrow the window.
+  const [timeframe, setTimeframe] = useState<Timeframe>("all");
   const [metric, setMetric] = useState<Metric>("acquired");
   const [engine, setEngine] = useState<string>("all");
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
@@ -625,7 +628,11 @@ export default function SeoSummaryPage() {
             <FunnelStat
               label="Acquired via search"
               value={acquired}
-              sub={`SEO sessions, last ${days}d`}
+              sub={
+                timeframe === "all"
+                  ? "SEO sessions, all time"
+                  : `SEO sessions, last ${days}d`
+              }
             />
             <FunnelStat
               label="Reached app"
