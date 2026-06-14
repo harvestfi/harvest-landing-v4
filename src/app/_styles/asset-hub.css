@@ -1349,6 +1349,83 @@ body:has(.uni-hub-test) {
   flex-wrap: wrap;
 }
 
+/* Funnel stat sub-line (SEO Summary). Base = the old inline style;
+   shrinks on the mobile mini-box layout below. */
+.uni-hub-test .uni-hub-stat-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--uni-ink-3);
+}
+
+/* "(?)" info tooltip next to a page title. Hidden by default; revealed
+   only on the mobile control-room layout (.lf-page) where the full
+   description paragraph is hidden. Opens on hover + on tap (focus). */
+.uni-hub-test .lf-infotip {
+  position: relative;
+  display: none;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.uni-hub-test .lf-infotip-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--uni-line);
+  background: var(--uni-bg);
+  color: var(--uni-ink-3);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.uni-hub-test .lf-infotip-pop {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  width: min(80vw, 340px);
+  padding: 11px 13px;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--uni-ink-2);
+  display: none;
+}
+.uni-hub-test .lf-infotip:hover .lf-infotip-pop,
+.uni-hub-test .lf-infotip:focus-within .lf-infotip-pop {
+  display: block;
+}
+
+/* Mobile control-room (Live Feed + SEO Summary, scoped to .lf-page so
+   the public hubs and other admin pages are untouched): drop the long
+   description into the (?) tip, hide the section titles, and squeeze the
+   SEO funnel stats into a compact 33/33/33 mini-box row. Flow becomes:
+   title (?) -> summary -> filters -> table + pager. */
+@media (max-width: 900px) {
+  .uni-hub-test.lf-page .lf-infotip { display: inline-block; }
+  .uni-hub-test.lf-page .uni-hub-sub { display: none; }
+  .uni-hub-test.lf-page .uni-hub-section-title { display: none; }
+  .uni-hub-test.lf-page .uni-hub-section-head { margin-bottom: 12px; }
+
+  .uni-hub-test.lf-page .uni-hub-stats {
+    gap: 7px;
+    margin-bottom: 18px !important;
+  }
+  .uni-hub-test.lf-page .uni-hub-stat {
+    padding: 9px 9px !important;
+  }
+  .uni-hub-test.lf-page .uni-hub-stat-label { font-size: 9.5px; }
+  .uni-hub-test.lf-page .uni-hub-stat-value { font-size: 17px; }
+  .uni-hub-test.lf-page .uni-hub-stat-sub { font-size: 9.5px; margin-top: 2px; }
+}
+
 /* Feed pager (Live Feed + SEO Summary tables): row count on the left,
    first/prev/label/next/last on the right. */
 .uni-hub-test .lf-pager {
