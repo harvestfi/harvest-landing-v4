@@ -1035,12 +1035,6 @@ function SessionRows({
           <span className="lf-dim">—</span>
         </span>
       </div>
-      {isOpen && s.wallet && (
-        <div className="uni-hub-row lf-row-child lf-detail-row">
-          <span className="lf-detail-time">Wallet</span>
-          <WalletLabel address={s.wallet} title={s.wallet} />
-        </div>
-      )}
       {isOpen &&
         s.actions.map((a) => (
           <div
