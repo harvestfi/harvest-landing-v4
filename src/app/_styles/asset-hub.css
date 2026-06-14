@@ -1150,8 +1150,43 @@ body:has(.uni-hub-test) {
   border-radius: var(--uni-radius-pill);
   font-family: var(--sans);
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
+}
+/* N/E badge tooltip: tap (mobile) reveals the wallet address + DeBank
+   link. The trigger is a transparent button wrapping the badge; the pop
+   is gated to mobile (desktop keeps the dedicated Wallet column). */
+.uni-hub-test .lf-ne-tip { position: relative; display: inline-flex; }
+.uni-hub-test .lf-ne-tip-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.uni-hub-test .lf-ne-tip-pop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(100% + 6px);
+  z-index: 30;
+  display: none;
+  padding: 7px 10px;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+@media (max-width: 900px) {
+  .uni-hub-test .lf-ne-tip:hover .lf-ne-tip-pop,
+  .uni-hub-test .lf-ne-tip:focus-within .lf-ne-tip-pop {
+    display: block;
+  }
 }
 .uni-hub-test .lf-badge-search { background: rgba(37, 99, 235, 0.12); color: #1d4ed8; }
 .uni-hub-test .lf-badge-ai { background: rgba(124, 58, 237, 0.13); color: #6d28d9; }
@@ -1800,7 +1835,8 @@ body:has(.uni-hub-test) {
   .uni-hub-test .lf-table .lf-product { order: 6; }
   /* Mobile: the Wallet column is replaced by the New/Existing badge
      (N / E); the address itself moves to the expanded (tap) detail. */
-  .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { display: none; }
+  /* !important to beat the nth-child(n) visibility-reassert rule above. */
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { display: none !important; }
   .uni-hub-test .lf-table .lf-status-cell { order: 7; justify-content: center; }
   .uni-hub-test .lf-table .lf-networth-cell { order: 8; justify-content: center; }
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Tx"] { order: 9; justify-content: center; }
