@@ -22,7 +22,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { supabaseSelect } from "@/lib/supabase";
+import { supabaseSelectAll } from "@/lib/supabase";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
@@ -36,6 +36,7 @@ import {
 import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
 import { RefreshButton } from "@/components/admin/refresh-button";
+import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import "../../_styles/asset-hub.css";
 
@@ -166,9 +167,11 @@ const CONNECT_SKEW_MS = 90_000;
 // tab doesn't collapse a day of return visits into one row. (GA uses 30m;
 // 1h is a touch more forgiving for slow reading.)
 const SESSION_GAP_MS = 60 * 60 * 1000;
-const DISPLAY_LIMIT = 200; // rows rendered
-const FETCH_LIMIT = 500; // visits/clicks/events pulled for merge + map
-const MAP_LIMIT = 2000; // connections pulled for the attribution map only
+// Full history: every source is pulled in its entirety (paginated
+// server-side via supabaseSelectAll) so the stream goes back as far as
+// the data does, then rendered 25 rows per page. No fetch/display caps -
+// the operator asked for max history depth, navigated by the pager.
+const ROWS_PER_PAGE = 25;
 const FEED_COLS = "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 54px";
 
 // Source-group toggle for the Stream filter. Collapses the many per-channel
@@ -223,27 +226,28 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   const [connections, setConnections] = useState<ConnectionRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
 
   // The four Supabase pulls that back the stream, in one place so both
   // the mount load and the manual Refresh button run the exact same
   // query set.
   const fetchAll = useCallback(async () => {
     const [v, c, e, w] = await Promise.all([
-      supabaseSelect<VisitRow>(
+      supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        `select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        "select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc",
       ),
-      supabaseSelect<ClickRow>(
+      supabaseSelectAll<ClickRow>(
         "outbound_clicks",
-        `select=created_at,session_id,vault_slug,source_page,target_url,source,country,device_type&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        "select=created_at,session_id,vault_slug,source_page,target_url,source,country,device_type&order=created_at.desc",
       ),
-      supabaseSelect<VaultEventRow>(
+      supabaseSelectAll<VaultEventRow>(
         "vault_events_prod",
-        `select=tx_hash,log_index,block_timestamp,chain,vault_address,vault_slug,event_type,wallet_address,amount_shares&event_type=in.(deposit,withdraw)&order=block_timestamp.desc&limit=${FETCH_LIMIT}`,
+        "select=tx_hash,log_index,block_timestamp,chain,vault_address,vault_slug,event_type,wallet_address,amount_shares&event_type=in.(deposit,withdraw)&order=block_timestamp.desc",
       ),
-      supabaseSelect<ConnectionRow>(
+      supabaseSelectAll<ConnectionRow>(
         "wallet_connections_prod",
-        `select=wallet_address,connected_at,session_id,balance&order=connected_at.desc&limit=${MAP_LIMIT}`,
+        "select=wallet_address,connected_at,session_id,balance&order=connected_at.desc",
       ),
     ]);
     return { v, c, e, w };
@@ -277,6 +281,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       setClicks(c);
       setEvents(e);
       setConnections(w);
+      setPage(0);
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -468,6 +473,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
 
   const [activity, setActivity] = useState<ActivityFilter>("all");
   const [sourceFilter, setSourceFilter] = useState<SourceGroup>("all");
+  // Jump back to the newest page whenever the filter changes (the row
+  // set, and its page count, changes underneath the pager).
+  useEffect(() => {
+    setPage(0);
+  }, [activity, sourceFilter]);
 
   const items = useMemo<FeedItem[]>(() => {
     if (!loaded) return [];
@@ -588,9 +598,9 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         };
       }),
     ];
-    return merged
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, DISPLAY_LIMIT);
+    return merged.sort(
+      (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visits, clicks, dedupedEvents, pickConnection, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
 
@@ -698,6 +708,13 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
 
   const loading = !loaded && !err;
 
+  const totalPages = Math.max(1, Math.ceil(streamRows.length / ROWS_PER_PAGE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageRows = streamRows.slice(
+    safePage * ROWS_PER_PAGE,
+    safePage * ROWS_PER_PAGE + ROWS_PER_PAGE,
+  );
+
   function productLabel(slug: string | null, address?: string): string {
     if (slug && productNames[slug.toLowerCase()]) return productNames[slug.toLowerCase()];
     if (address && productNames[address.toLowerCase()]) return productNames[address.toLowerCase()];
@@ -730,12 +747,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               {realEmpty && <span className="aq-sample-badge">sample</span>}
             </h2>
             <span className="uni-hub-section-meta">
-              {filtered.length === items.length
-                ? `${items.length} most recent`
-                : `${filtered.length} of ${items.length}`}
+              {streamRows.length.toLocaleString("en-US")}
+              {filtered.length === items.length ? "" : " filtered"} rows
               {realEmpty
                 ? " · preview data, no live activity yet"
-                : " · source attributed first-touch via the wallet-session join"}
+                : " · full history, source attributed first-touch via the wallet-session join"}
             </span>
           </div>
         </header>
@@ -804,7 +820,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 {streamRows.length === 0 && (
                   <div className="uni-hub-empty">No activity matches this filter.</div>
                 )}
-                {streamRows.map((row) =>
+                {pageRows.map((row) =>
                   row.kind === "item" ? (
                     <FeedRow
                       key={row.item.id}
@@ -822,6 +838,12 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 )}
               </div>
             </div>
+            <TablePager
+              page={safePage}
+              totalPages={totalPages}
+              totalRows={streamRows.length}
+              onPage={setPage}
+            />
           </div>
         )}
       </section>

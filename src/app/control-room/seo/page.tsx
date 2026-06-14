@@ -24,7 +24,8 @@ import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { WalletLabel } from "@/components/admin/wallet-label";
-import { supabaseSelect, supabaseSelectAll } from "@/lib/supabase";
+import { supabaseSelectAll } from "@/lib/supabase";
+import { TablePager } from "@/components/admin/table-pager";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
@@ -68,7 +69,8 @@ interface EventRow {
   tx_hash: string;
 }
 
-const FETCH_LIMIT = 5000;
+// Full history: pulled in its entirety (paginated server-side via
+// supabaseSelectAll) and the session table is navigated 25 rows/page.
 
 type Metric = "acquired" | "reached" | "deposited";
 const METRIC_OPTIONS: ReadonlyArray<{ value: Metric; label: string }> = [
@@ -77,7 +79,7 @@ const METRIC_OPTIONS: ReadonlyArray<{ value: Metric; label: string }> = [
   { value: "deposited", label: "Deposited" },
 ];
 
-const SEO_DISPLAY_LIMIT = 200;
+const SEO_ROWS_PER_PAGE = 25;
 // Same column rhythm as the Live Feed stream so the two read alike
 // (Time, Source, Country, Stage, Activity, Device, Wallet, Tx).
 const SEO_FEED_COLS =
@@ -123,6 +125,12 @@ export default function SeoSummaryPage() {
   const [metric, setMetric] = useState<Metric>("acquired");
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
+  // Reset to the first page when the visible session set changes (metric
+  // or timeframe toggle), so the pager never points past the last page.
+  useEffect(() => {
+    setPage(0);
+  }, [metric, timeframe]);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -136,21 +144,21 @@ export default function SeoSummaryPage() {
   // mount load and the manual Refresh button issue the same queries.
   const fetchAll = useCallback(async () => {
     const [v, c, w, e] = await Promise.all([
-      supabaseSelect<VisitRow>(
+      supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        `select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        "select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc",
       ),
-      supabaseSelect<ClickRow>(
+      supabaseSelectAll<ClickRow>(
         "outbound_clicks",
-        `select=created_at,session_id,vault_slug,source_page,source,country,device_type&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        "select=created_at,session_id,vault_slug,source_page,source,country,device_type&order=created_at.desc",
       ),
       supabaseSelectAll<ConnRow>(
         "wallet_connections_prod",
         "select=wallet_address,connected_at,session_id&order=connected_at.desc",
       ),
-      supabaseSelect<EventRow>(
+      supabaseSelectAll<EventRow>(
         "vault_events_prod",
-        `select=block_timestamp,event_type,wallet_address,vault_address,vault_slug,chain,tx_hash&event_type=in.(deposit,withdraw)&order=block_timestamp.desc&limit=${FETCH_LIMIT}`,
+        "select=block_timestamp,event_type,wallet_address,vault_address,vault_slug,chain,tx_hash&event_type=in.(deposit,withdraw)&order=block_timestamp.desc",
       ),
     ]);
     return { v, c, w, e };
@@ -184,6 +192,7 @@ export default function SeoSummaryPage() {
       setClicks(c);
       setConns(w);
       setEvents(e);
+      setPage(0);
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -481,12 +490,34 @@ export default function SeoSummaryPage() {
             refreshing={refreshing}
           />
 
-          <SeoSessionTable
-            sessions={visibleSessions.slice(0, SEO_DISPLAY_LIMIT)}
-            metricLabel={metricLabel}
-            expanded={expanded}
-            onToggle={toggle}
-          />
+          {(() => {
+            const totalPages = Math.max(
+              1,
+              Math.ceil(visibleSessions.length / SEO_ROWS_PER_PAGE),
+            );
+            const safePage = Math.min(page, totalPages - 1);
+            const pageSessions = visibleSessions.slice(
+              safePage * SEO_ROWS_PER_PAGE,
+              safePage * SEO_ROWS_PER_PAGE + SEO_ROWS_PER_PAGE,
+            );
+            return (
+              <>
+                <SeoSessionTable
+                  sessions={pageSessions}
+                  metricLabel={metricLabel}
+                  expanded={expanded}
+                  onToggle={toggle}
+                />
+                <TablePager
+                  page={safePage}
+                  totalPages={totalPages}
+                  totalRows={visibleSessions.length}
+                  onPage={setPage}
+                  unit="sessions"
+                />
+              </>
+            );
+          })()}
         </>
       )}
     </div>
@@ -664,9 +695,8 @@ function SeoSessionTable({
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">{metricLabel} sessions</h2>
           <span className="uni-hub-section-meta">
-            {sessions.length.toLocaleString("en-US")} session
-            {sessions.length === 1 ? "" : "s"} · one row each, expand to see
-            its actions
+            one row per session · expand to see its actions · full history,
+            25 per page
           </span>
         </div>
       </header>
