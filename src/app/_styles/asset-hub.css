@@ -1360,6 +1360,11 @@ body:has(.uni-hub-test) {
 /* "(?)" info tooltip next to a page title. Hidden by default; revealed
    only on the mobile control-room layout (.lf-page) where the full
    description paragraph is hidden. Opens on hover + on tap (focus). */
+.uni-hub-test.lf-page .uni-hub-h1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
 .uni-hub-test .lf-infotip {
   position: relative;
   display: none;
@@ -1415,6 +1420,10 @@ body:has(.uni-hub-test) {
   .uni-hub-test.lf-page .uni-hub-section-head { margin-bottom: 12px; }
 
   .uni-hub-test.lf-page .uni-hub-stats {
+    display: grid !important;
+    /* Beat the generic 2-col / 1-col !important rules at narrow widths:
+       the three funnel boxes stay side by side at 33/33/33. */
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 7px;
     margin-bottom: 18px !important;
   }
