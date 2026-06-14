@@ -872,6 +872,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         {loading ? (
           <div className="uni-hub-empty">Loading feed…</div>
         ) : (
+          <>
           <div className="lf-scroll">
             <div className="uni-hub-table lf-table">
               <div className="uni-hub-thead" style={{ gridTemplateColumns: FEED_COLS }}>
@@ -907,13 +908,14 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 )}
               </div>
             </div>
-            <TablePager
-              page={safePage}
-              totalPages={totalPages}
-              totalRows={streamRows.length}
-              onPage={setPage}
-            />
           </div>
+          <TablePager
+            page={safePage}
+            totalPages={totalPages}
+            totalRows={streamRows.length}
+            onPage={setPage}
+          />
+          </>
         )}
       </section>
     </div>
