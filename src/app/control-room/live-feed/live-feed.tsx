@@ -36,6 +36,7 @@ import {
 } from "@/lib/channels";
 import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
+import { InfoTip } from "@/components/admin/info-tip";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
@@ -783,20 +784,20 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return slug ?? (address ? shortenAddress(address) : "—");
   }
 
+  const description =
+    "The heart of Harvest activity, newest first: front-page views, [View strategy] clicks into the app, and on-chain deposits and withdrawals. On-chain events are attributed back to the session that drove them, so a deposit from a wallet that connected through the index reads as Homepage; one with no tracked session reads as Direct.";
+
   return (
-    <div className="uni-hub-test">
+    <div className="uni-hub-test lf-page">
       <header className="uni-hub-hero aq-hero-slim aq-hero-fullwidth">
         <div className="uni-hub-hero-headline">
           <div style={{ width: "100%" }}>
-            <h1 className="uni-hub-h1">Live Feed</h1>
-            <p className="uni-hub-sub aq-sub-full">
-              The heart of Harvest activity, newest first: front-page views,
-              [View strategy] clicks into the app, and on-chain deposits and
-              withdrawals. On-chain events are attributed back to the session
-              that drove them, so a deposit from a wallet that connected
-              through the index reads as Homepage; one with no tracked session
-              reads as Direct.
-            </p>
+            <h1 className="uni-hub-h1">
+              Live Feed
+              <InfoTip label="About Live Feed">{description}</InfoTip>
+              {realEmpty && <span className="aq-sample-badge">sample</span>}
+            </h1>
+            <p className="uni-hub-sub aq-sub-full">{description}</p>
           </div>
         </div>
       </header>
@@ -804,10 +805,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       <section className="uni-hub-section" style={{ marginTop: 28 }}>
         <header className="uni-hub-section-head">
           <div className="aq-section-head-left">
-            <h2 className="uni-hub-section-title">
-              Site &amp; app activity
-              {realEmpty && <span className="aq-sample-badge">sample</span>}
-            </h2>
+            <h2 className="uni-hub-section-title">Site &amp; app activity</h2>
             <span className="uni-hub-section-meta">
               {streamRows.length.toLocaleString("en-US")}
               {filtered.length === items.length ? "" : " filtered"} rows

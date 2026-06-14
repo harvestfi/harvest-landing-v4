@@ -22,6 +22,7 @@ import {
 } from "@/components/admin/timeframe-selector";
 import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
+import { InfoTip } from "@/components/admin/info-tip";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import { supabaseSelectAll } from "@/lib/supabase";
@@ -558,24 +559,20 @@ export default function SeoSummaryPage() {
   }
   const metricLabel = METRIC_OPTIONS.find((o) => o.value === metric)!.label;
 
+  const description =
+    "The search funnel at a glance: of the people the index acquired from a search engine (Google, Bing, DuckDuckGo), how many crossed into app.harvest.finance and how many deposited. Every stage, the chart, and the table below are scoped to the same SEO sessions. The table lists one row per session; expand a row to see that session's actions.";
+
   return (
-    <div className="uni-hub-test">
+    <div className="uni-hub-test lf-page">
       <header className="uni-hub-hero aq-hero-slim aq-hero-fullwidth">
         <div className="uni-hub-hero-headline">
           <div style={{ width: "100%" }}>
             <h1 className="uni-hub-h1">
               SEO Summary
+              <InfoTip label="About SEO Summary">{description}</InfoTip>
               {realEmpty && <span className="aq-sample-badge">sample</span>}
             </h1>
-            <p className="uni-hub-sub aq-sub-full">
-              The search funnel at a glance: of the people the index acquired
-              from a search engine (Google, Bing, DuckDuckGo), how many crossed
-              into app.harvest.finance and how many deposited. Every stage, the
-              chart, and the table below are scoped to the same SEO sessions.
-              The table lists one row per session and follows the metric toggle,
-              so its row count always matches the number above; expand a row to
-              see that session's actions.
-            </p>
+            <p className="uni-hub-sub aq-sub-full">{description}</p>
           </div>
         </div>
       </header>
@@ -722,9 +719,7 @@ function FunnelStat({
     <div className="uni-hub-stat">
       <div className="uni-hub-stat-label">{label}</div>
       <div className="uni-hub-stat-value">{value.toLocaleString("en-US")}</div>
-      <div style={{ marginTop: 4, fontSize: 12, color: "var(--uni-ink-3)" }}>
-        {sub}
-      </div>
+      <div className="uni-hub-stat-sub">{sub}</div>
     </div>
   );
 }
