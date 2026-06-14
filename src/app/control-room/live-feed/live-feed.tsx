@@ -38,6 +38,7 @@ import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
 import { InfoTip } from "@/components/admin/info-tip";
 import { RefreshButton } from "@/components/admin/refresh-button";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import "../../_styles/asset-hub.css";
@@ -179,7 +180,7 @@ const SESSION_GAP_MS = 60 * 60 * 1000;
 // the operator asked for max history depth, navigated by the pager.
 const ROWS_PER_PAGE = 25;
 const FEED_COLS =
-  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 84px 54px";
+  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 96px 128px 84px 54px";
 
 // Source-group toggle for the Stream filter. Collapses the many per-channel
 // names into the buckets an operator reasons about. "Referral" isolates real
@@ -769,6 +770,33 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     });
   }, [filtered]);
 
+  // Earliest deposit per wallet across the whole stream (sample or
+  // real), for the New / Existing classification.
+  const firstDepTs = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const it of items) {
+      if (it.kind === "event" && it.eventType === "deposit" && it.wallet) {
+        const w = it.wallet.toLowerCase();
+        const t = new Date(it.time).getTime();
+        const prev = m.get(w);
+        if (prev === undefined || t < prev) m.set(w, t);
+      }
+    }
+    return m;
+  }, [items]);
+
+  // Existing = the wallet held a Harvest balance (a deposit predating
+  // this row's time); New = no prior balance (incl. a first deposit made
+  // now). No wallet -> no classification.
+  const statusFor = useCallback(
+    (wallet: string | null, timeMs: number): "new" | "existing" | null => {
+      if (!wallet) return null;
+      const fd = firstDepTs.get(wallet.toLowerCase());
+      return fd !== undefined && fd < timeMs ? "existing" : "new";
+    },
+    [firstDepTs],
+  );
+
   const loading = !loaded && !err;
 
   const totalPages = Math.max(1, Math.ceil(streamRows.length / ROWS_PER_PAGE));
@@ -880,6 +908,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 <span className="uni-hub-th">Event</span>
                 <span className="uni-hub-th">Product / Page</span>
                 <span className="uni-hub-th">Device</span>
+                <span className="uni-hub-th lf-status-cell">New / Existing</span>
                 <span className="uni-hub-th">Wallet</span>
                 <span className="uni-hub-th lf-networth-cell">Net worth</span>
                 <span className="uni-hub-th">Tx</span>
@@ -894,6 +923,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                       key={row.item.id}
                       item={row.item}
                       productLabel={productLabel}
+                      statusFor={statusFor}
                     />
                   ) : (
                     <SessionGroupRow
@@ -901,6 +931,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                       group={row.group}
                       expanded={expandedClusters.has(row.group.clusterId)}
                       onToggle={() => toggleCluster(row.group.clusterId)}
+                      statusFor={statusFor}
                     />
                   ),
                 )}
@@ -936,9 +967,11 @@ type ProductLabel = (slug: string | null, address?: string) => string;
 function FeedRow({
   item,
   productLabel,
+  statusFor,
 }: {
   item: FeedItem;
   productLabel: ProductLabel;
+  statusFor: (wallet: string | null, timeMs: number) => "new" | "existing" | null;
 }) {
   const [open, setOpen] = useState(false);
   const productNode =
@@ -1037,6 +1070,9 @@ function FeedRow({
       <span className="uni-hub-cell lf-device-cell" data-label="Device">
         <DeviceIcon device={item.device} />
       </span>
+      <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
+        <StatusBadge status={statusFor(item.wallet ?? null, new Date(item.time).getTime())} />
+      </span>
       <span className="uni-hub-cell" data-label="Wallet">
         {item.wallet ? (
           <WalletLabel
@@ -1082,6 +1118,9 @@ function FeedRow({
         <span className="uni-hub-cell lf-product" data-label="Product / Page">
           {productNode}
         </span>
+        {item.wallet && (
+          <WalletLabel address={item.wallet} title={item.wallet} />
+        )}
       </div>
     )}
     </>
@@ -1095,10 +1134,12 @@ function SessionGroupRow({
   group,
   expanded,
   onToggle,
+  statusFor,
 }: {
   group: VisitGroup;
   expanded: boolean;
   onToggle: () => void;
+  statusFor: (wallet: string | null, timeMs: number) => "new" | "existing" | null;
 }) {
   return (
     <>
@@ -1159,6 +1200,9 @@ function SessionGroupRow({
         <span className="uni-hub-cell lf-device-cell" data-label="Device">
           <DeviceIcon device={group.device} />
         </span>
+        <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
+          <StatusBadge status={statusFor(group.wallet, new Date(group.time).getTime())} />
+        </span>
         <span className="uni-hub-cell" data-label="Wallet">
           {group.wallet ? (
             <WalletLabel address={group.wallet} />
@@ -1212,6 +1256,9 @@ function SessionGroupRow({
             </span>
             <span className="uni-hub-cell lf-device-cell" data-label="Device">
               <DeviceIcon device={p.device} />
+            </span>
+            <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
+              <span className="lf-dim">—</span>
             </span>
             <span className="uni-hub-cell" data-label="Wallet">
               <span className="lf-dim">—</span>

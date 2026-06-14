@@ -24,6 +24,7 @@ import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
 import { InfoTip } from "@/components/admin/info-tip";
 import { RefreshButton } from "@/components/admin/refresh-button";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import { supabaseSelectAll } from "@/lib/supabase";
 import { TablePager } from "@/components/admin/table-pager";
@@ -86,7 +87,7 @@ const SEO_ROWS_PER_PAGE = 25;
 // Same column rhythm as the Live Feed stream so the two read alike
 // (Time, Source, Country, Stage, Activity, Device, Wallet, Tx).
 const SEO_FEED_COLS =
-  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 84px 54px";
+  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 96px 128px 84px 54px";
 
 // One action within a session (a visit, click, or on-chain event).
 interface SeoAction {
@@ -109,6 +110,7 @@ interface SeoSession {
   srcDomain: string | null;
   wallet: string | null;
   netWorth: number | null;
+  status: "new" | "existing" | null;
   firstVisitMs: number;
   firstClickMs: number; // Infinity if it never clicked into the app
   firstDepositMs: number; // Infinity if it never deposited
@@ -211,6 +213,8 @@ function buildSampleSeoSessions(): {
       srcDomain: dom[seoName],
       wallet,
       netWorth: wallet ? worths[i % worths.length] : null,
+      // Mix of returning vs first-time for the demo.
+      status: !wallet ? null : i % 3 === 0 ? "existing" : "new",
       firstVisitMs,
       firstClickMs,
       firstDepositMs,
@@ -477,6 +481,20 @@ export default function SeoSummaryPage() {
       });
     }
 
+    // Earliest deposit per wallet (across all history), for New /
+    // Existing: a session is Existing if its wallet deposited before the
+    // session's first visit, New otherwise.
+    const firstDepByWallet = new Map<string, number>();
+    for (const e of events!) {
+      if (e.event_type !== "deposit") continue;
+      const addr = (e.wallet_address || "").toLowerCase();
+      if (!addr) continue;
+      const ms = new Date(e.block_timestamp).getTime();
+      if (!Number.isFinite(ms)) continue;
+      const prev = firstDepByWallet.get(addr);
+      if (prev === undefined || ms < prev) firstDepByWallet.set(addr, ms);
+    }
+
     const sessions: SeoSession[] = [];
     let oldest = Infinity;
     for (const [id, a] of acc) {
@@ -488,6 +506,12 @@ export default function SeoSummaryPage() {
         sessionWallet.get(id) ??
         a.actions.find((x) => x.wallet)?.wallet ??
         null;
+      const fd = wallet ? firstDepByWallet.get(wallet.toLowerCase()) : undefined;
+      const status: "new" | "existing" | null = !wallet
+        ? null
+        : fd !== undefined && fd < a.firstVisitMs
+          ? "existing"
+          : "new";
       sessions.push({
         sessionId: id,
         seoName: a.seoName,
@@ -496,6 +520,7 @@ export default function SeoSummaryPage() {
         srcDomain: a.srcDomain,
         wallet,
         netWorth: wallet ? walletBalance.get(wallet.toLowerCase()) ?? null : null,
+        status,
         firstVisitMs: a.firstVisitMs,
         firstClickMs: a.firstClickMs,
         firstDepositMs: a.firstDepositMs,
@@ -882,6 +907,7 @@ function SeoSessionTable({
             <span className="uni-hub-th">Stage</span>
             <span className="uni-hub-th">Activity</span>
             <span className="uni-hub-th">Device</span>
+            <span className="uni-hub-th lf-status-cell">New / Existing</span>
             <span className="uni-hub-th">Wallet</span>
             <span className="uni-hub-th lf-networth-cell">Net worth</span>
             <span className="uni-hub-th">Tx</span>
@@ -986,6 +1012,9 @@ function SessionRows({
         <span className="uni-hub-cell lf-device-cell" data-label="Device">
           <DeviceIcon device={s.device} />
         </span>
+        <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
+          <StatusBadge status={s.status} />
+        </span>
         <span className="uni-hub-cell" data-label="Wallet">
           {s.wallet ? (
             <WalletLabel address={s.wallet} />
@@ -1006,6 +1035,12 @@ function SessionRows({
           <span className="lf-dim">—</span>
         </span>
       </div>
+      {isOpen && s.wallet && (
+        <div className="uni-hub-row lf-row-child lf-detail-row">
+          <span className="lf-detail-time">Wallet</span>
+          <WalletLabel address={s.wallet} title={s.wallet} />
+        </div>
+      )}
       {isOpen &&
         s.actions.map((a) => (
           <div
@@ -1062,6 +1097,9 @@ function SessionRows({
               )}
             </span>
             <span className="uni-hub-cell lf-device-cell" data-label="Device">
+              <span className="lf-dim">—</span>
+            </span>
+            <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
               <span className="lf-dim">—</span>
             </span>
             <span className="uni-hub-cell" data-label="Wallet">
