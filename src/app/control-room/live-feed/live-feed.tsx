@@ -1118,9 +1118,6 @@ function FeedRow({
         <span className="uni-hub-cell lf-product" data-label="Product / Page">
           {productNode}
         </span>
-        {item.wallet && (
-          <WalletLabel address={item.wallet} title={item.wallet} />
-        )}
       </div>
     )}
     </>
