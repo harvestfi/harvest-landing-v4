@@ -233,6 +233,7 @@ export default function SeoSummaryPage() {
   const [err, setErr] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
   const [metric, setMetric] = useState<Metric>("acquired");
+  const [engine, setEngine] = useState<string>("all");
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
@@ -510,6 +511,15 @@ export default function SeoSummaryPage() {
     return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
   }, [loaded, realEmpty, visits, clicks, conns, events]);
 
+  // Search-engine options + the engine-filtered base set every funnel
+  // output reads from (stats, chart, table), mirroring the Live Feed's
+  // source filter.
+  const engineOptions = Array.from(
+    new Set(sessions.map((s) => s.seoName)),
+  ).sort();
+  const enginedSessions =
+    engine === "all" ? sessions : sessions.filter((s) => s.seoName === engine);
+
   const days = resolveDays(timeframe, oldestMs);
   const now = Date.now();
   const inWindow = (ms: number) => {
@@ -526,7 +536,7 @@ export default function SeoSummaryPage() {
     return s.deposited ? s.firstDepositMs : null;
   };
   const countFor = (m: Metric) =>
-    sessions.filter((s) => {
+    enginedSessions.filter((s) => {
       const ts = stageOf(s, m);
       return ts !== null && inWindow(ts);
     }).length;
@@ -540,7 +550,7 @@ export default function SeoSummaryPage() {
   // Chart series + table list, both for the selected metric and window.
   const series: number[] = [];
   const visibleSessions: SeoSession[] = [];
-  for (const s of sessions) {
+  for (const s of enginedSessions) {
     const ts = stageOf(s, metric);
     if (ts === null || !inWindow(ts)) continue;
     series.push(ts);
@@ -607,6 +617,53 @@ export default function SeoSummaryPage() {
             />
           </div>
 
+          {/* Filter bar in the Live Feed register: Refresh + iconed
+              dropdowns (globe = search engine, funnel = funnel stage).
+              The stage dropdown drives the chart + table; the engine
+              dropdown scopes the whole funnel to one search source. */}
+          <div className="lf-filterbar">
+            <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+            <label className="lf-filter" aria-label="Search engine filter">
+              <span className="lf-filter-icon" aria-hidden="true">
+                <EngineFilterIcon />
+              </span>
+              <select
+                className="lf-select lf-select-iconed"
+                value={engine}
+                onChange={(e) => {
+                  setEngine(e.target.value);
+                  setPage(0);
+                }}
+              >
+                <option value="all">All engines</option>
+                {engineOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="lf-filter" aria-label="Funnel stage filter">
+              <span className="lf-filter-icon" aria-hidden="true">
+                <StageFilterIcon />
+              </span>
+              <select
+                className="lf-select lf-select-iconed"
+                value={metric}
+                onChange={(e) => {
+                  setMetric(e.target.value as Metric);
+                  setPage(0);
+                }}
+              >
+                {METRIC_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           <ChartSection
             series={series}
             days={days}
@@ -616,13 +673,6 @@ export default function SeoSummaryPage() {
               setTimeframe(tf);
               setPage(0);
             }}
-            metric={metric}
-            onMetricChange={(m) => {
-              setMetric(m);
-              setPage(0);
-            }}
-            onRefresh={handleRefresh}
-            refreshing={refreshing}
           />
 
           {(() => {
@@ -679,26 +729,38 @@ function FunnelStat({
   );
 }
 
+// Globe glyph for the search-engine filter.
+function EngineFilterIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  );
+}
+
+// Funnel glyph for the funnel-stage filter.
+function StageFilterIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 4h18l-7 8v6l-4 2v-8z" />
+    </svg>
+  );
+}
+
 function ChartSection({
   series,
   days,
   metricLabel,
   timeframe,
   onTimeframeChange,
-  metric,
-  onMetricChange,
-  onRefresh,
-  refreshing,
 }: {
   series: number[];
   days: number;
   metricLabel: string;
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
-  metric: Metric;
-  onMetricChange: (m: Metric) => void;
-  onRefresh: () => void;
-  refreshing: boolean;
 }) {
   const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
     null,
@@ -745,30 +807,8 @@ function ChartSection({
             {peak.toLocaleString("en-US")}/day
           </span>
         </div>
-        <div className="aq-head-controls">
-          <RefreshButton onClick={onRefresh} refreshing={refreshing} />
-          <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
-        </div>
+        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
-
-      <div
-        className="aq-timeframe"
-        role="group"
-        aria-label="Funnel metric"
-        style={{ marginBottom: 12 }}
-      >
-        {METRIC_OPTIONS.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            className={`aq-timeframe-tab${metric === o.value ? " active" : ""}`}
-            aria-pressed={metric === o.value}
-            onClick={() => onMetricChange(o.value)}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
 
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">
@@ -914,7 +954,7 @@ function SessionRows({
           title={`session ${s.sessionId}`}
         >
           <Chevron />
-          {relativeTimeMs(s.latestMs)}
+          <TimeLabel ms={s.latestMs} />
         </span>
         <span className="uni-hub-cell" data-label="Source">
           <span
@@ -983,7 +1023,8 @@ function SessionRows({
               data-label="Time"
               title={formatTime(a.time)}
             >
-              {relativeTime(a.time)}
+              <span className="lf-lbl-full">{relativeTime(a.time)}</span>
+              <span className="lf-lbl-short">{relativeTime(a.time, true)}</span>
             </span>
             <span className="uni-hub-cell" data-label="Source">
               <span className="lf-dim">—</span>
@@ -1156,12 +1197,20 @@ function formatTime(iso: string): string {
   }
 }
 
-function relativeTimeMs(ms: number): string {
-  if (!Number.isFinite(ms)) return "—";
-  return relativeTime(new Date(ms).toISOString());
+function formatDateOnly(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
 }
 
-function relativeTime(iso: string): string {
+// With dateOnly, rows past 24h show just the date (no hour) - used for
+// the tight mobile rows; desktop keeps the full timestamp + title.
+function relativeTime(iso: string, dateOnly = false): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return iso;
   const diffMs = Date.now() - then;
@@ -1170,5 +1219,17 @@ function relativeTime(iso: string): string {
   if (min < 60) return `${min}m`;
   const hr = Math.floor(min / 60);
   if (hr < 24) return `${hr}h`;
-  return formatTime(iso);
+  return dateOnly ? formatDateOnly(iso) : formatTime(iso);
+}
+
+// Full timestamp on desktop, date-only past 24h on the mobile rows.
+function TimeLabel({ ms }: { ms: number }) {
+  if (!Number.isFinite(ms)) return <span className="lf-dim">—</span>;
+  const iso = new Date(ms).toISOString();
+  return (
+    <>
+      <span className="lf-lbl-full">{relativeTime(iso)}</span>
+      <span className="lf-lbl-short">{relativeTime(iso, true)}</span>
+    </>
+  );
 }
