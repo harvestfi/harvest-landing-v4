@@ -23,6 +23,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelectAll } from "@/lib/supabase";
+import { formatTVL } from "@/lib/format";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
@@ -89,6 +90,7 @@ type FeedItem =
       pagePath: string;
       hsid: string | null;
       wallet: string | null;
+      netWorth: number | null;
     }
   | {
       kind: "click";
@@ -103,6 +105,7 @@ type FeedItem =
       targetUrl: string;
       hsid: string | null;
       wallet: string | null;
+      netWorth: number | null;
     }
   | {
       kind: "event";
@@ -121,6 +124,7 @@ type FeedItem =
       vaultAddress: string;
       chain: string;
       tx: string;
+      netWorth: number | null;
     };
 
 type VisitItem = Extract<FeedItem, { kind: "visit" }>;
@@ -137,6 +141,7 @@ interface VisitGroup {
   device: string | null;
   srcDomain: string | null;
   wallet: string | null;
+  netWorth: number | null;
   pages: VisitItem[]; // newest first
 }
 
@@ -172,7 +177,8 @@ const SESSION_GAP_MS = 60 * 60 * 1000;
 // the data does, then rendered 25 rows per page. No fetch/display caps -
 // the operator asked for max history depth, navigated by the pager.
 const ROWS_PER_PAGE = 25;
-const FEED_COLS = "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 54px";
+const FEED_COLS =
+  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 84px 54px";
 
 // Source-group toggle for the Stream filter. Collapses the many per-channel
 // names into the buckets an operator reasons about. "Referral" isolates real
@@ -192,27 +198,8 @@ const SOURCE_GROUPS: ReadonlyArray<{ value: SourceGroup; label: string }> = [
 // @/lib/channels so both feeds bucket sources identically.
 
 // ── Sample fallback (only when every real source is empty) ──────────
-// The three `sid: "sample-hsid-tour"` visits share one session id, so
-// the demo stream shows a collapsed "Session · 3 pages" row that
-// expands into its visited URLs - the same grouping live data gets.
-const SAMPLE_VISIT_SEED: ReadonlyArray<{ page: string; source: string; country: string; minsAgo: number; sid?: string }> = [
-  { page: "/", source: "https://www.google.com/", country: "US", minsAgo: 1 },
-  { page: "/weth-autopilot-base", source: "chatgpt.com", country: "GB", minsAgo: 5, sid: "sample-hsid-tour" },
-  { page: "/usdc", source: "chatgpt.com", country: "GB", minsAgo: 7, sid: "sample-hsid-tour" },
-  { page: "/eth", source: "chatgpt.com", country: "GB", minsAgo: 9, sid: "sample-hsid-tour" },
-  { page: "/arbitrum", source: "https://t.co/", country: "BR", minsAgo: 33 },
-  { page: "/btc", source: "https://www.reddit.com/", country: "IN", minsAgo: 70 },
-  { page: "/methodology", source: "perplexity.ai", country: "CA", minsAgo: 150 },
-];
-const SAMPLE_EVENT_SEED: ReadonlyArray<{ slug: string; chain: string; type: "deposit" | "withdraw"; wallet: string; channel: string; country: string; minsAgo: number }> = [
-  { slug: "weth-autopilot-base", chain: "Base", type: "deposit", wallet: "0x417c8e123e5d0f3e0a0c0ee171606e61ccb637df", channel: "Homepage", country: "PL", minsAgo: 3 },
-  { slug: "usdc-aerodrome-aero-base", chain: "Base", type: "deposit", wallet: "0x8a3fce21b9d47a0c6f5e2d18b4c7a90e3f1d6b24", channel: "Google", country: "US", minsAgo: 28 },
-  { slug: "usdc-hypurr-hyperevm", chain: "HyperEVM", type: "withdraw", wallet: "0xa07f3c91e6b2d8540c19a3f7b08e2d45c6019e8b", channel: "Direct", country: "DE", minsAgo: 96 },
-];
-const SAMPLE_CLICK_SEED: ReadonlyArray<{ slug: string; source: string; country: string; minsAgo: number }> = [
-  { slug: "weth-autopilot-base", source: "(direct)", country: "PL", minsAgo: 4 },
-  { slug: "usdc-aerodrome-aero-base", source: "https://www.google.com/", country: "US", minsAgo: 30 },
-];
+// The demo stream is generated in the items memo (see realEmpty); these
+// are the only shared seed values it reuses.
 const SAMPLE_TX: readonly string[] = [
   "0x9f2c1ab73e08d45c6a1f90b3e27d4c85a06f1e93b2d7c40859a1e6f3c08d24b71",
   "0x3b7e0d92a14c6f85309e1b4a7c0d28f6e5a9c1340b8d6e2f7019a4c83e6d50f29",
@@ -435,17 +422,39 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return m;
   }, [connections]);
 
+  // wallet (lowercased) -> latest captured net worth (DeBank USD balance
+  // recorded at connect). Most-recent non-null capture wins, so the
+  // Net worth column reflects the wallet's current size, not a stale one.
+  const walletBalance = useMemo(() => {
+    const bal = new Map<string, number>();
+    const at = new Map<string, number>();
+    for (const w of connections ?? []) {
+      const a = (w.wallet_address || "").toLowerCase();
+      if (!a || w.balance == null || !Number.isFinite(w.balance)) continue;
+      const t = new Date(w.connected_at).getTime();
+      const prev = at.get(a);
+      if (prev === undefined || t > prev) {
+        at.set(a, t);
+        bal.set(a, w.balance);
+      }
+    }
+    return bal;
+  }, [connections]);
+
   // Resolve an on-chain event's wallet back to its acquisition source.
   function resolveWallet(wallet: string, atMs: number): {
     channel: string;
     country: string | null;
     device: string | null;
     srcDomain: string | null;
+    netWorth: number | null;
     attributed: boolean;
     upstream: string | null;
     hsid: string | null;
   } {
     const link = pickConnection(wallet, atMs);
+    const netWorth =
+      link?.balance ?? walletBalance.get((wallet || "").toLowerCase()) ?? null;
     const ft = link?.session ? sessionFirstTouch.get(link.session) : undefined;
     if (!ft) {
       // No web session ties this wallet to us: no identifiable acquisition
@@ -455,6 +464,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         country: null,
         device: null,
         srcDomain: null,
+        netWorth,
         attributed: false,
         upstream: null,
         hsid: link?.session ?? null,
@@ -465,6 +475,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       country: ft.country,
       device: ft.device,
       srcDomain: ft.domain,
+      netWorth,
       attributed: true,
       upstream: classifyChannel(ft.source),
       hsid: link?.session ?? null,
@@ -473,106 +484,155 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
 
   const [activity, setActivity] = useState<ActivityFilter>("all");
   const [sourceFilter, setSourceFilter] = useState<SourceGroup>("all");
-  // Jump back to the newest page whenever the filter changes (the row
-  // set, and its page count, changes underneath the pager).
-  useEffect(() => {
-    setPage(0);
-  }, [activity, sourceFilter]);
 
   const items = useMemo<FeedItem[]>(() => {
     if (!loaded) return [];
     const now = Date.now();
 
     if (realEmpty) {
-      // Demo stream so the page isn't blank in a credential-less or
-      // brand-new environment. Marked "sample" in the header.
-      const sampleDevices = ["desktop", "mobile", "tablet"];
-      const sv: FeedItem[] = SAMPLE_VISIT_SEED.map((v, i) => ({
-        kind: "visit",
-        id: `sv-${i}`,
-        time: new Date(now - v.minsAgo * 60_000).toISOString(),
-        channel: classifyChannel(v.source),
-        country: v.country,
-        // Visits sharing a sid keep one device so the grouped session
-        // row reads coherently.
-        device: v.sid ? "mobile" : sampleDevices[i % sampleDevices.length],
-        srcDomain: sourceDomain(v.source),
-        pagePath: v.page,
-        hsid: v.sid ?? `sample-hsid-v${i}`,
-        wallet: null,
-      }));
-      const sc: FeedItem[] = SAMPLE_CLICK_SEED.map((c, i) => ({
-        kind: "click",
-        id: `sc-${i}`,
-        time: new Date(now - c.minsAgo * 60_000).toISOString(),
-        channel: appChannel(c.source),
-        country: c.country,
-        device: sampleDevices[i % sampleDevices.length],
-        srcDomain: sourceDomain(c.source),
-        vaultSlug: c.slug,
-        sourcePage: `/${c.slug}`,
-        targetUrl: "https://app.harvest.finance/",
-        hsid: `sample-hsid-c${i}`,
-        wallet: i === 0 ? "0xa56a2edcf9315e2cf98bd8d2b0a41a5eda3a09a2" : null,
-      }));
-      const se: FeedItem[] = SAMPLE_EVENT_SEED.map((s, i) => ({
-        kind: "event",
-        id: `se-${i}`,
-        time: new Date(now - s.minsAgo * 60_000).toISOString(),
-        channel: s.channel,
-        country: s.country,
-        device: sampleDevices[i % sampleDevices.length],
-        srcDomain: null,
-        attributed: s.channel !== "Direct",
-        upstream: s.channel,
-        hsid: s.channel === "Direct" ? null : `sample-hsid-e${i}`,
-        eventType: s.type,
-        wallet: s.wallet,
-        vaultSlug: s.slug,
-        vaultAddress: "0x0000000000000000000000000000000000000000",
-        chain: s.chain,
-        tx: SAMPLE_TX[i],
-      }));
-      return [...sv, ...sc, ...se].sort(
+      // Demo stream for credential-less / brand-new environments (marked
+      // "sample" in the header). Generated deterministically with enough
+      // volume + time depth (~100 rows across ~7 days) to exercise the
+      // pager, the >1-day date format, and the Net worth column.
+      const devs = ["desktop", "mobile", "tablet"];
+      const srcs = [
+        "https://www.google.com/", "chatgpt.com", "https://t.co/",
+        "https://www.reddit.com/", "perplexity.ai", "https://www.bing.com/",
+        "coingecko.com", "defiprime.com", "(direct)", "https://duckduckgo.com/",
+      ];
+      const countries = ["US", "GB", "DE", "PL", "BR", "IN", "CA", "FR", "NL", "SG"];
+      const pages = ["/", "/usdc", "/eth", "/btc", "/arbitrum", "/base", "/methodology", "/weth-autopilot-base"];
+      const slugs = ["weth-autopilot-base", "usdc-autopilot-base", "usdc-aerodrome-aero-base", "usdc-hypurr-hyperevm", "eth-clearstar-reactor-v2-base"];
+      const wallets = ["0x417c8e123e5d0f3e0a0c0ee171606e61ccb637df", "0x8a3fce21b9d47a0c6f5e2d18b4c7a90e3f1d6b24", "0xa07f3c91e6b2d8540c19a3f7b08e2d45c6019e8b", "0xa56a2edcf9315e2cf98bd8d2b0a41a5eda3a09a2", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"];
+      const worths: (number | null)[] = [4200, 18500, 142000, 1250000, 3400, 56000, 890000, null];
+      const out: FeedItem[] = [];
+      for (let i = 0; i < 70; i++) {
+        const src = srcs[i % srcs.length];
+        const wal = i % 4 === 0 ? wallets[i % wallets.length] : null;
+        out.push({
+          kind: "visit",
+          id: `sv-${i}`,
+          // Accelerating gap: ~1 min ago out to ~7 days, so plenty of
+          // rows cross the 24h boundary.
+          time: new Date(now - Math.round(1 + i * i * 2.1) * 60_000).toISOString(),
+          channel: classifyChannel(src),
+          country: countries[i % countries.length],
+          device: devs[i % devs.length],
+          srcDomain: sourceDomain(src),
+          pagePath: pages[i % pages.length],
+          hsid: `sample-hsid-v${i}`,
+          wallet: wal,
+          netWorth: wal ? worths[i % worths.length] : null,
+        });
+      }
+      // One multi-page session (collapses to an expandable row).
+      ["/weth-autopilot-base", "/usdc", "/eth"].forEach((page, k) =>
+        out.push({
+          kind: "visit",
+          id: `sv-tour-${k}`,
+          time: new Date(now - (5 + k * 2) * 60_000).toISOString(),
+          channel: classifyChannel("chatgpt.com"),
+          country: "GB",
+          device: "mobile",
+          srcDomain: "chatgpt.com",
+          pagePath: page,
+          hsid: "sample-hsid-tour",
+          wallet: null,
+          netWorth: null,
+        }),
+      );
+      for (let i = 0; i < 15; i++) {
+        const src = srcs[(i + 2) % srcs.length];
+        const wal = i % 3 === 0 ? wallets[i % wallets.length] : null;
+        const slug = slugs[i % slugs.length];
+        out.push({
+          kind: "click",
+          id: `sc-${i}`,
+          time: new Date(now - Math.round(3 + i * i * 9) * 60_000).toISOString(),
+          channel: appChannel(src),
+          country: countries[(i + 3) % countries.length],
+          device: devs[i % devs.length],
+          srcDomain: sourceDomain(src),
+          vaultSlug: slug,
+          sourcePage: `/${slug}`,
+          targetUrl: "https://app.harvest.finance/",
+          hsid: `sample-hsid-c${i}`,
+          wallet: wal,
+          netWorth: wal ? worths[(i + 1) % worths.length] : null,
+        });
+      }
+      const evChannels = ["Homepage", "Google", "Direct", "ChatGPT", "X / Twitter"];
+      const evChains = ["Base", "Ethereum", "Arbitrum", "HyperEVM"];
+      for (let i = 0; i < 12; i++) {
+        const ch = evChannels[i % evChannels.length];
+        out.push({
+          kind: "event",
+          id: `se-${i}`,
+          time: new Date(now - Math.round(20 + i * i * 60) * 60_000).toISOString(),
+          channel: ch,
+          country: countries[(i + 1) % countries.length],
+          device: devs[i % devs.length],
+          srcDomain: ch === "Google" ? "google.com" : null,
+          attributed: ch !== "Direct",
+          upstream: ch,
+          hsid: ch === "Direct" ? null : `sample-hsid-e${i}`,
+          eventType: i % 3 === 0 ? "withdraw" : "deposit",
+          wallet: wallets[i % wallets.length],
+          vaultSlug: slugs[i % slugs.length],
+          vaultAddress: "0x0000000000000000000000000000000000000000",
+          chain: evChains[i % evChains.length],
+          tx: SAMPLE_TX[i % SAMPLE_TX.length],
+          netWorth: worths[i % worths.length],
+        });
+      }
+      return out.sort(
         (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
       );
     }
 
     const merged: FeedItem[] = [
-      ...(visits ?? []).map((v, i) => ({
-        kind: "visit" as const,
-        id: `v-${v.session_id}-${v.created_at}-${i}`,
-        time: v.created_at,
-        channel: classifyChannel(v.source),
-        country: v.country,
-        device: v.device_type,
-        srcDomain: sourceDomain(v.referrer),
-        pagePath: v.page_path || "/",
-        hsid: v.session_id || null,
-        wallet: v.session_id
+      ...(visits ?? []).map((v, i) => {
+        const wal = v.session_id
           ? sessionWallet.get(v.session_id)?.wallet ?? null
-          : null,
-      })),
-      ...(clicks ?? []).map((c, i) => ({
-        kind: "click" as const,
-        id: `c-${c.session_id}-${c.created_at}-${i}`,
-        time: c.created_at,
-        channel: appChannel(c.source),
-        country: c.country,
-        device: c.device_type,
-        // Clicks carry no referrer; fall back to the session's first
-        // visit domain so a click row still shows where it came from.
-        srcDomain: c.session_id
-          ? sessionFirstTouch.get(c.session_id)?.domain ?? null
-          : null,
-        vaultSlug: c.vault_slug,
-        sourcePage: c.source_page || "/",
-        targetUrl: c.target_url,
-        hsid: c.session_id || null,
-        wallet: c.session_id
+          : null;
+        return {
+          kind: "visit" as const,
+          id: `v-${v.session_id}-${v.created_at}-${i}`,
+          time: v.created_at,
+          channel: classifyChannel(v.source),
+          country: v.country,
+          device: v.device_type,
+          srcDomain: sourceDomain(v.referrer),
+          pagePath: v.page_path || "/",
+          hsid: v.session_id || null,
+          wallet: wal,
+          netWorth: wal ? walletBalance.get(wal) ?? null : null,
+        };
+      }),
+      ...(clicks ?? []).map((c, i) => {
+        const wal = c.session_id
           ? sessionWallet.get(c.session_id)?.wallet ?? null
-          : null,
-      })),
+          : null;
+        return {
+          kind: "click" as const,
+          id: `c-${c.session_id}-${c.created_at}-${i}`,
+          time: c.created_at,
+          channel: appChannel(c.source),
+          country: c.country,
+          device: c.device_type,
+          // Clicks carry no referrer; fall back to the session's first
+          // visit domain so a click row still shows where it came from.
+          srcDomain: c.session_id
+            ? sessionFirstTouch.get(c.session_id)?.domain ?? null
+            : null,
+          vaultSlug: c.vault_slug,
+          sourcePage: c.source_page || "/",
+          targetUrl: c.target_url,
+          hsid: c.session_id || null,
+          wallet: wal,
+          netWorth: wal ? walletBalance.get(wal) ?? null : null,
+        };
+      }),
       ...(dedupedEvents ?? []).map((e) => {
         const r = resolveWallet(
           e.wallet_address,
@@ -595,6 +655,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           vaultAddress: e.vault_address,
           chain: e.chain,
           tx: e.tx_hash,
+          netWorth: r.netWorth,
         };
       }),
     ];
@@ -677,6 +738,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           device: desc.find((v) => v.device)?.device ?? null,
           srcDomain: desc.find((v) => v.srcDomain)?.srcDomain ?? null,
           wallet: desc.find((v) => v.wallet)?.wallet ?? null,
+          netWorth: desc.find((v) => v.netWorth != null)?.netWorth ?? null,
           pages: desc,
         },
       });
@@ -768,7 +830,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             <select
               className="lf-select lf-select-iconed"
               value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value as SourceGroup)}
+              onChange={(e) => {
+                setSourceFilter(e.target.value as SourceGroup);
+                setPage(0);
+              }}
             >
               {SOURCE_GROUPS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -784,7 +849,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             <select
               className="lf-select lf-select-iconed"
               value={activity}
-              onChange={(e) => setActivity(e.target.value as ActivityFilter)}
+              onChange={(e) => {
+                setActivity(e.target.value as ActivityFilter);
+                setPage(0);
+              }}
             >
               {ACTIVITY_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -814,6 +882,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
                 <span className="uni-hub-th">Product / Page</span>
                 <span className="uni-hub-th">Device</span>
                 <span className="uni-hub-th">Wallet</span>
+                <span className="uni-hub-th lf-networth-cell">Net worth</span>
                 <span className="uni-hub-th">Tx</span>
               </div>
               <div className="uni-hub-tbody">
@@ -912,7 +981,7 @@ function FeedRow({
         data-label="Time"
         title={formatTime(item.time)}
       >
-        {relativeTime(item.time)}
+        <TimeLabel iso={item.time} />
       </span>
       <span className="uni-hub-cell" data-label="Source">
         <span
@@ -982,6 +1051,15 @@ function FeedRow({
           <span className="lf-dim">—</span>
         )}
       </span>
+      <span className="uni-hub-cell lf-networth-cell" data-label="Net worth">
+        {item.netWorth != null ? (
+          <span className="lf-mono" title={`$${Math.round(item.netWorth).toLocaleString("en-US")}`}>
+            {formatTVL(item.netWorth)}
+          </span>
+        ) : (
+          <span className="lf-dim">—</span>
+        )}
+      </span>
       <span className="uni-hub-cell" data-label="Tx">
         {item.kind === "event" ? (
           <a
@@ -1000,6 +1078,7 @@ function FeedRow({
     </div>
     {open && (
       <div className="uni-hub-row lf-row-child lf-detail-row">
+        <span className="lf-detail-time">{formatTime(item.time)}</span>
         <span className="uni-hub-cell lf-product" data-label="Product / Page">
           {productNode}
         </span>
@@ -1043,7 +1122,7 @@ function SessionGroupRow({
           title={formatTime(group.time)}
         >
           <Chevron />
-          {relativeTime(group.time)}
+          <TimeLabel iso={group.time} />
         </span>
         <span className="uni-hub-cell" data-label="Source">
           <span
@@ -1087,6 +1166,15 @@ function SessionGroupRow({
             <span className="lf-dim">—</span>
           )}
         </span>
+        <span className="uni-hub-cell lf-networth-cell" data-label="Net worth">
+          {group.netWorth != null ? (
+            <span className="lf-mono" title={`$${Math.round(group.netWorth).toLocaleString("en-US")}`}>
+              {formatTVL(group.netWorth)}
+            </span>
+          ) : (
+            <span className="lf-dim">—</span>
+          )}
+        </span>
         <span className="uni-hub-cell" data-label="Tx">
           <span className="lf-dim">—</span>
         </span>
@@ -1103,7 +1191,7 @@ function SessionGroupRow({
               data-label="Time"
               title={formatTime(p.time)}
             >
-              {relativeTime(p.time)}
+              <TimeLabel iso={p.time} />
             </span>
             <span className="uni-hub-cell" data-label="Source">
               <span className="lf-dim">—</span>
@@ -1126,6 +1214,9 @@ function SessionGroupRow({
               <DeviceIcon device={p.device} />
             </span>
             <span className="uni-hub-cell" data-label="Wallet">
+              <span className="lf-dim">—</span>
+            </span>
+            <span className="uni-hub-cell lf-networth-cell" data-label="Net worth">
               <span className="lf-dim">—</span>
             </span>
             <span className="uni-hub-cell" data-label="Tx">
@@ -1205,8 +1296,23 @@ function formatTime(iso: string): string {
   }
 }
 
-// "now", "Nm", "Nh" up to a day, then the absolute date.
-function relativeTime(iso: string): string {
+// Date without the time, e.g. "Jun 13".
+function formatDateOnly(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+// "now", "Nm", "Nh" up to a day, then the absolute timestamp. With
+// dateOnly, rows past 24h show just the date (no hour) - used for the
+// tight mobile rows; the exact hour stays available on tap (expanded
+// detail) and on desktop (full label + title).
+function relativeTime(iso: string, dateOnly = false): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return iso;
   const diffMs = Date.now() - then;
@@ -1215,7 +1321,18 @@ function relativeTime(iso: string): string {
   if (min < 60) return `${min}m`;
   const hr = Math.floor(min / 60);
   if (hr < 24) return `${hr}h`;
-  return formatTime(iso);
+  return dateOnly ? formatDateOnly(iso) : formatTime(iso);
+}
+
+// Time cell content: full timestamp on desktop, date-only past 24h on
+// the tight mobile rows (the <24h relative forms are identical on both).
+function TimeLabel({ iso }: { iso: string }) {
+  return (
+    <>
+      <span className="lf-lbl-full">{relativeTime(iso)}</span>
+      <span className="lf-lbl-short">{relativeTime(iso, true)}</span>
+    </>
+  );
 }
 
 // Direction arrow: deposit points in (down), withdraw points out (up).
