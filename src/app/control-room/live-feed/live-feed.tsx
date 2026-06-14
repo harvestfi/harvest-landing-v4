@@ -1071,7 +1071,10 @@ function FeedRow({
         <DeviceIcon device={item.device} />
       </span>
       <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
-        <StatusBadge status={statusFor(item.wallet ?? null, new Date(item.time).getTime())} />
+        <StatusBadge
+          status={statusFor(item.wallet ?? null, new Date(item.time).getTime())}
+          wallet={item.wallet ?? null}
+        />
       </span>
       <span className="uni-hub-cell" data-label="Wallet">
         {item.wallet ? (
@@ -1198,7 +1201,10 @@ function SessionGroupRow({
           <DeviceIcon device={group.device} />
         </span>
         <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
-          <StatusBadge status={statusFor(group.wallet, new Date(group.time).getTime())} />
+          <StatusBadge
+            status={statusFor(group.wallet, new Date(group.time).getTime())}
+            wallet={group.wallet}
+          />
         </span>
         <span className="uni-hub-cell" data-label="Wallet">
           {group.wallet ? (

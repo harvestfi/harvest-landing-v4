@@ -1020,7 +1020,7 @@ function SessionRows({
           <DeviceIcon device={s.device} />
         </span>
         <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
-          <StatusBadge status={s.status} />
+          <StatusBadge status={s.status} wallet={s.wallet} />
         </span>
         <span className="uni-hub-cell" data-label="Wallet">
           {s.wallet ? (
