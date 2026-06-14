@@ -26,6 +26,7 @@ import { RefreshButton } from "@/components/admin/refresh-button";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import { supabaseSelectAll } from "@/lib/supabase";
 import { TablePager } from "@/components/admin/table-pager";
+import { formatTVL } from "@/lib/format";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
@@ -58,6 +59,7 @@ interface ConnRow {
   wallet_address: string;
   connected_at: string;
   session_id: string | null;
+  balance: number | null;
 }
 interface EventRow {
   block_timestamp: string;
@@ -83,7 +85,7 @@ const SEO_ROWS_PER_PAGE = 25;
 // Same column rhythm as the Live Feed stream so the two read alike
 // (Time, Source, Country, Stage, Activity, Device, Wallet, Tx).
 const SEO_FEED_COLS =
-  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 54px";
+  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 84px 54px";
 
 // One action within a session (a visit, click, or on-chain event).
 interface SeoAction {
@@ -105,6 +107,7 @@ interface SeoSession {
   device: string | null;
   srcDomain: string | null;
   wallet: string | null;
+  netWorth: number | null;
   firstVisitMs: number;
   firstClickMs: number; // Infinity if it never clicked into the app
   firstDepositMs: number; // Infinity if it never deposited
@@ -126,11 +129,6 @@ export default function SeoSummaryPage() {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
-  // Reset to the first page when the visible session set changes (metric
-  // or timeframe toggle), so the pager never points past the last page.
-  useEffect(() => {
-    setPage(0);
-  }, [metric, timeframe]);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -154,7 +152,7 @@ export default function SeoSummaryPage() {
       ),
       supabaseSelectAll<ConnRow>(
         "wallet_connections_prod",
-        "select=wallet_address,connected_at,session_id&order=connected_at.desc",
+        "select=wallet_address,connected_at,session_id,balance&order=connected_at.desc",
       ),
       supabaseSelectAll<EventRow>(
         "vault_events_prod",
@@ -301,6 +299,9 @@ export default function SeoSummaryPage() {
     const sessionWalletT = new Map<string, number>();
     const walletSession = new Map<string, string>();
     const walletSessionT = new Map<string, number>();
+    // wallet -> latest captured net worth (DeBank USD balance at connect).
+    const walletBalance = new Map<string, number>();
+    const walletBalanceT = new Map<string, number>();
     for (const w of conns!) {
       if (!w.session_id) continue;
       const addr = (w.wallet_address || "").toLowerCase();
@@ -316,6 +317,13 @@ export default function SeoSummaryPage() {
       if (pw === undefined || t < pw) {
         walletSessionT.set(addr, t);
         walletSession.set(addr, w.session_id);
+      }
+      if (w.balance != null && Number.isFinite(w.balance)) {
+        const pb = walletBalanceT.get(addr);
+        if (pb === undefined || t > pb) {
+          walletBalanceT.set(addr, t);
+          walletBalance.set(addr, w.balance);
+        }
       }
     }
 
@@ -358,16 +366,18 @@ export default function SeoSummaryPage() {
       a.actions.sort(
         (x, y) => new Date(y.time).getTime() - new Date(x.time).getTime(),
       );
+      const wallet =
+        sessionWallet.get(id) ??
+        a.actions.find((x) => x.wallet)?.wallet ??
+        null;
       sessions.push({
         sessionId: id,
         seoName: a.seoName,
         country: a.country,
         device: a.device,
         srcDomain: a.srcDomain,
-        wallet:
-          sessionWallet.get(id) ??
-          a.actions.find((x) => x.wallet)?.wallet ??
-          null,
+        wallet,
+        netWorth: wallet ? walletBalance.get(wallet.toLowerCase()) ?? null : null,
         firstVisitMs: a.firstVisitMs,
         firstClickMs: a.firstClickMs,
         firstDepositMs: a.firstDepositMs,
@@ -483,9 +493,15 @@ export default function SeoSummaryPage() {
             days={days}
             metricLabel={metricLabel}
             timeframe={timeframe}
-            onTimeframeChange={setTimeframe}
+            onTimeframeChange={(tf) => {
+              setTimeframe(tf);
+              setPage(0);
+            }}
             metric={metric}
-            onMetricChange={setMetric}
+            onMetricChange={(m) => {
+              setMetric(m);
+              setPage(0);
+            }}
             onRefresh={handleRefresh}
             refreshing={refreshing}
           />
@@ -713,6 +729,7 @@ function SeoSessionTable({
             <span className="uni-hub-th">Activity</span>
             <span className="uni-hub-th">Device</span>
             <span className="uni-hub-th">Wallet</span>
+            <span className="uni-hub-th lf-networth-cell">Net worth</span>
             <span className="uni-hub-th">Tx</span>
           </div>
           <div className="uni-hub-tbody">
@@ -822,6 +839,15 @@ function SessionRows({
             <span className="lf-dim">—</span>
           )}
         </span>
+        <span className="uni-hub-cell lf-networth-cell" data-label="Net worth">
+          {s.netWorth != null ? (
+            <span className="lf-mono" title={`$${Math.round(s.netWorth).toLocaleString("en-US")}`}>
+              {formatTVL(s.netWorth)}
+            </span>
+          ) : (
+            <span className="lf-dim">—</span>
+          )}
+        </span>
         <span className="uni-hub-cell" data-label="Tx">
           <span className="lf-dim">—</span>
         </span>
@@ -884,6 +910,9 @@ function SessionRows({
               <span className="lf-dim">—</span>
             </span>
             <span className="uni-hub-cell" data-label="Wallet">
+              <span className="lf-dim">—</span>
+            </span>
+            <span className="uni-hub-cell lf-networth-cell" data-label="Net worth">
               <span className="lf-dim">—</span>
             </span>
             <span className="uni-hub-cell" data-label="Tx">

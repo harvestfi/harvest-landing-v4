@@ -2914,6 +2914,44 @@ body:has(.admin-shell) .foot {
   background: #ffffff;
 }
 
+/* === Admin is always light ==========================================
+   The control room is an internal operator surface and is pinned to the
+   light palette regardless of the site-wide dark-theme toggle. Light
+   global tokens are set on .admin-shell (a closer ancestor than :root,
+   so they win over :root[data-theme="dark"] for the whole admin subtree
+   without !important); the --uni-* ramp is re-asserted on the hub
+   wrapper under the dark selector with enough specificity to beat the
+   dark hub override; and the shell surfaces stay white. */
+.admin-shell {
+  color-scheme: light;
+  --bg: #fafaf9;
+  --bg-2: #f4f4f2;
+  --panel: #ffffff;
+  --line: #ebebe7;
+  --line-2: #e2e2dd;
+  --ink: #0a0a0a;
+  --ink-2: #2b2b2b;
+  --ink-3: #6b6b66;
+  --ink-4: #9a9a94;
+}
+:root[data-theme="dark"] .admin-shell .uni-hub-test {
+  --uni-bg: #ffffff;
+  --uni-card: #f1f5f4;
+  --uni-card-2: #ffffff;
+  --uni-ink: #191717;
+  --uni-ink-2: #32312b;
+  --uni-ink-3: #6e6c66;
+  --uni-line: #dddee0;
+  --uni-line-2: #ebebe7;
+  --uni-tint: rgba(25, 23, 23, 0.06);
+  --uni-tint-thin: rgba(25, 23, 23, 0.04);
+  --uni-tint-strong: rgba(25, 23, 23, 0.1);
+}
+:root[data-theme="dark"]:root html:has(.admin-shell),
+:root[data-theme="dark"]:root body:has(.admin-shell) {
+  background: #ffffff !important;
+}
+
 /* Hamburger top bar, drawer backdrop and the in-drawer close button are
    mobile-only; hidden on desktop where the rail is always visible. */
 .admin-mobilebar { display: none; }

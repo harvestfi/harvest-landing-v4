@@ -1690,6 +1690,9 @@ body:has(.uni-hub-test) {
     justify-self: center;
     justify-content: center;
   }
+  /* Net worth is a desktop-only column; the mobile grid is 8 fixed
+     tracks and the cell is removed from flow so it never claims one. */
+  .uni-hub-test .lf-table .lf-networth-cell { display: none; }
   /* Swap full labels for the abbreviated set. */
   .uni-hub-test .lf-table .lf-lbl-full { display: none; }
   .uni-hub-test .lf-table .lf-lbl-short { display: inline-flex; }
@@ -1783,8 +1786,19 @@ body:has(.uni-hub-test) {
     text-align: left;
   }
   /* Single-row detail line renders only on mobile (desktop already
-     shows the product inline). */
-  .uni-hub-test .lf-table .uni-hub-row.lf-detail-row { display: flex; }
+     shows the product inline). Carries the exact timestamp (the hour
+     that the collapsed row drops past 24h) + the page / product. */
+  .uni-hub-test .lf-table .uni-hub-row.lf-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .uni-hub-test .lf-table .lf-detail-time {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--uni-ink-3);
+  }
 }
 /* Under 540px the shell padding drops to 16px - keep the full-bleed
    pull in sync. */
