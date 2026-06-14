@@ -1673,14 +1673,15 @@ body:has(.uni-hub-test) {
      of neighbours' widths. !important because the desktop template is
      an inline style on the row. Products / pages are NOT inline here -
      the activity column is a bare count pill and the details appear
-     only when the row is expanded. */
+     only when the row is expanded. Nine tracks, matching desktop order:
+     time first, net worth second-to-last, tx last. */
   .uni-hub-test .lf-table .uni-hub-row {
     display: grid;
-    grid-template-columns: 38px 64px 16px 14px 24px 32px 56px 16px !important;
+    grid-template-columns: 34px 54px 15px 13px 22px 26px 50px 48px 14px !important;
     justify-content: space-between;
     gap: 0;
     align-items: center;
-    padding: 10px 12px;
+    padding: 10px 8px;
     min-width: 0;
     cursor: pointer;
   }
@@ -1690,15 +1691,13 @@ body:has(.uni-hub-test) {
     justify-self: center;
     justify-content: center;
   }
-  /* Net worth is a desktop-only column; the mobile grid is 8 fixed
-     tracks and the cell is removed from flow so it never claims one. */
-  .uni-hub-test .lf-table .lf-networth-cell { display: none; }
   /* Swap full labels for the abbreviated set. */
   .uni-hub-test .lf-table .lf-lbl-full { display: none; }
   .uni-hub-test .lf-table .lf-lbl-short { display: inline-flex; }
 
-  /* Column order per the operator spec (order-modified auto-placement):
-     time | source | device | country | event | activity | wallet | tx */
+  /* Column order: time stays first, net worth sits second-to-last
+     (before tx) exactly like desktop.
+     time | source | device | country | event | activity | wallet | NW | tx */
   .uni-hub-test .lf-table .lf-time { order: 1; }
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Source"] { order: 2; }
   .uni-hub-test .lf-table .lf-device-cell { order: 3; justify-content: center; }
@@ -1707,7 +1706,8 @@ body:has(.uni-hub-test) {
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Stage"] { order: 5; }
   .uni-hub-test .lf-table .lf-product { order: 6; }
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { order: 7; }
-  .uni-hub-test .lf-table .uni-hub-cell[data-label="Tx"] { order: 8; justify-content: center; }
+  .uni-hub-test .lf-table .lf-networth-cell { order: 8; justify-content: center; }
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Tx"] { order: 9; justify-content: center; }
 
   .uni-hub-test .lf-table .lf-time {
     font-size: 11px;
@@ -1716,9 +1716,9 @@ body:has(.uni-hub-test) {
   /* Source badge: one line, capped at its column track so long
      referral domains can't push the grid. */
   .uni-hub-test .lf-table .lf-badge {
-    font-size: 10.5px;
-    padding: 2px 7px;
-    max-width: 64px;
+    font-size: 10px;
+    padding: 2px 6px;
+    max-width: 54px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1750,7 +1750,9 @@ body:has(.uni-hub-test) {
     color: var(--uni-ink-2);
     background: var(--uni-bg);
   }
-  .uni-hub-test .lf-table .lf-mono { font-size: 11px; }
+  .uni-hub-test .lf-table .lf-mono { font-size: 10.5px; }
+  /* Net worth ($X.XM) needs to fit a ~48px track. */
+  .uni-hub-test .lf-table .lf-networth-cell .lf-mono { font-size: 9.5px; }
   /* Placeholder dashes recede so filled cells carry the eye. */
   .uni-hub-test .lf-table .lf-dim { opacity: 0.45; }
   /* Session chevron stays compact next to the time. */
@@ -1808,14 +1810,14 @@ body:has(.uni-hub-test) {
     margin-right: -16px;
   }
 }
-/* Very narrow phones: shave the gaps and the source-badge cap so the
-   fixed tracks + activity still fit a 320px viewport. */
+/* Very narrow phones: tighten the row padding and the source-badge cap
+   so all nine fixed tracks still fit a ~320px viewport (gap stays 0;
+   justify-content:space-between distributes the slack). */
 @media (max-width: 380px) {
   .uni-hub-test .lf-table .uni-hub-row {
-    gap: 4px;
-    padding: 10px 8px;
+    padding: 10px 6px;
   }
-  .uni-hub-test .lf-table .lf-badge { max-width: 60px; }
+  .uni-hub-test .lf-table .lf-badge { max-width: 44px; }
 }
 
 /* Hide panel: the Save CTA. Brand gold, prominent, with a clear
