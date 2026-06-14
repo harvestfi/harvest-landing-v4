@@ -1172,6 +1172,13 @@ body:has(.uni-hub-test) {
    acquisition source, distinct from search / AI / social / direct. */
 .uni-hub-test .lf-badge-referral { background: rgba(13, 148, 136, 0.13); color: #0f766e; }
 :root[data-theme="dark"] .uni-hub-test .lf-badge-referral { background: rgba(45, 212, 191, 0.16); color: #5eead4; }
+/* New / Existing user status. New = purple, Existing = orange. */
+.uni-hub-test .lf-badge-new { background: rgba(139, 92, 246, 0.15); color: #6d28d9; }
+.uni-hub-test .lf-badge-existing { background: rgba(249, 145, 23, 0.16); color: #b45309; }
+:root[data-theme="dark"] .uni-hub-test .lf-badge-new { background: rgba(167, 139, 250, 0.18); color: #c4b5fd; }
+:root[data-theme="dark"] .uni-hub-test .lf-badge-existing { background: rgba(255, 185, 54, 0.18); color: var(--uni-gold-soft); }
+.uni-hub-test .lf-wallet-link { text-decoration: none; }
+.uni-hub-test .lf-wallet-link:hover { color: var(--uni-gold); }
 /* External: an on-chain event from a wallet that never touched the
    index. Muted + dashed so it reads as "not our funnel", not an error. */
 .uni-hub-test .lf-badge-external {
@@ -1763,7 +1770,7 @@ body:has(.uni-hub-test) {
      time first, net worth second-to-last, tx last. */
   .uni-hub-test .lf-table .uni-hub-row {
     display: grid;
-    grid-template-columns: 34px 54px 15px 13px 22px 26px 50px 48px 14px !important;
+    grid-template-columns: 34px 58px 15px 13px 22px 26px 30px 48px 14px !important;
     justify-content: space-between;
     gap: 0;
     align-items: center;
@@ -1791,7 +1798,10 @@ body:has(.uni-hub-test) {
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Event"],
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Stage"] { order: 5; }
   .uni-hub-test .lf-table .lf-product { order: 6; }
-  .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { order: 7; }
+  /* Mobile: the Wallet column is replaced by the New/Existing badge
+     (N / E); the address itself moves to the expanded (tap) detail. */
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { display: none; }
+  .uni-hub-test .lf-table .lf-status-cell { order: 7; justify-content: center; }
   .uni-hub-test .lf-table .lf-networth-cell { order: 8; justify-content: center; }
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Tx"] { order: 9; justify-content: center; }
 
@@ -1886,6 +1896,18 @@ body:has(.uni-hub-test) {
     font-family: var(--mono);
     font-size: 11px;
     color: var(--uni-ink-3);
+  }
+  /* The wallet (DeBank link) shown on tap: use the fuller 6+4 form, not
+     the 4+2 used in the collapsed rows, so the address is readable. */
+  .uni-hub-test .lf-table .lf-detail-row .lf-wallet-link {
+    margin-left: auto;
+    font-size: 11px;
+  }
+  .uni-hub-test .lf-table .lf-detail-row .lf-wallet-link .lf-lbl-full {
+    display: inline;
+  }
+  .uni-hub-test .lf-table .lf-detail-row .lf-wallet-link .lf-lbl-short {
+    display: none;
   }
 }
 /* Under 540px the shell padding drops to 16px - keep the full-bleed
