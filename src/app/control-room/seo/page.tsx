@@ -118,6 +118,113 @@ interface SeoSession {
   actions: SeoAction[]; // newest first
 }
 
+// Demo funnel for credential-less environments (the staging fork). ~60
+// SEO sessions spread across the last ~30 days, ~50% reaching the app
+// and ~20% depositing, so the stat row, the chart and the paginated
+// table all populate. Deterministic; mirrors the shape the real
+// pipeline produces.
+function buildSampleSeoSessions(): {
+  sessions: SeoSession[];
+  oldestMs: number | null;
+} {
+  const now = Date.now();
+  const DAY = 86_400_000;
+  const seo = ["Google", "Bing", "DuckDuckGo"];
+  const dom: Record<string, string> = {
+    Google: "google.com",
+    Bing: "bing.com",
+    DuckDuckGo: "duckduckgo.com",
+  };
+  const devs = ["desktop", "mobile", "tablet"];
+  const countries = ["US", "GB", "DE", "PL", "BR", "IN", "CA", "FR", "NL", "SG"];
+  const wallets = ["0x417c8e123e5d0f3e0a0c0ee171606e61ccb637df", "0x8a3fce21b9d47a0c6f5e2d18b4c7a90e3f1d6b24", "0xa07f3c91e6b2d8540c19a3f7b08e2d45c6019e8b", "0xa56a2edcf9315e2cf98bd8d2b0a41a5eda3a09a2", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"];
+  const worths: (number | null)[] = [4200, 18500, 142000, 1250000, 3400, 56000, 890000, null];
+  const slugs = ["weth-autopilot-base", "usdc-autopilot-base", "usdc-aerodrome-aero-base", "eth-clearstar-reactor-v2-base"];
+  const visitPages = ["/", "/usdc", "/eth", "/btc", "/methodology"];
+  const sampleTx = "0x9f2c1ab73e08d45c6a1f90b3e27d4c85a06f1e93b2d7c40859a1e6f3c08d24b71";
+  const evChains = ["Base", "Ethereum", "Arbitrum"];
+  const sessions: SeoSession[] = [];
+  let oldest = Infinity;
+  for (let i = 0; i < 60; i++) {
+    const seoName = seo[i % seo.length];
+    const reached = i % 2 === 0;
+    const deposited = i % 5 === 0;
+    const firstVisitMs =
+      now - Math.round((i * 0.46 + (i % 5) * 0.7) * DAY) - (i % 8) * 3_600_000;
+    const firstClickMs = reached
+      ? firstVisitMs + 90_000 + (i % 6) * 60_000
+      : Infinity;
+    const firstDepositMs = deposited
+      ? (reached ? firstClickMs : firstVisitMs) + 240_000
+      : Infinity;
+    const latestMs = deposited
+      ? firstDepositMs
+      : reached
+        ? firstClickMs
+        : firstVisitMs;
+    const pageCount = 1 + (i % 4);
+    const wallet = reached || i % 3 === 0 ? wallets[i % wallets.length] : null;
+    const actions: SeoAction[] = [];
+    for (let p = 0; p < pageCount; p++) {
+      actions.push({
+        id: `sv-${i}-${p}`,
+        time: new Date(firstVisitMs + p * 60_000).toISOString(),
+        kind: "visit",
+        page: visitPages[(i + p) % visitPages.length],
+        vaultSlug: null,
+        wallet: null,
+        chain: null,
+        tx: null,
+      });
+    }
+    if (reached) {
+      actions.push({
+        id: `sc-${i}`,
+        time: new Date(firstClickMs).toISOString(),
+        kind: "click",
+        page: `/${slugs[i % slugs.length]}`,
+        vaultSlug: slugs[i % slugs.length],
+        wallet: null,
+        chain: null,
+        tx: null,
+      });
+    }
+    if (deposited) {
+      actions.push({
+        id: `sd-${i}`,
+        time: new Date(firstDepositMs).toISOString(),
+        kind: "deposit",
+        page: null,
+        vaultSlug: slugs[i % slugs.length],
+        wallet: wallets[i % wallets.length],
+        chain: evChains[i % evChains.length],
+        tx: sampleTx,
+      });
+    }
+    actions.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    sessions.push({
+      sessionId: `sample-seo-${i}`,
+      seoName,
+      country: countries[i % countries.length],
+      device: devs[i % devs.length],
+      srcDomain: dom[seoName],
+      wallet,
+      netWorth: wallet ? worths[i % worths.length] : null,
+      firstVisitMs,
+      firstClickMs,
+      firstDepositMs,
+      latestMs,
+      reached,
+      deposited,
+      pageCount,
+      actions,
+    });
+    if (firstVisitMs < oldest) oldest = firstVisitMs;
+  }
+  sessions.sort((a, b) => b.latestMs - a.latestMs);
+  return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
+}
+
 export default function SeoSummaryPage() {
   const [visits, setVisits] = useState<VisitRow[] | null>(null);
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
@@ -200,6 +307,12 @@ export default function SeoSummaryPage() {
 
   const loaded =
     visits !== null && clicks !== null && conns !== null && events !== null;
+  const realEmpty =
+    loaded &&
+    visits!.length === 0 &&
+    clicks!.length === 0 &&
+    conns!.length === 0 &&
+    events!.length === 0;
 
   // One pass over all sources, rolled up per session. A session is SEO if any
   // of its visits came from a search engine. Every output - funnel series and
@@ -207,6 +320,9 @@ export default function SeoSummaryPage() {
   // numbers and the table can never disagree.
   const { sessions, oldestMs } = useMemo(() => {
     if (!loaded) return { sessions: [] as SeoSession[], oldestMs: null as number | null };
+    // No Supabase creds (e.g. the staging fork): show a generated demo
+    // funnel so the page isn't blank, marked "sample" in the header.
+    if (realEmpty) return buildSampleSeoSessions();
 
     interface Acc {
       seoName: string | null;
@@ -392,7 +508,7 @@ export default function SeoSummaryPage() {
     sessions.sort((x, y) => y.latestMs - x.latestMs);
 
     return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
-  }, [loaded, visits, clicks, conns, events]);
+  }, [loaded, realEmpty, visits, clicks, conns, events]);
 
   const days = resolveDays(timeframe, oldestMs);
   const now = Date.now();
@@ -437,7 +553,10 @@ export default function SeoSummaryPage() {
       <header className="uni-hub-hero aq-hero-slim aq-hero-fullwidth">
         <div className="uni-hub-hero-headline">
           <div style={{ width: "100%" }}>
-            <h1 className="uni-hub-h1">SEO Summary</h1>
+            <h1 className="uni-hub-h1">
+              SEO Summary
+              {realEmpty && <span className="aq-sample-badge">sample</span>}
+            </h1>
             <p className="uni-hub-sub aq-sub-full">
               The search funnel at a glance: of the people the index acquired
               from a search engine (Google, Bing, DuckDuckGo), how many crossed
