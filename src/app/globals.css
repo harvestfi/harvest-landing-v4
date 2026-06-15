@@ -2893,20 +2893,32 @@ body:has(.admin-shell) .foot {
   font-weight: 600;
 }
 
+/* Footer row: Back-to-site link on the left, theme toggle on the right. */
+.admin-sidebar-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
 .admin-sidebar-back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 10px 12px;
-  margin-top: 12px;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--ink-3);
   text-decoration: none;
-  border-top: 1px solid var(--line);
   transition: color 0.12s ease;
 }
 .admin-sidebar-back:hover { color: #ffb936; }
+.admin-sidebar-toggle { flex-shrink: 0; }
+/* Theme toggle lives in the mobile top bar on phones (pushed right) and
+   in the sidebar footer on desktop; only one shows per breakpoint. */
+.admin-mobilebar-toggle { margin-left: auto; }
 
 .admin-content {
   flex: 1;
@@ -2947,9 +2959,48 @@ body:has(.admin-shell) .foot {
   --uni-tint-thin: rgba(25, 23, 23, 0.04);
   --uni-tint-strong: rgba(25, 23, 23, 0.1);
 }
-:root[data-theme="dark"]:root html:has(.admin-shell),
-:root[data-theme="dark"]:root body:has(.admin-shell) {
+:root[data-theme="dark"]:root html:has(.admin-shell):not(:has(.lf-page)),
+:root[data-theme="dark"]:root body:has(.admin-shell):not(:has(.lf-page)) {
   background: #ffffff !important;
+}
+
+/* === Dark mode: Live Feed + SEO Summary only ========================
+   The rest of the control room stays light (above); dark is opt-in for
+   the two feed pages, gated by :has(.lf-page) so it also themes the
+   shared chrome (sidebar, content surface, body) while you're on them.
+   Specificity beats the force-light defaults; the --uni-* ramp mirrors
+   the public dark palette. */
+:root[data-theme="dark"] .admin-shell:has(.lf-page) {
+  color-scheme: dark;
+  --bg: #1a1917;
+  --bg-2: #232220;
+  --panel: #232220;
+  --line: #2f2e2a;
+  --line-2: #3a3833;
+  --ink: #f4f4f1;
+  --ink-2: #d4d2cc;
+  --ink-3: #9a9892;
+  --ink-4: #6a6862;
+  background: var(--bg);
+}
+:root[data-theme="dark"] .admin-shell:has(.lf-page) .admin-content {
+  background: var(--bg);
+}
+:root[data-theme="dark"] .admin-shell:has(.lf-page) .uni-hub-test {
+  --uni-bg: #1a1917;
+  --uni-card: #232220;
+  --uni-card-2: #2a2825;
+  --uni-ink: #f4f4f1;
+  --uni-ink-2: #d4d2cc;
+  --uni-ink-3: #9a9892;
+  --uni-line: #2f2e2a;
+  --uni-line-2: #3a3833;
+  --uni-tint: rgba(244, 244, 241, 0.06);
+  --uni-tint-thin: rgba(244, 244, 241, 0.04);
+  --uni-tint-strong: rgba(244, 244, 241, 0.14);
+}
+:root[data-theme="dark"] body:has(.admin-shell .lf-page) {
+  background: var(--bg) !important;
 }
 
 /* Hamburger top bar, drawer backdrop and the in-drawer close button are
@@ -2975,6 +3026,9 @@ body:has(.admin-shell) .foot {
     background: var(--panel);
     border-bottom: 1px solid var(--line);
   }
+  /* Toggle shows in the mobile bar here, so hide the sidebar-footer one
+     (in the drawer) to avoid two out-of-sync togglers. */
+  .admin-sidebar-toggle { display: none; }
   .admin-hamburger {
     display: inline-flex;
     align-items: center;

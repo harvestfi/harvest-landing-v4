@@ -13,6 +13,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface Item {
   label: string;
@@ -140,6 +141,9 @@ export function AdminSidebar() {
         <Link href="/control-room/live-feed" className="admin-mobilebar-brand">
           <BrandMark />
         </Link>
+        <span className="admin-mobilebar-toggle">
+          <ThemeToggle />
+        </span>
       </div>
 
       {open && (
@@ -208,22 +212,27 @@ export function AdminSidebar() {
           ))}
         </nav>
 
-        <Link href="/" className="admin-sidebar-back">
-          <svg
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Back to site
-        </Link>
+        <div className="admin-sidebar-foot">
+          <Link href="/" className="admin-sidebar-back">
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back to site
+          </Link>
+          <span className="admin-sidebar-toggle">
+            <ThemeToggle />
+          </span>
+        </div>
       </aside>
     </>
   );
