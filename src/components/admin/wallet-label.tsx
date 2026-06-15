@@ -1,7 +1,10 @@
-// Wallet address chip for the Live Feed / SEO Summary tables. Renders
-// the address twice — the regular 6+4 shortening for desktop and an
-// extra-tight 4+2 shortening for the one-line mobile rows — and lets
-// CSS (.lf-lbl-full / .lf-lbl-short) pick which one shows.
+"use client";
+
+// Wallet address chip linking to the wallet's DeBank profile. Renders
+// the address twice — a 6+4 shortening for desktop, a tighter 4+2 for
+// the one-line mobile rows — and CSS (.lf-lbl-full / .lf-lbl-short)
+// picks which shows. stopPropagation so clicking it inside a clickable
+// (expandable) row opens DeBank instead of toggling the row.
 
 function shortDesktop(addr: string): string {
   if (!addr || addr.length < 10) return addr || "—";
@@ -21,9 +24,16 @@ export function WalletLabel({
   title?: string;
 }) {
   return (
-    <span className="lf-mono" title={title ?? address}>
+    <a
+      className="lf-mono lf-wallet-link"
+      href={`https://debank.com/profile/${address}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={title ? `${title} · DeBank ↗` : `${address} · DeBank ↗`}
+      onClick={(e) => e.stopPropagation()}
+    >
       <span className="lf-lbl-full">{shortDesktop(address)}</span>
       <span className="lf-lbl-short">{shortMobile(address)}</span>
-    </span>
+    </a>
   );
 }

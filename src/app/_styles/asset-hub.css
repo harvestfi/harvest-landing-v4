@@ -1063,6 +1063,9 @@ body:has(.uni-hub-test) {
   text-transform: capitalize;
 }
 .uni-hub-test .lf-event svg { flex-shrink: 0; }
+/* "Reached app" / "App click" icon: near-black for punch against the
+   teal chip (the label stays teal). */
+.uni-hub-test .lf-event-click svg { stroke: #131518; }
 .uni-hub-test .lf-event-deposit {
   background: rgba(31, 124, 77, 0.12);
   color: #1f7c4d;
@@ -1087,10 +1090,10 @@ body:has(.uni-hub-test) {
 }
 /* App click (CTA into the app): gold, since it's our own funnel step. */
 .uni-hub-test .lf-event-click {
-  background: rgba(255, 185, 54, 0.16);
-  color: #946208;
+  background: rgba(8, 145, 178, 0.16);
+  color: #0e7490;
 }
-:root[data-theme="dark"] .uni-hub-test .lf-event-click { color: var(--uni-gold-soft); }
+:root[data-theme="dark"] .uni-hub-test .lf-event-click { color: #67e8f9; }
 /* Placeholder dash for columns that don't apply to a visit/click row. */
 .uni-hub-test .lf-dim { color: var(--uni-ink-3); }
 
@@ -1150,8 +1153,43 @@ body:has(.uni-hub-test) {
   border-radius: var(--uni-radius-pill);
   font-family: var(--sans);
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
+}
+/* N/E badge tooltip: tap (mobile) reveals the wallet address + DeBank
+   link. The trigger is a transparent button wrapping the badge; the pop
+   is gated to mobile (desktop keeps the dedicated Wallet column). */
+.uni-hub-test .lf-ne-tip { position: relative; display: inline-flex; }
+.uni-hub-test .lf-ne-tip-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.uni-hub-test .lf-ne-tip-pop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(100% + 6px);
+  z-index: 30;
+  display: none;
+  padding: 7px 10px;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+@media (max-width: 900px) {
+  .uni-hub-test .lf-ne-tip:hover .lf-ne-tip-pop,
+  .uni-hub-test .lf-ne-tip:focus-within .lf-ne-tip-pop {
+    display: block;
+  }
 }
 .uni-hub-test .lf-badge-search { background: rgba(37, 99, 235, 0.12); color: #1d4ed8; }
 .uni-hub-test .lf-badge-ai { background: rgba(124, 58, 237, 0.13); color: #6d28d9; }
@@ -1172,6 +1210,13 @@ body:has(.uni-hub-test) {
    acquisition source, distinct from search / AI / social / direct. */
 .uni-hub-test .lf-badge-referral { background: rgba(13, 148, 136, 0.13); color: #0f766e; }
 :root[data-theme="dark"] .uni-hub-test .lf-badge-referral { background: rgba(45, 212, 191, 0.16); color: #5eead4; }
+/* New / Existing user status. New = purple, Existing = orange. */
+.uni-hub-test .lf-badge-new { background: rgba(37, 99, 235, 0.14); color: #1d4ed8; }
+.uni-hub-test .lf-badge-existing { background: rgba(31, 124, 77, 0.13); color: #1f7c4d; }
+:root[data-theme="dark"] .uni-hub-test .lf-badge-new { background: rgba(96, 165, 250, 0.18); color: #93c5fd; }
+:root[data-theme="dark"] .uni-hub-test .lf-badge-existing { background: rgba(109, 208, 160, 0.16); color: #6dd0a0; }
+.uni-hub-test .lf-wallet-link { text-decoration: none; }
+.uni-hub-test .lf-wallet-link:hover { color: var(--uni-gold); }
 /* External: an on-chain event from a wallet that never touched the
    index. Muted + dashed so it reads as "not our funnel", not an error. */
 .uni-hub-test .lf-badge-external {
@@ -1347,6 +1392,148 @@ body:has(.uni-hub-test) {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* Funnel stat sub-line (SEO Summary). Base = the old inline style;
+   shrinks on the mobile mini-box layout below. */
+.uni-hub-test .uni-hub-stat-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--uni-ink-3);
+}
+
+/* "(?)" info tooltip next to a page title. Hidden by default; revealed
+   only on the mobile control-room layout (.lf-page) where the full
+   description paragraph is hidden. Opens on hover + on tap (focus). */
+.uni-hub-test.lf-page .uni-hub-h1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.uni-hub-test .lf-infotip {
+  position: relative;
+  display: none;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.uni-hub-test .lf-infotip-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--uni-line);
+  background: var(--uni-bg);
+  color: var(--uni-ink-3);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.uni-hub-test .lf-infotip-pop {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  width: min(80vw, 340px);
+  padding: 11px 13px;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--uni-ink-2);
+  display: none;
+}
+.uni-hub-test .lf-infotip:hover .lf-infotip-pop,
+.uni-hub-test .lf-infotip:focus-within .lf-infotip-pop {
+  display: block;
+}
+
+/* Mobile control-room (Live Feed + SEO Summary, scoped to .lf-page so
+   the public hubs and other admin pages are untouched): drop the long
+   description into the (?) tip, hide the section titles, and squeeze the
+   SEO funnel stats into a compact 33/33/33 mini-box row. Flow becomes:
+   title (?) -> summary -> filters -> table + pager. */
+@media (max-width: 900px) {
+  .uni-hub-test.lf-page .lf-infotip { display: inline-block; }
+  .uni-hub-test.lf-page .uni-hub-sub { display: none; }
+  .uni-hub-test.lf-page .uni-hub-section-title { display: none; }
+  .uni-hub-test.lf-page .uni-hub-section-head { margin-bottom: 12px; }
+
+  .uni-hub-test.lf-page .uni-hub-stats {
+    display: grid !important;
+    /* Beat the generic 2-col / 1-col !important rules at narrow widths:
+       the three funnel boxes stay side by side at 33/33/33. */
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px;
+    margin-bottom: 18px !important;
+  }
+  .uni-hub-test.lf-page .uni-hub-stat {
+    padding: 9px 9px !important;
+  }
+  .uni-hub-test.lf-page .uni-hub-stat-label { font-size: 9.5px; }
+  .uni-hub-test.lf-page .uni-hub-stat-value { font-size: 17px; }
+  .uni-hub-test.lf-page .uni-hub-stat-sub { font-size: 9.5px; margin-top: 2px; }
+}
+
+/* Feed pager (Live Feed + SEO Summary tables): row count on the left,
+   first/prev/label/next/last on the right. */
+.uni-hub-test .lf-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.uni-hub-test .lf-pager-meta {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--uni-ink-3);
+}
+.uni-hub-test .lf-pager-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.uni-hub-test .lf-pager-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--uni-ink-2);
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.uni-hub-test .lf-pager-btn:hover:not(:disabled) {
+  border-color: var(--uni-ink-3);
+  color: var(--uni-ink);
+}
+.uni-hub-test .lf-pager-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.uni-hub-test .lf-pager-label {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--uni-ink-2);
+  padding: 0 8px;
+  white-space: nowrap;
 }
 
 /* === Cohort funnel on the Deposits page ============================ */
@@ -1617,14 +1804,15 @@ body:has(.uni-hub-test) {
      of neighbours' widths. !important because the desktop template is
      an inline style on the row. Products / pages are NOT inline here -
      the activity column is a bare count pill and the details appear
-     only when the row is expanded. */
+     only when the row is expanded. Nine tracks, matching desktop order:
+     time first, net worth second-to-last, tx last. */
   .uni-hub-test .lf-table .uni-hub-row {
     display: grid;
-    grid-template-columns: 38px 64px 16px 14px 24px 32px 56px 16px !important;
+    grid-template-columns: 34px 58px 15px 13px 22px 26px 30px 48px 14px !important;
     justify-content: space-between;
     gap: 0;
     align-items: center;
-    padding: 10px 12px;
+    padding: 10px 8px;
     min-width: 0;
     cursor: pointer;
   }
@@ -1638,8 +1826,9 @@ body:has(.uni-hub-test) {
   .uni-hub-test .lf-table .lf-lbl-full { display: none; }
   .uni-hub-test .lf-table .lf-lbl-short { display: inline-flex; }
 
-  /* Column order per the operator spec (order-modified auto-placement):
-     time | source | device | country | event | activity | wallet | tx */
+  /* Column order: time stays first, net worth sits second-to-last
+     (before tx) exactly like desktop.
+     time | source | device | country | event | activity | wallet | NW | tx */
   .uni-hub-test .lf-table .lf-time { order: 1; }
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Source"] { order: 2; }
   .uni-hub-test .lf-table .lf-device-cell { order: 3; justify-content: center; }
@@ -1647,8 +1836,13 @@ body:has(.uni-hub-test) {
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Event"],
   .uni-hub-test .lf-table .uni-hub-cell[data-label="Stage"] { order: 5; }
   .uni-hub-test .lf-table .lf-product { order: 6; }
-  .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { order: 7; }
-  .uni-hub-test .lf-table .uni-hub-cell[data-label="Tx"] { order: 8; justify-content: center; }
+  /* Mobile: the Wallet column is replaced by the New/Existing badge
+     (N / E); the address itself moves to the expanded (tap) detail. */
+  /* !important to beat the nth-child(n) visibility-reassert rule above. */
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Wallet"] { display: none !important; }
+  .uni-hub-test .lf-table .lf-status-cell { order: 7; justify-content: center; }
+  .uni-hub-test .lf-table .lf-networth-cell { order: 8; justify-content: center; }
+  .uni-hub-test .lf-table .uni-hub-cell[data-label="Tx"] { order: 9; justify-content: center; }
 
   .uni-hub-test .lf-table .lf-time {
     font-size: 11px;
@@ -1657,9 +1851,9 @@ body:has(.uni-hub-test) {
   /* Source badge: one line, capped at its column track so long
      referral domains can't push the grid. */
   .uni-hub-test .lf-table .lf-badge {
-    font-size: 10.5px;
-    padding: 2px 7px;
-    max-width: 64px;
+    font-size: 10px;
+    padding: 2px 6px;
+    max-width: 54px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1691,7 +1885,9 @@ body:has(.uni-hub-test) {
     color: var(--uni-ink-2);
     background: var(--uni-bg);
   }
-  .uni-hub-test .lf-table .lf-mono { font-size: 11px; }
+  .uni-hub-test .lf-table .lf-mono { font-size: 10.5px; }
+  /* Net worth ($X.XM) needs to fit a ~48px track. */
+  .uni-hub-test .lf-table .lf-networth-cell .lf-mono { font-size: 9.5px; }
   /* Placeholder dashes recede so filled cells carry the eye. */
   .uni-hub-test .lf-table .lf-dim { opacity: 0.45; }
   /* Session chevron stays compact next to the time. */
@@ -1727,8 +1923,19 @@ body:has(.uni-hub-test) {
     text-align: left;
   }
   /* Single-row detail line renders only on mobile (desktop already
-     shows the product inline). */
-  .uni-hub-test .lf-table .uni-hub-row.lf-detail-row { display: flex; }
+     shows the product inline). Carries the exact timestamp (the hour
+     that the collapsed row drops past 24h) + the page / product. */
+  .uni-hub-test .lf-table .uni-hub-row.lf-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .uni-hub-test .lf-table .lf-detail-time {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--uni-ink-3);
+  }
 }
 /* Under 540px the shell padding drops to 16px - keep the full-bleed
    pull in sync. */
@@ -1738,14 +1945,14 @@ body:has(.uni-hub-test) {
     margin-right: -16px;
   }
 }
-/* Very narrow phones: shave the gaps and the source-badge cap so the
-   fixed tracks + activity still fit a 320px viewport. */
+/* Very narrow phones: tighten the row padding and the source-badge cap
+   so all nine fixed tracks still fit a ~320px viewport (gap stays 0;
+   justify-content:space-between distributes the slack). */
 @media (max-width: 380px) {
   .uni-hub-test .lf-table .uni-hub-row {
-    gap: 4px;
-    padding: 10px 8px;
+    padding: 10px 6px;
   }
-  .uni-hub-test .lf-table .lf-badge { max-width: 60px; }
+  .uni-hub-test .lf-table .lf-badge { max-width: 44px; }
 }
 
 /* Hide panel: the Save CTA. Brand gold, prominent, with a clear

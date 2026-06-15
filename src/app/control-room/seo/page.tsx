@@ -22,9 +22,13 @@ import {
 } from "@/components/admin/timeframe-selector";
 import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
+import { InfoTip } from "@/components/admin/info-tip";
 import { RefreshButton } from "@/components/admin/refresh-button";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { WalletLabel } from "@/components/admin/wallet-label";
-import { supabaseSelect, supabaseSelectAll } from "@/lib/supabase";
+import { supabaseSelectAll } from "@/lib/supabase";
+import { TablePager } from "@/components/admin/table-pager";
+import { formatTVL } from "@/lib/format";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
@@ -57,6 +61,7 @@ interface ConnRow {
   wallet_address: string;
   connected_at: string;
   session_id: string | null;
+  balance: number | null;
 }
 interface EventRow {
   block_timestamp: string;
@@ -68,7 +73,8 @@ interface EventRow {
   tx_hash: string;
 }
 
-const FETCH_LIMIT = 5000;
+// Full history: pulled in its entirety (paginated server-side via
+// supabaseSelectAll) and the session table is navigated 25 rows/page.
 
 type Metric = "acquired" | "reached" | "deposited";
 const METRIC_OPTIONS: ReadonlyArray<{ value: Metric; label: string }> = [
@@ -77,11 +83,11 @@ const METRIC_OPTIONS: ReadonlyArray<{ value: Metric; label: string }> = [
   { value: "deposited", label: "Deposited" },
 ];
 
-const SEO_DISPLAY_LIMIT = 200;
+const SEO_ROWS_PER_PAGE = 25;
 // Same column rhythm as the Live Feed stream so the two read alike
 // (Time, Source, Country, Stage, Activity, Device, Wallet, Tx).
 const SEO_FEED_COLS =
-  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 128px 54px";
+  "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 96px 128px 84px 54px";
 
 // One action within a session (a visit, click, or on-chain event).
 interface SeoAction {
@@ -103,6 +109,8 @@ interface SeoSession {
   device: string | null;
   srcDomain: string | null;
   wallet: string | null;
+  netWorth: number | null;
+  status: "new" | "existing" | null;
   firstVisitMs: number;
   firstClickMs: number; // Infinity if it never clicked into the app
   firstDepositMs: number; // Infinity if it never deposited
@@ -113,16 +121,130 @@ interface SeoSession {
   actions: SeoAction[]; // newest first
 }
 
+// Demo funnel for credential-less environments (the staging fork). ~60
+// SEO sessions spread across the last ~30 days, ~50% reaching the app
+// and ~20% depositing, so the stat row, the chart and the paginated
+// table all populate. Deterministic; mirrors the shape the real
+// pipeline produces.
+function buildSampleSeoSessions(): {
+  sessions: SeoSession[];
+  oldestMs: number | null;
+} {
+  const now = Date.now();
+  const DAY = 86_400_000;
+  const seo = ["Google", "Bing", "DuckDuckGo"];
+  const dom: Record<string, string> = {
+    Google: "google.com",
+    Bing: "bing.com",
+    DuckDuckGo: "duckduckgo.com",
+  };
+  const devs = ["desktop", "mobile", "tablet"];
+  const countries = ["US", "GB", "DE", "PL", "BR", "IN", "CA", "FR", "NL", "SG"];
+  const wallets = ["0x417c8e123e5d0f3e0a0c0ee171606e61ccb637df", "0x8a3fce21b9d47a0c6f5e2d18b4c7a90e3f1d6b24", "0xa07f3c91e6b2d8540c19a3f7b08e2d45c6019e8b", "0xa56a2edcf9315e2cf98bd8d2b0a41a5eda3a09a2", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"];
+  const worths: (number | null)[] = [4200, 18500, 142000, 1250000, 3400, 56000, 890000, null];
+  const slugs = ["weth-autopilot-base", "usdc-autopilot-base", "usdc-aerodrome-aero-base", "eth-clearstar-reactor-v2-base"];
+  const visitPages = ["/", "/usdc", "/eth", "/btc", "/methodology"];
+  const sampleTx = "0x9f2c1ab73e08d45c6a1f90b3e27d4c85a06f1e93b2d7c40859a1e6f3c08d24b71";
+  const evChains = ["Base", "Ethereum", "Arbitrum"];
+  const sessions: SeoSession[] = [];
+  let oldest = Infinity;
+  for (let i = 0; i < 60; i++) {
+    const seoName = seo[i % seo.length];
+    const reached = i % 2 === 0;
+    const deposited = i % 5 === 0;
+    const firstVisitMs =
+      now - Math.round((i * 0.46 + (i % 5) * 0.7) * DAY) - (i % 8) * 3_600_000;
+    const firstClickMs = reached
+      ? firstVisitMs + 90_000 + (i % 6) * 60_000
+      : Infinity;
+    const firstDepositMs = deposited
+      ? (reached ? firstClickMs : firstVisitMs) + 240_000
+      : Infinity;
+    const latestMs = deposited
+      ? firstDepositMs
+      : reached
+        ? firstClickMs
+        : firstVisitMs;
+    const pageCount = 1 + (i % 4);
+    const wallet = reached || i % 3 === 0 ? wallets[i % wallets.length] : null;
+    const actions: SeoAction[] = [];
+    for (let p = 0; p < pageCount; p++) {
+      actions.push({
+        id: `sv-${i}-${p}`,
+        time: new Date(firstVisitMs + p * 60_000).toISOString(),
+        kind: "visit",
+        page: visitPages[(i + p) % visitPages.length],
+        vaultSlug: null,
+        wallet: null,
+        chain: null,
+        tx: null,
+      });
+    }
+    if (reached) {
+      actions.push({
+        id: `sc-${i}`,
+        time: new Date(firstClickMs).toISOString(),
+        kind: "click",
+        page: `/${slugs[i % slugs.length]}`,
+        vaultSlug: slugs[i % slugs.length],
+        wallet: null,
+        chain: null,
+        tx: null,
+      });
+    }
+    if (deposited) {
+      actions.push({
+        id: `sd-${i}`,
+        time: new Date(firstDepositMs).toISOString(),
+        kind: "deposit",
+        page: null,
+        vaultSlug: slugs[i % slugs.length],
+        wallet: wallets[i % wallets.length],
+        chain: evChains[i % evChains.length],
+        tx: sampleTx,
+      });
+    }
+    actions.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    sessions.push({
+      sessionId: `sample-seo-${i}`,
+      seoName,
+      country: countries[i % countries.length],
+      device: devs[i % devs.length],
+      srcDomain: dom[seoName],
+      wallet,
+      netWorth: wallet ? worths[i % worths.length] : null,
+      // Mix of returning vs first-time for the demo.
+      status: !wallet ? null : i % 3 === 0 ? "existing" : "new",
+      firstVisitMs,
+      firstClickMs,
+      firstDepositMs,
+      latestMs,
+      reached,
+      deposited,
+      pageCount,
+      actions,
+    });
+    if (firstVisitMs < oldest) oldest = firstVisitMs;
+  }
+  sessions.sort((a, b) => b.latestMs - a.latestMs);
+  return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
+}
+
 export default function SeoSummaryPage() {
   const [visits, setVisits] = useState<VisitRow[] | null>(null);
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
   const [conns, setConns] = useState<ConnRow[] | null>(null);
   const [events, setEvents] = useState<EventRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
+  // Default to the full history (matching the full-depth, paginated
+  // table) so the funnel boxes count every session, not just the last
+  // 30 days. The timeframe selector can still narrow the window.
+  const [timeframe, setTimeframe] = useState<Timeframe>("all");
   const [metric, setMetric] = useState<Metric>("acquired");
+  const [engine, setEngine] = useState<string>("all");
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -136,21 +258,21 @@ export default function SeoSummaryPage() {
   // mount load and the manual Refresh button issue the same queries.
   const fetchAll = useCallback(async () => {
     const [v, c, w, e] = await Promise.all([
-      supabaseSelect<VisitRow>(
+      supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        `select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        "select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc",
       ),
-      supabaseSelect<ClickRow>(
+      supabaseSelectAll<ClickRow>(
         "outbound_clicks",
-        `select=created_at,session_id,vault_slug,source_page,source,country,device_type&order=created_at.desc&limit=${FETCH_LIMIT}`,
+        "select=created_at,session_id,vault_slug,source_page,source,country,device_type&order=created_at.desc",
       ),
       supabaseSelectAll<ConnRow>(
         "wallet_connections_prod",
-        "select=wallet_address,connected_at,session_id&order=connected_at.desc",
+        "select=wallet_address,connected_at,session_id,balance&order=connected_at.desc",
       ),
-      supabaseSelect<EventRow>(
+      supabaseSelectAll<EventRow>(
         "vault_events_prod",
-        `select=block_timestamp,event_type,wallet_address,vault_address,vault_slug,chain,tx_hash&event_type=in.(deposit,withdraw)&order=block_timestamp.desc&limit=${FETCH_LIMIT}`,
+        "select=block_timestamp,event_type,wallet_address,vault_address,vault_slug,chain,tx_hash&event_type=in.(deposit,withdraw)&order=block_timestamp.desc",
       ),
     ]);
     return { v, c, w, e };
@@ -184,6 +306,7 @@ export default function SeoSummaryPage() {
       setClicks(c);
       setConns(w);
       setEvents(e);
+      setPage(0);
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -193,6 +316,12 @@ export default function SeoSummaryPage() {
 
   const loaded =
     visits !== null && clicks !== null && conns !== null && events !== null;
+  const realEmpty =
+    loaded &&
+    visits!.length === 0 &&
+    clicks!.length === 0 &&
+    conns!.length === 0 &&
+    events!.length === 0;
 
   // One pass over all sources, rolled up per session. A session is SEO if any
   // of its visits came from a search engine. Every output - funnel series and
@@ -200,6 +329,9 @@ export default function SeoSummaryPage() {
   // numbers and the table can never disagree.
   const { sessions, oldestMs } = useMemo(() => {
     if (!loaded) return { sessions: [] as SeoSession[], oldestMs: null as number | null };
+    // No Supabase creds (e.g. the staging fork): show a generated demo
+    // funnel so the page isn't blank, marked "sample" in the header.
+    if (realEmpty) return buildSampleSeoSessions();
 
     interface Acc {
       seoName: string | null;
@@ -292,6 +424,9 @@ export default function SeoSummaryPage() {
     const sessionWalletT = new Map<string, number>();
     const walletSession = new Map<string, string>();
     const walletSessionT = new Map<string, number>();
+    // wallet -> latest captured net worth (DeBank USD balance at connect).
+    const walletBalance = new Map<string, number>();
+    const walletBalanceT = new Map<string, number>();
     for (const w of conns!) {
       if (!w.session_id) continue;
       const addr = (w.wallet_address || "").toLowerCase();
@@ -307,6 +442,13 @@ export default function SeoSummaryPage() {
       if (pw === undefined || t < pw) {
         walletSessionT.set(addr, t);
         walletSession.set(addr, w.session_id);
+      }
+      if (w.balance != null && Number.isFinite(w.balance)) {
+        const pb = walletBalanceT.get(addr);
+        if (pb === undefined || t > pb) {
+          walletBalanceT.set(addr, t);
+          walletBalance.set(addr, w.balance);
+        }
       }
     }
 
@@ -342,6 +484,20 @@ export default function SeoSummaryPage() {
       });
     }
 
+    // Earliest deposit per wallet (across all history), for New /
+    // Existing: a session is Existing if its wallet deposited before the
+    // session's first visit, New otherwise.
+    const firstDepByWallet = new Map<string, number>();
+    for (const e of events!) {
+      if (e.event_type !== "deposit") continue;
+      const addr = (e.wallet_address || "").toLowerCase();
+      if (!addr) continue;
+      const ms = new Date(e.block_timestamp).getTime();
+      if (!Number.isFinite(ms)) continue;
+      const prev = firstDepByWallet.get(addr);
+      if (prev === undefined || ms < prev) firstDepByWallet.set(addr, ms);
+    }
+
     const sessions: SeoSession[] = [];
     let oldest = Infinity;
     for (const [id, a] of acc) {
@@ -349,16 +505,25 @@ export default function SeoSummaryPage() {
       a.actions.sort(
         (x, y) => new Date(y.time).getTime() - new Date(x.time).getTime(),
       );
+      const wallet =
+        sessionWallet.get(id) ??
+        a.actions.find((x) => x.wallet)?.wallet ??
+        null;
+      const fd = wallet ? firstDepByWallet.get(wallet.toLowerCase()) : undefined;
+      const status: "new" | "existing" | null = !wallet
+        ? null
+        : fd !== undefined && fd < a.firstVisitMs
+          ? "existing"
+          : "new";
       sessions.push({
         sessionId: id,
         seoName: a.seoName,
         country: a.country,
         device: a.device,
         srcDomain: a.srcDomain,
-        wallet:
-          sessionWallet.get(id) ??
-          a.actions.find((x) => x.wallet)?.wallet ??
-          null,
+        wallet,
+        netWorth: wallet ? walletBalance.get(wallet.toLowerCase()) ?? null : null,
+        status,
         firstVisitMs: a.firstVisitMs,
         firstClickMs: a.firstClickMs,
         firstDepositMs: a.firstDepositMs,
@@ -373,7 +538,16 @@ export default function SeoSummaryPage() {
     sessions.sort((x, y) => y.latestMs - x.latestMs);
 
     return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
-  }, [loaded, visits, clicks, conns, events]);
+  }, [loaded, realEmpty, visits, clicks, conns, events]);
+
+  // Search-engine options + the engine-filtered base set every funnel
+  // output reads from (stats, chart, table), mirroring the Live Feed's
+  // source filter.
+  const engineOptions = Array.from(
+    new Set(sessions.map((s) => s.seoName)),
+  ).sort();
+  const enginedSessions =
+    engine === "all" ? sessions : sessions.filter((s) => s.seoName === engine);
 
   const days = resolveDays(timeframe, oldestMs);
   const now = Date.now();
@@ -391,7 +565,7 @@ export default function SeoSummaryPage() {
     return s.deposited ? s.firstDepositMs : null;
   };
   const countFor = (m: Metric) =>
-    sessions.filter((s) => {
+    enginedSessions.filter((s) => {
       const ts = stageOf(s, m);
       return ts !== null && inWindow(ts);
     }).length;
@@ -405,7 +579,7 @@ export default function SeoSummaryPage() {
   // Chart series + table list, both for the selected metric and window.
   const series: number[] = [];
   const visibleSessions: SeoSession[] = [];
-  for (const s of sessions) {
+  for (const s of enginedSessions) {
     const ts = stageOf(s, metric);
     if (ts === null || !inWindow(ts)) continue;
     series.push(ts);
@@ -413,21 +587,20 @@ export default function SeoSummaryPage() {
   }
   const metricLabel = METRIC_OPTIONS.find((o) => o.value === metric)!.label;
 
+  const description =
+    "The search funnel at a glance: of the people the index acquired from a search engine (Google, Bing, DuckDuckGo), how many crossed into app.harvest.finance and how many deposited. Every stage, the chart, and the table below are scoped to the same SEO sessions. The table lists one row per session; expand a row to see that session's actions.";
+
   return (
-    <div className="uni-hub-test">
+    <div className="uni-hub-test lf-page">
       <header className="uni-hub-hero aq-hero-slim aq-hero-fullwidth">
         <div className="uni-hub-hero-headline">
           <div style={{ width: "100%" }}>
-            <h1 className="uni-hub-h1">SEO Summary</h1>
-            <p className="uni-hub-sub aq-sub-full">
-              The search funnel at a glance: of the people the index acquired
-              from a search engine (Google, Bing, DuckDuckGo), how many crossed
-              into app.harvest.finance and how many deposited. Every stage, the
-              chart, and the table below are scoped to the same SEO sessions.
-              The table lists one row per session and follows the metric toggle,
-              so its row count always matches the number above; expand a row to
-              see that session's actions.
-            </p>
+            <h1 className="uni-hub-h1">
+              SEO Summary
+              <InfoTip label="About SEO Summary">{description}</InfoTip>
+              {realEmpty && <span className="aq-sample-badge">sample</span>}
+            </h1>
+            <p className="uni-hub-sub aq-sub-full">{description}</p>
           </div>
         </div>
       </header>
@@ -455,7 +628,11 @@ export default function SeoSummaryPage() {
             <FunnelStat
               label="Acquired via search"
               value={acquired}
-              sub={`SEO sessions, last ${days}d`}
+              sub={
+                timeframe === "all"
+                  ? "SEO sessions, all time"
+                  : `SEO sessions, last ${days}d`
+              }
             />
             <FunnelStat
               label="Reached app"
@@ -469,24 +646,92 @@ export default function SeoSummaryPage() {
             />
           </div>
 
+          {/* Filter bar in the Live Feed register: Refresh + iconed
+              dropdowns (globe = search engine, funnel = funnel stage).
+              The stage dropdown drives the chart + table; the engine
+              dropdown scopes the whole funnel to one search source. */}
+          <div className="lf-filterbar">
+            <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+            <label className="lf-filter" aria-label="Search engine filter">
+              <span className="lf-filter-icon" aria-hidden="true">
+                <EngineFilterIcon />
+              </span>
+              <select
+                className="lf-select lf-select-iconed"
+                value={engine}
+                onChange={(e) => {
+                  setEngine(e.target.value);
+                  setPage(0);
+                }}
+              >
+                <option value="all">All engines</option>
+                {engineOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="lf-filter" aria-label="Funnel stage filter">
+              <span className="lf-filter-icon" aria-hidden="true">
+                <StageFilterIcon />
+              </span>
+              <select
+                className="lf-select lf-select-iconed"
+                value={metric}
+                onChange={(e) => {
+                  setMetric(e.target.value as Metric);
+                  setPage(0);
+                }}
+              >
+                {METRIC_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           <ChartSection
             series={series}
             days={days}
             metricLabel={metricLabel}
             timeframe={timeframe}
-            onTimeframeChange={setTimeframe}
-            metric={metric}
-            onMetricChange={setMetric}
-            onRefresh={handleRefresh}
-            refreshing={refreshing}
+            onTimeframeChange={(tf) => {
+              setTimeframe(tf);
+              setPage(0);
+            }}
           />
 
-          <SeoSessionTable
-            sessions={visibleSessions.slice(0, SEO_DISPLAY_LIMIT)}
-            metricLabel={metricLabel}
-            expanded={expanded}
-            onToggle={toggle}
-          />
+          {(() => {
+            const totalPages = Math.max(
+              1,
+              Math.ceil(visibleSessions.length / SEO_ROWS_PER_PAGE),
+            );
+            const safePage = Math.min(page, totalPages - 1);
+            const pageSessions = visibleSessions.slice(
+              safePage * SEO_ROWS_PER_PAGE,
+              safePage * SEO_ROWS_PER_PAGE + SEO_ROWS_PER_PAGE,
+            );
+            return (
+              <>
+                <SeoSessionTable
+                  sessions={pageSessions}
+                  metricLabel={metricLabel}
+                  expanded={expanded}
+                  onToggle={toggle}
+                />
+                <TablePager
+                  page={safePage}
+                  totalPages={totalPages}
+                  totalRows={visibleSessions.length}
+                  onPage={setPage}
+                  unit="sessions"
+                />
+              </>
+            );
+          })()}
         </>
       )}
     </div>
@@ -506,10 +751,28 @@ function FunnelStat({
     <div className="uni-hub-stat">
       <div className="uni-hub-stat-label">{label}</div>
       <div className="uni-hub-stat-value">{value.toLocaleString("en-US")}</div>
-      <div style={{ marginTop: 4, fontSize: 12, color: "var(--uni-ink-3)" }}>
-        {sub}
-      </div>
+      <div className="uni-hub-stat-sub">{sub}</div>
     </div>
+  );
+}
+
+// Globe glyph for the search-engine filter.
+function EngineFilterIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  );
+}
+
+// Funnel glyph for the funnel-stage filter.
+function StageFilterIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 4h18l-7 8v6l-4 2v-8z" />
+    </svg>
   );
 }
 
@@ -519,20 +782,12 @@ function ChartSection({
   metricLabel,
   timeframe,
   onTimeframeChange,
-  metric,
-  onMetricChange,
-  onRefresh,
-  refreshing,
 }: {
   series: number[];
   days: number;
   metricLabel: string;
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
-  metric: Metric;
-  onMetricChange: (m: Metric) => void;
-  onRefresh: () => void;
-  refreshing: boolean;
 }) {
   const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
     null,
@@ -579,30 +834,8 @@ function ChartSection({
             {peak.toLocaleString("en-US")}/day
           </span>
         </div>
-        <div className="aq-head-controls">
-          <RefreshButton onClick={onRefresh} refreshing={refreshing} />
-          <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
-        </div>
+        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
       </header>
-
-      <div
-        className="aq-timeframe"
-        role="group"
-        aria-label="Funnel metric"
-        style={{ marginBottom: 12 }}
-      >
-        {METRIC_OPTIONS.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            className={`aq-timeframe-tab${metric === o.value ? " active" : ""}`}
-            aria-pressed={metric === o.value}
-            onClick={() => onMetricChange(o.value)}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
 
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">
@@ -664,9 +897,8 @@ function SeoSessionTable({
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">{metricLabel} sessions</h2>
           <span className="uni-hub-section-meta">
-            {sessions.length.toLocaleString("en-US")} session
-            {sessions.length === 1 ? "" : "s"} · one row each, expand to see
-            its actions
+            one row per session · expand to see its actions · full history,
+            25 per page
           </span>
         </div>
       </header>
@@ -682,7 +914,9 @@ function SeoSessionTable({
             <span className="uni-hub-th">Stage</span>
             <span className="uni-hub-th">Activity</span>
             <span className="uni-hub-th">Device</span>
+            <span className="uni-hub-th lf-status-cell">New / Existing</span>
             <span className="uni-hub-th">Wallet</span>
+            <span className="uni-hub-th lf-networth-cell">Net worth</span>
             <span className="uni-hub-th">Tx</span>
           </div>
           <div className="uni-hub-tbody">
@@ -748,7 +982,7 @@ function SessionRows({
           title={`session ${s.sessionId}`}
         >
           <Chevron />
-          {relativeTimeMs(s.latestMs)}
+          <TimeLabel ms={s.latestMs} />
         </span>
         <span className="uni-hub-cell" data-label="Source">
           <span
@@ -785,9 +1019,21 @@ function SessionRows({
         <span className="uni-hub-cell lf-device-cell" data-label="Device">
           <DeviceIcon device={s.device} />
         </span>
+        <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
+          <StatusBadge status={s.status} wallet={s.wallet} />
+        </span>
         <span className="uni-hub-cell" data-label="Wallet">
           {s.wallet ? (
             <WalletLabel address={s.wallet} />
+          ) : (
+            <span className="lf-dim">—</span>
+          )}
+        </span>
+        <span className="uni-hub-cell lf-networth-cell" data-label="Net worth">
+          {s.netWorth != null ? (
+            <span className="lf-mono" title={`$${Math.round(s.netWorth).toLocaleString("en-US")}`}>
+              {formatTVL(s.netWorth)}
+            </span>
           ) : (
             <span className="lf-dim">—</span>
           )}
@@ -808,7 +1054,8 @@ function SessionRows({
               data-label="Time"
               title={formatTime(a.time)}
             >
-              {relativeTime(a.time)}
+              <span className="lf-lbl-full">{relativeTime(a.time)}</span>
+              <span className="lf-lbl-short">{relativeTime(a.time, true)}</span>
             </span>
             <span className="uni-hub-cell" data-label="Source">
               <span className="lf-dim">—</span>
@@ -853,7 +1100,13 @@ function SessionRows({
             <span className="uni-hub-cell lf-device-cell" data-label="Device">
               <span className="lf-dim">—</span>
             </span>
+            <span className="uni-hub-cell lf-status-cell" data-label="New / Existing">
+              <span className="lf-dim">—</span>
+            </span>
             <span className="uni-hub-cell" data-label="Wallet">
+              <span className="lf-dim">—</span>
+            </span>
+            <span className="uni-hub-cell lf-networth-cell" data-label="Net worth">
               <span className="lf-dim">—</span>
             </span>
             <span className="uni-hub-cell" data-label="Tx">
@@ -978,12 +1231,20 @@ function formatTime(iso: string): string {
   }
 }
 
-function relativeTimeMs(ms: number): string {
-  if (!Number.isFinite(ms)) return "—";
-  return relativeTime(new Date(ms).toISOString());
+function formatDateOnly(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
 }
 
-function relativeTime(iso: string): string {
+// With dateOnly, rows past 24h show just the date (no hour) - used for
+// the tight mobile rows; desktop keeps the full timestamp + title.
+function relativeTime(iso: string, dateOnly = false): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return iso;
   const diffMs = Date.now() - then;
@@ -992,5 +1253,17 @@ function relativeTime(iso: string): string {
   if (min < 60) return `${min}m`;
   const hr = Math.floor(min / 60);
   if (hr < 24) return `${hr}h`;
-  return formatTime(iso);
+  return dateOnly ? formatDateOnly(iso) : formatTime(iso);
+}
+
+// Full timestamp on desktop, date-only past 24h on the mobile rows.
+function TimeLabel({ ms }: { ms: number }) {
+  if (!Number.isFinite(ms)) return <span className="lf-dim">—</span>;
+  const iso = new Date(ms).toISOString();
+  return (
+    <>
+      <span className="lf-lbl-full">{relativeTime(iso)}</span>
+      <span className="lf-lbl-short">{relativeTime(iso, true)}</span>
+    </>
+  );
 }
