@@ -56,7 +56,7 @@ export default async function StudioPage() {
     .sort((a, b) => b.tvl - a.tvl);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 studio-page">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="adm-header">
         <h1>Studio</h1>
         <p className="adm-sub">
