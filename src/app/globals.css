@@ -3018,33 +3018,17 @@ body:has(.admin-shell) .foot {
 :root[data-theme="dark"] .admin-shell .ring-emerald-300 { --tw-ring-color: rgba(109, 208, 160, 0.4) !important; }
 :root[data-theme="dark"] .admin-shell .ring-gray-300 { --tw-ring-color: var(--line-2) !important; }
 
-/* === Studio is exempt from control-room dark mode ===================
-   The Studio centrepiece is a marketing creative (1:1 + other ratios)
-   that mirrors the *light* homepage hero and is exported verbatim as a
-   PNG, so the whole page must stay light regardless of the toggle.
-   Re-assert the light tokens - global chrome + the .uni-home-test ramp
-   the preview card reads (home.css darkens it via
-   :root[data-theme="dark"] .uni-home-test, which the homepage's
-   "light island" rule can't undo here because Studio nests the hero
-   the other way round). Scoped via :has(.studio-page) with enough
-   specificity (0,4,0 / 0,5,0) to beat the dark block above. */
-:root[data-theme="dark"] .admin-shell:has(.studio-page) {
-  color-scheme: light;
-  --bg: #fafaf9;
-  --bg-2: #f4f4f2;
-  --panel: #ffffff;
-  --line: #ebebe7;
-  --line-2: #e2e2dd;
-  --ink: #0a0a0a;
-  --ink-2: #2b2b2b;
-  --ink-3: #6b6b66;
-  --ink-4: #9a9a94;
-  background: #ffffff;
-}
-:root[data-theme="dark"] .admin-shell:has(.studio-page) .admin-content {
-  background: #ffffff;
-}
-:root[data-theme="dark"] .admin-shell:has(.studio-page) .uni-home-test {
+/* === Studio: page goes dark, the export canvas stays light ==========
+   Studio themes like every other control-room page (dark header,
+   controls, frame). Only the creative is exempt: it mirrors the light
+   homepage hero and is downloaded verbatim as a PNG. The gold canvas
+   (.studio-card) is hardcoded so it's already theme-proof; the inner
+   preview card reads the --uni-* ramp, which home.css darkens via
+   :root[data-theme="dark"] .uni-home-test (the homepage's "light
+   island" rule can't undo it here - Studio nests the hero the other
+   way round). Re-assert the light ramp on the .uni-home-test inside
+   the canvas only; specificity (0,4,0) beats the home.css rule. */
+:root[data-theme="dark"] .studio-card .uni-home-test {
   --uni-bg: #ffffff;
   --uni-card: #f1f5f4;
   --uni-card-2: #ffffff;
@@ -3053,9 +3037,6 @@ body:has(.admin-shell) .foot {
   --uni-ink-3: #6e6c66;
   --uni-line: #dddee0;
   --uni-line-2: #ebebe7;
-}
-:root[data-theme="dark"] body:has(.admin-shell .studio-page) {
-  background: #ffffff !important;
 }
 
 /* Hamburger top bar, drawer backdrop and the in-drawer close button are
