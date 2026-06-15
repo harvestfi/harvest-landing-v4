@@ -2926,14 +2926,13 @@ body:has(.admin-shell) .foot {
   background: #ffffff;
 }
 
-/* === Admin is always light ==========================================
-   The control room is an internal operator surface and is pinned to the
-   light palette regardless of the site-wide dark-theme toggle. Light
-   global tokens are set on .admin-shell (a closer ancestor than :root,
-   so they win over :root[data-theme="dark"] for the whole admin subtree
-   without !important); the --uni-* ramp is re-asserted on the hub
-   wrapper under the dark selector with enough specificity to beat the
-   dark hub override; and the shell surfaces stay white. */
+/* === Admin theming: light by default, dark via the toggle ===========
+   Light global tokens are set on .admin-shell (a closer ancestor than
+   :root, so they win over the public :root[data-theme="dark"] block for
+   the whole admin subtree without !important). The control-room theme
+   toggle then flips the entire control room by overriding these on
+   :root[data-theme="dark"] .admin-shell (higher specificity) - see the
+   dark block below. */
 .admin-shell {
   color-scheme: light;
   --bg: #fafaf9;
@@ -2946,31 +2945,16 @@ body:has(.admin-shell) .foot {
   --ink-3: #6b6b66;
   --ink-4: #9a9a94;
 }
-:root[data-theme="dark"] .admin-shell .uni-hub-test {
-  --uni-bg: #ffffff;
-  --uni-card: #f1f5f4;
-  --uni-card-2: #ffffff;
-  --uni-ink: #191717;
-  --uni-ink-2: #32312b;
-  --uni-ink-3: #6e6c66;
-  --uni-line: #dddee0;
-  --uni-line-2: #ebebe7;
-  --uni-tint: rgba(25, 23, 23, 0.06);
-  --uni-tint-thin: rgba(25, 23, 23, 0.04);
-  --uni-tint-strong: rgba(25, 23, 23, 0.1);
-}
-:root[data-theme="dark"]:root html:has(.admin-shell):not(:has(.lf-page)),
-:root[data-theme="dark"]:root body:has(.admin-shell):not(:has(.lf-page)) {
-  background: #ffffff !important;
-}
-
-/* === Dark mode: Live Feed + SEO Summary only ========================
-   The rest of the control room stays light (above); dark is opt-in for
-   the two feed pages, gated by :has(.lf-page) so it also themes the
-   shared chrome (sidebar, content surface, body) while you're on them.
-   Specificity beats the force-light defaults; the --uni-* ramp mirrors
-   the public dark palette. */
-:root[data-theme="dark"] .admin-shell:has(.lf-page) {
+/* === Dark mode: the entire control room ============================
+   The theme toggle (mobile top bar + sidebar footer) flips every admin
+   page, not just the feed. These rules override the light defaults
+   above under data-theme=dark with enough specificity (0,3,0+) to beat
+   both the public :root dark block and the .admin-shell light tokens.
+   The --uni-* ramp mirrors the public dark palette, so token-based
+   pages (SEO Overview, acquisition, products, hide, SERP previews, rule
+   cards) theme themselves; the few hardcoded-light surfaces are handled
+   explicitly just below. */
+:root[data-theme="dark"] .admin-shell {
   color-scheme: dark;
   --bg: #1a1917;
   --bg-2: #232220;
@@ -2983,10 +2967,10 @@ body:has(.admin-shell) .foot {
   --ink-4: #6a6862;
   background: var(--bg);
 }
-:root[data-theme="dark"] .admin-shell:has(.lf-page) .admin-content {
+:root[data-theme="dark"] .admin-shell .admin-content {
   background: var(--bg);
 }
-:root[data-theme="dark"] .admin-shell:has(.lf-page) .uni-hub-test {
+:root[data-theme="dark"] .admin-shell .uni-hub-test {
   --uni-bg: #1a1917;
   --uni-card: #232220;
   --uni-card-2: #2a2825;
@@ -2999,9 +2983,40 @@ body:has(.admin-shell) .foot {
   --uni-tint-thin: rgba(244, 244, 241, 0.04);
   --uni-tint-strong: rgba(244, 244, 241, 0.14);
 }
-:root[data-theme="dark"] body:has(.admin-shell .lf-page) {
+:root[data-theme="dark"] body:has(.admin-shell) {
   background: var(--bg) !important;
 }
+
+/* Hardcoded-light admin surfaces that don't ride the tokens above:
+   Tailwind surface remaps (cards / code insets), the SEO Overview table
+   chrome, the type / status pills, and the amber "rules are
+   load-bearing" callout on the Master Rules handouts. Text + border
+   grays and .adm-* text already resolve through --ink / --line and flip
+   on their own. */
+:root[data-theme="dark"] .admin-shell .bg-white,
+:root[data-theme="dark"] .admin-shell .bg-gray-50,
+:root[data-theme="dark"] .admin-shell .bg-gray-100 { background-color: #232220 !important; }
+:root[data-theme="dark"] .admin-shell .adm-input,
+:root[data-theme="dark"] .admin-shell .adm-table-wrap { background: var(--panel); }
+:root[data-theme="dark"] .admin-shell .adm-table thead { background: #2a2825; }
+:root[data-theme="dark"] .admin-shell .adm-row:not(:last-child) .adm-cell { border-bottom-color: var(--line); }
+:root[data-theme="dark"] .admin-shell .adm-type-product { background: rgba(244, 244, 241, 0.08); }
+:root[data-theme="dark"] .admin-shell .adm-type-home { color: #ffd98a; }
+:root[data-theme="dark"] .admin-shell .adm-type-asset-hub { background: rgba(109, 208, 160, 0.16); color: #6dd0a0; }
+:root[data-theme="dark"] .admin-shell .adm-type-network-hub { background: rgba(129, 140, 248, 0.18); color: #a4a8ff; }
+:root[data-theme="dark"] .admin-shell .adm-pill.ok { background: rgba(109, 208, 160, 0.16); color: #6dd0a0; }
+:root[data-theme="dark"] .admin-shell .adm-pill.no { background: rgba(255, 138, 130, 0.16); color: #ff8a82; }
+:root[data-theme="dark"] .admin-shell .bg-amber-50 { background-color: rgba(255, 185, 54, 0.08) !important; }
+:root[data-theme="dark"] .admin-shell .border-amber-200 { border-color: rgba(255, 185, 54, 0.28) !important; }
+:root[data-theme="dark"] .admin-shell .text-amber-900 { color: #ffd98a !important; }
+/* Rule on/off badge (ranking + master rules cards): the emerald "ON"
+   chip and gray "OFF" chip ride Tailwind's light scales; recolour the
+   fills, text and rings for dark. The status dots (bg-emerald-500 /
+   bg-gray-400) are saturated enough to read on either surface. */
+:root[data-theme="dark"] .admin-shell .bg-emerald-100 { background-color: rgba(31, 124, 77, 0.2) !important; }
+:root[data-theme="dark"] .admin-shell .text-emerald-800 { color: #6dd0a0 !important; }
+:root[data-theme="dark"] .admin-shell .ring-emerald-300 { --tw-ring-color: rgba(109, 208, 160, 0.4) !important; }
+:root[data-theme="dark"] .admin-shell .ring-gray-300 { --tw-ring-color: var(--line-2) !important; }
 
 /* Hamburger top bar, drawer backdrop and the in-drawer close button are
    mobile-only; hidden on desktop where the rail is always visible. */
@@ -3106,6 +3121,8 @@ body:has(.admin-shell) .foot {
 .admin-shell .bg-white { background-color: #ffffff !important; }
 .admin-shell .border-gray-200,
 .admin-shell .border-gray-300 { border-color: var(--line) !important; }
+.admin-shell .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+.admin-shell .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
 .admin-shell .text-gray-300,
 .admin-shell .text-gray-400 { color: var(--ink-4) !important; }
 .admin-shell .text-gray-500,
@@ -3113,6 +3130,8 @@ body:has(.admin-shell) .foot {
 .admin-shell .text-gray-700 { color: var(--ink-2) !important; }
 .admin-shell .text-gray-800,
 .admin-shell .text-gray-900 { color: var(--ink) !important; }
+.admin-shell .hover\:text-gray-900:hover { color: var(--ink) !important; }
+.admin-shell .hover\:border-gray-300:hover { border-color: var(--line-2) !important; }
 .admin-shell .placeholder-gray-400::placeholder { color: var(--ink-4) !important; }
 .admin-shell .text-blue-600 { color: var(--ink) !important; }
 .admin-shell .text-blue-600:hover { color: #ffb936 !important; }
