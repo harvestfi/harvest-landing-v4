@@ -14,6 +14,7 @@ import {
   channelGroup,
   type SourceGroup,
 } from "@/lib/channels";
+import { isBotRow } from "@/lib/bots";
 import {
   TimeframeSelector,
   resolveDays,
@@ -30,6 +31,8 @@ interface Visit {
   country: string | null;
   city: string | null;
   device_type: string | null;
+  is_bot: boolean | null;
+  user_agent: string | null;
 }
 
 const ROWS_DISPLAY_LIMIT = 200;
@@ -61,6 +64,23 @@ export default function AcquisitionPage() {
   const [visits, setVisits] = useState<Visit[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
+  // Human-first: crawler / scanner / asset-path hits are excluded from the
+  // tiles and chart by default so Last 7d / 30d are real human traffic.
+  const [showBots, setShowBots] = useState(false);
+
+  // Bot-filtered view feeds both the summary tiles and the chart.
+  const visibleVisits = useMemo(() => {
+    if (visits == null) return null;
+    if (showBots) return visits;
+    return visits.filter(
+      (v) =>
+        !isBotRow({
+          is_bot: v.is_bot,
+          user_agent: v.user_agent,
+          page_path: v.page_path,
+        }),
+    );
+  }, [visits, showBots]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +88,7 @@ export default function AcquisitionPage() {
       try {
         // Full history (paginated past PostgREST's 1000-row cap) so the
         // window counts and chart reflect every visit, not a capped page.
-        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type&order=created_at.desc`;
+        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type,is_bot,user_agent&order=created_at.desc`;
         const data = await supabaseSelectAll<Visit>("frontpage_visits", params);
         if (!cancelled) setVisits(data);
       } catch (e) {
@@ -81,19 +101,20 @@ export default function AcquisitionPage() {
   }, []);
 
   const stats = useMemo(() => {
-    if (!visits) return null;
+    if (!visibleVisits) return null;
     const now = Date.now();
     const dayMs = 86_400_000;
     const count = (days: number) =>
-      visits.filter((v) => now - new Date(v.created_at).getTime() < days * dayMs)
-        .length;
+      visibleVisits.filter(
+        (v) => now - new Date(v.created_at).getTime() < days * dayMs,
+      ).length;
     return {
       last24: count(1),
       last7: count(7),
       last30: count(30),
-      uniqueSessions: new Set(visits.map((v) => v.session_id)).size,
+      uniqueSessions: new Set(visibleVisits.map((v) => v.session_id)).size,
     };
-  }, [visits]);
+  }, [visibleVisits]);
 
   return (
     <>
@@ -131,14 +152,16 @@ export default function AcquisitionPage() {
         <div className="uni-hub-empty">Loading visits…</div>
       )}
 
-      {visits && (
+      {visibleVisits && (
         <>
           <ChartSection
-            visits={visits}
+            visits={visibleVisits}
             timeframe={timeframe}
             onTimeframeChange={setTimeframe}
+            showBots={showBots}
+            onShowBotsChange={setShowBots}
           />
-          <TableSection visits={visits.slice(0, ROWS_DISPLAY_LIMIT)} />
+          <TableSection visits={visibleVisits.slice(0, ROWS_DISPLAY_LIMIT)} />
         </>
       )}
     </>
@@ -166,10 +189,14 @@ function ChartSection({
   visits,
   timeframe,
   onTimeframeChange,
+  showBots,
+  onShowBotsChange,
 }: {
   visits: Visit[];
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
+  showBots: boolean;
+  onShowBotsChange: (b: boolean) => void;
 }) {
   const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
     null,
@@ -245,6 +272,17 @@ function ChartSection({
           </span>
         </div>
         <div className="aq-head-controls">
+          <label
+            className="lf-bot-toggle"
+            title="Bots (crawlers, scanners, asset-path hits) are excluded from the tiles and chart by default. Toggle to include non-human traffic."
+          >
+            <input
+              type="checkbox"
+              checked={showBots}
+              onChange={(e) => onShowBotsChange(e.target.checked)}
+            />
+            Show bots
+          </label>
           <select
             className="lf-select"
             aria-label="Filter visits by source"
