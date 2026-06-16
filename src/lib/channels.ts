@@ -3,48 +3,157 @@
 // on-chain event inherits its session's first-touch source. These helpers
 // normalize that into a channel name, a badge tone, and a coarse filter group.
 
-export type SourceGroup = "all" | "SEO" | "AI" | "Social" | "Referral" | "Direct";
+export type SourceGroup =
+  | "all"
+  | "SEO"
+  | "AI"
+  | "Social"
+  | "Wallet"
+  | "App"
+  | "Email"
+  | "Referral"
+  | "Direct";
 
 export type ChannelTone =
   | "search"
   | "ai"
   | "social"
+  | "wallet"
+  | "email"
+  | "app"
   | "owned"
   | "direct"
   | "referral";
 
+// In-app webview referrers arrive as android-app://<package> (Android Chrome
+// Custom Tabs / WebView set this) or, more rarely, ios-app://<bundle>.
+// Undecoded, every one of them collapses into Direct - which is exactly the
+// slice we want to pull apart, since a "Direct" hit that lands on a deep
+// product page is almost always a link shared/opened inside an app, not a
+// typed URL. Matched by package substring so suffixed variants (...android /
+// ...lite / ...gp) still resolve. Order matters: specific tokens (webmail)
+// come before the broad vendor token (google).
+const APP_PACKAGES: ReadonlyArray<readonly [string, string]> = [
+  // Wallet dapp browsers - the highest-signal traffic hiding under Direct.
+  ["metamask", "MetaMask"],
+  ["rainbow", "Rainbow"],
+  ["trust", "Trust Wallet"],
+  ["toshi", "Coinbase Wallet"],
+  ["coinbase", "Coinbase Wallet"],
+  ["rabby", "Rabby"],
+  ["zerion", "Zerion"],
+  ["imtoken", "imToken"],
+  ["token.app", "imToken"],
+  ["okex", "OKX"],
+  ["okx", "OKX"],
+  ["bitkeep", "Bitget Wallet"],
+  ["bitget", "Bitget Wallet"],
+  ["phantom", "Phantom"],
+  ["binance", "Binance"],
+  // Webmail (before the generic "google" token below).
+  ["android.gm", "Gmail"],
+  ["googlemail", "Gmail"],
+  ["outlook", "Outlook"],
+  ["yahoo", "Yahoo Mail"],
+  ["protonmail", "Proton Mail"],
+  // AI assistants.
+  ["openai", "ChatGPT"],
+  ["chatgpt", "ChatGPT"],
+  ["perplexity", "Perplexity"],
+  ["anthropic", "Claude"],
+  ["bard", "Gemini"],
+  // Social / messaging.
+  ["twitter", "X / Twitter"],
+  ["atebits", "X / Twitter"],
+  ["instagram", "Instagram"],
+  ["katana", "Facebook"],
+  ["facebook", "Facebook"],
+  ["linkedin", "LinkedIn"],
+  ["musically", "TikTok"],
+  ["zhiliaoapp", "TikTok"],
+  ["tiktok", "TikTok"],
+  ["reddit", "Reddit"],
+  ["discord", "Discord"],
+  ["telegram", "Telegram"],
+  ["whatsapp", "WhatsApp"],
+  ["securesms", "Signal"],
+  ["warpcast", "Farcaster"],
+  ["farcaster", "Farcaster"],
+  // Search / discover apps.
+  ["googlequicksearchbox", "Google"],
+  ["google", "Google"],
+];
+
+function decodeAppScheme(lower: string): string {
+  const pkg = lower
+    .replace(/^(android-app|ios-app):\/\//, "")
+    .split(/[/?#]/)[0];
+  for (const [needle, name] of APP_PACKAGES) {
+    if (pkg.includes(needle)) return name;
+  }
+  // Known to be an in-app webview, just not one we've named yet. Surfacing it
+  // as "App" (rather than Direct) tells the operator this was a link opened
+  // inside some app; the Source tooltip still carries the raw package so the
+  // map can be extended over time.
+  return "App";
+}
+
 export function classifyChannel(raw: string | null): string {
   if (!raw) return "Direct";
   const s = raw.toLowerCase();
+
+  // In-app webview: decode the host app (wallet / social / webmail / AI / ...)
+  // so it doesn't disappear into Direct.
+  if (s.startsWith("android-app://") || s.startsWith("ios-app://")) {
+    return decodeAppScheme(s);
+  }
+
+  // Webmail (checked before search - mail.google.com contains "google").
+  if (s.includes("mail.google") || s.includes("googlemail")) return "Gmail";
+  if (s.includes("outlook") || s.includes("office.com")) return "Outlook";
+  if (s.includes("mail.yahoo")) return "Yahoo Mail";
+  if (s.includes("proton.me") || s.includes("protonmail")) return "Proton Mail";
+
+  // Search engines.
   if (s.includes("google")) return "Google";
   if (s.includes("bing")) return "Bing";
   if (s.includes("duckduckgo")) return "DuckDuckGo";
+
+  // AI assistants.
   if (s.includes("chatgpt") || s.includes("openai")) return "ChatGPT";
   if (s.includes("perplexity")) return "Perplexity";
   if (s.includes("claude") || s.includes("anthropic")) return "Claude";
   if (s.includes("gemini")) return "Gemini";
+
+  // Social / messaging.
   if (s.includes("t.co") || s.includes("twitter") || s.includes("x.com")) return "X / Twitter";
   if (s.includes("reddit")) return "Reddit";
-  if (s.includes("github")) return "GitHub";
+  if (s.includes("instagram")) return "Instagram";
+  if (s.includes("facebook") || s.includes("fb.com") || s.includes("fb.me")) return "Facebook";
+  if (s.includes("linkedin") || s.includes("lnkd.in")) return "LinkedIn";
+  if (s.includes("tiktok")) return "TikTok";
   if (s.includes("t.me") || s.includes("telegram")) return "Telegram";
   if (s.includes("discord")) return "Discord";
+  if (s.includes("whatsapp") || s.includes("wa.me")) return "WhatsApp";
+  if (s.includes("github")) return "GitHub";
   if (s.includes("medium")) return "Medium";
+
+  // Our own site: first-party / owned referral (before the Direct catch-all,
+  // which also swallows other "harvest" self-referrals).
   if (s.includes("harvest.finance")) return "Homepage";
+
   // No identifiable acquisition source -> Direct, matching GA's treatment of
   // a typed URL, bookmark, or stripped / self referrer. Covers an explicit
   // "direct"/"(none)", our own site (self-referral / internal navigation),
-  // an in-app webview scheme that carries no real origin, and a literal
-  // "unknown". This is the bucket the operator should read as "came on their
-  // own", not a mysterious one.
+  // and a literal "unknown". In-app schemes are decoded above, so they no
+  // longer land here.
   if (
     s === "direct" ||
     s === "(direct)" ||
     s === "(none)" ||
     s === "internal" ||
     s === "unknown" ||
-    s.includes("harvest") ||
-    s.startsWith("android-app") ||
-    s.startsWith("ios-app")
+    s.includes("harvest")
   ) {
     return "Direct";
   }
@@ -56,44 +165,69 @@ export function classifyChannel(raw: string | null): string {
 
 // App-side events (clicks, deposits, withdrawals) entered the app from our
 // index, so a bare "Direct" session reads as "Homepage" (owned) - they came
-// straight to us and through the CTA. A real external channel (Google,
-// Reddit, ...) is kept since it's the more useful first touch.
+// straight to us and through the CTA. A real channel (Google, a wallet, ...)
+// is kept since it's the more useful first touch.
 export function appChannel(raw: string | null): string {
   const c = classifyChannel(raw);
   return c === "Direct" ? "Homepage" : c;
 }
 
+const SEARCH_CHANNELS = new Set(["Google", "Bing", "DuckDuckGo"]);
+const AI_CHANNELS = new Set(["ChatGPT", "Perplexity", "Claude", "Gemini"]);
+const SOCIAL_CHANNELS = new Set([
+  "X / Twitter", "Reddit", "Discord", "Telegram", "GitHub", "Medium",
+  "Instagram", "Facebook", "LinkedIn", "TikTok", "WhatsApp", "Signal", "Farcaster",
+]);
+// Wallet dapp browsers: a crypto-native first touch, and the most valuable
+// thing we recover from Direct.
+const WALLET_CHANNELS = new Set([
+  "MetaMask", "Rainbow", "Trust Wallet", "Coinbase Wallet", "Rabby",
+  "Zerion", "imToken", "OKX", "Bitget Wallet", "Binance", "Phantom",
+]);
+const EMAIL_CHANNELS = new Set(["Gmail", "Outlook", "Yahoo Mail", "Proton Mail"]);
+
 export function channelTone(name: string): ChannelTone {
-  if (name === "Google" || name === "Bing" || name === "DuckDuckGo") return "search";
-  if (name === "ChatGPT" || name === "Perplexity" || name === "Claude" || name === "Gemini") return "ai";
-  if (
-    name === "X / Twitter" || name === "Reddit" || name === "Discord" ||
-    name === "Telegram" || name === "GitHub" || name === "Medium"
-  )
-    return "social";
+  if (SEARCH_CHANNELS.has(name)) return "search";
+  if (AI_CHANNELS.has(name)) return "ai";
+  if (WALLET_CHANNELS.has(name)) return "wallet";
+  if (EMAIL_CHANNELS.has(name)) return "email";
+  if (SOCIAL_CHANNELS.has(name)) return "social";
   if (name === "Homepage") return "owned";
   if (name === "Direct") return "direct";
+  // Decoded-but-unnamed in-app webview.
+  if (name === "App") return "app";
   // Anything left is a real external site we don't have a named channel for
   // (an aggregator, blog, ...) - the badge shows its domain. Distinct tone so
   // these referral sources stand out instead of blending into neutral.
   return "referral";
 }
 
-// Map a per-row channel name to its coarse source-filter group. Search, AI
-// and social engines map to their bucket; a real external referrer domain
-// maps to Referral; owned Homepage and Direct fall under Direct ("came on
-// their own / no tracked channel").
+// Map a per-row channel name to its coarse source-filter group. Owned
+// Homepage and Direct both fall under Direct ("came on their own / no tracked
+// channel"); everything else maps to its named bucket.
 export function channelGroup(channel: string): Exclude<SourceGroup, "all"> {
-  const tone = channelTone(channel);
-  if (tone === "search") return "SEO";
-  if (tone === "ai") return "AI";
-  if (tone === "social") return "Social";
-  if (tone === "referral") return "Referral";
-  return "Direct";
+  switch (channelTone(channel)) {
+    case "search":
+      return "SEO";
+    case "ai":
+      return "AI";
+    case "social":
+      return "Social";
+    case "wallet":
+      return "Wallet";
+    case "email":
+      return "Email";
+    case "app":
+      return "App";
+    case "referral":
+      return "Referral";
+    default:
+      return "Direct"; // owned + direct
+  }
 }
 
-// Compact channel names for the one-line mobile feed rows, where the
-// full label ("X / Twitter", "Homepage") eats column width for no extra
+// Compact channel names for the one-line mobile feed rows, where the full
+// label ("X / Twitter", "Coinbase Wallet") eats column width for no extra
 // information. Channels without an entry keep their full name.
 const SHORT_CHANNEL: Record<string, string> = {
   Homepage: "Home",
@@ -102,6 +236,13 @@ const SHORT_CHANNEL: Record<string, string> = {
   Perplexity: "Pplx",
   ChatGPT: "GPT",
   Telegram: "TG",
+  "Coinbase Wallet": "Coinbase",
+  "Trust Wallet": "Trust",
+  "Bitget Wallet": "Bitget",
+  "Yahoo Mail": "Yahoo",
+  "Proton Mail": "Proton",
+  Instagram: "IG",
+  Facebook: "FB",
 };
 
 export function shortChannelLabel(channel: string): string {
@@ -110,9 +251,11 @@ export function shortChannelLabel(channel: string): string {
 
 // Best-effort full domain for the Source-column tooltip, derived from a
 // referrer URL or a bare host. "https://www.coingecko.com/x" and
-// "coingecko.com" both return "coingecko.com". Returns null when there's
-// no usable host (Direct, internal, or a utm label with no dot), so the
-// caller can simply omit the tooltip.
+// "coingecko.com" both return "coingecko.com"; an in-app referrer
+// "android-app://io.metamask" returns its package "io.metamask" so the
+// operator can see the exact app. Returns null when there's no usable host
+// (Direct, internal, or a utm label with no dot), so the caller can omit the
+// tooltip.
 export function sourceDomain(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const s = raw.trim();

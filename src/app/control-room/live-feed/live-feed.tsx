@@ -191,6 +191,9 @@ const SOURCE_GROUPS: ReadonlyArray<{ value: SourceGroup; label: string }> = [
   { value: "SEO", label: "SEO" },
   { value: "AI", label: "AI" },
   { value: "Social", label: "Social" },
+  { value: "Wallet", label: "Wallet" },
+  { value: "App", label: "App" },
+  { value: "Email", label: "Email" },
   { value: "Referral", label: "Referral" },
   { value: "Direct", label: "Direct" },
 ];
@@ -501,6 +504,12 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         "https://www.google.com/", "chatgpt.com", "https://t.co/",
         "https://www.reddit.com/", "perplexity.ai", "https://www.bing.com/",
         "coingecko.com", "defiprime.com", "(direct)", "https://duckduckgo.com/",
+        // In-app webview referrers, decoded out of Direct into Wallet / Social
+        // / Email / App so the new source buckets show up in the demo.
+        "android-app://io.metamask", "android-app://me.rainbow",
+        "android-app://com.instagram.android", "android-app://com.google.android.gm",
+        "android-app://com.linkedin.android", "android-app://com.opera.browser",
+        "ios-app://com.debank.rabby",
       ];
       const countries = ["US", "GB", "DE", "PL", "BR", "IN", "CA", "FR", "NL", "SG"];
       const pages = ["/", "/usdc", "/eth", "/btc", "/arbitrum", "/base", "/methodology", "/weth-autopilot-base"];
