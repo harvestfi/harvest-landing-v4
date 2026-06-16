@@ -41,6 +41,7 @@ import { RefreshButton } from "@/components/admin/refresh-button";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
+import { isBotRow } from "@/lib/bots";
 import "../../_styles/asset-hub.css";
 
 interface VaultEventRow {
@@ -62,6 +63,8 @@ interface VisitRow {
   country: string | null;
   device_type: string | null;
   referrer: string | null;
+  is_bot: boolean | null;
+  user_agent: string | null;
 }
 interface ClickRow {
   created_at: string;
@@ -72,6 +75,8 @@ interface ClickRow {
   source: string | null;
   country: string | null;
   device_type: string | null;
+  is_bot: boolean | null;
+  user_agent: string | null;
 }
 interface ConnectionRow {
   wallet_address: string;
@@ -83,6 +88,7 @@ interface ConnectionRow {
 type FeedItem =
   | {
       kind: "visit";
+      bot: boolean;
       id: string;
       time: string;
       channel: string;
@@ -96,6 +102,7 @@ type FeedItem =
     }
   | {
       kind: "click";
+      bot: boolean;
       id: string;
       time: string;
       channel: string;
@@ -111,6 +118,7 @@ type FeedItem =
     }
   | {
       kind: "event";
+      bot: boolean;
       id: string;
       time: string;
       channel: string;
@@ -144,6 +152,7 @@ interface VisitGroup {
   srcDomain: string | null;
   wallet: string | null;
   netWorth: number | null;
+  bot: boolean;
   pages: VisitItem[]; // newest first
 }
 
@@ -191,6 +200,9 @@ const SOURCE_GROUPS: ReadonlyArray<{ value: SourceGroup; label: string }> = [
   { value: "SEO", label: "SEO" },
   { value: "AI", label: "AI" },
   { value: "Social", label: "Social" },
+  { value: "Wallet", label: "Wallet" },
+  { value: "App", label: "App" },
+  { value: "Email", label: "Email" },
   { value: "Referral", label: "Referral" },
   { value: "Direct", label: "Direct" },
 ];
@@ -224,11 +236,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     const [v, c, e, w] = await Promise.all([
       supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        "select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc",
+        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent&order=created_at.desc",
       ),
       supabaseSelectAll<ClickRow>(
         "outbound_clicks",
-        "select=created_at,session_id,vault_slug,source_page,target_url,source,country,device_type&order=created_at.desc",
+        "select=created_at,session_id,vault_slug,source_page,target_url,source,country,device_type,is_bot,user_agent&order=created_at.desc",
       ),
       supabaseSelectAll<VaultEventRow>(
         "vault_events_prod",
@@ -486,6 +498,9 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
 
   const [activity, setActivity] = useState<ActivityFilter>("all");
   const [sourceFilter, setSourceFilter] = useState<SourceGroup>("all");
+  // Human-first by default: bots (crawlers, scanners, link unfurlers) are
+  // hidden until the operator opts in via the "Show bots" toggle.
+  const [showBots, setShowBots] = useState(false);
 
   const items = useMemo<FeedItem[]>(() => {
     if (!loaded) return [];
@@ -501,6 +516,12 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         "https://www.google.com/", "chatgpt.com", "https://t.co/",
         "https://www.reddit.com/", "perplexity.ai", "https://www.bing.com/",
         "coingecko.com", "defiprime.com", "(direct)", "https://duckduckgo.com/",
+        // In-app webview referrers, decoded out of Direct into Wallet / Social
+        // / Email / App so the new source buckets show up in the demo.
+        "android-app://io.metamask", "android-app://me.rainbow",
+        "android-app://com.instagram.android", "android-app://com.google.android.gm",
+        "android-app://com.linkedin.android", "android-app://com.opera.browser",
+        "ios-app://com.debank.rabby",
       ];
       const countries = ["US", "GB", "DE", "PL", "BR", "IN", "CA", "FR", "NL", "SG"];
       const pages = ["/", "/usdc", "/eth", "/btc", "/arbitrum", "/base", "/methodology", "/weth-autopilot-base"];
@@ -510,9 +531,14 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       const out: FeedItem[] = [];
       for (let i = 0; i < 70; i++) {
         const src = srcs[i % srcs.length];
-        const wal = i % 4 === 0 ? wallets[i % wallets.length] : null;
+        // Every 11th sample row is a crawler hitting an asset path (mirrors
+        // the real .svg / bot rows) so the "Show bots" toggle has something
+        // to reveal on a data-less fork.
+        const isBotSample = i % 11 === 0;
+        const wal = !isBotSample && i % 4 === 0 ? wallets[i % wallets.length] : null;
         out.push({
           kind: "visit",
+          bot: isBotSample,
           id: `sv-${i}`,
           // Accelerating gap: ~1 min ago out to ~7 days, so plenty of
           // rows cross the 24h boundary.
@@ -521,7 +547,9 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           country: countries[i % countries.length],
           device: devs[i % devs.length],
           srcDomain: sourceDomain(src),
-          pagePath: pages[i % pages.length],
+          pagePath: isBotSample
+            ? "/pool/public/logo302d83e9f8fb9ddd88ef.svg"
+            : pages[i % pages.length],
           hsid: `sample-hsid-v${i}`,
           wallet: wal,
           netWorth: wal ? worths[i % worths.length] : null,
@@ -531,6 +559,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       ["/weth-autopilot-base", "/usdc", "/eth"].forEach((page, k) =>
         out.push({
           kind: "visit",
+          bot: false,
           id: `sv-tour-${k}`,
           time: new Date(now - (5 + k * 2) * 60_000).toISOString(),
           channel: classifyChannel("chatgpt.com"),
@@ -549,6 +578,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         const slug = slugs[i % slugs.length];
         out.push({
           kind: "click",
+          bot: false,
           id: `sc-${i}`,
           time: new Date(now - Math.round(3 + i * i * 9) * 60_000).toISOString(),
           channel: appChannel(src),
@@ -569,6 +599,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         const ch = evChannels[i % evChannels.length];
         out.push({
           kind: "event",
+          bot: false,
           id: `se-${i}`,
           time: new Date(now - Math.round(20 + i * i * 60) * 60_000).toISOString(),
           channel: ch,
@@ -599,6 +630,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           : null;
         return {
           kind: "visit" as const,
+          bot: isBotRow({ is_bot: v.is_bot, user_agent: v.user_agent, page_path: v.page_path }),
           id: `v-${v.session_id}-${v.created_at}-${i}`,
           time: v.created_at,
           channel: classifyChannel(v.source),
@@ -617,6 +649,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           : null;
         return {
           kind: "click" as const,
+          bot: isBotRow({ is_bot: c.is_bot, user_agent: c.user_agent, page_path: c.source_page }),
           id: `c-${c.session_id}-${c.created_at}-${i}`,
           time: c.created_at,
           channel: appChannel(c.source),
@@ -642,6 +675,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         );
         return {
           kind: "event" as const,
+          bot: false,
           id: `e-${e.tx_hash}-${e.log_index}`,
           time: e.block_timestamp,
           channel: r.channel,
@@ -670,6 +704,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   const filtered = useMemo(
     () =>
       items.filter((it) => {
+        if (!showBots && it.bot) return false;
         if (sourceFilter !== "all" && channelGroup(it.channel) !== sourceFilter)
           return false;
         switch (activity) {
@@ -685,7 +720,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             return true;
         }
       }),
-    [items, activity, sourceFilter],
+    [items, activity, sourceFilter, showBots],
   );
 
   // Clusters the operator has expanded to see the individual page views.
@@ -741,6 +776,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           srcDomain: desc.find((v) => v.srcDomain)?.srcDomain ?? null,
           wallet: desc.find((v) => v.wallet)?.wallet ?? null,
           netWorth: desc.find((v) => v.netWorth != null)?.netWorth ?? null,
+          bot: desc.some((v) => v.bot),
           pages: desc,
         },
       });
@@ -887,6 +923,20 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               ))}
             </select>
           </label>
+          <label
+            className="lf-bot-toggle"
+            title="Bots (crawlers, scanners, link unfurlers) are hidden by default. Toggle to audit non-human traffic."
+          >
+            <input
+              type="checkbox"
+              checked={showBots}
+              onChange={(e) => {
+                setShowBots(e.target.checked);
+                setPage(0);
+              }}
+            />
+            Show bots
+          </label>
         </div>
 
         {err && (
@@ -1001,7 +1051,7 @@ function FeedRow({
   return (
     <>
     <div
-      className="uni-hub-row lf-item-row"
+      className={`uni-hub-row lf-item-row${item.bot ? " lf-row-bot" : ""}`}
       style={{ gridTemplateColumns: FEED_COLS }}
       onClick={(e) => {
         // Links inside the row (product, tx) keep their own behaviour.
@@ -1028,6 +1078,11 @@ function FeedRow({
           <span className="lf-lbl-full">{item.channel}</span>
           <span className="lf-lbl-short">{shortChannelLabel(item.channel)}</span>
         </span>
+        {item.bot && (
+          <span className="lf-botflag" title="Non-human / bot traffic">
+            bot
+          </span>
+        )}
       </span>
       <span className="uni-hub-cell" data-label="Country">
         {item.country ? <CountryFlag country={item.country} /> : <span className="lf-dim">—</span>}
@@ -1144,7 +1199,7 @@ function SessionGroupRow({
   return (
     <>
       <div
-        className="uni-hub-row lf-session-row"
+        className={`uni-hub-row lf-session-row${group.bot ? " lf-row-bot" : ""}`}
         style={{ gridTemplateColumns: FEED_COLS }}
         role="button"
         tabIndex={0}
@@ -1173,6 +1228,11 @@ function SessionGroupRow({
             <span className="lf-lbl-full">{group.channel}</span>
             <span className="lf-lbl-short">{shortChannelLabel(group.channel)}</span>
           </span>
+          {group.bot && (
+            <span className="lf-botflag" title="Non-human / bot traffic">
+              bot
+            </span>
+          )}
         </span>
         <span className="uni-hub-cell" data-label="Country">
           {group.country ? (

@@ -37,6 +37,7 @@ import {
   shortChannelLabel,
   sourceDomain,
 } from "@/lib/channels";
+import { isBotRow } from "@/lib/bots";
 import "../../_styles/asset-hub.css";
 
 interface VisitRow {
@@ -47,6 +48,8 @@ interface VisitRow {
   country: string | null;
   device_type: string | null;
   referrer: string | null;
+  is_bot: boolean | null;
+  user_agent: string | null;
 }
 interface ClickRow {
   created_at: string;
@@ -111,6 +114,7 @@ interface SeoSession {
   wallet: string | null;
   netWorth: number | null;
   status: "new" | "existing" | null;
+  bot: boolean;
   firstVisitMs: number;
   firstClickMs: number; // Infinity if it never clicked into the app
   firstDepositMs: number; // Infinity if it never deposited
@@ -215,6 +219,9 @@ function buildSampleSeoSessions(): {
       netWorth: wallet ? worths[i % worths.length] : null,
       // Mix of returning vs first-time for the demo.
       status: !wallet ? null : i % 3 === 0 ? "existing" : "new",
+      // A few sample sessions are crawlers so the "Show bots" toggle has
+      // something to reveal on a data-less fork.
+      bot: i % 13 === 0,
       firstVisitMs,
       firstClickMs,
       firstDepositMs,
@@ -242,6 +249,8 @@ export default function SeoSummaryPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>("all");
   const [metric, setMetric] = useState<Metric>("acquired");
   const [engine, setEngine] = useState<string>("all");
+  // Human-first by default: crawler sessions are hidden until opted in.
+  const [showBots, setShowBots] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
@@ -260,7 +269,7 @@ export default function SeoSummaryPage() {
     const [v, c, w, e] = await Promise.all([
       supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        "select=created_at,session_id,page_path,source,country,device_type,referrer&order=created_at.desc",
+        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent&order=created_at.desc",
       ),
       supabaseSelectAll<ClickRow>(
         "outbound_clicks",
@@ -344,6 +353,7 @@ export default function SeoSummaryPage() {
       firstDepositMs: number;
       latestMs: number;
       pageCount: number;
+      bot: boolean;
       actions: SeoAction[];
     }
     const acc = new Map<string, Acc>();
@@ -361,6 +371,7 @@ export default function SeoSummaryPage() {
           firstDepositMs: Infinity,
           latestMs: -Infinity,
           pageCount: 0,
+          bot: false,
           actions: [],
         };
         acc.set(id, a);
@@ -374,6 +385,11 @@ export default function SeoSummaryPage() {
       if (!Number.isFinite(t)) continue;
       const a = get(v.session_id);
       a.pageCount++;
+      if (
+        !a.bot &&
+        isBotRow({ is_bot: v.is_bot, user_agent: v.user_agent, page_path: v.page_path })
+      )
+        a.bot = true;
       if (t < a.firstVisitMs) a.firstVisitMs = t;
       if (t > a.latestMs) a.latestMs = t;
       if (a.country === null && v.country) a.country = v.country;
@@ -524,6 +540,7 @@ export default function SeoSummaryPage() {
         wallet,
         netWorth: wallet ? walletBalance.get(wallet.toLowerCase()) ?? null : null,
         status,
+        bot: a.bot,
         firstVisitMs: a.firstVisitMs,
         firstClickMs: a.firstClickMs,
         firstDepositMs: a.firstDepositMs,
@@ -546,8 +563,9 @@ export default function SeoSummaryPage() {
   const engineOptions = Array.from(
     new Set(sessions.map((s) => s.seoName)),
   ).sort();
-  const enginedSessions =
-    engine === "all" ? sessions : sessions.filter((s) => s.seoName === engine);
+  const enginedSessions = (
+    engine === "all" ? sessions : sessions.filter((s) => s.seoName === engine)
+  ).filter((s) => showBots || !s.bot);
 
   const days = resolveDays(timeframe, oldestMs);
   const now = Date.now();
@@ -690,6 +708,20 @@ export default function SeoSummaryPage() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label
+              className="lf-bot-toggle"
+              title="Crawler sessions (search bots, scanners) are hidden by default. Toggle to audit non-human SEO traffic."
+            >
+              <input
+                type="checkbox"
+                checked={showBots}
+                onChange={(e) => {
+                  setShowBots(e.target.checked);
+                  setPage(0);
+                }}
+              />
+              Show bots
             </label>
           </div>
 
@@ -963,7 +995,7 @@ function SessionRows({
   return (
     <>
       <div
-        className="uni-hub-row lf-session-row"
+        className={`uni-hub-row lf-session-row${s.bot ? " lf-row-bot" : ""}`}
         style={{ gridTemplateColumns: SEO_FEED_COLS }}
         role="button"
         tabIndex={0}
@@ -992,6 +1024,11 @@ function SessionRows({
             <span className="lf-lbl-full">{s.seoName}</span>
             <span className="lf-lbl-short">{shortChannelLabel(s.seoName)}</span>
           </span>
+          {s.bot && (
+            <span className="lf-botflag" title="Non-human / bot traffic">
+              bot
+            </span>
+          )}
         </span>
         <span className="uni-hub-cell" data-label="Country">
           {s.country ? (

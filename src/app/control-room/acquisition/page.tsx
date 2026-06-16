@@ -8,7 +8,13 @@
 // only contributes its own content area.
 
 import { useEffect, useMemo, useState } from "react";
-import { supabaseSelect } from "@/lib/supabase";
+import { supabaseSelectAll } from "@/lib/supabase";
+import {
+  classifyChannel,
+  channelGroup,
+  type SourceGroup,
+} from "@/lib/channels";
+import { isBotRow } from "@/lib/bots";
 import {
   TimeframeSelector,
   resolveDays,
@@ -25,10 +31,26 @@ interface Visit {
   country: string | null;
   city: string | null;
   device_type: string | null;
+  is_bot: boolean | null;
+  user_agent: string | null;
 }
 
-const ROWS_FETCH_LIMIT = 1000;
 const ROWS_DISPLAY_LIMIT = 200;
+
+// Source-filter options for the chart. Mirrors the Live Feed buckets so
+// "Direct / SEO / AI / Wallet / ..." mean the same thing across the
+// control room.
+const SOURCE_GROUPS: ReadonlyArray<{ value: SourceGroup; label: string }> = [
+  { value: "all", label: "All sources" },
+  { value: "SEO", label: "SEO" },
+  { value: "AI", label: "AI" },
+  { value: "Social", label: "Social" },
+  { value: "Wallet", label: "Wallet" },
+  { value: "App", label: "App" },
+  { value: "Email", label: "Email" },
+  { value: "Referral", label: "Referral" },
+  { value: "Direct", label: "Direct" },
+];
 
 // 7-column track for the visits table. Same shape as the hub-table
 // grid on /eth (6 cols) plus one extra for Session. Source / Country
@@ -42,13 +64,32 @@ export default function AcquisitionPage() {
   const [visits, setVisits] = useState<Visit[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
+  // Human-first: crawler / scanner / asset-path hits are excluded from the
+  // tiles and chart by default so Last 7d / 30d are real human traffic.
+  const [showBots, setShowBots] = useState(false);
+
+  // Bot-filtered view feeds both the summary tiles and the chart.
+  const visibleVisits = useMemo(() => {
+    if (visits == null) return null;
+    if (showBots) return visits;
+    return visits.filter(
+      (v) =>
+        !isBotRow({
+          is_bot: v.is_bot,
+          user_agent: v.user_agent,
+          page_path: v.page_path,
+        }),
+    );
+  }, [visits, showBots]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type&order=created_at.desc&limit=${ROWS_FETCH_LIMIT}`;
-        const data = await supabaseSelect<Visit>("frontpage_visits", params);
+        // Full history (paginated past PostgREST's 1000-row cap) so the
+        // window counts and chart reflect every visit, not a capped page.
+        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type,is_bot,user_agent&order=created_at.desc`;
+        const data = await supabaseSelectAll<Visit>("frontpage_visits", params);
         if (!cancelled) setVisits(data);
       } catch (e) {
         if (!cancelled) setError(String(e));
@@ -60,19 +101,20 @@ export default function AcquisitionPage() {
   }, []);
 
   const stats = useMemo(() => {
-    if (!visits) return null;
+    if (!visibleVisits) return null;
     const now = Date.now();
     const dayMs = 86_400_000;
     const count = (days: number) =>
-      visits.filter((v) => now - new Date(v.created_at).getTime() < days * dayMs)
-        .length;
+      visibleVisits.filter(
+        (v) => now - new Date(v.created_at).getTime() < days * dayMs,
+      ).length;
     return {
       last24: count(1),
       last7: count(7),
       last30: count(30),
-      uniqueSessions: new Set(visits.map((v) => v.session_id)).size,
+      uniqueSessions: new Set(visibleVisits.map((v) => v.session_id)).size,
     };
-  }, [visits]);
+  }, [visibleVisits]);
 
   return (
     <>
@@ -110,14 +152,16 @@ export default function AcquisitionPage() {
         <div className="uni-hub-empty">Loading visits…</div>
       )}
 
-      {visits && (
+      {visibleVisits && (
         <>
           <ChartSection
-            visits={visits}
+            visits={visibleVisits}
             timeframe={timeframe}
             onTimeframeChange={setTimeframe}
+            showBots={showBots}
+            onShowBotsChange={setShowBots}
           />
-          <TableSection visits={visits.slice(0, ROWS_DISPLAY_LIMIT)} />
+          <TableSection visits={visibleVisits.slice(0, ROWS_DISPLAY_LIMIT)} />
         </>
       )}
     </>
@@ -145,14 +189,19 @@ function ChartSection({
   visits,
   timeframe,
   onTimeframeChange,
+  showBots,
+  onShowBotsChange,
 }: {
   visits: Visit[];
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
+  showBots: boolean;
+  onShowBotsChange: (b: boolean) => void;
 }) {
   const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
     null,
   );
+  const [sourceFilter, setSourceFilter] = useState<SourceGroup>("all");
 
   // Oldest visit timestamp drives the "All" window. memo'd so we don't
   // recompute on every render.
@@ -167,6 +216,18 @@ function ChartSection({
   }, [visits]);
   const days = resolveDays(timeframe, oldestMs);
 
+  // Keep only the selected source group; the window (days) stays based on
+  // all visits so the time axis doesn't shift as you switch sources.
+  const filtered = useMemo(
+    () =>
+      sourceFilter === "all"
+        ? visits
+        : visits.filter(
+            (v) => channelGroup(classifyChannel(v.source)) === sourceFilter,
+          ),
+    [visits, sourceFilter],
+  );
+
   const { bins, max, total, latest, peak } = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
@@ -175,7 +236,7 @@ function ChartSection({
       out.push({ v: 0, daysAgo: days - 1 - i });
     }
     let inWindow = 0;
-    for (const v of visits) {
+    for (const v of filtered) {
       const daysAgo = Math.floor(
         (now - new Date(v.created_at).getTime()) / dayMs,
       );
@@ -192,12 +253,13 @@ function ChartSection({
       latest: out[out.length - 1]?.v ?? 0,
       peak: m,
     };
-  }, [visits, days]);
+  }, [filtered, days]);
 
   const displayValue = hovered ? hovered.v : total;
+  const srcLabel = sourceFilter === "all" ? "" : `${sourceFilter} `;
   const displayLabel = hovered
-    ? `visits ${labelForDaysAgo(hovered.daysAgo)}`
-    : `visits indexed across the trailing ${days} days`;
+    ? `${srcLabel}visits ${labelForDaysAgo(hovered.daysAgo)}`
+    : `${srcLabel}visits indexed across the trailing ${days} days`;
 
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
@@ -209,7 +271,32 @@ function ChartSection({
             {peak.toLocaleString("en-US")}/day
           </span>
         </div>
-        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
+        <div className="aq-head-controls">
+          <label
+            className="lf-bot-toggle"
+            title="Bots (crawlers, scanners, asset-path hits) are excluded from the tiles and chart by default. Toggle to include non-human traffic."
+          >
+            <input
+              type="checkbox"
+              checked={showBots}
+              onChange={(e) => onShowBotsChange(e.target.checked)}
+            />
+            Show bots
+          </label>
+          <select
+            className="lf-select"
+            aria-label="Filter visits by source"
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value as SourceGroup)}
+          >
+            {SOURCE_GROUPS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
+        </div>
       </header>
       <div className="aq-chart-card">
         <div className="aq-chart-bignum">
