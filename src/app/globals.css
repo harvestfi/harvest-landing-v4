@@ -2916,6 +2916,122 @@ body:has(.admin-shell) .foot {
 }
 .admin-sidebar-back:hover { color: #ffb936; }
 .admin-sidebar-toggle { flex-shrink: 0; }
+
+/* === Sidebar session menu ===========================================
+   A wallet-dropdown-style popover anchored to the footer trigger,
+   opening upward. Geometry (196px min-width, 12px/8px radii, 6px frame,
+   10/12 item padding, 10px icon gap, 15px Feather icons) follows the
+   reference spec; colours use the admin tokens so it themes light +
+   dark instead of the spec's hardcoded onyx. */
+.admin-menu {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.admin-menu-trigger {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-2);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.admin-menu-trigger:hover {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+.admin-menu-trigger svg {
+  flex: none;
+  color: var(--ink-3);
+}
+.admin-menu-trigger > span {
+  flex: 1;
+  text-align: left;
+}
+.admin-menu-caret {
+  transition: transform 0.15s ease;
+}
+.admin-menu-trigger[aria-expanded="true"] .admin-menu-caret {
+  transform: rotate(180deg);
+}
+
+.admin-menu-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  min-width: 196px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* Required: the base rule sets display:flex, which would override the
+   HTML `hidden` attribute, so re-assert that hidden hides. */
+.admin-menu-pop[hidden] { display: none; }
+
+.admin-menu-item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.admin-menu-item:hover {
+  background: var(--bg-2);
+  color: var(--ink);
+}
+/* all:unset strips the default focus ring; add one back for a11y. */
+.admin-menu-item:focus-visible {
+  background: var(--bg-2);
+  color: var(--ink);
+  outline: 2px solid #ffb936;
+  outline-offset: -2px;
+}
+.admin-menu-item svg {
+  color: var(--ink-3);
+  flex: none;
+}
+
+/* Transient confirmation (e.g. "Panel link copied"). Inverted chip. */
+.admin-toast {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
 /* Theme toggle lives in the mobile top bar on phones (pushed right) and
    in the sidebar footer on desktop; only one shows per breakpoint. */
 .admin-mobilebar-toggle { margin-left: auto; }
