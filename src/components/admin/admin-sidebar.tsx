@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 interface Item {
@@ -85,6 +85,182 @@ function BrandMark() {
       <span className="brand-dot" aria-hidden="true" />
       <span className="admin-sidebar-tag">Admin</span>
     </>
+  );
+}
+
+// Session menu: a small popover dropping (upward) from the sidebar footer.
+// Adapts a wallet-dropdown pattern to the control room - "Copy my address"
+// becomes "Copy panel link", and "Disconnect" becomes "Lock panel", which
+// clears the remembered passphrase (ControlRoomGate, key "cr_auth") and
+// reloads so the gate re-locks. Toggled via the boolean `hidden` attribute;
+// closes on outside-click, Escape, or after an item runs.
+function SessionMenu() {
+  const [open, setOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("click", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const flash = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 1800);
+  };
+
+  const copyLink = () => {
+    setOpen(false);
+    const url = window.location.href;
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => flash("Panel link copied"), () => flash("Copy failed"));
+    } else {
+      flash("Copy unavailable");
+    }
+  };
+
+  const lockPanel = () => {
+    setOpen(false);
+    try {
+      localStorage.removeItem("cr_auth");
+      sessionStorage.removeItem("cr_auth");
+    } catch {
+      /* ignore storage access errors */
+    }
+    window.location.reload();
+  };
+
+  return (
+    <div className="admin-menu" ref={ref}>
+      <button
+        type="button"
+        className="admin-menu-trigger"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={(e) => {
+          // stopPropagation so this same click doesn't hit the outside-click
+          // closer registered on document.
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+        <span>Session</span>
+        <svg
+          className="admin-menu-caret"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="18 15 12 9 6 15" />
+        </svg>
+      </button>
+      <div className="admin-menu-pop" role="menu" hidden={!open}>
+        <button
+          type="button"
+          role="menuitem"
+          className="admin-menu-item"
+          onClick={copyLink}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          Copy panel link
+        </button>
+        <Link
+          href="/"
+          role="menuitem"
+          className="admin-menu-item"
+          onClick={() => setOpen(false)}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+          Back to site
+        </Link>
+        <button
+          type="button"
+          role="menuitem"
+          className="admin-menu-item"
+          onClick={lockPanel}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Lock panel
+        </button>
+      </div>
+      {toast && (
+        <div className="admin-toast" role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -213,22 +389,7 @@ export function AdminSidebar() {
         </nav>
 
         <div className="admin-sidebar-foot">
-          <Link href="/" className="admin-sidebar-back">
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Back to site
-          </Link>
+          <SessionMenu />
           <span className="admin-sidebar-toggle">
             <ThemeToggle />
           </span>
