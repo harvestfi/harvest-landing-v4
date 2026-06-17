@@ -12,12 +12,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 interface Item {
   label: string;
   href: string;
+  icon: IconName;
   // When true, the row is considered active only when pathname is
   // exactly equal to href (used for index routes like /control-room and
   // /control-room/acquisition, which would otherwise swallow their
@@ -34,39 +35,39 @@ const SECTIONS: Section[] = [
   {
     label: null,
     items: [
-      { label: "Live Feed", href: "/control-room/live-feed" },
-      { label: "SEO Summary", href: "/control-room/seo" },
+      { label: "Live Feed", href: "/control-room/live-feed", icon: "activity" },
+      { label: "SEO Summary", href: "/control-room/seo", icon: "search" },
     ],
   },
   {
     label: "Acquisition",
     items: [
-      { label: "Traffic", href: "/control-room/acquisition", exact: true },
-      { label: "App Clicks", href: "/control-room/acquisition/clicks-into-app" },
-      { label: "User Networth", href: "/control-room/acquisition/app-net-worth" },
-      { label: "Deposits (TVL)", href: "/control-room/acquisition/deposits" },
+      { label: "Traffic", href: "/control-room/acquisition", icon: "users", exact: true },
+      { label: "App Clicks", href: "/control-room/acquisition/clicks-into-app", icon: "click" },
+      { label: "User Networth", href: "/control-room/acquisition/app-net-worth", icon: "dollar" },
+      { label: "Deposits (TVL)", href: "/control-room/acquisition/deposits", icon: "trending" },
     ],
   },
   {
     label: "Products",
     items: [
-      { label: "View All", href: "/control-room/products" },
-      { label: "Hide", href: "/control-room/hide" },
-      { label: "SEO Overview", href: "/control-room", exact: true },
+      { label: "View All", href: "/control-room/products", icon: "grid" },
+      { label: "Hide", href: "/control-room/hide", icon: "eye-off" },
+      { label: "SEO Overview", href: "/control-room", icon: "bar-chart", exact: true },
     ],
   },
   {
     label: "Marketing",
-    items: [{ label: "Studio", href: "/control-room/studio" }],
+    items: [{ label: "Studio", href: "/control-room/studio", icon: "image" }],
   },
   {
     label: "Settings",
     items: [
-      { label: "Master Rules", href: "/control-room/master-rules" },
+      { label: "Master Rules", href: "/control-room/master-rules", icon: "book" },
       // Master Config (/control-room/master-config) is intentionally not
       // listed here - the route stays in the repo, just hidden from the nav.
-      { label: "Ranking Rules", href: "/control-room/ranking-rules" },
-      { label: "Design System", href: "/control-room/design-system" },
+      { label: "Ranking Rules", href: "/control-room/ranking-rules", icon: "sliders" },
+      { label: "Design System", href: "/control-room/design-system", icon: "layout" },
     ],
   },
 ];
@@ -88,179 +89,116 @@ function BrandMark() {
   );
 }
 
-// Session menu: a small popover dropping (upward) from the sidebar footer.
-// Adapts a wallet-dropdown pattern to the control room - "Copy my address"
-// becomes "Copy panel link", and "Disconnect" becomes "Lock panel", which
-// clears the remembered passphrase (ControlRoomGate, key "cr_auth") and
-// reloads so the gate re-locks. Toggled via the boolean `hidden` attribute;
-// closes on outside-click, Escape, or after an item runs.
-function SessionMenu() {
-  const [open, setOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
+// Feather-style stroke icons for the nav. Each value is the inner SVG
+// content; NavIcon wraps it in a standard 15x15 stroked <svg> (same
+// treatment as the reference dropdown's item icons).
+const NAV_ICONS = {
+  activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </>
+  ),
+  users: (
+    <>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
+  click: (
+    <>
+      <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+      <path d="M13 13l6 6" />
+    </>
+  ),
+  dollar: (
+    <>
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </>
+  ),
+  trending: (
+    <>
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </>
+  ),
+  "eye-off": (
+    <>
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </>
+  ),
+  "bar-chart": (
+    <>
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </>
+  ),
+  book: (
+    <>
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </>
+  ),
+  sliders: (
+    <>
+      <line x1="4" y1="21" x2="4" y2="14" />
+      <line x1="4" y1="10" x2="4" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12" y2="3" />
+      <line x1="20" y1="21" x2="20" y2="16" />
+      <line x1="20" y1="12" x2="20" y2="3" />
+      <line x1="1" y1="14" x2="7" y2="14" />
+      <line x1="9" y1="8" x2="15" y2="8" />
+      <line x1="17" y1="16" x2="23" y2="16" />
+    </>
+  ),
+  layout: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="9" y1="21" x2="9" y2="9" />
+    </>
+  ),
+} as const;
 
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("click", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("click", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+type IconName = keyof typeof NAV_ICONS;
 
-  const flash = (msg: string) => {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 1800);
-  };
-
-  const copyLink = () => {
-    setOpen(false);
-    const url = window.location.href;
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(url)
-        .then(() => flash("Panel link copied"), () => flash("Copy failed"));
-    } else {
-      flash("Copy unavailable");
-    }
-  };
-
-  const lockPanel = () => {
-    setOpen(false);
-    try {
-      localStorage.removeItem("cr_auth");
-      sessionStorage.removeItem("cr_auth");
-    } catch {
-      /* ignore storage access errors */
-    }
-    window.location.reload();
-  };
-
+function NavIcon({ name }: { name: IconName }) {
   return (
-    <div className="admin-menu" ref={ref}>
-      <button
-        type="button"
-        className="admin-menu-trigger"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={(e) => {
-          // stopPropagation so this same click doesn't hit the outside-click
-          // closer registered on document.
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
-      >
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-        <span>Session</span>
-        <svg
-          className="admin-menu-caret"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="18 15 12 9 6 15" />
-        </svg>
-      </button>
-      <div className="admin-menu-pop" role="menu" hidden={!open}>
-        <button
-          type="button"
-          role="menuitem"
-          className="admin-menu-item"
-          onClick={copyLink}
-        >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
-          Copy panel link
-        </button>
-        <Link
-          href="/"
-          role="menuitem"
-          className="admin-menu-item"
-          onClick={() => setOpen(false)}
-        >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
-          Back to site
-        </Link>
-        <button
-          type="button"
-          role="menuitem"
-          className="admin-menu-item"
-          onClick={lockPanel}
-        >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-          Lock panel
-        </button>
-      </div>
-      {toast && (
-        <div className="admin-toast" role="status" aria-live="polite">
-          {toast}
-        </div>
-      )}
-    </div>
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {NAV_ICONS[name]}
+    </svg>
   );
 }
 
@@ -378,6 +316,7 @@ export function AdminSidebar() {
                         className={`admin-sidebar-link${active ? " active" : ""}`}
                         aria-current={active ? "page" : undefined}
                       >
+                        <NavIcon name={item.icon} />
                         {item.label}
                       </Link>
                     </li>
@@ -389,7 +328,22 @@ export function AdminSidebar() {
         </nav>
 
         <div className="admin-sidebar-foot">
-          <SessionMenu />
+          <Link href="/" className="admin-sidebar-back">
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back to site
+          </Link>
           <span className="admin-sidebar-toggle">
             <ThemeToggle />
           </span>
