@@ -38,6 +38,7 @@ import {
   sourceDomain,
 } from "@/lib/channels";
 import { isBotRow } from "@/lib/bots";
+import { FilterHint } from "@/components/admin/filter-hint";
 import "../../_styles/asset-hub.css";
 
 interface VisitRow {
@@ -115,6 +116,7 @@ interface SeoSession {
   netWorth: number | null;
   status: "new" | "existing" | null;
   bot: boolean;
+  entryPage: string; // page_path of the first visit ("/" = homepage)
   firstVisitMs: number;
   firstClickMs: number; // Infinity if it never clicked into the app
   firstDepositMs: number; // Infinity if it never deposited
@@ -222,6 +224,7 @@ function buildSampleSeoSessions(): {
       // A few sample sessions are crawlers so the "Show bots" toggle has
       // something to reveal on a data-less fork.
       bot: i % 13 === 0,
+      entryPage: visitPages[i % visitPages.length],
       firstVisitMs,
       firstClickMs,
       firstDepositMs,
@@ -251,6 +254,9 @@ export default function SeoSummaryPage() {
   const [engine, setEngine] = useState<string>("all");
   // Human-first by default: crawler sessions are hidden until opted in.
   const [showBots, setShowBots] = useState(false);
+  // "Isolate direct": hide SEO sessions whose first page was the homepage,
+  // leaving only those that landed straight on a content page.
+  const [deepLandingOnly, setDeepLandingOnly] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
@@ -354,6 +360,7 @@ export default function SeoSummaryPage() {
       latestMs: number;
       pageCount: number;
       bot: boolean;
+      entryPage: string;
       actions: SeoAction[];
     }
     const acc = new Map<string, Acc>();
@@ -372,6 +379,7 @@ export default function SeoSummaryPage() {
           latestMs: -Infinity,
           pageCount: 0,
           bot: false,
+          entryPage: "/",
           actions: [],
         };
         acc.set(id, a);
@@ -390,7 +398,10 @@ export default function SeoSummaryPage() {
         isBotRow({ is_bot: v.is_bot, user_agent: v.user_agent, page_path: v.page_path })
       )
         a.bot = true;
-      if (t < a.firstVisitMs) a.firstVisitMs = t;
+      if (t < a.firstVisitMs) {
+        a.firstVisitMs = t;
+        a.entryPage = v.page_path || "/";
+      }
       if (t > a.latestMs) a.latestMs = t;
       if (a.country === null && v.country) a.country = v.country;
       if (a.device === null && v.device_type) a.device = v.device_type;
@@ -500,9 +511,12 @@ export default function SeoSummaryPage() {
       });
     }
 
-    // Earliest deposit per wallet (across all history), for New /
-    // Existing: a session is Existing if its wallet deposited before the
-    // session's first visit, New otherwise.
+    // Earliest deposit per wallet, and earliest tracked visit per wallet
+    // (via the session<->wallet join). New/Existing anchors to the wallet's
+    // first visit (its acquisition): Existing iff it deposited before then,
+    // New otherwise - incl. first-time depositors and repeat deposits within
+    // the same acquisition. Keyed per wallet so it stays consistent across
+    // the wallet's sessions and with the Live Feed.
     const firstDepByWallet = new Map<string, number>();
     for (const e of events!) {
       if (e.event_type !== "deposit") continue;
@@ -512,6 +526,15 @@ export default function SeoSummaryPage() {
       if (!Number.isFinite(ms)) continue;
       const prev = firstDepByWallet.get(addr);
       if (prev === undefined || ms < prev) firstDepByWallet.set(addr, ms);
+    }
+    const firstVisitByWallet = new Map<string, number>();
+    for (const [sid, av] of acc) {
+      const w = sessionWallet.get(sid);
+      if (!w || !Number.isFinite(av.firstVisitMs)) continue;
+      const prev = firstVisitByWallet.get(w);
+      if (prev === undefined || av.firstVisitMs < prev) {
+        firstVisitByWallet.set(w, av.firstVisitMs);
+      }
     }
 
     const sessions: SeoSession[] = [];
@@ -525,10 +548,14 @@ export default function SeoSummaryPage() {
         sessionWallet.get(id) ??
         a.actions.find((x) => x.wallet)?.wallet ??
         null;
-      const fd = wallet ? firstDepByWallet.get(wallet.toLowerCase()) : undefined;
+      const wl = wallet ? wallet.toLowerCase() : null;
+      const fd = wl ? firstDepByWallet.get(wl) : undefined;
+      // Anchor to the wallet's first visit (acquisition), not this session's,
+      // so repeat depositors and multi-session wallets stay consistent.
+      const fv = (wl ? firstVisitByWallet.get(wl) : undefined) ?? a.firstVisitMs;
       const status: "new" | "existing" | null = !wallet
         ? null
-        : fd !== undefined && fd < a.firstVisitMs
+        : fd !== undefined && fd < fv
           ? "existing"
           : "new";
       sessions.push({
@@ -541,6 +568,7 @@ export default function SeoSummaryPage() {
         netWorth: wallet ? walletBalance.get(wallet.toLowerCase()) ?? null : null,
         status,
         bot: a.bot,
+        entryPage: a.entryPage,
         firstVisitMs: a.firstVisitMs,
         firstClickMs: a.firstClickMs,
         firstDepositMs: a.firstDepositMs,
@@ -565,7 +593,9 @@ export default function SeoSummaryPage() {
   ).sort();
   const enginedSessions = (
     engine === "all" ? sessions : sessions.filter((s) => s.seoName === engine)
-  ).filter((s) => showBots || !s.bot);
+  )
+    .filter((s) => showBots || !s.bot)
+    .filter((s) => !deepLandingOnly || s.entryPage !== "/");
 
   const days = resolveDays(timeframe, oldestMs);
   const now = Date.now();
@@ -670,6 +700,7 @@ export default function SeoSummaryPage() {
               dropdown scopes the whole funnel to one search source. */}
           <div className="lf-filterbar">
             <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+            <span className="lf-filter-grp">
             <label className="lf-filter" aria-label="Search engine filter">
               <span className="lf-filter-icon" aria-hidden="true">
                 <EngineFilterIcon />
@@ -690,6 +721,12 @@ export default function SeoSummaryPage() {
                 ))}
               </select>
             </label>
+            <FilterHint label="About the engine filter">
+              Which search engine acquired the session (Google, Bing,
+              DuckDuckGo). Only search-acquired sessions appear on this page.
+            </FilterHint>
+            </span>
+            <span className="lf-filter-grp">
             <label className="lf-filter" aria-label="Funnel stage filter">
               <span className="lf-filter-icon" aria-hidden="true">
                 <StageFilterIcon />
@@ -709,6 +746,12 @@ export default function SeoSummaryPage() {
                 ))}
               </select>
             </label>
+            <FilterHint label="About the stage filter">
+              Funnel stage in view: Acquired (landed from search), Reached app
+              (clicked through to the app), or Deposited. The chart and table
+              follow the chosen stage.
+            </FilterHint>
+            </span>
             <label
               className="lf-bot-toggle"
               title="Crawler sessions (search bots, scanners) are hidden by default. Toggle to audit non-human SEO traffic."
@@ -723,6 +766,30 @@ export default function SeoSummaryPage() {
               />
               Show bots
             </label>
+            <span className="lf-filter-grp">
+              <label className="lf-bot-toggle">
+                <input
+                  type="checkbox"
+                  checked={deepLandingOnly}
+                  onChange={(e) => {
+                    setDeepLandingOnly(e.target.checked);
+                    setPage(0);
+                  }}
+                />
+                Isolate direct
+              </label>
+              <FilterHint label="About isolate direct">
+                Hides SEO sessions that first landed on the homepage (/),
+                leaving only the ones where search dropped the visitor straight
+                onto a content page - e.g. /usdc, /hyperevm,
+                /usdc-autopilot-base. Those are the pages whose own SEO is doing
+                the work: the strategy or asset content itself is what got found
+                and clicked, not the brand homepage. Use it to judge how well
+                individual product and asset pages rank and convert on their
+                own, separate from people who arrive at the homepage and browse
+                in.
+              </FilterHint>
+            </span>
           </div>
 
           <ChartSection

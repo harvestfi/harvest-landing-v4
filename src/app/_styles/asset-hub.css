@@ -1318,14 +1318,83 @@ body:has(.uni-hub-test) {
   letter-spacing: 0.04em;
   color: var(--uni-ink-2);
 }
-/* Mobile: Refresh keeps its size, the two filters split the leftover
+/* Mobile: Refresh keeps its size, the two filter groups split the leftover
    row width equally so their text starts at the same x. */
 @media (max-width: 900px) {
-  .uni-hub-test .lf-filterbar .lf-filter {
+  .uni-hub-test .lf-filterbar .lf-filter-grp {
     flex: 1 1 0;
     min-width: 0;
   }
+  .uni-hub-test .lf-filterbar .lf-filter-grp .lf-filter {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
   .uni-hub-test .lf-filter .lf-select-iconed { min-width: 0; }
+}
+
+/* A filter dropdown paired with its "(?)" hint. */
+.uni-hub-test .lf-filter-grp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Always-visible "(?)" hint for a filter control (hover/focus reveals the
+   popover). Unlike .lf-infotip it shows on every viewport. Token-driven so
+   it themes in light + dark. */
+.uni-hub-test .lf-hint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.uni-hub-test .lf-hint-btn {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--uni-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--uni-ink-3);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.uni-hub-test .lf-hint-btn:hover {
+  color: var(--uni-ink);
+  border-color: var(--uni-ink-3);
+}
+.uni-hub-test .lf-hint-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: max-content;
+  max-width: 240px;
+  padding: 9px 11px;
+  background: var(--uni-bg);
+  border: 1px solid var(--uni-line);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  color: var(--uni-ink-2);
+  display: none;
+}
+.uni-hub-test .lf-hint:hover .lf-hint-pop,
+.uni-hub-test .lf-hint:focus-within .lf-hint-pop {
+  display: block;
 }
 .uni-hub-test .lf-source-filter {
   display: inline-flex;

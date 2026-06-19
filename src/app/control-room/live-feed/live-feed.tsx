@@ -42,6 +42,7 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import { isBotRow } from "@/lib/bots";
+import { FilterHint } from "@/components/admin/filter-hint";
 import "../../_styles/asset-hub.css";
 
 interface VaultEventRow {
@@ -169,6 +170,15 @@ const ACTIVITY_OPTIONS: ReadonlyArray<{ value: ActivityFilter; label: string }> 
   { value: "clicks", label: "Clicks" },
   { value: "deposits", label: "Deposits" },
   { value: "withdrawals", label: "Withdrawals" },
+];
+
+// Engagement filter: off, or isolate sessions that explored more than one
+// page - either from any landing, or only deep (non-root) first touches.
+type Engagement = "all" | "engaged" | "deep";
+const ENGAGEMENT_OPTIONS: ReadonlyArray<{ value: Engagement; label: string }> = [
+  { value: "all", label: "All sessions" },
+  { value: "engaged", label: "Engaged (any landing)" },
+  { value: "deep", label: "Engaged (deep landing)" },
 ];
 
 // Tolerance for matching a wallet connection to a later on-chain event:
@@ -501,6 +511,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   // Human-first by default: bots (crawlers, scanners, link unfurlers) are
   // hidden until the operator opts in via the "Show bots" toggle.
   const [showBots, setShowBots] = useState(false);
+  // Engagement filter: "all" (off), "engaged" (explored >1 page, any
+  // landing), or "deep" (explored >1 page AND first touch on a non-root
+  // page). Any source either way.
+  const [engagement, setEngagement] = useState<Engagement>("all");
 
   const items = useMemo<FeedItem[]>(() => {
     if (!loaded) return [];
@@ -701,10 +715,40 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visits, clicks, dedupedEvents, pickConnection, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
 
+  // Per-session entry page + distinct pages viewed, for "Isolate engaged":
+  // a session qualifies if its first touch was a non-root page and it spans
+  // more than one unique page (across all sources). Built from visit rows.
+  const sessionMeta = useMemo(() => {
+    const m = new Map<
+      string,
+      { entryPage: string; entryMs: number; pages: Set<string> }
+    >();
+    for (const it of items) {
+      if (it.kind !== "visit" || !it.hsid) continue;
+      const t = new Date(it.time).getTime();
+      let s = m.get(it.hsid);
+      if (!s) {
+        s = { entryPage: it.pagePath, entryMs: t, pages: new Set() };
+        m.set(it.hsid, s);
+      }
+      if (Number.isFinite(t) && t < s.entryMs) {
+        s.entryMs = t;
+        s.entryPage = it.pagePath;
+      }
+      s.pages.add(it.pagePath);
+    }
+    return m;
+  }, [items]);
+
   const filtered = useMemo(
     () =>
       items.filter((it) => {
         if (!showBots && it.bot) return false;
+        if (engagement !== "all") {
+          const s = it.hsid ? sessionMeta.get(it.hsid) : undefined;
+          if (!s || s.pages.size <= 1) return false;
+          if (engagement === "deep" && s.entryPage === "/") return false;
+        }
         if (sourceFilter !== "all" && channelGroup(it.channel) !== sourceFilter)
           return false;
         switch (activity) {
@@ -720,7 +764,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             return true;
         }
       }),
-    [items, activity, sourceFilter, showBots],
+    [items, activity, sourceFilter, showBots, engagement, sessionMeta],
   );
 
   // Clusters the operator has expanded to see the individual page views.
@@ -821,16 +865,40 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return m;
   }, [items]);
 
-  // Existing = the wallet held a Harvest balance (a deposit predating
-  // this row's time); New = no prior balance (incl. a first deposit made
-  // now). No wallet -> no classification.
+  // Earliest tracked visit per wallet (via the session<->wallet join), the
+  // "acquisition" time the New/Existing test anchors to.
+  const firstVisitByWallet = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const v of visits ?? []) {
+      if (!v.session_id) continue;
+      const w = sessionWallet.get(v.session_id)?.wallet;
+      if (!w) continue;
+      const t = new Date(v.created_at).getTime();
+      if (!Number.isFinite(t)) continue;
+      const prev = m.get(w);
+      if (prev === undefined || t < prev) m.set(w, t);
+    }
+    return m;
+  }, [visits, sessionWallet]);
+
+  // Existing = the wallet was already a depositor before we acquired it (its
+  // earliest deposit predates its first tracked visit); New = no prior
+  // balance, incl. first-time depositors who deposit during the session -
+  // even on a repeat deposit. Anchoring to the first visit (not the row's own
+  // time) keeps this consistent with the SEO Summary. No wallet -> none.
   const statusFor = useCallback(
     (wallet: string | null, timeMs: number): "new" | "existing" | null => {
       if (!wallet) return null;
-      const fd = firstDepTs.get(wallet.toLowerCase());
-      return fd !== undefined && fd < timeMs ? "existing" : "new";
+      const w = wallet.toLowerCase();
+      const fd = firstDepTs.get(w);
+      if (fd === undefined) return "new";
+      const fv = firstVisitByWallet.get(w);
+      if (fv !== undefined) return fd < fv ? "existing" : "new";
+      // Event-only wallet with no tracked visit (not in the SEO funnel):
+      // fall back to whether a deposit predates this row.
+      return fd < timeMs ? "existing" : "new";
     },
-    [firstDepTs],
+    [firstDepTs, firstVisitByWallet],
   );
 
   const loading = !loaded && !err;
@@ -885,6 +953,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             type) instead of two full-width pill bars. */}
         <div className="lf-filterbar">
           <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+          <span className="lf-filter-grp">
           <label className="lf-filter" aria-label="Source filter">
             <span className="lf-filter-icon" aria-hidden="true">
               <SourceFilterIcon />
@@ -904,6 +973,14 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               ))}
             </select>
           </label>
+          <FilterHint label="About the source filter">
+            How the visitor was acquired: SEO (search engines), AI assistants,
+            Social, Wallet (in-wallet dapp browsers), App (other in-app
+            webviews), Email (webmail), a named Referral site, or Direct (no
+            referrer, a typed URL, or an app share).
+          </FilterHint>
+          </span>
+          <span className="lf-filter-grp">
           <label className="lf-filter" aria-label="Activity filter">
             <span className="lf-filter-icon" aria-hidden="true">
               <ActivityFilterIcon />
@@ -923,6 +1000,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               ))}
             </select>
           </label>
+          <FilterHint label="About the activity filter">
+            Filter the stream by event type: page Visits, App Clicks into the
+            app, Deposits, or Withdrawals.
+          </FilterHint>
+          </span>
           <label
             className="lf-bot-toggle"
             title="Bots (crawlers, scanners, link unfurlers) are hidden by default. Toggle to audit non-human traffic."
@@ -937,6 +1019,31 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             />
             Show bots
           </label>
+          <span className="lf-filter-grp">
+            <select
+              className="lf-select"
+              aria-label="Engagement filter"
+              value={engagement}
+              onChange={(e) => {
+                setEngagement(e.target.value as Engagement);
+                setPage(0);
+              }}
+            >
+              {ENGAGEMENT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <FilterHint label="About the engagement filter">
+              Isolate engaged visitors - sessions that explored more than one
+              page - across any source. "Engaged (any landing)" counts every
+              multi-page session, homepage or not. "Engaged (deep landing)"
+              keeps only those whose first touch was a content page rather than
+              the homepage, the highest-intent cohort. Single-page bounces are
+              excluded once either mode is on.
+            </FilterHint>
+          </span>
         </div>
 
         {err && (

@@ -15,6 +15,7 @@ import {
   type SourceGroup,
 } from "@/lib/channels";
 import { isBotRow } from "@/lib/bots";
+import { FilterHint } from "@/components/admin/filter-hint";
 import {
   TimeframeSelector,
   resolveDays,
@@ -283,18 +284,26 @@ function ChartSection({
             />
             Show bots
           </label>
-          <select
-            className="lf-select"
-            aria-label="Filter visits by source"
-            value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value as SourceGroup)}
-          >
-            {SOURCE_GROUPS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <span className="lf-filter-grp">
+            <select
+              className="lf-select"
+              aria-label="Filter visits by source"
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value as SourceGroup)}
+            >
+              {SOURCE_GROUPS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <FilterHint label="About the source filter">
+              How the visit was acquired: SEO (search engines), AI assistants,
+              Social, Wallet (in-wallet dapp browsers), App (other in-app
+              webviews), Email (webmail), a named Referral site, or Direct (no
+              referrer, a typed URL, or an app share).
+            </FilterHint>
+          </span>
           <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
         </div>
       </header>
