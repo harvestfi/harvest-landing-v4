@@ -116,6 +116,7 @@ interface SeoSession {
   netWorth: number | null;
   status: "new" | "existing" | null;
   bot: boolean;
+  entryPage: string; // page_path of the first visit ("/" = homepage)
   firstVisitMs: number;
   firstClickMs: number; // Infinity if it never clicked into the app
   firstDepositMs: number; // Infinity if it never deposited
@@ -223,6 +224,7 @@ function buildSampleSeoSessions(): {
       // A few sample sessions are crawlers so the "Show bots" toggle has
       // something to reveal on a data-less fork.
       bot: i % 13 === 0,
+      entryPage: visitPages[i % visitPages.length],
       firstVisitMs,
       firstClickMs,
       firstDepositMs,
@@ -252,6 +254,9 @@ export default function SeoSummaryPage() {
   const [engine, setEngine] = useState<string>("all");
   // Human-first by default: crawler sessions are hidden until opted in.
   const [showBots, setShowBots] = useState(false);
+  // "Isolate direct": hide SEO sessions whose first page was the homepage,
+  // leaving only those that landed straight on a content page.
+  const [deepLandingOnly, setDeepLandingOnly] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
@@ -355,6 +360,7 @@ export default function SeoSummaryPage() {
       latestMs: number;
       pageCount: number;
       bot: boolean;
+      entryPage: string;
       actions: SeoAction[];
     }
     const acc = new Map<string, Acc>();
@@ -373,6 +379,7 @@ export default function SeoSummaryPage() {
           latestMs: -Infinity,
           pageCount: 0,
           bot: false,
+          entryPage: "/",
           actions: [],
         };
         acc.set(id, a);
@@ -391,7 +398,10 @@ export default function SeoSummaryPage() {
         isBotRow({ is_bot: v.is_bot, user_agent: v.user_agent, page_path: v.page_path })
       )
         a.bot = true;
-      if (t < a.firstVisitMs) a.firstVisitMs = t;
+      if (t < a.firstVisitMs) {
+        a.firstVisitMs = t;
+        a.entryPage = v.page_path || "/";
+      }
       if (t > a.latestMs) a.latestMs = t;
       if (a.country === null && v.country) a.country = v.country;
       if (a.device === null && v.device_type) a.device = v.device_type;
@@ -558,6 +568,7 @@ export default function SeoSummaryPage() {
         netWorth: wallet ? walletBalance.get(wallet.toLowerCase()) ?? null : null,
         status,
         bot: a.bot,
+        entryPage: a.entryPage,
         firstVisitMs: a.firstVisitMs,
         firstClickMs: a.firstClickMs,
         firstDepositMs: a.firstDepositMs,
@@ -582,7 +593,9 @@ export default function SeoSummaryPage() {
   ).sort();
   const enginedSessions = (
     engine === "all" ? sessions : sessions.filter((s) => s.seoName === engine)
-  ).filter((s) => showBots || !s.bot);
+  )
+    .filter((s) => showBots || !s.bot)
+    .filter((s) => !deepLandingOnly || s.entryPage !== "/");
 
   const days = resolveDays(timeframe, oldestMs);
   const now = Date.now();
@@ -753,6 +766,30 @@ export default function SeoSummaryPage() {
               />
               Show bots
             </label>
+            <span className="lf-filter-grp">
+              <label className="lf-bot-toggle">
+                <input
+                  type="checkbox"
+                  checked={deepLandingOnly}
+                  onChange={(e) => {
+                    setDeepLandingOnly(e.target.checked);
+                    setPage(0);
+                  }}
+                />
+                Isolate direct
+              </label>
+              <FilterHint label="About isolate direct">
+                Hides SEO sessions that first landed on the homepage (/),
+                leaving only the ones where search dropped the visitor straight
+                onto a content page - e.g. /usdc, /hyperevm,
+                /usdc-autopilot-base. Those are the pages whose own SEO is doing
+                the work: the strategy or asset content itself is what got found
+                and clicked, not the brand homepage. Use it to judge how well
+                individual product and asset pages rank and convert on their
+                own, separate from people who arrive at the homepage and browse
+                in.
+              </FilterHint>
+            </span>
           </div>
 
           <ChartSection
