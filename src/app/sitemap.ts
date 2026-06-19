@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getVaults, isBrokenLowTvlVault } from "@/lib/data";
+import { getVaults, isVaultPageIndexable } from "@/lib/data";
 import { getCanonicalSlugs } from "@/lib/canonical-vaults";
 import { SITE_URL } from "@/lib/constants";
 import { NETWORKS } from "@/lib/networks";
@@ -11,13 +11,14 @@ const ASSET_HUBS = ["usdc", "usdt", "btc", "eth"];
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const vaults = await getVaults();
   const canonical = await getCanonicalSlugs();
-  const brokenSlugs = new Set(vaults.filter(isBrokenLowTvlVault).map((v) => v.slug));
 
+  // Mirror the per-page robots gate (app/[slug]/page.tsx) exactly so the
+  // sitemap never lists a URL we noindex - canonical only, no broken /
+  // stale / missing-metrics / thin-history stubs.
   const vaultPages = vaults
-    .map((v) => v.slug)
-    .filter((s) => canonical.has(s) && !brokenSlugs.has(s))
-    .map((slug) => ({
-      url: `${SITE_URL}/${slug}`,
+    .filter((v) => isVaultPageIndexable(v, canonical.has(v.slug)))
+    .map((v) => ({
+      url: `${SITE_URL}/${v.slug}`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.8,

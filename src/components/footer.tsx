@@ -36,7 +36,7 @@ const COMPANY = [
 const SOCIAL: { label: string; href: string; icon: React.ReactNode }[] = [
   {
     label: "Twitter",
-    href: "https://twitter.com/harvest_finance",
+    href: "https://x.com/harvest_finance",
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -45,7 +45,7 @@ const SOCIAL: { label: string; href: string; icon: React.ReactNode }[] = [
   },
   {
     label: "Medium",
-    href: "https://medium.com/harvest-finance",
+    href: "https://harvestfinance.medium.com/",
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M2.846 6.887c.03-.295-.083-.586-.303-.784L.275 3.297V2.91h7.314l5.654 12.404L18.222 2.91H25.2v.387l-1.945 1.866c-.168.128-.252.339-.218.547v13.708c-.034.208.05.418.218.547l1.901 1.866v.387h-9.564v-.387l1.967-1.911c.193-.193.193-.25.193-.547V8.246l-5.466 13.882h-.738L4.999 8.246v9.305c-.053.394.077.79.353 1.075l2.563 3.115v.387H.748v-.387l2.563-3.115c.273-.286.395-.683.318-1.075V6.887z" />
