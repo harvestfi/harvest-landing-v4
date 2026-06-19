@@ -502,6 +502,9 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   // Human-first by default: bots (crawlers, scanners, link unfurlers) are
   // hidden until the operator opts in via the "Show bots" toggle.
   const [showBots, setShowBots] = useState(false);
+  // "Isolate engaged": highest-intent sessions only - first touch on a
+  // non-root page AND more than one page explored (any source).
+  const [engagedOnly, setEngagedOnly] = useState(false);
 
   const items = useMemo<FeedItem[]>(() => {
     if (!loaded) return [];
@@ -702,10 +705,39 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visits, clicks, dedupedEvents, pickConnection, sessionWallet, sessionFirstTouch, loaded, realEmpty]);
 
+  // Per-session entry page + distinct pages viewed, for "Isolate engaged":
+  // a session qualifies if its first touch was a non-root page and it spans
+  // more than one unique page (across all sources). Built from visit rows.
+  const sessionMeta = useMemo(() => {
+    const m = new Map<
+      string,
+      { entryPage: string; entryMs: number; pages: Set<string> }
+    >();
+    for (const it of items) {
+      if (it.kind !== "visit" || !it.hsid) continue;
+      const t = new Date(it.time).getTime();
+      let s = m.get(it.hsid);
+      if (!s) {
+        s = { entryPage: it.pagePath, entryMs: t, pages: new Set() };
+        m.set(it.hsid, s);
+      }
+      if (Number.isFinite(t) && t < s.entryMs) {
+        s.entryMs = t;
+        s.entryPage = it.pagePath;
+      }
+      s.pages.add(it.pagePath);
+    }
+    return m;
+  }, [items]);
+
   const filtered = useMemo(
     () =>
       items.filter((it) => {
         if (!showBots && it.bot) return false;
+        if (engagedOnly) {
+          const s = it.hsid ? sessionMeta.get(it.hsid) : undefined;
+          if (!s || s.entryPage === "/" || s.pages.size <= 1) return false;
+        }
         if (sourceFilter !== "all" && channelGroup(it.channel) !== sourceFilter)
           return false;
         switch (activity) {
@@ -721,7 +753,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             return true;
         }
       }),
-    [items, activity, sourceFilter, showBots],
+    [items, activity, sourceFilter, showBots, engagedOnly, sessionMeta],
   );
 
   // Clusters the operator has expanded to see the individual page views.
@@ -976,6 +1008,25 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             />
             Show bots
           </label>
+          <span className="lf-filter-grp">
+            <label className="lf-bot-toggle">
+              <input
+                type="checkbox"
+                checked={engagedOnly}
+                onChange={(e) => {
+                  setEngagedOnly(e.target.checked);
+                  setPage(0);
+                }}
+              />
+              Isolate engaged
+            </label>
+            <FilterHint label="About isolate engaged">
+              Highest-intent visitors, any source: landed straight on a content
+              page (not the homepage) and then explored more than one page -
+              they found something specific and dug in. Excludes homepage
+              landings and single-page bounces.
+            </FilterHint>
+          </span>
         </div>
 
         {err && (
