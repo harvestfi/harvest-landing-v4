@@ -42,6 +42,7 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import { isBotRow } from "@/lib/bots";
+import { FilterHint } from "@/components/admin/filter-hint";
 import "../../_styles/asset-hub.css";
 
 interface VaultEventRow {
@@ -909,6 +910,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             type) instead of two full-width pill bars. */}
         <div className="lf-filterbar">
           <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+          <span className="lf-filter-grp">
           <label className="lf-filter" aria-label="Source filter">
             <span className="lf-filter-icon" aria-hidden="true">
               <SourceFilterIcon />
@@ -928,6 +930,14 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               ))}
             </select>
           </label>
+          <FilterHint label="About the source filter">
+            How the visitor was acquired: SEO (search engines), AI assistants,
+            Social, Wallet (in-wallet dapp browsers), App (other in-app
+            webviews), Email (webmail), a named Referral site, or Direct (no
+            referrer, a typed URL, or an app share).
+          </FilterHint>
+          </span>
+          <span className="lf-filter-grp">
           <label className="lf-filter" aria-label="Activity filter">
             <span className="lf-filter-icon" aria-hidden="true">
               <ActivityFilterIcon />
@@ -947,6 +957,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               ))}
             </select>
           </label>
+          <FilterHint label="About the activity filter">
+            Filter the stream by event type: page Visits, App Clicks into the
+            app, Deposits, or Withdrawals.
+          </FilterHint>
+          </span>
           <label
             className="lf-bot-toggle"
             title="Bots (crawlers, scanners, link unfurlers) are hidden by default. Toggle to audit non-human traffic."
