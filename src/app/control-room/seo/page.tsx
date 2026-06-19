@@ -500,9 +500,12 @@ export default function SeoSummaryPage() {
       });
     }
 
-    // Earliest deposit per wallet (across all history), for New /
-    // Existing: a session is Existing if its wallet deposited before the
-    // session's first visit, New otherwise.
+    // Earliest deposit per wallet, and earliest tracked visit per wallet
+    // (via the session<->wallet join). New/Existing anchors to the wallet's
+    // first visit (its acquisition): Existing iff it deposited before then,
+    // New otherwise - incl. first-time depositors and repeat deposits within
+    // the same acquisition. Keyed per wallet so it stays consistent across
+    // the wallet's sessions and with the Live Feed.
     const firstDepByWallet = new Map<string, number>();
     for (const e of events!) {
       if (e.event_type !== "deposit") continue;
@@ -512,6 +515,15 @@ export default function SeoSummaryPage() {
       if (!Number.isFinite(ms)) continue;
       const prev = firstDepByWallet.get(addr);
       if (prev === undefined || ms < prev) firstDepByWallet.set(addr, ms);
+    }
+    const firstVisitByWallet = new Map<string, number>();
+    for (const [sid, av] of acc) {
+      const w = sessionWallet.get(sid);
+      if (!w || !Number.isFinite(av.firstVisitMs)) continue;
+      const prev = firstVisitByWallet.get(w);
+      if (prev === undefined || av.firstVisitMs < prev) {
+        firstVisitByWallet.set(w, av.firstVisitMs);
+      }
     }
 
     const sessions: SeoSession[] = [];
@@ -525,10 +537,14 @@ export default function SeoSummaryPage() {
         sessionWallet.get(id) ??
         a.actions.find((x) => x.wallet)?.wallet ??
         null;
-      const fd = wallet ? firstDepByWallet.get(wallet.toLowerCase()) : undefined;
+      const wl = wallet ? wallet.toLowerCase() : null;
+      const fd = wl ? firstDepByWallet.get(wl) : undefined;
+      // Anchor to the wallet's first visit (acquisition), not this session's,
+      // so repeat depositors and multi-session wallets stay consistent.
+      const fv = (wl ? firstVisitByWallet.get(wl) : undefined) ?? a.firstVisitMs;
       const status: "new" | "existing" | null = !wallet
         ? null
-        : fd !== undefined && fd < a.firstVisitMs
+        : fd !== undefined && fd < fv
           ? "existing"
           : "new";
       sessions.push({

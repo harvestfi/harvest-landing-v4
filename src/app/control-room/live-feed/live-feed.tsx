@@ -821,16 +821,40 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     return m;
   }, [items]);
 
-  // Existing = the wallet held a Harvest balance (a deposit predating
-  // this row's time); New = no prior balance (incl. a first deposit made
-  // now). No wallet -> no classification.
+  // Earliest tracked visit per wallet (via the session<->wallet join), the
+  // "acquisition" time the New/Existing test anchors to.
+  const firstVisitByWallet = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const v of visits ?? []) {
+      if (!v.session_id) continue;
+      const w = sessionWallet.get(v.session_id)?.wallet;
+      if (!w) continue;
+      const t = new Date(v.created_at).getTime();
+      if (!Number.isFinite(t)) continue;
+      const prev = m.get(w);
+      if (prev === undefined || t < prev) m.set(w, t);
+    }
+    return m;
+  }, [visits, sessionWallet]);
+
+  // Existing = the wallet was already a depositor before we acquired it (its
+  // earliest deposit predates its first tracked visit); New = no prior
+  // balance, incl. first-time depositors who deposit during the session -
+  // even on a repeat deposit. Anchoring to the first visit (not the row's own
+  // time) keeps this consistent with the SEO Summary. No wallet -> none.
   const statusFor = useCallback(
     (wallet: string | null, timeMs: number): "new" | "existing" | null => {
       if (!wallet) return null;
-      const fd = firstDepTs.get(wallet.toLowerCase());
-      return fd !== undefined && fd < timeMs ? "existing" : "new";
+      const w = wallet.toLowerCase();
+      const fd = firstDepTs.get(w);
+      if (fd === undefined) return "new";
+      const fv = firstVisitByWallet.get(w);
+      if (fv !== undefined) return fd < fv ? "existing" : "new";
+      // Event-only wallet with no tracked visit (not in the SEO funnel):
+      // fall back to whether a deposit predates this row.
+      return fd < timeMs ? "existing" : "new";
     },
-    [firstDepTs],
+    [firstDepTs, firstVisitByWallet],
   );
 
   const loading = !loaded && !err;
