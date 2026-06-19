@@ -32,6 +32,7 @@ import {
   channelGroup,
   shortChannelLabel,
   sourceDomain,
+  brandFromSource,
   type SourceGroup,
 } from "@/lib/channels";
 import { CountryFlag } from "@/components/admin/country-flag";
@@ -642,15 +643,23 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         const wal = v.session_id
           ? sessionWallet.get(v.session_id)?.wallet ?? null
           : null;
+        // For an unrecognised referral, prefer the referrer's brand so the
+        // pill shows the root domain (e.g. "Moonwell") even on older rows
+        // whose stored source was a subdomain.
+        const dom = sourceDomain(v.referrer);
+        const baseCh = classifyChannel(v.source);
         return {
           kind: "visit" as const,
           bot: isBotRow({ is_bot: v.is_bot, user_agent: v.user_agent, page_path: v.page_path }),
           id: `v-${v.session_id}-${v.created_at}-${i}`,
           time: v.created_at,
-          channel: classifyChannel(v.source),
+          channel:
+            channelTone(baseCh) === "referral" && dom
+              ? brandFromSource(dom)
+              : baseCh,
           country: v.country,
           device: v.device_type,
-          srcDomain: sourceDomain(v.referrer),
+          srcDomain: dom,
           pagePath: v.page_path || "/",
           hsid: v.session_id || null,
           wallet: wal,
@@ -661,19 +670,25 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         const wal = c.session_id
           ? sessionWallet.get(c.session_id)?.wallet ?? null
           : null;
+        // Clicks carry no referrer; fall back to the session's first visit
+        // domain, and prefer its brand for an unrecognised referral so the
+        // pill shows the root domain, not a subdomain.
+        const cDom = c.session_id
+          ? sessionFirstTouch.get(c.session_id)?.domain ?? null
+          : null;
+        const cBaseCh = appChannel(c.source);
         return {
           kind: "click" as const,
           bot: isBotRow({ is_bot: c.is_bot, user_agent: c.user_agent, page_path: c.source_page }),
           id: `c-${c.session_id}-${c.created_at}-${i}`,
           time: c.created_at,
-          channel: appChannel(c.source),
+          channel:
+            channelTone(cBaseCh) === "referral" && cDom
+              ? brandFromSource(cDom)
+              : cBaseCh,
           country: c.country,
           device: c.device_type,
-          // Clicks carry no referrer; fall back to the session's first
-          // visit domain so a click row still shows where it came from.
-          srcDomain: c.session_id
-            ? sessionFirstTouch.get(c.session_id)?.domain ?? null
-            : null,
+          srcDomain: cDom,
           vaultSlug: c.vault_slug,
           sourcePage: c.source_page || "/",
           targetUrl: c.target_url,

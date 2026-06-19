@@ -124,7 +124,12 @@ export function deriveSource(
     // fire because we track each route, but covers edge cases like
     // hash navigation.
     if (host.includes("harvest")) return "Internal";
-    return capitalize(host.split(".")[0] || host);
+    // Brand from the registrable domain, not the subdomain, so a referrer of
+    // "docs.moonwell.fi" reads "Moonwell", not "Docs". Heuristic root = last
+    // two labels; the second-to-last label is the brand.
+    const parts = host.split(".").filter(Boolean);
+    const sld = parts.length >= 2 ? parts[parts.length - 2] : parts[0] || host;
+    return capitalize(sld);
   } catch {
     return "Unknown";
   }
