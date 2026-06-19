@@ -38,6 +38,7 @@ import {
   sourceDomain,
 } from "@/lib/channels";
 import { isBotRow } from "@/lib/bots";
+import { FilterHint } from "@/components/admin/filter-hint";
 import "../../_styles/asset-hub.css";
 
 interface VisitRow {
@@ -686,6 +687,7 @@ export default function SeoSummaryPage() {
               dropdown scopes the whole funnel to one search source. */}
           <div className="lf-filterbar">
             <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+            <span className="lf-filter-grp">
             <label className="lf-filter" aria-label="Search engine filter">
               <span className="lf-filter-icon" aria-hidden="true">
                 <EngineFilterIcon />
@@ -706,6 +708,12 @@ export default function SeoSummaryPage() {
                 ))}
               </select>
             </label>
+            <FilterHint label="About the engine filter">
+              Which search engine acquired the session (Google, Bing,
+              DuckDuckGo). Only search-acquired sessions appear on this page.
+            </FilterHint>
+            </span>
+            <span className="lf-filter-grp">
             <label className="lf-filter" aria-label="Funnel stage filter">
               <span className="lf-filter-icon" aria-hidden="true">
                 <StageFilterIcon />
@@ -725,6 +733,12 @@ export default function SeoSummaryPage() {
                 ))}
               </select>
             </label>
+            <FilterHint label="About the stage filter">
+              Funnel stage in view: Acquired (landed from search), Reached app
+              (clicked through to the app), or Deposited. The chart and table
+              follow the chosen stage.
+            </FilterHint>
+            </span>
             <label
               className="lf-bot-toggle"
               title="Crawler sessions (search bots, scanners) are hidden by default. Toggle to audit non-human SEO traffic."

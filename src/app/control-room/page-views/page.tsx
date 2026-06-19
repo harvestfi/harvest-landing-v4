@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabaseSelectAll } from "@/lib/supabase";
 import { isBotRow } from "@/lib/bots";
 import { InfoTip } from "@/components/admin/info-tip";
+import { FilterHint } from "@/components/admin/filter-hint";
 import {
   TimeframeSelector,
   resolveDays,
@@ -242,30 +243,43 @@ export default function PageViewsPage() {
                 />
                 Show bots
               </label>
-              <select
-                className="lf-select"
-                aria-label="Entry page filter"
-                value={entry}
-                onChange={(e) => setEntry(e.target.value as EntryFilter)}
-              >
-                {ENTRY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="lf-select"
-                aria-label="Metric"
-                value={metric}
-                onChange={(e) => setMetric(e.target.value as Metric)}
-              >
-                {METRIC_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              <span className="lf-filter-grp">
+                <select
+                  className="lf-select"
+                  aria-label="Entry page filter"
+                  value={entry}
+                  onChange={(e) => setEntry(e.target.value as EntryFilter)}
+                >
+                  {ENTRY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <FilterHint label="About the entry filter">
+                  Scope to all sessions, or only those that first landed on the
+                  homepage (/) - so you can see how many homepage visitors go on
+                  to explore the app.
+                </FilterHint>
+              </span>
+              <span className="lf-filter-grp">
+                <select
+                  className="lf-select"
+                  aria-label="Metric"
+                  value={metric}
+                  onChange={(e) => setMetric(e.target.value as Metric)}
+                >
+                  {METRIC_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <FilterHint label="About the metric">
+                  What the bars count: sessions that explored further (more than
+                  one unique page), or all sessions.
+                </FilterHint>
+              </span>
               <TimeframeSelector value={timeframe} onChange={setTimeframe} />
             </div>
           </header>
