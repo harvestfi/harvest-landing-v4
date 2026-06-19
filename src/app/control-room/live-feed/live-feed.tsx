@@ -172,6 +172,15 @@ const ACTIVITY_OPTIONS: ReadonlyArray<{ value: ActivityFilter; label: string }> 
   { value: "withdrawals", label: "Withdrawals" },
 ];
 
+// Engagement filter: off, or isolate sessions that explored more than one
+// page - either from any landing, or only deep (non-root) first touches.
+type Engagement = "all" | "engaged" | "deep";
+const ENGAGEMENT_OPTIONS: ReadonlyArray<{ value: Engagement; label: string }> = [
+  { value: "all", label: "All sessions" },
+  { value: "engaged", label: "Engaged (any landing)" },
+  { value: "deep", label: "Engaged (deep landing)" },
+];
+
 // Tolerance for matching a wallet connection to a later on-chain event:
 // the connect is written client-side moments before the deposit, while
 // the deposit time comes from the chain block, so allow a little slack
@@ -502,9 +511,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   // Human-first by default: bots (crawlers, scanners, link unfurlers) are
   // hidden until the operator opts in via the "Show bots" toggle.
   const [showBots, setShowBots] = useState(false);
-  // "Isolate engaged": highest-intent sessions only - first touch on a
-  // non-root page AND more than one page explored (any source).
-  const [engagedOnly, setEngagedOnly] = useState(false);
+  // Engagement filter: "all" (off), "engaged" (explored >1 page, any
+  // landing), or "deep" (explored >1 page AND first touch on a non-root
+  // page). Any source either way.
+  const [engagement, setEngagement] = useState<Engagement>("all");
 
   const items = useMemo<FeedItem[]>(() => {
     if (!loaded) return [];
@@ -734,9 +744,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     () =>
       items.filter((it) => {
         if (!showBots && it.bot) return false;
-        if (engagedOnly) {
+        if (engagement !== "all") {
           const s = it.hsid ? sessionMeta.get(it.hsid) : undefined;
-          if (!s || s.entryPage === "/" || s.pages.size <= 1) return false;
+          if (!s || s.pages.size <= 1) return false;
+          if (engagement === "deep" && s.entryPage === "/") return false;
         }
         if (sourceFilter !== "all" && channelGroup(it.channel) !== sourceFilter)
           return false;
@@ -753,7 +764,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             return true;
         }
       }),
-    [items, activity, sourceFilter, showBots, engagedOnly, sessionMeta],
+    [items, activity, sourceFilter, showBots, engagement, sessionMeta],
   );
 
   // Clusters the operator has expanded to see the individual page views.
@@ -1009,22 +1020,28 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             Show bots
           </label>
           <span className="lf-filter-grp">
-            <label className="lf-bot-toggle">
-              <input
-                type="checkbox"
-                checked={engagedOnly}
-                onChange={(e) => {
-                  setEngagedOnly(e.target.checked);
-                  setPage(0);
-                }}
-              />
-              Isolate engaged
-            </label>
-            <FilterHint label="About isolate engaged">
-              Highest-intent visitors, any source: landed straight on a content
-              page (not the homepage) and then explored more than one page -
-              they found something specific and dug in. Excludes homepage
-              landings and single-page bounces.
+            <select
+              className="lf-select"
+              aria-label="Engagement filter"
+              value={engagement}
+              onChange={(e) => {
+                setEngagement(e.target.value as Engagement);
+                setPage(0);
+              }}
+            >
+              {ENGAGEMENT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <FilterHint label="About the engagement filter">
+              Isolate engaged visitors - sessions that explored more than one
+              page - across any source. "Engaged (any landing)" counts every
+              multi-page session, homepage or not. "Engaged (deep landing)"
+              keeps only those whose first touch was a content page rather than
+              the homepage, the highest-intent cohort. Single-page bounces are
+              excluded once either mode is on.
             </FilterHint>
           </span>
         </div>
