@@ -98,6 +98,30 @@ function decodeAppScheme(lower: string): string {
   return "App";
 }
 
+// Brand label from a host or URL, stripped to the registrable domain so a
+// referral pill shows the site, not a subdomain: "docs.moonwell.fi" and
+// "https://docs.moonwell.fi/x" both -> "Moonwell", "www.coingecko.com" ->
+// "Coingecko". Returns the input unchanged when it isn't host-like (a utm
+// label or an already-clean brand with no dot). Heuristic root = last two
+// labels, so the second-to-last is the brand (imperfect for multi-part TLDs
+// like .co.uk, which are rare for our referrers).
+export function brandFromSource(raw: string): string {
+  const s = raw.trim();
+  let host: string;
+  try {
+    host = (
+      /^[a-z][a-z0-9+.-]*:\/\//i.test(s) ? new URL(s) : new URL("https://" + s)
+    ).hostname;
+  } catch {
+    return raw;
+  }
+  host = host.replace(/^www\./, "").toLowerCase();
+  const parts = host.split(".").filter(Boolean);
+  if (parts.length < 2) return raw;
+  const sld = parts[parts.length - 2];
+  return sld.charAt(0).toUpperCase() + sld.slice(1);
+}
+
 export function classifyChannel(raw: string | null): string {
   if (!raw) return "Direct";
   const s = raw.toLowerCase();
@@ -118,12 +142,16 @@ export function classifyChannel(raw: string | null): string {
   if (s.includes("google")) return "Google";
   if (s.includes("bing")) return "Bing";
   if (s.includes("duckduckgo")) return "DuckDuckGo";
+  if (s.includes("yandex")) return "Yandex";
+  if (s.includes("baidu")) return "Baidu";
+  if (s.includes("brave")) return "Brave";
 
   // AI assistants.
   if (s.includes("chatgpt") || s.includes("openai")) return "ChatGPT";
   if (s.includes("perplexity")) return "Perplexity";
   if (s.includes("claude") || s.includes("anthropic")) return "Claude";
   if (s.includes("gemini")) return "Gemini";
+  if (s.includes("minara")) return "Minara";
 
   // Social / messaging.
   if (s.includes("t.co") || s.includes("twitter") || s.includes("x.com")) return "X / Twitter";
@@ -157,10 +185,10 @@ export function classifyChannel(raw: string | null): string {
   ) {
     return "Direct";
   }
-  // A real external site we don't have a named channel for: surface the
-  // referrer itself (GA-style "Referral / <source>") rather than a blank
-  // "Referral" bucket, so the operator can see where it actually came from.
-  return raw;
+  // A real external site we don't have a named channel for: surface its
+  // brand (registrable domain, subdomains stripped) so the pill reads
+  // "Moonwell", not "docs". Falls back to the raw value when not host-like.
+  return brandFromSource(raw);
 }
 
 // App-side events (clicks, deposits, withdrawals) entered the app from our
@@ -172,8 +200,10 @@ export function appChannel(raw: string | null): string {
   return c === "Direct" ? "Homepage" : c;
 }
 
-const SEARCH_CHANNELS = new Set(["Google", "Bing", "DuckDuckGo"]);
-const AI_CHANNELS = new Set(["ChatGPT", "Perplexity", "Claude", "Gemini"]);
+const SEARCH_CHANNELS = new Set([
+  "Google", "Bing", "DuckDuckGo", "Yandex", "Baidu", "Brave",
+]);
+const AI_CHANNELS = new Set(["ChatGPT", "Perplexity", "Claude", "Gemini", "Minara"]);
 const SOCIAL_CHANNELS = new Set([
   "X / Twitter", "Reddit", "Discord", "Telegram", "GitHub", "Medium",
   "Instagram", "Facebook", "LinkedIn", "TikTok", "WhatsApp", "Signal", "Farcaster",
