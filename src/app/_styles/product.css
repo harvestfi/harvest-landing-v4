@@ -1610,6 +1610,40 @@ body:has(.uni-shell) {
 /* === Daily history table - Uniswap Explore feel ===
    Bigger row padding, larger numeric typography, gold underline on
    the header row, soft hover bg. */
+/* Historical Data section head: title on the left, the CSV download
+   affordance on the right. The link is deliberately quiet (muted until
+   hover) so it doesn't compete with the section title, and the
+   a.vh-csv-dl scoping overrides the .pp-section underline-link rule. */
+.uni-shell .vh-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.uni-shell .pp-section a.vh-csv-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uni-ink-2);
+  border: 1px solid var(--uni-line);
+  border-radius: 999px;
+  padding: 6px 13px;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.uni-shell .pp-section a.vh-csv-dl:hover {
+  color: var(--uni-ink);
+  border-color: var(--uni-gold);
+  background: var(--uni-tint);
+}
+.uni-shell .vh-csv-dl svg {
+  flex-shrink: 0;
+}
+
 /* Daily history table wrap on /test: strip the production card, lay
    the metric tabs on the LEFT and the lifetime summary INLINE on
    the right of the same row. */

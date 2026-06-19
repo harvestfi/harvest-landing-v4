@@ -295,6 +295,49 @@ export function hasMissingMetrics(v: YieldVault): boolean {
   return !(v.apy24h > 0) || !(v.tvl > 0);
 }
 
+// Data-depth floor for indexability. Mirrors datasetSchema()'s 30-point
+// cutoff: a page too thin to emit a Dataset (fewer than 30 points in BOTH
+// the APY and TVL series) has no real historical analytics to offer and is
+// almost always a brand-new or dust vault that still slips past the
+// live/metrics gates on a spot APY. We noindex those stubs so crawlers
+// don't bank near-empty pages, but - unlike broken/stale - this is NOT a
+// ranking signal: thin vaults stay on every on-site ranking surface (with
+// their existing low-liquidity marker) and simply shouldn't be the page
+// Google indexes until they accumulate history. Re-includes automatically
+// the moment either series crosses the threshold.
+export const INDEX_MIN_HISTORY_POINTS = 30;
+
+export function hasThinHistory(v: YieldVault): boolean {
+  if (!_historyCache) _historyCache = loadHistoryFromFile();
+  const h =
+    _historyCache?.[v.contractAddress] ??
+    _historyCache?.[v.contractAddress.toLowerCase()];
+  const apyN = h?.apyHistory.length ?? 0;
+  const tvlN = h?.tvlHistory.length ?? 0;
+  return apyN < INDEX_MIN_HISTORY_POINTS && tvlN < INDEX_MIN_HISTORY_POINTS;
+}
+
+// Single source of truth for "should this vault's page be indexed?".
+// Consumed by both the per-page robots gate (app/[slug]/page.tsx) and the
+// sitemap, so the two never drift - we never advertise a URL we noindex.
+// `isCanonical` is passed in because it's resolved against the whole vault
+// set (async) by the caller. canonical de-dupes asset/protocol/network
+// repeats; broken / stale / missing-metrics mirror the ranking-hide
+// signals; thin-history noindexes near-empty stubs without ranking-hiding
+// them.
+export function isVaultPageIndexable(
+  v: YieldVault,
+  isCanonical: boolean,
+): boolean {
+  return (
+    isCanonical &&
+    !isBrokenLowTvlVault(v) &&
+    !isStaleApyVault(v) &&
+    !hasMissingMetrics(v) &&
+    !hasThinHistory(v)
+  );
+}
+
 let _staleSetCache: Set<string> | null = null;
 
 function getStaleAddresses(): Set<string> {
