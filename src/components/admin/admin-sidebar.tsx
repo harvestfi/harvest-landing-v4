@@ -49,6 +49,12 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    label: "Page Views",
+    items: [
+      { label: "Exploration", href: "/control-room/page-views", icon: "compass" },
+    ],
+  },
+  {
     label: "Products",
     items: [
       { label: "View All", href: "/control-room/products", icon: "grid" },
@@ -99,6 +105,12 @@ const NAV_ICONS = {
       <circle cx="12" cy="12" r="10" />
       <line x1="2" y1="12" x2="22" y2="12" />
       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </>
+  ),
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
     </>
   ),
   users: (
