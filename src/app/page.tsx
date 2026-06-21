@@ -97,7 +97,19 @@ export default async function HomePage() {
 
       <main className="uni-home-shell">
         {/* Top yields ranking */}
-        <section className="uni-home-section" id="yields" aria-labelledby="yields-title">
+        {/* data-nosnippet: this live ranking table is the homepage's most
+            prominent block, so Google was lifting it verbatim into the SERP
+            snippet (mashed cell text, plus the "#" rank header and bare "%"),
+            overriding our crafted meta description. nosnippet keeps the table
+            fully crawled and indexed - no ranking impact - but bars it from
+            the snippet, so the meta description wins. Reversible: remove the
+            attribute to restore. */}
+        <section
+          className="uni-home-section"
+          id="yields"
+          aria-labelledby="yields-title"
+          data-nosnippet=""
+        >
           <header className="uni-home-section-head">
             <div>
               <h2 id="yields-title" className="uni-home-section-title">
