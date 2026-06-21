@@ -1570,6 +1570,78 @@ body:has(.uni-hub-test) {
   display: block;
 }
 
+/* Dark mode: both (?) popovers float above the page, so the bubble must
+   read as a raised dark card with light text. The base rule uses
+   var(--uni-bg) / var(--uni-ink-2), but in some scopes --uni-bg hadn't
+   flipped to its dark value (light bubble + already-light text =
+   unreadable). Pin the surface, text and border to the dark palette so the
+   bubble is always legible - in the admin control room and on public hubs. */
+:root[data-theme="dark"] .uni-hub-test .lf-hint-pop,
+:root[data-theme="dark"] .uni-hub-test .lf-infotip-pop {
+  background: #232220;
+  color: #d4d2cc;
+  border-color: #3a3833;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Product Data (control room > Data) ===================== */
+.uni-hub-test .pd-name a {
+  color: var(--uni-ink);
+  font-weight: 500;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+.uni-hub-test .pd-name a:hover { color: var(--uni-gold); }
+.uni-hub-test .pd-deployed {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  color: var(--uni-ink-2);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.uni-hub-test .pd-age {
+  color: var(--uni-ink-3);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+.uni-hub-test .pd-pts { font-weight: 600; }
+.uni-hub-test .pd-pts.is-sparse { color: #b91c1c; }
+.uni-hub-test .pd-pts.is-partial { color: #b45309; }
+.uni-hub-test .pd-pts.is-dense { color: #047857; }
+.uni-hub-test .pd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.uni-hub-test .pd-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.uni-hub-test .pd-badge.is-critical { background: rgba(185, 28, 28, 0.1); color: #b91c1c; }
+.uni-hub-test .pd-badge.is-minor { background: rgba(180, 83, 9, 0.1); color: #b45309; }
+.uni-hub-test .pd-badge.is-good { background: rgba(29, 78, 216, 0.1); color: #1d4ed8; }
+.uni-hub-test .pd-badge.is-perfect { background: rgba(4, 120, 87, 0.1); color: #047857; }
+:root[data-theme="dark"] .uni-hub-test .pd-pts.is-sparse { color: #ff8a82; }
+:root[data-theme="dark"] .uni-hub-test .pd-pts.is-partial { color: #ffd98a; }
+:root[data-theme="dark"] .uni-hub-test .pd-pts.is-dense { color: #6dd0a0; }
+:root[data-theme="dark"] .uni-hub-test .pd-badge.is-critical { background: rgba(255, 138, 130, 0.16); color: #ff8a82; }
+:root[data-theme="dark"] .uni-hub-test .pd-badge.is-minor { background: rgba(255, 217, 138, 0.16); color: #ffd98a; }
+:root[data-theme="dark"] .uni-hub-test .pd-badge.is-good { background: rgba(164, 168, 255, 0.18); color: #a4a8ff; }
+:root[data-theme="dark"] .uni-hub-test .pd-badge.is-perfect { background: rgba(109, 208, 160, 0.16); color: #6dd0a0; }
+
 /* Mobile control-room (Live Feed + SEO Summary, scoped to .lf-page so
    the public hubs and other admin pages are untouched): drop the long
    description into the (?) tip, hide the section titles, and squeeze the
