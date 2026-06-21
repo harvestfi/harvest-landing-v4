@@ -1570,6 +1570,20 @@ body:has(.uni-hub-test) {
   display: block;
 }
 
+/* Dark mode: both (?) popovers float above the page, so the bubble must
+   read as a raised dark card with light text. The base rule uses
+   var(--uni-bg) / var(--uni-ink-2), but in some scopes --uni-bg hadn't
+   flipped to its dark value (light bubble + already-light text =
+   unreadable). Pin the surface, text and border to the dark palette so the
+   bubble is always legible - in the admin control room and on public hubs. */
+:root[data-theme="dark"] .uni-hub-test .lf-hint-pop,
+:root[data-theme="dark"] .uni-hub-test .lf-infotip-pop {
+  background: #232220;
+  color: #d4d2cc;
+  border-color: #3a3833;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
 /* Mobile control-room (Live Feed + SEO Summary, scoped to .lf-page so
    the public hubs and other admin pages are untouched): drop the long
    description into the (?) tip, hide the section titles, and squeeze the
