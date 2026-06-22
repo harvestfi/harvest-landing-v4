@@ -40,6 +40,37 @@ export interface BotSignals {
   is_bot?: boolean | null;
   user_agent?: string | null;
   page_path?: string | null;
+  // Geometry for the headless-automation check (d). Optional: callers that
+  // don't select these columns simply skip that layer.
+  device_type?: string | null;
+  screen_width?: number | null;
+  screen_height?: number | null;
+  viewport_width?: number | null;
+  viewport_height?: number | null;
+}
+
+// (d) Headless / automation footprint: a DESKTOP hit whose viewport is
+// exactly the full screen in both dimensions. A real desktop browser always
+// loses vertical space to the OS taskbar + browser chrome, so
+// viewport_height < screen_height holds for every genuine visit; viewport
+// == screen only happens in a headless / no-UI browser. This is the stable
+// fingerprint of the worldwide referrer-spoofing "Google" flood (every hit
+// reported a 1920x1080 viewport on a 1920x1080 screen, with a real-looking
+// Windows Chrome UA the UA layer can't touch) and of assorted datacenter
+// scrapers. Desktop-only on purpose: on mobile, viewport == screen does
+// occur on real devices, and mobile bots are already caught by the UA
+// layer. Validated against ~280 real rows with zero false positives - every
+// genuine desktop visit had viewport_height < screen_height.
+export function isAutomationViewport(s: BotSignals): boolean {
+  return (
+    s.device_type === "desktop" &&
+    typeof s.screen_width === "number" &&
+    s.screen_width > 0 &&
+    typeof s.screen_height === "number" &&
+    s.screen_height > 0 &&
+    s.viewport_width === s.screen_width &&
+    s.viewport_height === s.screen_height
+  );
 }
 
 // True if any layer flags the row as non-human.
@@ -47,6 +78,7 @@ export function isBotRow(s: BotSignals): boolean {
   return (
     s.is_bot === true ||
     isBotUserAgent(s.user_agent) ||
-    isNonPagePath(s.page_path)
+    isNonPagePath(s.page_path) ||
+    isAutomationViewport(s)
   );
 }
