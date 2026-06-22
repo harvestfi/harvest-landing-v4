@@ -36,6 +36,7 @@ import { HistoricalNarrative } from "@/components/historical-narrative";
 import { MarketBenchmark, EcosystemContext } from "@/components/market-sections";
 import { VaultCommentary } from "@/components/vault-commentary";
 import { VaultHistoryTable } from "@/components/vault-history-table";
+import { hasDatasetDownload, historyCsvHref } from "@/lib/jsonld";
 import { VaultFaq } from "@/components/vault-faq";
 import { YieldTrajectory } from "@/components/yield-trajectory";
 import { OverviewChart, type ChartSeries } from "@/components/vault-overview-chart";
@@ -537,7 +538,14 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
 
         <HistoricalStats history={history} asset={vault.asset} currentTvl={vault.tvl} />
 
-        <VaultHistoryTable history={history} />
+        <VaultHistoryTable
+          history={history}
+          csvHref={
+            hasDatasetDownload(history)
+              ? historyCsvHref(vault.slug)
+              : undefined
+          }
+        />
 
         {/* Strategy details */}
         <section className="pp-section" id="details">

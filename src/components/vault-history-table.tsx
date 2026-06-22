@@ -5,6 +5,10 @@ import type { FullVaultHistory } from "@/lib/history-api";
 
 interface VaultHistoryTableProps {
   history: FullVaultHistory;
+  // Public URL of the per-vault CSV export, present only when this vault
+  // has enough indexed history to warrant one (see hasDatasetDownload in
+  // lib/jsonld). Thin vaults pass undefined and render no download link.
+  csvHref?: string;
 }
 
 type TabMode = "apy" | "tvl" | "sharePrice";
@@ -80,7 +84,10 @@ const TAB_CONFIG: Record<
   sharePrice: { label: "Share Price", header: "Share Price" },
 };
 
-export function VaultHistoryTable({ history }: VaultHistoryTableProps) {
+export function VaultHistoryTable({
+  history,
+  csvHref,
+}: VaultHistoryTableProps) {
   const [tab, setTab] = useState<TabMode>("apy");
   const [page, setPage] = useState(0);
 
@@ -152,7 +159,34 @@ export function VaultHistoryTable({ history }: VaultHistoryTableProps) {
 
   return (
     <div className="pp-section" id="history">
-      <h2>Historical Data</h2>
+      <div className="vh-section-head">
+        <h2>Historical Data</h2>
+        {csvHref && (
+          <a
+            className="vh-csv-dl"
+            href={csvHref}
+            download
+            aria-label="Download this vault's full history as a CSV file"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download CSV
+          </a>
+        )}
+      </div>
 
       {isStale && latestTs > 0 && (
         <p

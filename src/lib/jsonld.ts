@@ -124,11 +124,33 @@ export function articleSchema({
   };
 }
 
+// A vault qualifies for a Dataset (and a downloadable CSV export) once
+// either series has at least this many indexed points. The same 30-point
+// floor drives hasThinHistory in lib/data.ts, so the Dataset schema, the
+// CSV download, and the noindex gate all agree on "enough data to be a
+// real, indexable page".
+export const DATASET_MIN_POINTS = 30;
+
+export function hasDatasetDownload(history: FullVaultHistory): boolean {
+  return (
+    history.apyHistory.length >= DATASET_MIN_POINTS ||
+    history.tvlHistory.length >= DATASET_MIN_POINTS
+  );
+}
+
+// Public path of the per-vault CSV export emitted at build time by
+// scripts/build-history-csv.mjs. Used by both the Dataset schema's
+// DataDownload distribution and the on-page "Download CSV" link, so the
+// schema and the UI can never point at different URLs.
+export function historyCsvHref(slug: string): string {
+  return `/history/${slug}.csv`;
+}
+
 export function datasetSchema(
   vault: YieldVault,
   history: FullVaultHistory,
 ): object | null {
-  if (history.apyHistory.length < 30 && history.tvlHistory.length < 30) {
+  if (!hasDatasetDownload(history)) {
     return null;
   }
 
@@ -168,10 +190,20 @@ export function datasetSchema(
     ],
     license: "https://creativecommons.org/licenses/by/4.0/",
     isAccessibleForFree: true,
-    distribution: {
-      "@type": "DataDownload",
-      encodingFormat: "text/html",
-      contentUrl: `${SITE_URL}/${vault.slug}#history`,
-    },
+    // CSV first (a real, parseable file Google's Dataset crawler and
+    // researchers can download), then the on-page HTML table as a
+    // human-readable secondary distribution.
+    distribution: [
+      {
+        "@type": "DataDownload",
+        encodingFormat: "text/csv",
+        contentUrl: `${SITE_URL}${historyCsvHref(vault.slug)}`,
+      },
+      {
+        "@type": "DataDownload",
+        encodingFormat: "text/html",
+        contentUrl: `${SITE_URL}/${vault.slug}#history`,
+      },
+    ],
   };
 }

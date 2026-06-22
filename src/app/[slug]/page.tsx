@@ -5,9 +5,7 @@ import {
   getVaults,
   getAllSlugs,
   getVaultHistory,
-  isBrokenLowTvlVault,
-  isStaleApyVault,
-  hasMissingMetrics,
+  isVaultPageIndexable,
 } from "@/lib/data";
 import { isCanonicalSlug } from "@/lib/canonical-vaults";
 import { formatAPY, formatTVL } from "@/lib/format";
@@ -69,17 +67,14 @@ export async function generateMetadata({
     ? `Autocompounding LP yield on the ${vault.asset}/${lpPair.counterpart} pair on ${lpPair.platform} (${vault.chain}). ${lpPair.rewardToken ?? "Platform-native"} rewards are claimed and added back to the position automatically.`
     : productPageDescription(vault);
 
+  // Single robots gate, shared with sitemap.ts so we never advertise a
+  // URL we noindex. canonical de-dupes asset/protocol/network repeats;
+  // broken / stale / missing-metrics mirror the ranking-hide signals; the
+  // data-depth floor noindexes near-empty stubs (brand-new or dust vaults
+  // with no real history to show) WITHOUT pulling them from on-site
+  // rankings. See isVaultPageIndexable in lib/data.ts.
   const canonical = await isCanonicalSlug(slug);
-  const broken = isBrokenLowTvlVault(vault);
-  // Two additional gates so we don't burn crawl budget on pages
-  // whose headline numbers are empty or whose APY has been frozen
-  // for 14+ days (which is our public-rankings staleness threshold).
-  // Both conditions mirror checks already used to drop the vault
-  // from the live ranking surface, so noindex + ranking-hide stay
-  // in lockstep.
-  const stale = isStaleApyVault(vault);
-  const missingMetrics = hasMissingMetrics(vault);
-  const indexable = canonical && !broken && !stale && !missingMetrics;
+  const indexable = isVaultPageIndexable(vault, canonical);
 
   return {
     title: { absolute: title },

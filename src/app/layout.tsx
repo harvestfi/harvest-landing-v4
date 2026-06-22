@@ -99,11 +99,21 @@ const ORGANIZATION_JSONLD = {
   url: SITE_URL,
   logo: `${SITE_URL}/icon.png`,
   description: SITE_DESCRIPTION,
+  // Entity graph: the official surfaces that all refer to the same
+  // Harvest organization. Strengthens E-E-A-T / entity resolution for
+  // search and AI answer engines. Official-first, then the high-signal
+  // DeFi sources (DefiLlama), then a token aggregator. The canonical home
+  // is intentionally omitted - it's already `url` above; sameAs is for the
+  // *other* profiles.
   sameAs: [
-    "https://twitter.com/harvest_finance",
-    "https://medium.com/harvest-finance",
+    "https://app.harvest.finance/",
+    "https://x.com/harvest_finance",
+    "https://harvestfinance.medium.com/",
     "https://discord.gg/xHXe3tYjPY",
     "https://github.com/harvestfi",
+    "https://docs.harvest.finance/",
+    "https://defillama.com/protocol/harvest-finance",
+    "https://www.coingecko.com/en/coins/harvest-finance",
   ],
 };
 

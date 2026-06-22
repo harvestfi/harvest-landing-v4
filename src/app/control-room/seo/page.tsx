@@ -51,6 +51,10 @@ interface VisitRow {
   referrer: string | null;
   is_bot: boolean | null;
   user_agent: string | null;
+  screen_width: number | null;
+  screen_height: number | null;
+  viewport_width: number | null;
+  viewport_height: number | null;
 }
 interface ClickRow {
   created_at: string;
@@ -275,7 +279,7 @@ export default function SeoSummaryPage() {
     const [v, c, w, e] = await Promise.all([
       supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent&order=created_at.desc",
+        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height&order=created_at.desc",
       ),
       supabaseSelectAll<ClickRow>(
         "outbound_clicks",
@@ -395,7 +399,7 @@ export default function SeoSummaryPage() {
       a.pageCount++;
       if (
         !a.bot &&
-        isBotRow({ is_bot: v.is_bot, user_agent: v.user_agent, page_path: v.page_path })
+        isBotRow(v)
       )
         a.bot = true;
       if (t < a.firstVisitMs) {

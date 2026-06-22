@@ -63,6 +63,12 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    label: "Data",
+    items: [
+      { label: "Product Data", href: "/control-room/product-data", icon: "database" },
+    ],
+  },
+  {
     label: "Marketing",
     items: [{ label: "Studio", href: "/control-room/studio", icon: "image" }],
   },
@@ -145,6 +151,13 @@ const NAV_ICONS = {
       <rect x="14" y="3" width="7" height="7" />
       <rect x="14" y="14" width="7" height="7" />
       <rect x="3" y="14" width="7" height="7" />
+    </>
+  ),
+  database: (
+    <>
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 5v14c0 1.66-4 3-9 3s-9-1.34-9-3V5" />
+      <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
     </>
   ),
   "eye-off": (

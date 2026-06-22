@@ -34,6 +34,10 @@ interface Visit {
   device_type: string | null;
   is_bot: boolean | null;
   user_agent: string | null;
+  screen_width: number | null;
+  screen_height: number | null;
+  viewport_width: number | null;
+  viewport_height: number | null;
 }
 
 const ROWS_DISPLAY_LIMIT = 200;
@@ -75,11 +79,7 @@ export default function AcquisitionPage() {
     if (showBots) return visits;
     return visits.filter(
       (v) =>
-        !isBotRow({
-          is_bot: v.is_bot,
-          user_agent: v.user_agent,
-          page_path: v.page_path,
-        }),
+        !isBotRow(v),
     );
   }, [visits, showBots]);
 
@@ -89,7 +89,7 @@ export default function AcquisitionPage() {
       try {
         // Full history (paginated past PostgREST's 1000-row cap) so the
         // window counts and chart reflect every visit, not a capped page.
-        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type,is_bot,user_agent&order=created_at.desc`;
+        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height&order=created_at.desc`;
         const data = await supabaseSelectAll<Visit>("frontpage_visits", params);
         if (!cancelled) setVisits(data);
       } catch (e) {
