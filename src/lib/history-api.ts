@@ -8,6 +8,7 @@ const CHAIN_IDS: Record<string, string> = {
   arbitrum: "42161",
   base: "8453",
   zksync: "324",
+  hyperevm: "999",
 };
 
 function log(msg: string) {
