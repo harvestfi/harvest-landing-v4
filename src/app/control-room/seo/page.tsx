@@ -142,11 +142,14 @@ function buildSampleSeoSessions(): {
 } {
   const now = Date.now();
   const DAY = 86_400_000;
-  const seo = ["Google", "Bing", "DuckDuckGo"];
+  const seo = ["Google", "Bing", "DuckDuckGo", "Brave", "Yandex", "Baidu"];
   const dom: Record<string, string> = {
     Google: "google.com",
     Bing: "bing.com",
     DuckDuckGo: "duckduckgo.com",
+    Brave: "search.brave.com",
+    Yandex: "yandex.com",
+    Baidu: "baidu.com",
   };
   const devs = ["desktop", "mobile", "tablet"];
   const countries = ["US", "GB", "DE", "PL", "BR", "IN", "CA", "FR", "NL", "SG"];
@@ -438,6 +441,18 @@ export default function SeoSummaryPage() {
       if (t > a.latestMs) a.latestMs = t;
       if (a.country === null && c.country) a.country = c.country;
       if (a.device === null && c.device_type) a.device = c.device_type;
+      // A search touch can land on a click row, not just a visit (e.g. the
+      // session's visit wasn't logged, or its source was captured on the
+      // outbound click). The Live Feed already badges those rows as
+      // Brave/Yandex/Baidu/etc, so mirror that here: let a search-sourced
+      // click mark the session SEO too, keeping the funnel and the feed in
+      // agreement. Earliest SEO touch across visits + clicks wins.
+      const cch = classifyChannel(c.source);
+      if (channelGroup(cch) === "SEO" && t < a.seoMs) {
+        a.seoMs = t;
+        a.seoName = cch;
+        if (!a.srcDomain) a.srcDomain = sourceDomain(c.source);
+      }
       a.actions.push({
         id: `c-${c.session_id}-${c.created_at}`,
         time: c.created_at,
@@ -640,7 +655,7 @@ export default function SeoSummaryPage() {
   const metricLabel = METRIC_OPTIONS.find((o) => o.value === metric)!.label;
 
   const description =
-    "The search funnel at a glance: of the people the index acquired from a search engine (Google, Bing, DuckDuckGo), how many crossed into app.harvest.finance and how many deposited. Every stage, the chart, and the table below are scoped to the same SEO sessions. The table lists one row per session; expand a row to see that session's actions.";
+    "The search funnel at a glance: of the people the index acquired from a search engine (Google, Bing, DuckDuckGo, Brave, Yandex, Baidu), how many crossed into app.harvest.finance and how many deposited. Every stage, the chart, and the table below are scoped to the same SEO sessions. The table lists one row per session; expand a row to see that session's actions.";
 
   return (
     <div className="uni-hub-test lf-page">
@@ -727,7 +742,8 @@ export default function SeoSummaryPage() {
             </label>
             <FilterHint label="About the engine filter">
               Which search engine acquired the session (Google, Bing,
-              DuckDuckGo). Only search-acquired sessions appear on this page.
+              DuckDuckGo, Brave, Yandex, Baidu). Only search-acquired sessions
+              appear on this page.
             </FilterHint>
             </span>
             <span className="lf-filter-grp">
