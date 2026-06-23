@@ -26,6 +26,11 @@ interface VisitRow {
   page_path: string | null;
   is_bot: boolean | null;
   user_agent: string | null;
+  device_type: string | null;
+  screen_width: number | null;
+  screen_height: number | null;
+  viewport_width: number | null;
+  viewport_height: number | null;
 }
 
 type EntryFilter = "all" | "home";
@@ -73,7 +78,7 @@ export default function PageViewsPage() {
       try {
         // Full history (paginated past PostgREST's 1000-row cap) so the
         // exploration counts are retroactive over every visit.
-        const params = `select=created_at,session_id,page_path,is_bot,user_agent&order=created_at.asc`;
+        const params = `select=created_at,session_id,page_path,is_bot,user_agent,device_type,screen_width,screen_height,viewport_width,viewport_height&order=created_at.asc`;
         const data = await supabaseSelectAll<VisitRow>("frontpage_visits", params);
         if (!cancelled) setVisits(data);
       } catch (e) {
@@ -110,7 +115,7 @@ export default function PageViewsPage() {
       s.pages.add(path);
       if (
         !s.bot &&
-        isBotRow({ is_bot: v.is_bot, user_agent: v.user_agent, page_path: path })
+        isBotRow(v)
       ) {
         s.bot = true;
       }

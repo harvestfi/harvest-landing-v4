@@ -51,6 +51,7 @@ const CHAIN_IDS = {
   arbitrum: "42161",
   base: "8453",
   zksync: "324",
+  hyperevm: "999",
 };
 
 const CHAIN_NAME_TO_KEY = {
