@@ -112,7 +112,12 @@ interface SeoAction {
 // One SEO-acquired session: the unit of the funnel. One table row.
 interface SeoSession {
   sessionId: string;
-  seoName: string; // the search channel that acquired it (e.g. "Google")
+  seoName: string; // primary (first-touch) search channel, e.g. "Google"
+  // Every distinct search engine that touched the session (first-seen
+  // order), so the engine filter and breakdown are multi-touch: a session
+  // acquired via Google that later came back through Brave counts under
+  // both. seoName stays the first touch for the default row label.
+  seoEngines: string[];
   country: string | null;
   device: string | null;
   srcDomain: string | null;
@@ -218,9 +223,18 @@ function buildSampleSeoSessions(): {
       });
     }
     actions.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    // Give every 3rd demo session a second search touch so the
+    // multi-touch engine filter has something to exercise on a data-less
+    // fork (a Google session that also came back via Brave, etc).
+    const secondEngine = seo[(i + 1) % seo.length];
+    const seoEngines =
+      i % 3 === 0 && secondEngine !== seoName
+        ? [seoName, secondEngine]
+        : [seoName];
     sessions.push({
       sessionId: `sample-seo-${i}`,
       seoName,
+      seoEngines,
       country: countries[i % countries.length],
       device: devs[i % devs.length],
       srcDomain: dom[seoName],
@@ -358,6 +372,10 @@ export default function SeoSummaryPage() {
     interface Acc {
       seoName: string | null;
       seoMs: number;
+      // engine name -> earliest timestamp it touched this session, so we
+      // can list every search engine that acquired/re-acquired it
+      // (multi-touch) and still derive the first-touch primary.
+      seoEngines: Map<string, number>;
       country: string | null;
       device: string | null;
       srcDomain: string | null;
@@ -377,6 +395,7 @@ export default function SeoSummaryPage() {
         a = {
           seoName: null,
           seoMs: Infinity,
+          seoEngines: new Map<string, number>(),
           country: null,
           device: null,
           srcDomain: null,
@@ -413,12 +432,16 @@ export default function SeoSummaryPage() {
       if (a.country === null && v.country) a.country = v.country;
       if (a.device === null && v.device_type) a.device = v.device_type;
       const ch = classifyChannel(v.source);
-      if (channelGroup(ch) === "SEO" && t < a.seoMs) {
-        a.seoMs = t;
-        a.seoName = ch;
-        // Domain of the search visit that acquired the session, for the
-        // Source tooltip (e.g. "google.com").
-        a.srcDomain = sourceDomain(v.referrer);
+      if (channelGroup(ch) === "SEO") {
+        const prevEng = a.seoEngines.get(ch);
+        if (prevEng === undefined || t < prevEng) a.seoEngines.set(ch, t);
+        if (t < a.seoMs) {
+          a.seoMs = t;
+          a.seoName = ch;
+          // Domain of the search visit that acquired the session, for the
+          // Source tooltip (e.g. "google.com").
+          a.srcDomain = sourceDomain(v.referrer);
+        }
       }
       a.actions.push({
         id: `v-${v.session_id}-${v.created_at}`,
@@ -448,10 +471,14 @@ export default function SeoSummaryPage() {
       // click mark the session SEO too, keeping the funnel and the feed in
       // agreement. Earliest SEO touch across visits + clicks wins.
       const cch = classifyChannel(c.source);
-      if (channelGroup(cch) === "SEO" && t < a.seoMs) {
-        a.seoMs = t;
-        a.seoName = cch;
-        if (!a.srcDomain) a.srcDomain = sourceDomain(c.source);
+      if (channelGroup(cch) === "SEO") {
+        const prevEng = a.seoEngines.get(cch);
+        if (prevEng === undefined || t < prevEng) a.seoEngines.set(cch, t);
+        if (t < a.seoMs) {
+          a.seoMs = t;
+          a.seoName = cch;
+          if (!a.srcDomain) a.srcDomain = sourceDomain(c.source);
+        }
       }
       a.actions.push({
         id: `c-${c.session_id}-${c.created_at}`,
@@ -580,6 +607,10 @@ export default function SeoSummaryPage() {
       sessions.push({
         sessionId: id,
         seoName: a.seoName,
+        // distinct engines, first-touch first
+        seoEngines: [...a.seoEngines.entries()]
+          .sort((x, y) => x[1] - y[1])
+          .map(([name]) => name),
         country: a.country,
         device: a.device,
         srcDomain: a.srcDomain,
@@ -606,12 +637,17 @@ export default function SeoSummaryPage() {
 
   // Search-engine options + the engine-filtered base set every funnel
   // output reads from (stats, chart, table), mirroring the Live Feed's
-  // source filter.
+  // source filter. Multi-touch: the option list is the union of every
+  // engine that touched any session, and selecting one keeps every
+  // session that engine touched (not just the ones it acquired
+  // first-touch) - so Brave/Baidu surface even when a later touch.
   const engineOptions = Array.from(
-    new Set(sessions.map((s) => s.seoName)),
+    new Set(sessions.flatMap((s) => s.seoEngines)),
   ).sort();
   const enginedSessions = (
-    engine === "all" ? sessions : sessions.filter((s) => s.seoName === engine)
+    engine === "all"
+      ? sessions
+      : sessions.filter((s) => s.seoEngines.includes(engine))
   )
     .filter((s) => showBots || !s.bot)
     .filter((s) => !deepLandingOnly || s.entryPage !== "/");
@@ -741,9 +777,11 @@ export default function SeoSummaryPage() {
               </select>
             </label>
             <FilterHint label="About the engine filter">
-              Which search engine acquired the session (Google, Bing,
-              DuckDuckGo, Brave, Yandex, Baidu). Only search-acquired sessions
-              appear on this page.
+              Search engine the session came through (Google, Bing,
+              DuckDuckGo, Brave, Yandex, Baidu). Multi-touch: a session is
+              listed under every engine that touched it, so picking one shows
+              all sessions it appeared in - not only the ones it acquired
+              first. Only search-touched sessions appear on this page.
             </FilterHint>
             </span>
             <span className="lf-filter-grp">
@@ -838,6 +876,7 @@ export default function SeoSummaryPage() {
                 <SeoSessionTable
                   sessions={pageSessions}
                   metricLabel={metricLabel}
+                  selectedEngine={engine}
                   expanded={expanded}
                   onToggle={toggle}
                 />
@@ -1002,11 +1041,13 @@ function labelForDaysAgo(d: number): string {
 function SeoSessionTable({
   sessions,
   metricLabel,
+  selectedEngine,
   expanded,
   onToggle,
 }: {
   sessions: SeoSession[];
   metricLabel: string;
+  selectedEngine: string;
   expanded: Set<string>;
   onToggle: (id: string) => void;
 }) {
@@ -1057,6 +1098,7 @@ function SeoSessionTable({
                   session={s}
                   isOpen={isOpen}
                   stage={stage}
+                  selectedEngine={selectedEngine}
                   onToggle={() => onToggle(s.sessionId)}
                 />
               );
@@ -1072,13 +1114,24 @@ function SessionRows({
   session: s,
   isOpen,
   stage,
+  selectedEngine,
   onToggle,
 }: {
   session: SeoSession;
   isOpen: boolean;
   stage: { label: string; short: string; tone: string };
+  selectedEngine: string;
   onToggle: () => void;
 }) {
+  // When filtered to one engine, label the row with that engine (it's why
+  // the row is here, even if first-touch was someone else). Under "all",
+  // show the first-touch primary and flag extra touches with a "+N".
+  const displayEngine =
+    selectedEngine !== "all" ? selectedEngine : s.seoName;
+  const extraEngines =
+    selectedEngine === "all"
+      ? s.seoEngines.filter((e) => e !== s.seoName)
+      : [];
   return (
     <>
       <div
@@ -1105,12 +1158,23 @@ function SessionRows({
         </span>
         <span className="uni-hub-cell" data-label="Source">
           <span
-            className={`lf-badge lf-badge-${channelTone(s.seoName)}`}
+            className={`lf-badge lf-badge-${channelTone(displayEngine)}`}
             title={s.srcDomain ?? undefined}
           >
-            <span className="lf-lbl-full">{s.seoName}</span>
-            <span className="lf-lbl-short">{shortChannelLabel(s.seoName)}</span>
+            <span className="lf-lbl-full">{displayEngine}</span>
+            <span className="lf-lbl-short">
+              {shortChannelLabel(displayEngine)}
+            </span>
           </span>
+          {extraEngines.length > 0 && (
+            <span
+              className="lf-botflag"
+              style={{ background: "transparent", color: "inherit", opacity: 0.55 }}
+              title={`Also acquired via ${extraEngines.join(", ")}`}
+            >
+              +{extraEngines.length}
+            </span>
+          )}
           {s.bot && (
             <span className="lf-botflag" title="Non-human / bot traffic">
               bot

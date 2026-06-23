@@ -13,6 +13,7 @@ import {
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { isLowLiquidityTvl, LOW_LIQUIDITY_TVL_THRESHOLD } from "@/lib/admin-rules";
 import type { FullVaultHistory } from "@/lib/history-api";
+import { trackedDays as vaultTrackedDays } from "@/lib/vault-age";
 import { productPageCrumbs } from "@/lib/seo";
 import { SITE_URL } from "@/lib/constants";
 import { harvestAppUrl } from "@/lib/harvest-app";
@@ -80,14 +81,10 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
     ? `${CHAIN_EXPLORERS[vault.chain]}${vault.contractAddress}`
     : null;
 
-  const validApy = history.apyHistory.filter((p) => p.apy >= 0);
-  let trackedDays = 0;
-  if (validApy.length > 0) {
-    const sortedApy = [...validApy].sort((a, b) => a.timestamp - b.timestamp);
-    trackedDays = Math.round(
-      (sortedApy[sortedApy.length - 1].timestamp - sortedApy[0].timestamp) / 86400,
-    );
-  }
+  // One canonical tracked-age for the whole page (see lib/vault-age): the
+  // longest span across APY / TVL / share-price history, so every day-count
+  // on the page agrees and the consistency gate stays green on sparse vaults.
+  const trackedDays = vaultTrackedDays(history);
 
   // Build chart series from indexed history. Append a "live" point at
   // the current second using vault.tvl / vault.apy24h so the chart's

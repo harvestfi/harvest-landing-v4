@@ -6,6 +6,7 @@ import {
   isErraticTvl,
 } from "@/lib/contextualize";
 import type { FullVaultHistory } from "@/lib/history-api";
+import { trackedDays as vaultTrackedDays } from "@/lib/vault-age";
 import { freshness } from "@/lib/freshness";
 
 function median(arr: number[]): number {
@@ -114,6 +115,11 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
     return Math.round((Math.max(...stamps) - Math.min(...stamps)) / 86400);
   };
   const apyTrackedDays = trackedDaysOf(allApy.map((p) => p.timestamp));
+  // Canonical tracked-age for every day-count the page prints (lib/vault-age):
+  // longest span across APY / TVL / share-price. apyTrackedDays stays for the
+  // APY-window prefix and the narrative-mode gate, both of which are
+  // intentionally APY-specific and not cross-checked for the age.
+  const canonDays = vaultTrackedDays(history);
 
   const apyValues = apy30d.map((p) => p.apy);
   const allApyValues = allApy.map((p) => p.apy);
@@ -214,7 +220,7 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
           { label: `${win} Low`, value: apyPct(apyStats.low) },
           { label: `${win} High`, value: apyPct(apyStats.high) },
           { label: `${win} Average`, value: apyPct(apyStats.avg) },
-          { label: `Lifetime avg (${apyTrackedDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
+          { label: `Lifetime avg (${canonDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
           { label: "Median APY", value: apyPct(apyStats.med) },
           { label: "Best day", value: `${apyPct(apyStats.bestDay.apy)} · ${formatDate(apyStats.bestDay.timestamp)}` },
           { label: "Worst day", value: `${apyPct(apyStats.worstDay.apy)} · ${formatDate(apyStats.worstDay.timestamp)}` },
@@ -233,7 +239,7 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
         // show only the lifetime average (the header already carries the
         // live 24h APY).
         [
-          { label: `Lifetime avg (${apyTrackedDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
+          { label: `Lifetime avg (${canonDays}d)`, value: apyPct(apyStats.lifetimeAvg) },
         ];
 
   const tvlRows = !tvlStats
@@ -243,7 +249,7 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
           { label: `${win} Low`, value: formatTVL(tvlStats.low) },
           { label: `${win} High`, value: formatTVL(tvlStats.high) },
           { label: `${win} Average`, value: formatTVL(tvlStats.avg) },
-          { label: `Lifetime avg (${apyTrackedDays}d)`, value: formatTVL(tvlStats.lifetimeAvg) },
+          { label: `Lifetime avg (${canonDays}d)`, value: formatTVL(tvlStats.lifetimeAvg) },
           { label: "Median TVL", value: formatTVL(tvlStats.med) },
           { label: "Best day", value: `${formatTVL(tvlStats.bestDay.value)} · ${formatDate(tvlStats.bestDay.timestamp)}` },
           { label: "Worst day", value: `${formatTVL(tvlStats.worstDay.value)} · ${formatDate(tvlStats.worstDay.timestamp)}` },
@@ -254,7 +260,7 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
         // unambiguous current + lifetime figures (no stale-dated rows).
         [
           { label: "Current TVL", value: formatTVL(tvlStats.current) },
-          { label: `Lifetime avg (${apyTrackedDays}d)`, value: formatTVL(tvlStats.lifetimeAvg) },
+          { label: `Lifetime avg (${canonDays}d)`, value: formatTVL(tvlStats.lifetimeAvg) },
         ];
 
   // Split a single block into two columns when the other block is absent
@@ -273,7 +279,7 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
   // >= 60 readings -> full lifetime-change paragraph
   if (apyStats && apyTrackedDays < 7) {
     narratives.push(
-      `Tracked for ${apyTrackedDays} day${apyTrackedDays === 1 ? "" : "s"}. APY data is still accumulating; the first meaningful summary requires at least a week of readings.`,
+      `Tracked for ${canonDays} day${canonDays === 1 ? "" : "s"}. APY data is still accumulating; the first meaningful summary requires at least a week of readings.`,
     );
   } else if (apyStats && apyStats.dataPoints >= 60) {
     const ref = depositRef(asset);
@@ -340,21 +346,11 @@ export function HistoricalStats({ history, asset, currentTvl }: { history: FullV
         sorted[0],
       );
       // "The vault has been live for N days" must equal the canonical
-      // "Tracked for N days" age shown in the header / Strategy details,
-      // which is the APY-history span (apyTrackedDays, computed above).
-      // The TVL series usually starts indexing a few days after APY, so
-      // deriving this count from the TVL span alone printed a shorter age
-      // (e.g. 549 against the header's 554) that read as a longevity
-      // contradiction. Fall back to the TVL span only when there is no
-      // APY history - the header shows no "Tracked for" line in that
-      // case, so there is nothing for it to disagree with.
-      const tvlSpanDays = Math.max(
-        0,
-        Math.round(
-          (sorted[sorted.length - 1].timestamp - sorted[0].timestamp) / 86400,
-        ),
-      );
-      const days = apyTrackedDays > 0 ? apyTrackedDays : tvlSpanDays;
+      // "Tracked for N days" shown in the header / Strategy details /
+      // trajectory. They all read from the shared trackedDays() now, so a
+      // sparse vault whose APY series is a single point no longer prints
+      // "live for 9 days" beside "Lifetime avg (0d)".
+      const days = canonDays;
       // When the TVL series is erratic (transient index spikes), the
       // "peak" is noise. Fall through to the minimal fallback so we
       // never cite a $932K all-time peak that the vault never really
