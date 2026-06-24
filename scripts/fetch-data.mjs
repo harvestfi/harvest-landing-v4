@@ -588,7 +588,10 @@ async function fetchPlasmaVaultHistory(chainId, addr) {
 async function fetchAllRows(chainId, entity, addr, fields) {
   const out = [];
   let cursor = 9_999_999_999; // far-future sentinel: first page = newest rows
-  for (let page = 0; page < 20; page++) {
+  // 90 pages is a runaway backstop, not the expected depth: the loop exits as
+  // soon as a page comes back short (inception reached). Even the oldest
+  // hyper-dense tvl series (~700 days at ~100 pts/day) lands well inside it.
+  for (let page = 0; page < 90; page++) {
     const query = `{
       ${entity}(
         where: { vault: "${addr}", timestamp_lt: "${cursor}" }
@@ -602,8 +605,13 @@ async function fetchAllRows(chainId, entity, addr, fields) {
     const batch = data[entity] || [];
     if (batch.length === 0) break;
     out.push(...batch);
-    cursor = parseInt(batch[batch.length - 1].timestamp, 10);
     if (batch.length < 1000) break;
+    // Jump to the start of the oldest day in this page. We only keep one
+    // point per day downstream, so skipping the rest of that day both
+    // advances by whole days and prevents a stall when a single day holds
+    // more than 1000 points.
+    const oldest = parseInt(batch[batch.length - 1].timestamp, 10);
+    cursor = Math.floor(oldest / 86400) * 86400;
   }
   return out;
 }
