@@ -14,7 +14,7 @@ import {
   channelGroup,
   type SourceGroup,
 } from "@/lib/channels";
-import { isBotRow } from "@/lib/bots";
+import { isBotRow, detectSpoofedFingerprints, fingerprintKey } from "@/lib/bots";
 import { FilterHint } from "@/components/admin/filter-hint";
 import {
   TimeframeSelector,
@@ -77,9 +77,11 @@ export default function AcquisitionPage() {
   const visibleVisits = useMemo(() => {
     if (visits == null) return null;
     if (showBots) return visits;
+    // Cluster-poisoning: drop the referrer-spoofing fleets whose fingerprint
+    // turns up across many countries with an impossible timezone.
+    const poisoned = detectSpoofedFingerprints(visits);
     return visits.filter(
-      (v) =>
-        !isBotRow(v),
+      (v) => !isBotRow(v) && !poisoned.has(fingerprintKey(v)),
     );
   }, [visits, showBots]);
 
@@ -89,7 +91,7 @@ export default function AcquisitionPage() {
       try {
         // Full history (paginated past PostgREST's 1000-row cap) so the
         // window counts and chart reflect every visit, not a capped page.
-        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height&order=created_at.desc`;
+        const params = `select=id,created_at,session_id,page_path,source,country,city,device_type,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height,timezone&order=created_at.desc`;
         const data = await supabaseSelectAll<Visit>("frontpage_visits", params);
         if (!cancelled) setVisits(data);
       } catch (e) {

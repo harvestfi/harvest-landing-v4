@@ -42,7 +42,7 @@ import { RefreshButton } from "@/components/admin/refresh-button";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
-import { isBotRow } from "@/lib/bots";
+import { isBotRow, detectSpoofedFingerprints, fingerprintKey } from "@/lib/bots";
 import { FilterHint } from "@/components/admin/filter-hint";
 import "../../_styles/asset-hub.css";
 
@@ -71,6 +71,7 @@ interface VisitRow {
   screen_height: number | null;
   viewport_width: number | null;
   viewport_height: number | null;
+  timezone: string | null;
 }
 interface ClickRow {
   created_at: string;
@@ -251,7 +252,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
     const [v, c, e, w] = await Promise.all([
       supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height&order=created_at.desc",
+        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height,timezone&order=created_at.desc",
       ),
       supabaseSelectAll<ClickRow>(
         "outbound_clicks",
@@ -642,6 +643,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       );
     }
 
+    // Cluster-poisoning: fingerprints of the referrer-spoofing fleets (mimic
+    // a maximized browser + spoof organic search), flagged across the whole
+    // visit set so even their geo-consistent nodes read as bots.
+    const poisonedFp = detectSpoofedFingerprints(visits ?? []);
+
     const merged: FeedItem[] = [
       ...(visits ?? []).map((v, i) => {
         const wal = v.session_id
@@ -654,7 +660,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         const baseCh = classifyChannel(v.source);
         return {
           kind: "visit" as const,
-          bot: isBotRow(v),
+          bot: isBotRow(v) || poisonedFp.has(fingerprintKey(v)),
           id: `v-${v.session_id}-${v.created_at}-${i}`,
           time: v.created_at,
           channel:
