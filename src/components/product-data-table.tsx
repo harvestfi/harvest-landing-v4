@@ -355,6 +355,17 @@ function RowIntel({ row }: { row: ProductDataRow }) {
             {fmtDate(row.latestTs)}
           </div>
         </div>
+        <div className="pd-intel-legend">
+          Per series
+          <span
+            className="pd-intel-help"
+            data-tooltip="How each series is judged. sparse: under ~0.8 points/day (the subgraph emits less than daily). starts Nd after deploy: the first point lands well after the vault's earliest indexed data — missing early history. ends Nd before latest: this series stopped updating before the freshest one. no data returned: the endpoint gave nothing for this series. daily, full span: ~1 point/day across the vault's whole life."
+            aria-label="What the per-series verdicts mean"
+            tabIndex={0}
+          >
+            ?
+          </span>
+        </div>
         <div className="pd-intel-series">
           {row.diag.map((s) => (
             <div
