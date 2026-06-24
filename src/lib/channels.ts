@@ -145,6 +145,14 @@ export function classifyChannel(raw: string | null): string {
   if (s.includes("yandex")) return "Yandex";
   if (s.includes("baidu")) return "Baidu";
   if (s.includes("brave")) return "Brave";
+  if (s.includes("ecosia")) return "Ecosia";
+  if (s.includes("startpage")) return "Startpage";
+  if (s.includes("qwant")) return "Qwant";
+  if (s.includes("naver")) return "Naver";
+  if (s.includes("seznam")) return "Seznam";
+  if (s.includes("kagi")) return "Kagi";
+  if (s.includes("mojeek")) return "Mojeek";
+  if (s.includes("ask.com")) return "Ask";
 
   // AI assistants.
   if (s.includes("chatgpt") || s.includes("openai")) return "ChatGPT";
@@ -202,6 +210,7 @@ export function appChannel(raw: string | null): string {
 
 const SEARCH_CHANNELS = new Set([
   "Google", "Bing", "DuckDuckGo", "Yandex", "Baidu", "Brave",
+  "Ecosia", "Startpage", "Qwant", "Naver", "Seznam", "Kagi", "Mojeek", "Ask",
 ]);
 const AI_CHANNELS = new Set(["ChatGPT", "Perplexity", "Claude", "Gemini", "Minara"]);
 const SOCIAL_CHANNELS = new Set([
