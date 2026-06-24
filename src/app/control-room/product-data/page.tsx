@@ -88,13 +88,28 @@ function buildDiag(
 // series sits near 1.0; a series that only spans part of the vault's life
 // (or is event-driven and sparse) drops well below it. Thresholds are
 // deliberately forgiving so only genuinely thin series flag red.
-function healthFor(points: number, ageDays: number): SeriesHealth {
+// Health is judged on continuity + freshness, not strict daily density.
+// The subgraph is event-driven, so a healthy series can run ~every other
+// day rather than exactly once a day; what actually matters is that it's
+// fresh (a recent point) and continuous (covers the vault's life without
+// big holes). So: a stale series (no point in 3 weeks) is always "needs
+// fix" however dense its old data; otherwise we grade on coverage with
+// forgiving thresholds — ~every-other-day, fresh and full-span reads as
+// "good", near-daily as "dense", and only genuinely holey series flag red.
+function healthFor(
+  points: number,
+  ageDays: number,
+  lastTs: number | null,
+  now: number,
+): SeriesHealth {
   if (points <= 0) return "missing";
+  const freshDays = lastTs ? (now - lastTs) / 86400 : Infinity;
+  if (freshDays > 21) return "sparse"; // stale: no recent data
   const coverage = points / Math.max(ageDays, 1);
-  if (coverage < 0.3) return "sparse";
-  if (coverage < 0.8) return "partial";
-  if (coverage < 0.95) return "good";
-  return "dense";
+  if (coverage < 0.2) return "sparse"; // fresh but holey
+  if (coverage < 0.45) return "partial"; // ~every 3+ days
+  if (coverage < 0.85) return "good"; // ~every other day, continuous
+  return "dense"; // near-daily
 }
 
 const SEVERITY: Record<SeriesHealth, number> = {
@@ -119,6 +134,7 @@ function statusFor(healths: SeriesHealth[]): DataStatus {
 export default async function ProductDataPage() {
   const vaults = await getVaults();
   const history = loadHistoryFile() ?? {};
+  const now = Math.floor(Date.now() / 1000); // freshness reference (build time)
 
   const rows: ProductDataRow[] = vaults.map((v) => {
     const h =
@@ -145,9 +161,11 @@ export default async function ProductDataPage() {
     const tvlPoints = h.tvlHistory.length;
     const apyPoints = h.apyHistory.length;
     const spPoints = h.sharePriceHistory.length;
-    const tvlHealth = healthFor(tvlPoints, ageDays);
-    const apyHealth = healthFor(apyPoints, ageDays);
-    const spHealth = healthFor(spPoints, ageDays);
+    const lastOf = (pts: { timestamp: number }[]): number | null =>
+      pts.length ? Math.max(...pts.map((p) => p.timestamp)) : null;
+    const tvlHealth = healthFor(tvlPoints, ageDays, lastOf(h.tvlHistory), now);
+    const apyHealth = healthFor(apyPoints, ageDays, lastOf(h.apyHistory), now);
+    const spHealth = healthFor(spPoints, ageDays, lastOf(h.sharePriceHistory), now);
 
     const chainId = CHAIN_ID[v.chain] ?? "?";
     const diag: SeriesDiag[] = [

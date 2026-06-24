@@ -47,6 +47,9 @@ export interface BotSignals {
   screen_height?: number | null;
   viewport_width?: number | null;
   viewport_height?: number | null;
+  // Geo signals for cluster-poisoning (e). Optional.
+  country?: string | null;
+  timezone?: string | null;
 }
 
 // (d) Headless / automation footprint: a DESKTOP hit whose viewport is
@@ -73,7 +76,7 @@ export function isAutomationViewport(s: BotSignals): boolean {
   );
 }
 
-// True if any layer flags the row as non-human.
+// True if any layer flags the row as non-human (per-row layers a-d).
 export function isBotRow(s: BotSignals): boolean {
   return (
     s.is_bot === true ||
@@ -81,4 +84,109 @@ export function isBotRow(s: BotSignals): boolean {
     isNonPagePath(s.page_path) ||
     isAutomationViewport(s)
   );
+}
+
+// (e) Cluster-poisoning — defeats the referrer-spoofing fleets that mimic a
+// real maximized browser (so the per-row viewport layer misses them) and
+// spoof an organic search referrer. Their tell is statistical, not per-row:
+// one identical device fingerprint (UA + screen + viewport) appears across
+// many countries while reporting a single timezone, so for most of those
+// hits the browser timezone and the IP-geolocated country sit on different
+// continents — geographically impossible. We poison the whole fingerprint
+// off that signal, which also catches the fleet's hits whose own country
+// happens to match the timezone (e.g. the US-located ones).
+
+// Coarse continent group of an IANA timezone, from its region prefix. UTC /
+// GMT / Indian / Atlantic are ambiguous, so we don't judge them.
+function tzGroup(tz: string | null | undefined): string | null {
+  if (!tz) return null;
+  switch (tz.split("/")[0]) {
+    case "America":
+      return "AMER";
+    case "Europe":
+      return "EU";
+    case "Asia":
+      return "AS";
+    case "Africa":
+      return "AF";
+    case "Australia":
+    case "Pacific":
+      return "OC";
+    default:
+      return null;
+  }
+}
+
+// Continent group of an ISO country code. "AMER" spans both Americas so it
+// lines up with the "America/*" timezone region. Unlisted codes return null
+// (we simply don't judge them).
+const COUNTRY_GROUP: Record<string, string> = {
+  US: "AMER", CA: "AMER", MX: "AMER", BR: "AMER", AR: "AMER", CL: "AMER",
+  CO: "AMER", PE: "AMER", VE: "AMER", EC: "AMER", BO: "AMER", PY: "AMER",
+  UY: "AMER", GY: "AMER", SR: "AMER", PA: "AMER", CR: "AMER", GT: "AMER",
+  HN: "AMER", NI: "AMER", SV: "AMER", BZ: "AMER", DO: "AMER", CU: "AMER",
+  JM: "AMER", HT: "AMER", TT: "AMER", BS: "AMER", PR: "AMER",
+  GB: "EU", IE: "EU", FR: "EU", DE: "EU", ES: "EU", PT: "EU", IT: "EU",
+  NL: "EU", BE: "EU", LU: "EU", CH: "EU", AT: "EU", SE: "EU", NO: "EU",
+  DK: "EU", FI: "EU", IS: "EU", PL: "EU", CZ: "EU", SK: "EU", HU: "EU",
+  RO: "EU", BG: "EU", GR: "EU", HR: "EU", SI: "EU", RS: "EU", UA: "EU",
+  LT: "EU", LV: "EU", EE: "EU",
+  IN: "AS", CN: "AS", JP: "AS", KR: "AS", SG: "AS", ID: "AS", PK: "AS",
+  TH: "AS", VN: "AS", PH: "AS", MY: "AS", BD: "AS", LK: "AS", HK: "AS",
+  TW: "AS", AE: "AS", SA: "AS", IL: "AS", QA: "AS", KW: "AS", KZ: "AS",
+  ZA: "AF", NG: "AF", EG: "AF", KE: "AF", MA: "AF", GH: "AF", DZ: "AF",
+  TN: "AF", ET: "AF", UG: "AF", TZ: "AF", CI: "AF", SN: "AF",
+  AU: "OC", NZ: "OC", FJ: "OC", PG: "OC",
+};
+
+function countryGroup(cc: string | null | undefined): string | null {
+  return cc ? COUNTRY_GROUP[cc.toUpperCase()] ?? null : null;
+}
+
+function geoImpossible(s: BotSignals): boolean {
+  const t = tzGroup(s.timezone);
+  const c = countryGroup(s.country);
+  return t !== null && c !== null && t !== c;
+}
+
+// Device fingerprint: UA + screen + viewport. Specific enough that diverse
+// real visitors don't collide, but every node of one automation fleet shares
+// it exactly.
+export function fingerprintKey(s: BotSignals): string {
+  return [
+    (s.user_agent || "").trim(),
+    `${s.screen_width ?? ""}x${s.screen_height ?? ""}`,
+    `${s.viewport_width ?? ""}x${s.viewport_height ?? ""}`,
+  ].join("|");
+}
+
+// Returns the set of fingerprints to treat as bots. A fingerprint is poisoned
+// when it carries at least one geographically impossible hit AND is spread
+// across >=3 countries with >=5 total hits — the guards keep a lone
+// VPN/travelling user (foreign OS timezone) from poisoning a real, shared
+// fingerprint.
+export function detectSpoofedFingerprints(rows: BotSignals[]): Set<string> {
+  const agg = new Map<
+    string,
+    { countries: Set<string>; impossible: number; total: number }
+  >();
+  for (const r of rows) {
+    if (!r.user_agent && !r.screen_width) continue;
+    const key = fingerprintKey(r);
+    let a = agg.get(key);
+    if (!a) {
+      a = { countries: new Set(), impossible: 0, total: 0 };
+      agg.set(key, a);
+    }
+    a.total++;
+    if (r.country) a.countries.add(r.country.toUpperCase());
+    if (geoImpossible(r)) a.impossible++;
+  }
+  const poisoned = new Set<string>();
+  for (const [key, a] of agg) {
+    if (a.impossible >= 1 && a.countries.size >= 3 && a.total >= 5) {
+      poisoned.add(key);
+    }
+  }
+  return poisoned;
 }
