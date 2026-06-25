@@ -208,6 +208,29 @@ export function appChannel(raw: string | null): string {
   return c === "Direct" ? "Homepage" : c;
 }
 
+// Resolve a visit's acquisition channel from its captured `source`, falling
+// back to the `referrer` when the source is too generic to name. The
+// capture-time source can lose a search engine: e.g. Brave Search arrives
+// with referrer "https://search.brave.com/" but a generic source ("Search"
+// from a ?utm_source=search tag, or a bare registrable-domain brand), which
+// classifies as Referral and drops out of the SEO funnel. We only consult
+// the referrer when the source yields no named channel (Referral/Direct), so
+// a genuine source/utm signal always wins; the referrer is used only if it
+// itself resolves to a named channel (a real engine / AI / social / wallet).
+export function classifyVisit(
+  source: string | null,
+  referrer: string | null,
+): string {
+  const ch = classifyChannel(source);
+  const group = channelGroup(ch);
+  if ((group === "Referral" || group === "Direct") && referrer) {
+    const refCh = classifyChannel(referrer);
+    const refGroup = channelGroup(refCh);
+    if (refGroup !== "Referral" && refGroup !== "Direct") return refCh;
+  }
+  return ch;
+}
+
 const SEARCH_CHANNELS = new Set([
   "Google", "Bing", "DuckDuckGo", "Yandex", "Baidu", "Brave",
   "Ecosia", "Startpage", "Qwant", "Naver", "Seznam", "Kagi", "Mojeek", "Ask",

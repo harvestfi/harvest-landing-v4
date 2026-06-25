@@ -32,6 +32,7 @@ import { formatTVL } from "@/lib/format";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
+  classifyVisit,
   channelTone,
   channelGroup,
   shortChannelLabel,
@@ -437,7 +438,7 @@ export default function SeoSummaryPage() {
       if (t > a.latestMs) a.latestMs = t;
       if (a.country === null && v.country) a.country = v.country;
       if (a.device === null && v.device_type) a.device = v.device_type;
-      const ch = classifyChannel(v.source);
+      const ch = classifyVisit(v.source, v.referrer);
       if (channelGroup(ch) === "SEO") {
         const prevEng = a.seoEngines.get(ch);
         if (prevEng === undefined || t < prevEng) a.seoEngines.set(ch, t);

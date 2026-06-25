@@ -27,6 +27,7 @@ import { formatTVL } from "@/lib/format";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
+  classifyVisit,
   appChannel,
   channelTone,
   channelGroup,
@@ -657,7 +658,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         // pill shows the root domain (e.g. "Moonwell") even on older rows
         // whose stored source was a subdomain.
         const dom = sourceDomain(v.referrer);
-        const baseCh = classifyChannel(v.source);
+        const baseCh = classifyVisit(v.source, v.referrer);
         return {
           kind: "visit" as const,
           bot: isBotRow(v) || poisonedFp.has(fingerprintKey(v)),
