@@ -252,6 +252,19 @@ function usdValue(value, price, decimals) {
   return Number.isFinite(usd) ? Math.round(usd * 100) / 100 : null;
 }
 
+// Human token amount of a leg: `value` scaled down by the SAME decimals used
+// for USD (vault.decimal for autocompounders, plasmaVault.decimals for
+// autopilots - the latter carry an IPOR-style +2 offset, e.g. 8 for USDC /
+// 20 for WETH). Storing this keeps the feed's Units column consistent with
+// amount_usd instead of the page guessing decimals from the asset.
+function tokenAmount(value, decimals) {
+  const dec = Number(decimals);
+  const v = Number(value);
+  if (!Number.isFinite(dec) || !Number.isFinite(v)) return null;
+  const n = v / 10 ** dec;
+  return Number.isFinite(n) ? n : null;
+}
+
 // Stable per-LEG log_index derived from the entity id (which is unique per
 // leg), so two legs of the same transaction - even on the same vault and
 // wallet - get distinct (chain, tx_hash, log_index) keys and neither is
@@ -331,6 +344,7 @@ async function indexChain(chain) {
         wallet_address: wallet,
         amount_shares: String(t.value ?? "0"),
         amount_usd: usdValue(t.value, t.price, decimals),
+        amount_token: tokenAmount(t.value, decimals),
       });
     }
 

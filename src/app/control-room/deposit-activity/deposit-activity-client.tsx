@@ -5,11 +5,11 @@
 // it in as vaultMeta; everything below fetches vault_events_prod live and
 // renders the figures, chart and feed. See page.tsx for the data model.
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseSelectAll } from "@/lib/supabase";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
-import { AssetIcon } from "@/components/token-icons";
+import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import {
   TimeframeSelector,
   resolveDays,
@@ -35,6 +35,7 @@ interface EventRow {
   wallet_address: string;
   amount_shares: string;
   amount_usd: number | null;
+  amount_token: number | null;
 }
 
 const DAY_MS = 86_400_000;
@@ -57,31 +58,34 @@ export default function DepositActivityClient({
 }) {
   const [events, setEvents] = useState<EventRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [timeframe, setTimeframe] = useState<Timeframe>("90d");
   const [network, setNetwork] = useState<string>("all");
   const [type, setType] = useState<TypeFilter>("all");
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const rows = await supabaseSelectAll<EventRow>(
-          "vault_events_prod",
-          "select=chain,tx_hash,log_index,block_timestamp,vault_address," +
-            "vault_slug,event_type,wallet_address,amount_shares,amount_usd" +
-            "&amount_usd=not.is.null" +
-            "&order=block_timestamp.desc",
-        );
-        if (cancelled) return;
-        setEvents(rows);
-      } catch (e) {
-        if (!cancelled) setErr(String(e));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const load = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const rows = await supabaseSelectAll<EventRow>(
+        "vault_events_prod",
+        "select=chain,tx_hash,log_index,block_timestamp,vault_address," +
+          "vault_slug,event_type,wallet_address,amount_shares,amount_usd," +
+          "amount_token" +
+          "&amount_usd=not.is.null" +
+          "&order=block_timestamp.desc",
+      );
+      setEvents(rows);
+      setErr(null);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const rebalancers = useMemo(
     () => (events ? detectRebalancerActors(events) : new Set<string>()),
@@ -227,20 +231,24 @@ export default function DepositActivityClient({
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: 28,
+              gap: 18,
               alignItems: "center",
             }}
           >
             <FilterGroup label="Network">
-              <SegSelector
-                ariaLabel="Network filter"
+              <select
+                aria-label="Network filter"
                 value={network}
-                onChange={setNetwork}
-                options={[
-                  { value: "all", label: "All" },
-                  ...networks.map((n) => ({ value: n, label: n })),
-                ]}
-              />
+                onChange={(e) => setNetwork(e.target.value)}
+                className="lf-select"
+              >
+                <option value="all">All networks</option>
+                {networks.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
             </FilterGroup>
             <FilterGroup label="Type">
               <SegSelector
@@ -254,6 +262,16 @@ export default function DepositActivityClient({
                 ]}
               />
             </FilterGroup>
+            <button
+              type="button"
+              className="lf-refresh"
+              onClick={load}
+              disabled={refreshing}
+              style={{ marginLeft: "auto" }}
+            >
+              <RefreshIcon spinning={refreshing} />
+              {refreshing ? "Refreshing…" : "Refresh"}
+            </button>
           </div>
         </section>
       )}
@@ -509,7 +527,7 @@ function DailyFlowChart({
 // ──────────────────────────────────────────────────────────────────
 
 const EVENTS_COLS =
-  "104px minmax(170px, 1.5fr) 84px 104px 104px 116px minmax(132px, 1fr) 52px";
+  "104px minmax(170px, 1.5fr) 52px 104px 104px 120px minmax(140px, 1fr) 52px";
 const FEED_LIMIT = 250;
 
 function EventsFeed({
@@ -563,7 +581,6 @@ function EventsFeed({
             </div>
             {display.map((e) => {
               const meta = vaultMeta[(e.vault_address || "").toLowerCase()];
-              const units = unitsFor(e.amount_shares, meta?.asset);
               return (
                 <div
                   key={`${e.tx_hash}-${e.log_index}`}
@@ -590,7 +607,13 @@ function EventsFeed({
                       </span>
                     )}
                   </span>
-                  <span className="hub-cell">{e.chain}</span>
+                  <span
+                    className="hub-cell"
+                    title={e.chain}
+                    style={{ display: "flex", alignItems: "center" }}
+                  >
+                    <ChainIcon chain={e.chain} size={17} />
+                  </span>
                   <span className="hub-cell">
                     <span className={`lf-event lf-event-${e.event_type}`}>
                       <EventIcon type={e.event_type} />
@@ -604,8 +627,8 @@ function EventsFeed({
                     className="hub-cell"
                     style={{ fontFamily: "var(--sans)", fontSize: 12 }}
                   >
-                    {units != null
-                      ? `${formatUnits(units)}${meta?.asset ? " " + meta.asset : ""}`
+                    {e.amount_token != null
+                      ? `${formatUnits(e.amount_token)}${meta?.asset ? " " + meta.asset : ""}`
                       : "—"}
                   </span>
                   <span
@@ -684,12 +707,13 @@ function DebankBadge({ address }: { address: string }) {
         width: 16,
         height: 16,
         borderRadius: "50%",
-        border: "1px solid var(--uni-ink-3)",
+        border: "1px solid #ff6a00",
+        background: "rgba(255, 106, 0, 0.12)",
         fontFamily: "var(--sans)",
         fontSize: 9.5,
         fontWeight: 700,
         lineHeight: 1,
-        color: "var(--uni-ink-2)",
+        color: "#ff6a00",
         textDecoration: "none",
         flexShrink: 0,
       }}
@@ -699,33 +723,30 @@ function DebankBadge({ address }: { address: string }) {
   );
 }
 
+// Circular-arrow refresh glyph; spins while a refresh is in flight.
+function RefreshIcon({ spinning }: { spinning: boolean }) {
+  return (
+    <svg
+      className={`lf-refresh-icon${spinning ? " spinning" : ""}`}
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+      <polyline points="21 3 21 9 15 9" />
+    </svg>
+  );
+}
+
 // ──────────────────────────────────────────────────────────────────
 // formatting helpers
 // ──────────────────────────────────────────────────────────────────
-
-// Underlying-token decimals by asset. `value` from the subgraph is in the
-// underlying token's smallest units, so we scale by these to show a human
-// token amount. Harvest's assets all sit on standard decimals; unknown
-// assets fall back to 18.
-const TOKEN_DECIMALS: Record<string, number> = {
-  USDC: 6,
-  USDT: 6,
-  USDT0: 6,
-  EURC: 6,
-  DAI: 18,
-  ETH: 18,
-  WETH: 18,
-  BTC: 8,
-  WBTC: 8,
-  cbBTC: 8,
-  tBTC: 18,
-};
-
-function unitsFor(amountShares: string, asset?: string): number | null {
-  const dec = asset ? (TOKEN_DECIMALS[asset] ?? 18) : 18;
-  const n = Number(amountShares) / 10 ** dec;
-  return Number.isFinite(n) ? n : null;
-}
 
 function formatUnits(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;

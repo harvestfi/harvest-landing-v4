@@ -16,8 +16,9 @@ name: Index Vault Events (Subgraph)
 # null) even while both run. Each chain backfills BACKFILL_DAYS on its first
 # run, then resumes from the latest subgraph row it wrote.
 #
-# PREREQUISITE: vault_events_prod must have an `amount_usd` column:
+# PREREQUISITE: vault_events_prod must have amount_usd + amount_token cols:
 #   ALTER TABLE vault_events_prod ADD COLUMN IF NOT EXISTS amount_usd numeric;
+#   ALTER TABLE vault_events_prod ADD COLUMN IF NOT EXISTS amount_token numeric;
 #
 # Pass --chain=<Name> to limit to a single network when debugging.
 
