@@ -264,7 +264,11 @@ function syntheticLogIndex(vaultAddr, userAddr) {
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 0x01000193);
   }
-  return (h >>> 0) % 1_000_000;
+  // Offset into a high band (>= 1,000,000) that real on-chain log indices
+  // never reach (a tx has at most a few hundred logs), so a subgraph row
+  // and an RPC-indexer row for the same tx keep distinct (tx_hash,
+  // log_index) identities and never clobber each other.
+  return 1_000_000 + ((h >>> 0) % 1_000_000);
 }
 
 async function indexChain(chain) {
@@ -333,8 +337,13 @@ async function indexChain(chain) {
     }
 
     if (rows.length > 0) {
+      // Plain insert, matching the RPC indexer (scripts/index-vault-events.mjs):
+      // vault_events_prod has no unique constraint on (tx_hash, log_index),
+      // so an ON CONFLICT target errors (42P10). The resume cursor bounds
+      // re-fetch to a ~60s overlap, and the Deposit Activity page dedupes by
+      // (tx_hash, log_index), so the handful of possible repeats are harmless.
       await supabase(
-        "vault_events_prod?on_conflict=tx_hash,log_index",
+        "vault_events_prod",
         {
           method: "POST",
           headers: { Prefer: "resolution=ignore-duplicates" },

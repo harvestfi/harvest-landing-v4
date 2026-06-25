@@ -77,10 +77,20 @@ export default function DepositActivityPage() {
   );
   const realEvents = useMemo(() => {
     if (!events) return null;
-    return events.filter((e) => {
+    // Dedupe by (tx_hash, log_index): a re-run of the indexer can re-insert
+    // the ~60s overlap window (the table has no unique constraint to absorb
+    // it), so collapse repeats before any counting.
+    const seen = new Set<string>();
+    const out: EventRow[] = [];
+    for (const e of events) {
       const a = (e.wallet_address || "").toLowerCase();
-      return a && !isMutedActor(a) && !rebalancers.has(a);
-    });
+      if (!a || isMutedActor(a) || rebalancers.has(a)) continue;
+      const key = `${e.tx_hash}-${e.log_index}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(e);
+    }
+    return out;
   }, [events, rebalancers]);
 
   const oldestMs = useMemo(() => {
