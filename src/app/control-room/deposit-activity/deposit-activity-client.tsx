@@ -635,9 +635,13 @@ function EventsFeed({
                     className="hub-cell"
                     style={{ display: "flex", alignItems: "center", gap: 6 }}
                   >
-                    <span style={{ fontFamily: "var(--sans)", fontSize: 12.5 }}>
+                    <Link
+                      href={`/control-room/history?address=${e.wallet_address}`}
+                      className="aq-vault-link"
+                      style={{ fontFamily: "var(--sans)", fontSize: 12.5 }}
+                    >
                       {shortenAddress(e.wallet_address)}
-                    </span>
+                    </Link>
                     <DebankBadge address={e.wallet_address} />
                   </span>
                   <span className="hub-cell">
