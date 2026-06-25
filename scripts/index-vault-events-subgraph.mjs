@@ -252,23 +252,21 @@ function usdValue(value, price, decimals) {
   return Number.isFinite(usd) ? Math.round(usd * 100) / 100 : null;
 }
 
-// Stable per-leg log_index derived from (vault, userAddress) so a single
-// tx that touches two vaults yields two distinct (tx_hash, log_index)
-// rows, and re-runs upsert idempotently. FNV-1a over the pair, kept well
-// clear of any real on-chain log index so subgraph rows never collide with
-// the RPC indexer's rows for the same tx.
-function syntheticLogIndex(vaultAddr, userAddr) {
-  const s = `${vaultAddr}:${userAddr}`;
+// Stable per-LEG log_index derived from the entity id (which is unique per
+// leg), so two legs of the same transaction - even on the same vault and
+// wallet - get distinct (chain, tx_hash, log_index) keys and neither is
+// dropped. FNV-1a over the id, offset into a high band (>= 1e9) that real
+// on-chain log indices never reach, so a subgraph row and an RPC-indexer
+// row for the same tx keep distinct identities and never clobber each
+// other. The band fits in a 32-bit int column (< 2.147e9).
+function syntheticLogIndex(entityId) {
+  const s = String(entityId ?? "");
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 0x01000193);
   }
-  // Offset into a high band (>= 1,000,000) that real on-chain log indices
-  // never reach (a tx has at most a few hundred logs), so a subgraph row
-  // and an RPC-indexer row for the same tx keep distinct (tx_hash,
-  // log_index) identities and never clobber each other.
-  return 1_000_000 + ((h >>> 0) % 1_000_000);
+  return 1_000_000_000 + ((h >>> 0) % 1_000_000_000);
 }
 
 async function indexChain(chain) {
@@ -317,7 +315,7 @@ async function indexChain(chain) {
 
       const tx_hash = t.tx ? String(t.tx).toLowerCase() : null;
       if (!tx_hash) continue;
-      const log_index = syntheticLogIndex(vaultAddr, wallet);
+      const log_index = syntheticLogIndex(t.id);
       const tsSec = Number(t.timestamp ?? 0);
       if (!Number.isFinite(tsSec) || tsSec === 0) continue;
 
@@ -336,21 +334,31 @@ async function indexChain(chain) {
       });
     }
 
-    if (rows.length > 0) {
-      // Plain insert, matching the RPC indexer (scripts/index-vault-events.mjs):
-      // vault_events_prod has no unique constraint on (tx_hash, log_index),
-      // so an ON CONFLICT target errors (42P10). The resume cursor bounds
-      // re-fetch to a ~60s overlap, and the Deposit Activity page dedupes by
-      // (tx_hash, log_index), so the handful of possible repeats are harmless.
+    // Dedupe within the batch on the table's real unique key
+    // (chain, tx_hash, log_index) before sending, so a single INSERT never
+    // carries two rows that violate the constraint.
+    const seen = new Set();
+    const unique = [];
+    for (const row of rows) {
+      const k = `${row.chain}|${row.tx_hash}|${row.log_index}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      unique.push(row);
+    }
+
+    if (unique.length > 0) {
+      // Upsert onto the table's actual unique constraint
+      // (vault_events_prod_chain_tx_hash_log_index_key), ignoring duplicates
+      // so the ~60s resume overlap on re-runs is absorbed instead of erroring.
       await supabase(
-        "vault_events_prod",
+        "vault_events_prod?on_conflict=chain,tx_hash,log_index",
         {
           method: "POST",
           headers: { Prefer: "resolution=ignore-duplicates" },
-          body: JSON.stringify(rows),
+          body: JSON.stringify(unique),
         },
       );
-      totalWritten += rows.length;
+      totalWritten += unique.length;
     }
 
     // Advance the cursor to the last id we saw. Combined with the
