@@ -52,28 +52,56 @@ export interface BotSignals {
   timezone?: string | null;
 }
 
-// (d) Headless / automation footprint: a DESKTOP hit whose viewport is
-// exactly the full screen in both dimensions. A real desktop browser always
-// loses vertical space to the OS taskbar + browser chrome, so
-// viewport_height < screen_height holds for every genuine visit; viewport
-// == screen only happens in a headless / no-UI browser. This is the stable
-// fingerprint of the worldwide referrer-spoofing "Google" flood (every hit
-// reported a 1920x1080 viewport on a 1920x1080 screen, with a real-looking
-// Windows Chrome UA the UA layer can't touch) and of assorted datacenter
-// scrapers. Desktop-only on purpose: on mobile, viewport == screen does
-// occur on real devices, and mobile bots are already caught by the UA
-// layer. Validated against ~280 real rows with zero false positives - every
-// genuine desktop visit had viewport_height < screen_height.
+// (d) Headless / automation footprint, from the reported geometry. Two
+// desktop-only tells, either of which flags the row:
+//
+//   (d1) viewport EXACTLY equals the screen in both dimensions. A real
+//        desktop browser always loses vertical space to the OS taskbar +
+//        browser chrome, so viewport_height < screen_height holds for
+//        every genuine visit; viewport == screen only happens in a
+//        headless / no-UI browser. This is the stable fingerprint of the
+//        worldwide "Google" referrer-spoofing flood (every hit reported a
+//        1920x1080 viewport on a 1920x1080 screen, with a real-looking
+//        Windows Chrome UA the UA layer can't touch) and of assorted
+//        datacenter scrapers.
+//
+//   (d2) viewport LARGER than the screen in either dimension. innerWidth /
+//        innerHeight can never exceed screen.width / screen.height on a
+//        real desktop browser, so this is physically impossible - it only
+//        happens when a spoofed client reports a canned screen size (the
+//        latest flood hard-codes 800x600) while rendering at a much bigger
+//        viewport (1920x993, 1920x1080, 1280x1024, ...). The
+//        cluster-poisoning layer misses this wave because its fingerprint
+//        is geographically consistent (US/TR, all on America/New_York) and
+//        never trips the geo-impossible threshold.
+//
+// Desktop-only on purpose: on mobile, viewport == screen occurs on real
+// devices, and viewport_width > screen_width legitimately happens via
+// devicePixelRatio scaling (e.g. a real moto e13 reporting screen 377 but
+// viewport 443) - mobile bots are already caught by the UA layer. Validated
+// against real rows with zero false positives: every genuine desktop visit
+// has viewport <= screen in both dimensions, with at least one strictly less.
 export function isAutomationViewport(s: BotSignals): boolean {
-  return (
-    s.device_type === "desktop" &&
-    typeof s.screen_width === "number" &&
-    s.screen_width > 0 &&
-    typeof s.screen_height === "number" &&
-    s.screen_height > 0 &&
+  if (
+    s.device_type !== "desktop" ||
+    typeof s.screen_width !== "number" ||
+    s.screen_width <= 0 ||
+    typeof s.screen_height !== "number" ||
+    s.screen_height <= 0 ||
+    typeof s.viewport_width !== "number" ||
+    s.viewport_width <= 0 ||
+    typeof s.viewport_height !== "number" ||
+    s.viewport_height <= 0
+  ) {
+    return false;
+  }
+  const noChrome =
     s.viewport_width === s.screen_width &&
-    s.viewport_height === s.screen_height
-  );
+    s.viewport_height === s.screen_height;
+  const exceedsScreen =
+    s.viewport_width > s.screen_width ||
+    s.viewport_height > s.screen_height;
+  return noChrome || exceedsScreen;
 }
 
 // True if any layer flags the row as non-human (per-row layers a-d).
