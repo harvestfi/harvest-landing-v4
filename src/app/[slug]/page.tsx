@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import {
   getVaultBySlug,
   getVaults,
+  getLiveVaults,
   getAllSlugs,
   getVaultHistory,
   isVaultPageIndexable,
@@ -211,7 +212,10 @@ export default async function ProductPage({
   if (!vault) notFound();
 
   const history = await getVaultHistory(vault.contractAddress);
-  const allVaults = await getVaults();
+  // Peer/cohort data for the FAQ schema excludes hidden products so they
+  // don't surface in another product's comparisons (the current vault is
+  // passed separately, so its own page still builds even when hidden).
+  const allVaults = await getLiveVaults();
 
   // FAQ items for JSON-LD: pull from the same builders that
   // ProductPageBody uses so the schema in <head> matches what

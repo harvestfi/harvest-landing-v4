@@ -7,6 +7,7 @@ import {
   isErraticTvl,
 } from "@/lib/contextualize";
 import type { FullVaultHistory } from "@/lib/history-api";
+import { trackedDays as vaultTrackedDays } from "@/lib/vault-age";
 
 interface Props {
   history: FullVaultHistory;
@@ -61,13 +62,10 @@ export function HistoricalNarrative({ history, asset, currentTvl: liveTvl }: Pro
   // lifetime-CAGR window and the drawdown duration) from exceeding it:
   // the share-price / TVL series can start earlier than APY indexing
   // began, which otherwise prints day counts longer than the header.
-  const apyStamps = history.apyHistory
-    .filter((p) => p.apy >= 0)
-    .map((p) => p.timestamp);
-  const trackedDays =
-    apyStamps.length >= 2
-      ? Math.round((Math.max(...apyStamps) - Math.min(...apyStamps)) / 86400)
-      : 0;
+  // Canonical tracked-age shared across the whole page (lib/vault-age), so
+  // the CAGR window and drawdown duration never exceed or contradict the
+  // "Tracked for N days" the header / stats / trajectory render.
+  const trackedDays = vaultTrackedDays(history);
 
   const ref = depositRef(asset);
 

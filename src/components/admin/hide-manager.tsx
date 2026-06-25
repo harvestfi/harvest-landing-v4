@@ -23,6 +23,22 @@ export function HideManager({ items }: { items: HideItem[] }) {
   const [ready, setReady] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  // The exact content to commit to data/hidden.json for an all-visitor hide.
+  const hiddenJson = useMemo(
+    () => JSON.stringify([...draft].sort(), null, 2),
+    [draft],
+  );
+  function copyHiddenJson() {
+    navigator.clipboard?.writeText(hiddenJson).then(
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      },
+      () => setCopied(false),
+    );
+  }
 
   // localStorage is only available client-side; read after mount so SSR
   // markup matches (everything starts visible, then we reconcile).
@@ -54,7 +70,9 @@ export function HideManager({ items }: { items: HideItem[] }) {
     const ok = writeHiddenSlugs(draft);
     if (ok) {
       setSaved(new Set(draft));
-      setSaveMsg(`Saved. ${draft.size} product${draft.size === 1 ? "" : "s"} hidden in this browser.`);
+      setSaveMsg(
+        `Previewing ${draft.size} hidden product${draft.size === 1 ? "" : "s"} in this browser. Commit data/hidden.json (below) to apply for all visitors.`,
+      );
     } else {
       setSaveMsg("Could not write to this browser's storage.");
     }
@@ -125,6 +143,58 @@ export function HideManager({ items }: { items: HideItem[] }) {
           {saveMsg}
         </div>
       )}
+
+      {/* Commit panel: the toggles above are an instant per-browser preview
+          (localStorage). To hide from the rankings for ALL visitors, this
+          list must land in the committed data/hidden.json, which the build
+          filters server-side. No backend / no Supabase. */}
+      <div
+        style={{
+          marginBottom: 20,
+          padding: "12px 14px",
+          border: "1px solid var(--uni-line)",
+          borderRadius: 10,
+          background: "var(--uni-bg)",
+        }}
+      >
+        <div
+          className="uni-hub-section-meta"
+          style={{ marginBottom: 8, lineHeight: 1.5 }}
+        >
+          The toggles above preview instantly in <strong>this browser</strong>{" "}
+          only. To hide from the rankings for <strong>all visitors</strong>,
+          commit the list below to <code>data/hidden.json</code> and redeploy.
+          This affects rankings only — it does not change a product&apos;s
+          index status or its own page.
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <pre
+            style={{
+              flex: 1,
+              margin: 0,
+              padding: "8px 10px",
+              maxHeight: 160,
+              overflow: "auto",
+              fontFamily: "var(--mono)",
+              fontSize: 12,
+              background: "var(--uni-tint)",
+              borderRadius: 8,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+            }}
+          >
+            {hiddenJson}
+          </pre>
+          <button
+            type="button"
+            className="aq-timeframe-tab"
+            onClick={copyHiddenJson}
+            style={{ flexShrink: 0 }}
+          >
+            {copied ? "Copied ✓" : "Copy data/hidden.json"}
+          </button>
+        </div>
+      </div>
 
       <div className="lf-filterbar" style={{ marginBottom: 16 }}>
         <input

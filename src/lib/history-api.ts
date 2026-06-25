@@ -295,6 +295,47 @@ async function fetchPlasmaVaultHistory(
  * Fetch full vault history (up to 1000 records each) for TVL, share price, and APY.
  * Returns one data point per day (last value of each day).
  */
+// Pull an entity collection for one vault, walking timestamp_lt backward
+// from now so we get the deepest series we can WITHOUT ever losing the most
+// recent points. The subgraph caps each call at 1000 rows; the deeper daily
+// subgraphs blow past 1000 in ~3 months for dense series (esp. tvls), so a
+// single first:1000 truncated history. Paginating recent-first keeps the
+// chart fresh and extends depth as far as the cap allows. Cap at 20 pages =
+// 20k rows to bound runaway loops.
+async function fetchAllRows(
+  chainId: string,
+  entity: string,
+  addr: string,
+  fields: string,
+): Promise<Record<string, string>[]> {
+  const out: Record<string, string>[] = [];
+  let cursor = 9_999_999_999; // far-future sentinel: first page = newest rows
+  // 90 pages is a runaway backstop, not the expected depth: the loop exits as
+  // soon as a page comes back short (inception reached).
+  for (let page = 0; page < 90; page++) {
+    const query = `{
+      ${entity}(
+        where: { vault: "${addr}", timestamp_lt: "${cursor}" }
+        orderBy: timestamp
+        orderDirection: desc
+        first: 1000
+      ) { ${fields} timestamp }
+    }`;
+    const data = await queryGraphQL(chainId, query);
+    if (!data) break;
+    const batch = (data[entity] as Record<string, string>[] | undefined) || [];
+    if (batch.length === 0) break;
+    out.push(...batch);
+    if (batch.length < 1000) break;
+    // Jump to the start of the oldest day in this page: we keep one point per
+    // day downstream, so skipping the day's remainder advances by whole days
+    // and prevents a stall when a single day holds more than 1000 points.
+    const oldest = parseInt(batch[batch.length - 1].timestamp, 10);
+    cursor = Math.floor(oldest / 86400) * 86400;
+  }
+  return out;
+}
+
 export async function fetchFullVaultHistory(
   vaultAddress: string,
   chainKey: string,
@@ -323,42 +364,18 @@ export async function fetchFullVaultHistory(
     log(`[history-full] plasma empty for ${addr}, falling through to standard query`);
   }
 
-  const query = `{
-    tvls(
-      where: { vault: "${addr}" }
-      orderBy: timestamp
-      orderDirection: asc
-      first: 1000
-    ) {
-      value
-      timestamp
-    }
-    vaultHistories(
-      where: { vault: "${addr}" }
-      orderBy: timestamp
-      orderDirection: asc
-      first: 1000
-    ) {
-      sharePrice
-      timestamp
-    }
-    apyAutoCompounds(
-      where: { vault: "${addr}" }
-      orderBy: timestamp
-      orderDirection: asc
-      first: 1000
-    ) {
-      apy
-      timestamp
-    }
-  }`;
-
-  const data = await queryGraphQL(chainId, query);
-  if (!data) return empty;
-
-  const rawTvl = data.tvls as { value: string; timestamp: string }[] | undefined;
-  const rawSharePrice = data.vaultHistories as { sharePrice: string; timestamp: string }[] | undefined;
-  const rawApy = data.apyAutoCompounds as { apy: string; timestamp: string }[] | undefined;
+  // Paginate each series to its full depth (back to inception) rather than
+  // grabbing only the newest 1000 rows - the deep daily subgraphs blow past
+  // 1000 in ~3 months for dense series, so a single page truncated history.
+  const [rawTvl, rawSharePrice, rawApy] = (await Promise.all([
+    fetchAllRows(chainId, "tvls", addr, "value"),
+    fetchAllRows(chainId, "vaultHistories", addr, "sharePrice"),
+    fetchAllRows(chainId, "apyAutoCompounds", addr, "apy"),
+  ])) as [
+    { value: string; timestamp: string }[],
+    { sharePrice: string; timestamp: string }[],
+    { apy: string; timestamp: string }[],
+  ];
 
   log(
     `[history-full] vault=${addr} chain=${chainKey} tvl=${rawTvl?.length ?? 0} sharePrice=${rawSharePrice?.length ?? 0} apy=${rawApy?.length ?? 0}`,

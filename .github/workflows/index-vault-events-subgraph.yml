@@ -5,19 +5,22 @@ name: Index Vault Events (Subgraph)
 # {chainId} substituted at the URL placeholder) and upserts them
 # into vault_events_prod.
 #
-# SCHEDULE DISABLED: the RPC indexer (index-vault-events.yml) is the
-# authoritative source of deposit/withdraw rows for the funnel. It
-# resolves the signing EOA (tx.from) so aggregator-routed deposits
-# (Portals, 1inch, Zapper, ...) attribute to the user, not the router
-# contract. The subgraph's `sender` is the router in that case and uses
-# a different log_index, so running it on cron would write a second,
-# router-attributed row for the same deposit that reads "External" in
-# the feed. Kept here for manual / schema-probe use only (run via the
-# Actions "Run workflow" button, or `--probe` locally); re-enable the
-# cron below only if the RPC indexer is ever retired.
+# SCHEDULE DISABLED - run manually via the Actions "Run workflow" button.
 #
-# Runs in a single job (not per-chain matrix) - the subgraph
-# handles all chains in one HTTP roundtrip per page.
+# Indexes ALL networks (Ethereum, Base, Arbitrum, Polygon, zkSync,
+# HyperEVM) in one job. The script keeps only the real-user leg
+# (userAddress, not the zero-address mint/burn counterpart) and writes a
+# USD value per row into vault_events_prod.amount_usd. The Deposit Activity
+# page reads exactly those rows (amount_usd IS NOT NULL), so subgraph rows
+# never double-count against the RPC indexer's rows (which leave amount_usd
+# null) even while both run. Each chain backfills BACKFILL_DAYS on its first
+# run, then resumes from the latest subgraph row it wrote.
+#
+# PREREQUISITE: vault_events_prod must have amount_usd + amount_token cols:
+#   ALTER TABLE vault_events_prod ADD COLUMN IF NOT EXISTS amount_usd numeric;
+#   ALTER TABLE vault_events_prod ADD COLUMN IF NOT EXISTS amount_token numeric;
+#
+# Pass --chain=<Name> to limit to a single network when debugging.
 
 on:
   # schedule:

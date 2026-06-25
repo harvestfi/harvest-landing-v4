@@ -7,6 +7,7 @@
 import type { YieldVault } from "./types";
 import type { FullVaultHistory } from "./history-api";
 import { freshness } from "./freshness";
+import { trackedDays as vaultTrackedDays } from "./vault-age";
 import { formatAPY } from "./format";
 import {
   depositRef,
@@ -121,13 +122,11 @@ export function buildYieldTrajectory(
   // header and Strategy-details, killing the "13 days" header vs
   // "15 days ago" trajectory mismatch.
   const ageDays = Math.max(0, Math.round((nowTs - inceptionTs) / 86400));
-  const apyTs = history.apyHistory
-    .filter((p) => p.apy >= 0)
-    .map((p) => p.timestamp);
-  const labelAgeDays =
-    apyTs.length >= 2
-      ? Math.round((Math.max(...apyTs) - Math.min(...apyTs)) / 86400)
-      : ageDays;
+  // Label age = the canonical page-wide tracked span (lib/vault-age), so the
+  // "deposited at launch (N days ago)" line matches the "Tracked for N days"
+  // header / stats exactly. ageDays (share-price span) still drives the
+  // 30-day gating below, which must stay tied to real share-price coverage.
+  const labelAgeDays = vaultTrackedDays(history);
 
   // 30-day lines: only render when the vault has at least 30 days
   // of history (per the spec, skip when the window doesn't apply).
