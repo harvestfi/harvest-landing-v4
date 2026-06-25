@@ -5,19 +5,21 @@ name: Index Vault Events (Subgraph)
 # {chainId} substituted at the URL placeholder) and upserts them
 # into vault_events_prod.
 #
-# SCHEDULE DISABLED: the RPC indexer (index-vault-events.yml) is the
-# authoritative source of deposit/withdraw rows for the funnel. It
-# resolves the signing EOA (tx.from) so aggregator-routed deposits
-# (Portals, 1inch, Zapper, ...) attribute to the user, not the router
-# contract. The subgraph's `sender` is the router in that case and uses
-# a different log_index, so running it on cron would write a second,
-# router-attributed row for the same deposit that reads "External" in
-# the feed. Kept here for manual / schema-probe use only (run via the
-# Actions "Run workflow" button, or `--probe` locally); re-enable the
-# cron below only if the RPC indexer is ever retired.
+# SCHEDULE DISABLED - run manually via the Actions "Run workflow" button.
 #
-# Runs in a single job (not per-chain matrix) - the subgraph
-# handles all chains in one HTTP roundtrip per page.
+# Scoped to Base while we validate the subgraph source against the RPC
+# indexer. The script keeps only the real-user leg (userAddress, not the
+# zero-address mint/burn counterpart) and writes a USD value per row into
+# vault_events_prod.amount_usd. The Deposit Activity page reads exactly
+# those rows (chain=Base AND amount_usd IS NOT NULL), so subgraph rows
+# never double-count against the RPC indexer's rows (which leave
+# amount_usd null) even while both run.
+#
+# PREREQUISITE: vault_events_prod must have an `amount_usd` column:
+#   ALTER TABLE vault_events_prod ADD COLUMN IF NOT EXISTS amount_usd numeric;
+#
+# Once Base is validated, widen with --chain or drop the flag to index
+# all chains, and scope the RPC indexer off Base to avoid duplicate rows.
 
 on:
   # schedule:
@@ -43,4 +45,4 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/index-vault-events-subgraph.mjs
+        run: node scripts/index-vault-events-subgraph.mjs --chain=Base

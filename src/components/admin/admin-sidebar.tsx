@@ -37,6 +37,11 @@ const SECTIONS: Section[] = [
     items: [
       { label: "Live Feed", href: "/control-room/live-feed", icon: "activity" },
       { label: "SEO Summary", href: "/control-room/seo", icon: "globe" },
+      {
+        label: "Deposit Activity",
+        href: "/control-room/deposit-activity",
+        icon: "exchange",
+      },
     ],
   },
   {
@@ -151,6 +156,14 @@ const NAV_ICONS = {
       <rect x="14" y="3" width="7" height="7" />
       <rect x="14" y="14" width="7" height="7" />
       <rect x="3" y="14" width="7" height="7" />
+    </>
+  ),
+  exchange: (
+    <>
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
     </>
   ),
   database: (
