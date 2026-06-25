@@ -46,7 +46,7 @@ const CHAINS = [
 ];
 
 const PAGE_SIZE = 1000;
-const BACKFILL_DAYS = 30;
+const BACKFILL_DAYS = 180;
 const RESUME_GUARD_SECONDS = 60;
 const MAX_PAGES_PER_RUN = 200; // ~200k rows per chain per run, hard cap
 
@@ -155,11 +155,19 @@ async function probe(chainId) {
 // ──────────────────────────────────────────────────────────────────
 
 async function latestTimestampForChain(chainName) {
-  // Read the newest block_timestamp we already have on this chain.
-  // Returns the Unix seconds value, or null if the table is empty.
+  // Newest block_timestamp of a SUBGRAPH-sourced row on this chain. Scoped
+  // to amount_usd IS NOT NULL on purpose: the RPC indexer also writes this
+  // table (amount_usd null) and runs every 15 min, so an unscoped query
+  // would return a near-`now` timestamp, collapse the resume window to the
+  // last ~minute, and skip the backfill entirely (the bug that left the
+  // page empty after a "successful" run). Scoping to our own rows means the
+  // first run sees null here and backfills BACKFILL_DAYS, and later runs
+  // resume from the last row we actually wrote. Returns null if we've never
+  // written a subgraph row on this chain.
   const params = new URLSearchParams({
     select: "block_timestamp",
     chain: `eq.${chainName}`,
+    amount_usd: "not.is.null",
     order: "block_timestamp.desc",
     limit: "1",
   });
