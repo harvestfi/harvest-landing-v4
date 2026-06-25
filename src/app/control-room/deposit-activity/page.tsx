@@ -1,22 +1,24 @@
 "use client";
 
-// Control room > Deposit Activity (Base).
+// Control room > Deposit Activity.
 //
-// A USD-denominated deposit / withdraw feed for Base, sourced from the
-// Harvest subgraph (userTransactions) rather than the public-RPC indexer.
-// The subgraph indexer (scripts/index-vault-events-subgraph.mjs) writes a
-// USD value per leg into vault_events_prod.amount_usd, so this page reads
-// ONLY rows that carry a USD value:
+// A USD-denominated deposit / withdraw feed across every network we index,
+// sourced from the Harvest subgraph (userTransactions) rather than the
+// public-RPC indexer. The subgraph indexer
+// (scripts/index-vault-events-subgraph.mjs) writes a USD value per leg into
+// vault_events_prod.amount_usd, so this page reads ONLY rows that carry a
+// USD value:
 //
-//   chain = Base  AND  amount_usd IS NOT NULL
+//   amount_usd IS NOT NULL
 //
 // That predicate cleanly isolates subgraph-sourced rows from the RPC
 // indexer's rows (which leave amount_usd null), so the two sources never
 // double-count here even while both run.
 //
 // Covers both autocompounders (vault legs) and autopilots (plasmaVault
-// legs) - the subgraph entity carries both. Internal allocator /
-// rebalancer wallets are filtered out so the figures reflect real users.
+// legs) - the subgraph entity carries both. Internal allocator / rebalancer
+// wallets are filtered out so the figures reflect real users. The Network
+// and Type controls filter the headline figures, chart and feed together.
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -29,6 +31,7 @@ import {
 } from "@/components/admin/timeframe-selector";
 
 interface EventRow {
+  chain: string;
   tx_hash: string;
   log_index: number;
   block_timestamp: string;
@@ -42,10 +45,25 @@ interface EventRow {
 
 const DAY_MS = 86_400_000;
 
+// Canonical network order for the filter chips; only those actually present
+// in the data are shown.
+const NETWORK_ORDER = [
+  "Ethereum",
+  "Base",
+  "Arbitrum",
+  "Polygon",
+  "zkSync",
+  "HyperEVM",
+];
+
+type TypeFilter = "all" | "deposit" | "withdraw";
+
 export default function DepositActivityPage() {
   const [events, setEvents] = useState<EventRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>("90d");
+  const [network, setNetwork] = useState<string>("all");
+  const [type, setType] = useState<TypeFilter>("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -53,9 +71,9 @@ export default function DepositActivityPage() {
       try {
         const rows = await supabaseSelectAll<EventRow>(
           "vault_events_prod",
-          "select=tx_hash,log_index,block_timestamp,vault_address,vault_slug," +
-            "event_type,wallet_address,amount_shares,amount_usd" +
-            "&chain=eq.Base&amount_usd=not.is.null" +
+          "select=chain,tx_hash,log_index,block_timestamp,vault_address," +
+            "vault_slug,event_type,wallet_address,amount_shares,amount_usd" +
+            "&amount_usd=not.is.null" +
             "&order=block_timestamp.desc",
         );
         if (cancelled) return;
@@ -70,16 +88,14 @@ export default function DepositActivityPage() {
   }, []);
 
   // Internal allocator / rebalancer wallets - excluded so reallocations
-  // don't inflate depositor counts or flow.
+  // don't inflate depositor counts or flow. Deduped by (tx_hash, log_index)
+  // to absorb the ~60s resume overlap on indexer re-runs.
   const rebalancers = useMemo(
     () => (events ? detectRebalancerActors(events) : new Set<string>()),
     [events],
   );
   const realEvents = useMemo(() => {
     if (!events) return null;
-    // Dedupe by (tx_hash, log_index): a re-run of the indexer can re-insert
-    // the ~60s overlap window (the table has no unique constraint to absorb
-    // it), so collapse repeats before any counting.
     const seen = new Set<string>();
     const out: EventRow[] = [];
     for (const e of events) {
@@ -93,25 +109,43 @@ export default function DepositActivityPage() {
     return out;
   }, [events, rebalancers]);
 
+  // Networks actually present, in canonical order, for the filter chips.
+  const networks = useMemo(() => {
+    if (!realEvents) return [] as string[];
+    const present = new Set(realEvents.map((e) => e.chain));
+    return NETWORK_ORDER.filter((n) => present.has(n));
+  }, [realEvents]);
+
+  // Apply the Network + Type filters before any rollups so the stats, chart
+  // and feed all reflect the same selection.
+  const filtered = useMemo(() => {
+    if (!realEvents) return null;
+    return realEvents.filter(
+      (e) =>
+        (network === "all" || e.chain === network) &&
+        (type === "all" || e.event_type === type),
+    );
+  }, [realEvents, network, type]);
+
   const oldestMs = useMemo(() => {
-    if (!realEvents || realEvents.length === 0) return null;
+    if (!filtered || filtered.length === 0) return null;
     let oldest = Infinity;
-    for (const e of realEvents) {
+    for (const e of filtered) {
       const t = new Date(e.block_timestamp).getTime();
       if (t < oldest) oldest = t;
     }
     return Number.isFinite(oldest) ? oldest : null;
-  }, [realEvents]);
+  }, [filtered]);
   const days = resolveDays(timeframe, oldestMs);
 
-  // Window the events to the selected timeframe, then roll up the headline
-  // figures and the daily net-flow series in a single pass.
+  // Window to the selected timeframe, then roll up the headline figures and
+  // the daily net-flow series in a single pass.
   const { windowed, stats } = useMemo(() => {
-    if (!realEvents) {
+    if (!filtered) {
       return { windowed: [] as EventRow[], stats: null };
     }
     const cutoff = Date.now() - days * DAY_MS;
-    const win = realEvents.filter(
+    const win = filtered.filter(
       (e) => new Date(e.block_timestamp).getTime() >= cutoff,
     );
     let depCount = 0;
@@ -142,22 +176,24 @@ export default function DepositActivityPage() {
         avgDep: depCount > 0 ? depUsd / depCount : 0,
       },
     };
-  }, [realEvents, days]);
+  }, [filtered, days]);
 
   const loading = events === null;
+  const scope = network === "all" ? "all networks" : network;
 
   return (
     <div className="uni-hub-test">
       <header className="uni-hub-hero">
         <div className="uni-hub-hero-headline">
           <div>
-            <h1 className="uni-hub-h1">Deposit Activity · Base</h1>
+            <h1 className="uni-hub-h1">Deposit Activity</h1>
             <p className="uni-hub-sub">
-              USD-denominated deposit and withdraw flow on Base, pulled
-              directly from the Harvest subgraph (one pre-decoded row per
-              transaction, covering both autocompounders and autopilots).
-              Internal allocator wallets are filtered out, so these are real
-              user flows.
+              USD-denominated deposit and withdraw flow across every network
+              we index, pulled directly from the Harvest subgraph (one
+              pre-decoded row per transaction, covering both autocompounders
+              and autopilots). Internal allocator wallets are filtered out, so
+              these are real user flows. Use the Network and Type controls to
+              filter the figures, chart and feed.
             </p>
           </div>
         </div>
@@ -170,9 +206,7 @@ export default function DepositActivityPage() {
         >
           <Stat
             label={`Deposits · ${days}d`}
-            value={
-              stats ? `${stats.depCount.toLocaleString("en-US")}` : null
-            }
+            value={stats ? `${stats.depCount.toLocaleString("en-US")}` : null}
             sub={stats ? formatUsd(stats.depUsd) : undefined}
           />
           <Stat
@@ -183,17 +217,56 @@ export default function DepositActivityPage() {
           <Stat
             label="Net flow"
             value={stats ? formatSignedUsd(stats.netUsd) : null}
-            tone={
-              stats ? (stats.netUsd >= 0 ? "pos" : "neg") : undefined
-            }
+            tone={stats ? (stats.netUsd >= 0 ? "pos" : "neg") : undefined}
           />
           <Stat
             label="Avg deposit size"
             value={stats ? formatUsd(stats.avgDep) : null}
-            sub={stats ? `${stats.wallets.toLocaleString("en-US")} wallets` : undefined}
+            sub={
+              stats
+                ? `${stats.wallets.toLocaleString("en-US")} wallets`
+                : undefined
+            }
           />
         </div>
       </header>
+
+      {!loading && stats && (
+        <section className="uni-hub-section" style={{ marginTop: 0, marginBottom: 4 }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 28,
+              alignItems: "center",
+            }}
+          >
+            <FilterGroup label="Network">
+              <SegSelector
+                ariaLabel="Network filter"
+                value={network}
+                onChange={setNetwork}
+                options={[
+                  { value: "all", label: "All" },
+                  ...networks.map((n) => ({ value: n, label: n })),
+                ]}
+              />
+            </FilterGroup>
+            <FilterGroup label="Type">
+              <SegSelector
+                ariaLabel="Event type filter"
+                value={type}
+                onChange={(v) => setType(v as TypeFilter)}
+                options={[
+                  { value: "all", label: "All" },
+                  { value: "deposit", label: "Deposits" },
+                  { value: "withdraw", label: "Withdrawals" },
+                ]}
+              />
+            </FilterGroup>
+          </div>
+        </section>
+      )}
 
       {err && (
         <div className="uni-hub-empty" style={{ color: "#b91c1c" }}>
@@ -209,7 +282,7 @@ export default function DepositActivityPage() {
             timeframe={timeframe}
             onTimeframeChange={setTimeframe}
           />
-          <EventsFeed events={windowed} />
+          <EventsFeed events={windowed} scope={scope} />
         </>
       )}
 
@@ -219,10 +292,56 @@ export default function DepositActivityPage() {
 
       {!loading && !err && stats && windowed.length === 0 && (
         <div className="uni-hub-empty">
-          No subgraph-indexed Base events yet. Run the &ldquo;Index Vault
-          Events (Subgraph)&rdquo; action to populate amount_usd rows.
+          No subgraph-indexed events for this selection. Run the &ldquo;Index
+          Vault Events (Subgraph)&rdquo; action to populate amount_usd rows.
         </div>
       )}
+    </div>
+  );
+}
+
+function FilterGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span className="uni-hub-stat-label">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+// Generic segmented chip selector, same flagship treatment as the timeframe
+// picker (gold pill on the active segment).
+function SegSelector({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <div className="aq-timeframe" role="tablist" aria-label={ariaLabel}>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          role="tab"
+          aria-selected={value === opt.value}
+          className={`aq-timeframe-tab${value === opt.value ? " active" : ""}`}
+          onClick={() => onChange(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -399,10 +518,10 @@ function DailyFlowChart({
 // ──────────────────────────────────────────────────────────────────
 
 const EVENTS_COLS =
-  "150px minmax(180px, 1.6fr) 110px 130px minmax(140px, 1fr) 70px";
+  "140px minmax(170px, 1.5fr) 92px 96px 120px minmax(130px, 1fr) 60px";
 const FEED_LIMIT = 250;
 
-function EventsFeed({ events }: { events: EventRow[] }) {
+function EventsFeed({ events, scope }: { events: EventRow[]; scope: string }) {
   const display = useMemo(
     () =>
       [...events]
@@ -419,11 +538,9 @@ function EventsFeed({ events }: { events: EventRow[] }) {
     <section className="uni-hub-section">
       <header className="uni-hub-section-head">
         <div className="aq-section-head-left">
-          <h2 className="uni-hub-section-title">
-            Deposit + withdraw events
-          </h2>
+          <h2 className="uni-hub-section-title">Deposit + withdraw events</h2>
           <span className="uni-hub-section-meta">
-            most recent {Math.min(display.length, FEED_LIMIT)} of{" "}
+            {scope} · most recent {Math.min(display.length, FEED_LIMIT)} of{" "}
             {events.length.toLocaleString("en-US")} in window · subgraph
             indexed, USD priced at transaction time
           </span>
@@ -435,12 +552,10 @@ function EventsFeed({ events }: { events: EventRow[] }) {
       ) : (
         <div className="hub-table-wrap aq-recent-wrap">
           <div className="hub-table aq-clicks-table aq-recent-table">
-            <div
-              className="hub-thead"
-              style={{ gridTemplateColumns: EVENTS_COLS }}
-            >
+            <div className="hub-thead" style={{ gridTemplateColumns: EVENTS_COLS }}>
               <span className="hub-th">Time</span>
               <span className="hub-th">Vault</span>
+              <span className="hub-th">Chain</span>
               <span className="hub-th">Event</span>
               <span className="hub-th">Amount (USD)</span>
               <span className="hub-th">Wallet</span>
@@ -466,6 +581,7 @@ function EventsFeed({ events }: { events: EventRow[] }) {
                     </span>
                   )}
                 </span>
+                <span className="hub-cell">{e.chain}</span>
                 <span className="hub-cell">
                   <span
                     style={{
@@ -493,7 +609,7 @@ function EventsFeed({ events }: { events: EventRow[] }) {
                 </span>
                 <span className="hub-cell">
                   <a
-                    href={`https://basescan.org/tx/${e.tx_hash}`}
+                    href={txLink(e.chain, e.tx_hash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="aq-vault-link"
@@ -513,6 +629,24 @@ function EventsFeed({ events }: { events: EventRow[] }) {
 // ──────────────────────────────────────────────────────────────────
 // formatting helpers
 // ──────────────────────────────────────────────────────────────────
+
+function txLink(chain: string, tx: string): string {
+  const base =
+    chain === "Ethereum"
+      ? "https://etherscan.io/tx/"
+      : chain === "Base"
+        ? "https://basescan.org/tx/"
+        : chain === "Polygon"
+          ? "https://polygonscan.com/tx/"
+          : chain === "Arbitrum"
+            ? "https://arbiscan.io/tx/"
+            : chain === "HyperEVM"
+              ? "https://hyperevmscan.io/tx/"
+              : chain === "zkSync"
+                ? "https://explorer.zksync.io/tx/"
+                : "https://etherscan.io/tx/";
+  return base + tx;
+}
 
 function shortenAddress(addr: string): string {
   if (!addr || addr.length < 10) return addr || "—";

@@ -7,19 +7,19 @@ name: Index Vault Events (Subgraph)
 #
 # SCHEDULE DISABLED - run manually via the Actions "Run workflow" button.
 #
-# Scoped to Base while we validate the subgraph source against the RPC
-# indexer. The script keeps only the real-user leg (userAddress, not the
-# zero-address mint/burn counterpart) and writes a USD value per row into
-# vault_events_prod.amount_usd. The Deposit Activity page reads exactly
-# those rows (chain=Base AND amount_usd IS NOT NULL), so subgraph rows
-# never double-count against the RPC indexer's rows (which leave
-# amount_usd null) even while both run.
+# Indexes ALL networks (Ethereum, Base, Arbitrum, Polygon, zkSync,
+# HyperEVM) in one job. The script keeps only the real-user leg
+# (userAddress, not the zero-address mint/burn counterpart) and writes a
+# USD value per row into vault_events_prod.amount_usd. The Deposit Activity
+# page reads exactly those rows (amount_usd IS NOT NULL), so subgraph rows
+# never double-count against the RPC indexer's rows (which leave amount_usd
+# null) even while both run. Each chain backfills BACKFILL_DAYS on its first
+# run, then resumes from the latest subgraph row it wrote.
 #
 # PREREQUISITE: vault_events_prod must have an `amount_usd` column:
 #   ALTER TABLE vault_events_prod ADD COLUMN IF NOT EXISTS amount_usd numeric;
 #
-# Once Base is validated, widen with --chain or drop the flag to index
-# all chains, and scope the RPC indexer off Base to avoid duplicate rows.
+# Pass --chain=<Name> to limit to a single network when debugging.
 
 on:
   # schedule:
@@ -45,4 +45,4 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/index-vault-events-subgraph.mjs --chain=Base
+        run: node scripts/index-vault-events-subgraph.mjs
