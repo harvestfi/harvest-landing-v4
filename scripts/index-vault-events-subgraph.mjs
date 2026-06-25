@@ -46,9 +46,12 @@ const CHAINS = [
 ];
 
 const PAGE_SIZE = 1000;
-const BACKFILL_DAYS = 180;
+// First-run backfill depth. 730d (~2y) reaches the inception of essentially
+// every product we index, so the Deposit Activity feed can show deep history
+// (well before 1 Jan 2026). Bounded per run by MAX_PAGES_PER_RUN below.
+const BACKFILL_DAYS = 730;
 const RESUME_GUARD_SECONDS = 60;
-const MAX_PAGES_PER_RUN = 200; // ~200k rows per chain per run, hard cap
+const MAX_PAGES_PER_RUN = 400; // ~400k rows per chain per run, hard cap
 
 // ──────────────────────────────────────────────────────────────────
 // Args + env

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { supabaseSelectAll } from "@/lib/supabase";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
+import { TablePager } from "@/components/admin/table-pager";
 import {
   TimeframeSelector,
   resolveDays,
@@ -62,6 +63,7 @@ export default function DepositActivityClient({
   const [timeframe, setTimeframe] = useState<Timeframe>("90d");
   const [network, setNetwork] = useState<string>("all");
   const [type, setType] = useState<TypeFilter>("all");
+  const [minUsd, setMinUsd] = useState<number>(0);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -117,9 +119,10 @@ export default function DepositActivityClient({
     return realEvents.filter(
       (e) =>
         (network === "all" || e.chain === network) &&
-        (type === "all" || e.event_type === type),
+        (type === "all" || e.event_type === type) &&
+        (e.amount_usd ?? 0) >= minUsd,
     );
-  }, [realEvents, network, type]);
+  }, [realEvents, network, type, minUsd]);
 
   const oldestMs = useMemo(() => {
     if (!filtered || filtered.length === 0) return null;
@@ -259,6 +262,19 @@ export default function DepositActivityClient({
                   { value: "all", label: "All" },
                   { value: "deposit", label: "Deposits" },
                   { value: "withdraw", label: "Withdrawals" },
+                ]}
+              />
+            </FilterGroup>
+            <FilterGroup label="Min USD">
+              <SegSelector
+                ariaLabel="Minimum USD filter"
+                value={String(minUsd)}
+                onChange={(v) => setMinUsd(Number(v))}
+                options={[
+                  { value: "0", label: "All" },
+                  { value: "100", label: ">$100" },
+                  { value: "1000", label: ">$1k" },
+                  { value: "10000", label: ">$10k" },
                 ]}
               />
             </FilterGroup>
@@ -528,7 +544,7 @@ function DailyFlowChart({
 
 const EVENTS_COLS =
   "104px minmax(170px, 1.5fr) 52px 104px 104px 120px minmax(140px, 1fr) 52px";
-const FEED_LIMIT = 250;
+const PAGE_SIZE = 25;
 
 function EventsFeed({
   events,
@@ -539,16 +555,26 @@ function EventsFeed({
   scope: string;
   vaultMeta: VaultMeta;
 }) {
-  const display = useMemo(
+  const [page, setPage] = useState(0);
+  const sorted = useMemo(
     () =>
-      [...events]
-        .sort(
-          (a, b) =>
-            new Date(b.block_timestamp).getTime() -
-            new Date(a.block_timestamp).getTime(),
-        )
-        .slice(0, FEED_LIMIT),
+      [...events].sort(
+        (a, b) =>
+          new Date(b.block_timestamp).getTime() -
+          new Date(a.block_timestamp).getTime(),
+      ),
     [events],
+  );
+  // Reset to the first page whenever the filtered set changes.
+  useEffect(() => {
+    setPage(0);
+  }, [events]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const display = sorted.slice(
+    safePage * PAGE_SIZE,
+    safePage * PAGE_SIZE + PAGE_SIZE,
   );
 
   return (
@@ -557,9 +583,8 @@ function EventsFeed({
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">Deposit + withdraw events</h2>
           <span className="uni-hub-section-meta">
-            {scope} · most recent {Math.min(display.length, FEED_LIMIT)} of{" "}
-            {events.length.toLocaleString("en-US")} in window · subgraph
-            indexed, USD priced at transaction time
+            {scope} · {events.length.toLocaleString("en-US")} in window ·
+            subgraph indexed, USD priced at transaction time
           </span>
         </div>
       </header>
@@ -660,6 +685,14 @@ function EventsFeed({
           </div>
         </div>
       )}
+
+      <TablePager
+        page={safePage}
+        totalPages={totalPages}
+        totalRows={sorted.length}
+        onPage={setPage}
+        unit="events"
+      />
     </section>
   );
 }
