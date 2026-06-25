@@ -10,6 +10,7 @@
 // stitches together the subgraph (deposits / withdrawals), the in-app wallet
 // connections, and the front-end visits / clicks for that wallet's sessions.
 
+import { Suspense } from "react";
 import { getVaults } from "@/lib/data";
 import WalletHistoryClient, {
   type VaultMeta,
@@ -26,5 +27,15 @@ export default async function WalletHistoryPage() {
       slug: v.slug,
     };
   }
-  return <WalletHistoryClient vaultMeta={vaultMeta} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="uni-hub-test">
+          <div className="uni-hub-empty">Loading wallet history…</div>
+        </div>
+      }
+    >
+      <WalletHistoryClient vaultMeta={vaultMeta} />
+    </Suspense>
+  );
 }

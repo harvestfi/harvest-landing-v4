@@ -12,7 +12,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { supabaseSelectAll } from "@/lib/supabase";
+import { classifyChannel, classifyVisit } from "@/lib/channels";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import "../../_styles/asset-hub.css";
 
@@ -45,6 +47,7 @@ interface VisitRow {
   session_id: string | null;
   page_path: string | null;
   source: string | null;
+  referrer: string | null;
 }
 interface ClickRow {
   created_at: string;
@@ -52,6 +55,7 @@ interface ClickRow {
   vault_slug: string | null;
   source_page: string | null;
   target_url: string | null;
+  source: string | null;
 }
 
 type Kind = "deposit" | "withdraw" | "connect" | "visit" | "click";
@@ -72,6 +76,7 @@ interface TimelineRow {
   targetUrl?: string | null;
   balance?: number | null;
   harvestBalance?: number | null;
+  source?: string; // acquisition channel for visit / click rows
 }
 
 export default function WalletHistoryClient({
@@ -79,7 +84,15 @@ export default function WalletHistoryClient({
 }: {
   vaultMeta: VaultMeta;
 }) {
-  const [address, setAddress] = useState<string | null>(null);
+  // Wallet from the query string, reactive so navigating wallet -> wallet
+  // (same route, new ?address) re-fetches without a full reload. The page is
+  // wrapped in <Suspense> (see page.tsx) to satisfy static export.
+  const searchParams = useSearchParams();
+  const address =
+    (searchParams.get("address") || searchParams.get("wallet") || "")
+      .trim()
+      .toLowerCase() || null;
+
   const [data, setData] = useState<{
     events: EventRow[];
     conns: ConnRow[];
@@ -88,14 +101,6 @@ export default function WalletHistoryClient({
   } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Read the wallet from the query string client-side (avoids the
-  // useSearchParams Suspense requirement and works under static export).
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    const a = (p.get("address") || p.get("wallet") || "").trim().toLowerCase();
-    setAddress(a || null);
-  }, []);
 
   const load = useCallback(async (addr: string) => {
     setRefreshing(true);
@@ -126,12 +131,12 @@ export default function WalletHistoryClient({
         [visits, clicks] = await Promise.all([
           supabaseSelectAll<VisitRow>(
             "frontpage_visits",
-            "select=created_at,session_id,page_path,source" +
+            "select=created_at,session_id,page_path,source,referrer" +
               `&session_id=in.${inList}&order=created_at.desc`,
           ),
           supabaseSelectAll<ClickRow>(
             "outbound_clicks",
-            "select=created_at,session_id,vault_slug,source_page,target_url" +
+            "select=created_at,session_id,vault_slug,source_page,target_url,source" +
               `&session_id=in.${inList}&order=created_at.desc`,
           ),
         ]);
@@ -186,6 +191,7 @@ export default function WalletHistoryClient({
         iso: v.created_at,
         kind: "visit",
         page: v.page_path,
+        source: classifyVisit(v.source, v.referrer),
       });
     }
     for (const k of data.clicks) {
@@ -198,6 +204,7 @@ export default function WalletHistoryClient({
         vaultSlug: k.vault_slug,
         page: k.source_page,
         targetUrl: k.target_url,
+        source: classifyChannel(k.source),
       });
     }
     out.sort((a, b) => b.ms - a.ms);
@@ -326,6 +333,10 @@ export default function WalletHistoryClient({
         </div>
       </header>
 
+      {!loading && data && rows.length > 0 && (
+        <NetPositionChart events={data.events} />
+      )}
+
       <section className="uni-hub-section" style={{ marginTop: 0 }}>
         <header className="uni-hub-section-head">
           <div className="aq-section-head-left">
@@ -366,6 +377,7 @@ export default function WalletHistoryClient({
             <div className="hub-table aq-clicks-table aq-recent-table">
               <div className="hub-thead" style={{ gridTemplateColumns: COLS }}>
                 <span className="hub-th">Time</span>
+                <span className="hub-th">Source</span>
                 <span className="hub-th">Type</span>
                 <span className="hub-th">Detail</span>
                 <span className="hub-th">Chain</span>
@@ -385,6 +397,12 @@ export default function WalletHistoryClient({
                   >
                     <span className="hub-cell aq-cell-time">
                       {formatTime(r.iso)}
+                    </span>
+                    <span
+                      className="hub-cell"
+                      style={{ fontSize: 12, color: "var(--uni-ink-2)" }}
+                    >
+                      {r.source ?? "—"}
                     </span>
                     <span className="hub-cell">
                       <TypeBadge kind={r.kind} />
@@ -443,7 +461,113 @@ export default function WalletHistoryClient({
 }
 
 const COLS =
-  "104px 108px minmax(180px, 1.6fr) 52px 104px 116px 52px";
+  "100px 96px 100px minmax(170px, 1.5fr) 52px 100px 112px 52px";
+
+// Cumulative net position (deposits − withdrawals, USD) over time, as a bar
+// chart in the same register as the acquisition / SEO charts. A proxy for
+// "amount held in Harvest": the running USD basis the wallet has contributed
+// and not yet withdrawn (clamped at 0). Capped at the trailing 365 days.
+function NetPositionChart({ events }: { events: EventRow[] }) {
+  const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
+    null,
+  );
+  const DAY = 86_400_000;
+
+  const { bins, max, latest } = useMemo(() => {
+    const evs = events
+      .filter((e) => e.event_type === "deposit" || e.event_type === "withdraw")
+      .map((e) => ({
+        ms: new Date(e.block_timestamp).getTime(),
+        usd: (e.amount_usd ?? 0) * (e.event_type === "deposit" ? 1 : -1),
+      }))
+      .filter((e) => Number.isFinite(e.ms))
+      .sort((a, b) => a.ms - b.ms);
+    if (!evs.length) {
+      return { bins: [] as { v: number; daysAgo: number }[], max: 1, latest: 0 };
+    }
+    const now = Date.now();
+    const spanDays = Math.min(
+      Math.max(1, Math.ceil((now - evs[0].ms) / DAY) + 1),
+      365,
+    );
+    const startMs = now - (spanDays - 1) * DAY;
+    let running = 0;
+    let i = 0;
+    while (i < evs.length && evs[i].ms < startMs) {
+      running += evs[i].usd;
+      i++;
+    }
+    const out: { v: number; daysAgo: number }[] = [];
+    for (let d = 0; d < spanDays; d++) {
+      const dayEnd = startMs + (d + 1) * DAY;
+      while (i < evs.length && evs[i].ms < dayEnd) {
+        running += evs[i].usd;
+        i++;
+      }
+      out.push({ v: Math.max(0, running), daysAgo: spanDays - 1 - d });
+    }
+    return {
+      bins: out,
+      max: Math.max(1, ...out.map((b) => b.v)),
+      latest: out[out.length - 1]?.v ?? 0,
+    };
+  }, [events]);
+
+  if (!bins.length) return null;
+  const days = bins.length;
+
+  return (
+    <section className="uni-hub-section" style={{ marginTop: 0 }}>
+      <header className="uni-hub-section-head">
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">Amount held in Harvest</h2>
+          <span className="uni-hub-section-meta">
+            net deposited (deposits − withdrawals), cumulative · last {days}d
+          </span>
+        </div>
+      </header>
+      <div className="aq-chart-card">
+        <div className="aq-chart-bignum">
+          {formatUsd(hovered ? hovered.v : latest)}
+        </div>
+        <div className="aq-chart-bignum-label">
+          {hovered
+            ? `held ${labelForDaysAgo(hovered.daysAgo)}`
+            : "currently held (net contributed basis)"}
+        </div>
+        <div className="aq-chart">
+          <div className="aq-chart-bars">
+            {bins.map((b, i) => {
+              const h = Math.max((b.v / max) * 100, b.v > 0 ? 3 : 0);
+              return (
+                <div
+                  key={i}
+                  className="aq-bar-col"
+                  title={`${formatUsd(b.v)} (${labelForDaysAgo(b.daysAgo)})`}
+                  onMouseEnter={() => setHovered(b)}
+                  onMouseLeave={() => setHovered(null)}
+                >
+                  <div className="aq-bar" style={{ height: `${h}%` }} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="aq-chart-axis">
+            <span>{days}d ago</span>
+            <span>{Math.floor(days / 2)}d ago</span>
+            <span>today</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function labelForDaysAgo(d: number): string {
+  if (d === 0) return "today";
+  if (d === 1) return "yesterday";
+  return `${d} days ago`;
+}
 
 function DetailCell({
   row,
