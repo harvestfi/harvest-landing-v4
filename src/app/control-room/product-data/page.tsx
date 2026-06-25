@@ -9,22 +9,107 @@ import { getVaults, loadHistoryFile } from "@/lib/data";
 import {
   ProductDataTable,
   type ProductDataRow,
+  type SeriesDiag,
   type SeriesHealth,
   type DataStatus,
 } from "@/components/product-data-table";
 import "../../_styles/asset-hub.css";
 
+// Where each chain's history is pulled from (clownfish, keyed by chain id).
+// Mirrors CHAIN_IDS in scripts/fetch-data.mjs so the intel row tells the data
+// team exactly which endpoint served (or failed to serve) a product.
+const HISTORY_BASE = "https://clownfish-app-2dsdk.ondigitalocean.app";
+const CHAIN_ID: Record<string, string> = {
+  Ethereum: "1",
+  Polygon: "137",
+  Arbitrum: "42161",
+  Base: "8453",
+  zkSync: "324",
+  HyperEVM: "999",
+};
+const SERIES_ENTITY: Record<SeriesDiag["key"], string> = {
+  TVL: "tvls",
+  APY: "apyAutoCompounds",
+  Share: "vaultHistories",
+};
+
+// Build the per-series ingestion verdict: how many points came back, the
+// indexed span, density vs the vault's age, and a short note flagging what's
+// off (sparse, starts after deploy, or stops before the freshest series).
+function buildDiag(
+  key: SeriesDiag["key"],
+  points: { timestamp: number }[],
+  deploymentTs: number | null,
+  latestTs: number | null,
+  ageDays: number,
+): SeriesDiag {
+  const ts = points
+    .map((p) => p.timestamp)
+    .filter((t) => Number.isFinite(t) && t > 0)
+    .sort((a, b) => a - b);
+  const count = ts.length;
+  const firstTs = count ? ts[0] : null;
+  const lastTs = count ? ts[count - 1] : null;
+  const perDay = count / Math.max(ageDays, 1);
+  const DAY = 86400;
+  const startsLate =
+    firstTs !== null && deploymentTs !== null && firstTs > deploymentTs + 14 * DAY;
+  const stale =
+    lastTs !== null && latestTs !== null && lastTs < latestTs - 14 * DAY;
+  const sparse = count > 0 && perDay < 0.8;
+  const missing = count === 0;
+  const off = missing || sparse || startsLate || stale;
+
+  let note: string;
+  if (missing) {
+    note = "no data returned from endpoint";
+  } else {
+    const parts: string[] = [];
+    if (sparse) parts.push(`sparse (~${perDay.toFixed(2)}/day)`);
+    if (startsLate && firstTs !== null && deploymentTs !== null)
+      parts.push(`starts ${Math.round((firstTs - deploymentTs) / DAY)}d after deploy`);
+    if (stale && lastTs !== null && latestTs !== null)
+      parts.push(`ends ${Math.round((latestTs - lastTs) / DAY)}d before latest`);
+    note = parts.length ? parts.join(" · ") : "daily, full span";
+  }
+  return {
+    key,
+    entity: SERIES_ENTITY[key],
+    points: count,
+    firstTs,
+    lastTs,
+    perDay,
+    off,
+    note,
+  };
+}
+
 // Coverage = indexed points / vault age in days. A daily-snapshotted
 // series sits near 1.0; a series that only spans part of the vault's life
 // (or is event-driven and sparse) drops well below it. Thresholds are
 // deliberately forgiving so only genuinely thin series flag red.
-function healthFor(points: number, ageDays: number): SeriesHealth {
+// Health is judged on continuity + freshness, not strict daily density.
+// The subgraph is event-driven, so a healthy series can run ~every other
+// day rather than exactly once a day; what actually matters is that it's
+// fresh (a recent point) and continuous (covers the vault's life without
+// big holes). So: a stale series (no point in 3 weeks) is always "needs
+// fix" however dense its old data; otherwise we grade on coverage with
+// forgiving thresholds — ~every-other-day, fresh and full-span reads as
+// "good", near-daily as "dense", and only genuinely holey series flag red.
+function healthFor(
+  points: number,
+  ageDays: number,
+  lastTs: number | null,
+  now: number,
+): SeriesHealth {
   if (points <= 0) return "missing";
+  const freshDays = lastTs ? (now - lastTs) / 86400 : Infinity;
+  if (freshDays > 21) return "sparse"; // stale: no recent data
   const coverage = points / Math.max(ageDays, 1);
-  if (coverage < 0.3) return "sparse";
-  if (coverage < 0.8) return "partial";
-  if (coverage < 0.95) return "good";
-  return "dense";
+  if (coverage < 0.2) return "sparse"; // fresh but holey
+  if (coverage < 0.45) return "partial"; // ~every 3+ days
+  if (coverage < 0.85) return "good"; // ~every other day, continuous
+  return "dense"; // near-daily
 }
 
 const SEVERITY: Record<SeriesHealth, number> = {
@@ -49,6 +134,7 @@ function statusFor(healths: SeriesHealth[]): DataStatus {
 export default async function ProductDataPage() {
   const vaults = await getVaults();
   const history = loadHistoryFile() ?? {};
+  const now = Math.floor(Date.now() / 1000); // freshness reference (build time)
 
   const rows: ProductDataRow[] = vaults.map((v) => {
     const h =
@@ -75,9 +161,18 @@ export default async function ProductDataPage() {
     const tvlPoints = h.tvlHistory.length;
     const apyPoints = h.apyHistory.length;
     const spPoints = h.sharePriceHistory.length;
-    const tvlHealth = healthFor(tvlPoints, ageDays);
-    const apyHealth = healthFor(apyPoints, ageDays);
-    const spHealth = healthFor(spPoints, ageDays);
+    const lastOf = (pts: { timestamp: number }[]): number | null =>
+      pts.length ? Math.max(...pts.map((p) => p.timestamp)) : null;
+    const tvlHealth = healthFor(tvlPoints, ageDays, lastOf(h.tvlHistory), now);
+    const apyHealth = healthFor(apyPoints, ageDays, lastOf(h.apyHistory), now);
+    const spHealth = healthFor(spPoints, ageDays, lastOf(h.sharePriceHistory), now);
+
+    const chainId = CHAIN_ID[v.chain] ?? "?";
+    const diag: SeriesDiag[] = [
+      buildDiag("TVL", h.tvlHistory, deploymentTs, lastTs, ageDays),
+      buildDiag("APY", h.apyHistory, deploymentTs, lastTs, ageDays),
+      buildDiag("Share", h.sharePriceHistory, deploymentTs, lastTs, ageDays),
+    ];
 
     return {
       slug: v.slug,
@@ -92,6 +187,10 @@ export default async function ProductDataPage() {
       apyHealth,
       spHealth,
       status: statusFor([tvlHealth, apyHealth, spHealth]),
+      chainId,
+      endpoint: `${HISTORY_BASE}/${chainId}`,
+      latestTs: lastTs,
+      diag,
     };
   });
 

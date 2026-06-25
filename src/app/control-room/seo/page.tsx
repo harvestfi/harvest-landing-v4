@@ -32,12 +32,13 @@ import { formatTVL } from "@/lib/format";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import {
   classifyChannel,
+  classifyVisit,
   channelTone,
   channelGroup,
   shortChannelLabel,
   sourceDomain,
 } from "@/lib/channels";
-import { isBotRow } from "@/lib/bots";
+import { isBotRow, detectSpoofedFingerprints, fingerprintKey } from "@/lib/bots";
 import { FilterHint } from "@/components/admin/filter-hint";
 import "../../_styles/asset-hub.css";
 
@@ -55,6 +56,7 @@ interface VisitRow {
   screen_height: number | null;
   viewport_width: number | null;
   viewport_height: number | null;
+  timezone: string | null;
 }
 interface ClickRow {
   created_at: string;
@@ -296,7 +298,7 @@ export default function SeoSummaryPage() {
     const [v, c, w, e] = await Promise.all([
       supabaseSelectAll<VisitRow>(
         "frontpage_visits",
-        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height&order=created_at.desc",
+        "select=created_at,session_id,page_path,source,country,device_type,referrer,is_bot,user_agent,screen_width,screen_height,viewport_width,viewport_height,timezone&order=created_at.desc",
       ),
       supabaseSelectAll<ClickRow>(
         "outbound_clicks",
@@ -413,6 +415,11 @@ export default function SeoSummaryPage() {
       return a;
     };
 
+    // Cluster-poisoning: fingerprints of the referrer-spoofing fleets, so a
+    // session carrying one is flagged bot even when its viewport mimics a
+    // real maximized browser and its referrer spoofs organic search.
+    const poisoned = detectSpoofedFingerprints(visits!);
+
     for (const v of visits!) {
       if (!v.session_id) continue;
       const t = new Date(v.created_at).getTime();
@@ -421,7 +428,7 @@ export default function SeoSummaryPage() {
       a.pageCount++;
       if (
         !a.bot &&
-        isBotRow(v)
+        (isBotRow(v) || poisoned.has(fingerprintKey(v)))
       )
         a.bot = true;
       if (t < a.firstVisitMs) {
@@ -431,7 +438,7 @@ export default function SeoSummaryPage() {
       if (t > a.latestMs) a.latestMs = t;
       if (a.country === null && v.country) a.country = v.country;
       if (a.device === null && v.device_type) a.device = v.device_type;
-      const ch = classifyChannel(v.source);
+      const ch = classifyVisit(v.source, v.referrer);
       if (channelGroup(ch) === "SEO") {
         const prevEng = a.seoEngines.get(ch);
         if (prevEng === undefined || t < prevEng) a.seoEngines.set(ch, t);

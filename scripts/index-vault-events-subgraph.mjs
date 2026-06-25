@@ -46,9 +46,12 @@ const CHAINS = [
 ];
 
 const PAGE_SIZE = 1000;
-const BACKFILL_DAYS = 30;
+// First-run backfill depth. 730d (~2y) reaches the inception of essentially
+// every product we index, so the Deposit Activity feed can show deep history
+// (well before 1 Jan 2026). Bounded per run by MAX_PAGES_PER_RUN below.
+const BACKFILL_DAYS = 730;
 const RESUME_GUARD_SECONDS = 60;
-const MAX_PAGES_PER_RUN = 200; // ~200k rows per chain per run, hard cap
+const MAX_PAGES_PER_RUN = 400; // ~400k rows per chain per run, hard cap
 
 // ──────────────────────────────────────────────────────────────────
 // Args + env
@@ -155,11 +158,19 @@ async function probe(chainId) {
 // ──────────────────────────────────────────────────────────────────
 
 async function latestTimestampForChain(chainName) {
-  // Read the newest block_timestamp we already have on this chain.
-  // Returns the Unix seconds value, or null if the table is empty.
+  // Newest block_timestamp of a SUBGRAPH-sourced row on this chain. Scoped
+  // to amount_usd IS NOT NULL on purpose: the RPC indexer also writes this
+  // table (amount_usd null) and runs every 15 min, so an unscoped query
+  // would return a near-`now` timestamp, collapse the resume window to the
+  // last ~minute, and skip the backfill entirely (the bug that left the
+  // page empty after a "successful" run). Scoping to our own rows means the
+  // first run sees null here and backfills BACKFILL_DAYS, and later runs
+  // resume from the last row we actually wrote. Returns null if we've never
+  // written a subgraph row on this chain.
   const params = new URLSearchParams({
     select: "block_timestamp",
     chain: `eq.${chainName}`,
+    amount_usd: "not.is.null",
     order: "block_timestamp.desc",
     limit: "1",
   });
@@ -183,47 +194,96 @@ function mapTransactionType(raw) {
   return null;
 }
 
-function splitEntityId(id) {
-  // Standard subgraph id convention: "<txHash>-<logIndex>". Falls
-  // back to using the full id as tx_hash + log_index 0 when the
-  // dash isn't present.
-  if (typeof id !== "string") return { tx_hash: null, log_index: 0 };
-  const i = id.lastIndexOf("-");
-  if (i < 0) return { tx_hash: id, log_index: 0 };
-  const tail = id.slice(i + 1);
-  const n = Number(tail);
-  if (Number.isFinite(n)) {
-    return { tx_hash: id.slice(0, i), log_index: n };
-  }
-  return { tx_hash: id, log_index: 0 };
-}
-
-// The exact query. Pulled from the !ruby Discord snippet:
-//   userTransactions { plasmaVault { id } vault { id } value transactionType }
-// Padded with the metadata we need (entity id, timestamp, block,
-// wallet, txHash) using the most common Harvest-style subgraph
-// conventions. If a field name turns out to be different on the
-// live schema, the GraphQL error message will surface it cleanly on
-// the first CI run.
+// The exact query, verified against the live Base schema (probe mode).
+// Field names confirmed on UserTransaction:
+//   userAddress  - the wallet whose position changed (the real depositor)
+//   txOrigin     - the EOA that sent the tx (router for aggregator zaps)
+//   transactionType - "Deposit" / "Withdraw" (string enum, capitalized)
+//   value        - amount in UNDERLYING token units (wei-scale)
+//   price        - USD price of one whole underlying token
+//   sharePrice   - vault share price (informational)
+//   tx           - the real transaction hash
+//   createAtBlock - block number
+//   vault.decimal / plasmaVault.decimals - underlying decimals, used to
+//     scale `value` into a human amount before multiplying by `price`.
+//
+// IMPORTANT: every on-chain deposit/withdraw is logged as TWO legs - one
+// with userAddress = 0x000...000 (the mint/burn counterpart) and one with
+// the real userAddress. We keep only the real-user leg (see indexChain).
+//
+// Pagination: orderBy id / id_gt cursor is a stable keyset sweep that never
+// re-reads a row; timestamp_gte bounds it to the resume window. (The entity
+// id is an opaque hex blob, NOT "txHash-logIndex", so we take the tx hash
+// from the dedicated `tx` field instead of parsing the id.)
 const PAGE_QUERY = `
   query Page($since: BigInt!, $first: Int!, $cursor: String!) {
     userTransactions(
       first: $first
-      orderBy: timestamp
+      orderBy: id
       orderDirection: asc
       where: { timestamp_gte: $since, id_gt: $cursor }
     ) {
       id
+      tx
       timestamp
-      blockNumber
+      createAtBlock
       transactionType
       value
-      sender
-      vault { id }
-      plasmaVault { id }
+      price
+      userAddress
+      txOrigin
+      vault { id decimal }
+      plasmaVault { id decimals }
     }
   }
 `;
+
+const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
+
+// USD value of a transaction leg: scale `value` from the underlying
+// token's smallest units up by its decimals, then price it. Returns null
+// when we can't price it (missing decimals or price), so the column stays
+// NULL rather than storing a wrong number.
+function usdValue(value, price, decimals) {
+  const dec = Number(decimals);
+  const p = Number(price);
+  const v = Number(value);
+  if (!Number.isFinite(dec) || !Number.isFinite(p) || !Number.isFinite(v)) {
+    return null;
+  }
+  const usd = (v / 10 ** dec) * p;
+  return Number.isFinite(usd) ? Math.round(usd * 100) / 100 : null;
+}
+
+// Human token amount of a leg: `value` scaled down by the SAME decimals used
+// for USD (vault.decimal for autocompounders, plasmaVault.decimals for
+// autopilots - the latter carry an IPOR-style +2 offset, e.g. 8 for USDC /
+// 20 for WETH). Storing this keeps the feed's Units column consistent with
+// amount_usd instead of the page guessing decimals from the asset.
+function tokenAmount(value, decimals) {
+  const dec = Number(decimals);
+  const v = Number(value);
+  if (!Number.isFinite(dec) || !Number.isFinite(v)) return null;
+  const n = v / 10 ** dec;
+  return Number.isFinite(n) ? n : null;
+}
+
+// Stable per-LEG log_index derived from the entity id (which is unique per
+// leg), so two legs of the same transaction - even on the same vault and
+// wallet - get distinct (chain, tx_hash, log_index) keys and neither is
+// dropped. FNV-1a over the id, offset into a high band (>= 1e9) that real
+// on-chain log indices never reach, so a subgraph row and an RPC-indexer
+// row for the same tx keep distinct identities and never clobber each
+// other. The band fits in a 32-bit int column (< 2.147e9).
+function syntheticLogIndex(entityId) {
+  const s = String(entityId ?? "");
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return 1_000_000_000 + ((h >>> 0) % 1_000_000_000);
+}
 
 async function indexChain(chain) {
   const { name, chainId } = chain;
@@ -258,35 +318,64 @@ async function indexChain(chain) {
     for (const t of txs) {
       const event_type = mapTransactionType(t.transactionType);
       if (!event_type) continue;
+
+      // Drop the zero-address mint/burn counterpart leg; keep only the
+      // real depositor's leg, whose transactionType reflects what the
+      // user actually did.
+      const wallet = String(t.userAddress ?? "").toLowerCase();
+      if (!wallet || wallet === ZERO_ADDR) continue;
+
       const vaultAddr = t.vault?.id ?? t.plasmaVault?.id;
       if (!vaultAddr) continue;
-      const { tx_hash, log_index } = splitEntityId(t.id);
+      const decimals = t.vault?.decimal ?? t.plasmaVault?.decimals;
+
+      const tx_hash = t.tx ? String(t.tx).toLowerCase() : null;
+      if (!tx_hash) continue;
+      const log_index = syntheticLogIndex(t.id);
       const tsSec = Number(t.timestamp ?? 0);
       if (!Number.isFinite(tsSec) || tsSec === 0) continue;
+
       rows.push({
         chain: name,
         vault_address: String(vaultAddr).toLowerCase(),
         vault_slug: null, // joined client-side via slug-by-address lookup
-        tx_hash: tx_hash ? String(tx_hash).toLowerCase() : t.id,
+        tx_hash,
         log_index,
-        block_number: Number(t.blockNumber ?? 0) || 0,
+        block_number: Number(t.createAtBlock ?? 0) || 0,
         block_timestamp: new Date(tsSec * 1000).toISOString(),
         event_type,
-        wallet_address: String(t.sender ?? "").toLowerCase(),
+        wallet_address: wallet,
         amount_shares: String(t.value ?? "0"),
+        amount_usd: usdValue(t.value, t.price, decimals),
+        amount_token: tokenAmount(t.value, decimals),
       });
     }
 
-    if (rows.length > 0) {
+    // Dedupe within the batch on the table's real unique key
+    // (chain, tx_hash, log_index) before sending, so a single INSERT never
+    // carries two rows that violate the constraint.
+    const seen = new Set();
+    const unique = [];
+    for (const row of rows) {
+      const k = `${row.chain}|${row.tx_hash}|${row.log_index}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      unique.push(row);
+    }
+
+    if (unique.length > 0) {
+      // Upsert onto the table's actual unique constraint
+      // (vault_events_prod_chain_tx_hash_log_index_key), ignoring duplicates
+      // so the ~60s resume overlap on re-runs is absorbed instead of erroring.
       await supabase(
-        "vault_events_prod?on_conflict=tx_hash,log_index",
+        "vault_events_prod?on_conflict=chain,tx_hash,log_index",
         {
           method: "POST",
           headers: { Prefer: "resolution=ignore-duplicates" },
-          body: JSON.stringify(rows),
+          body: JSON.stringify(unique),
         },
       );
-      totalWritten += rows.length;
+      totalWritten += unique.length;
     }
 
     // Advance the cursor to the last id we saw. Combined with the
