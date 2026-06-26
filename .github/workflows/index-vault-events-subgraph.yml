@@ -23,8 +23,13 @@ name: Index Vault Events (Subgraph)
 # Pass --chain=<Name> to limit to a single network when debugging.
 
 on:
-  # schedule:
-  #   - cron: '15 * * * *'
+  # Hourly ongoing fill. The indexer is incremental (resumes from the latest
+  # subgraph row it wrote, with a 60s guard), so each run only pulls new
+  # transactions - cheap to run often. Tighten to '*/15 * * * *' for a
+  # near-live feed. The Deposit Activity / Wallet History pages read only
+  # amount_usd IS NOT NULL, so this stays isolated from the RPC indexer.
+  schedule:
+    - cron: '15 * * * *'
   workflow_dispatch: {}
 
 jobs:
