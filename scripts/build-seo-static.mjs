@@ -89,8 +89,10 @@ const llms = `# Harvest yield index
 
 ## Data
 
-- [Sitemap](${SITE_URL}/sitemap.xml): every indexable URL (hubs + 150 product pages).
+- [Machine-readable index](${SITE_URL}/data/index.json): every tracked strategy as JSON (slug, asset, chain, APY, TVL), each linking to its per-vault file.
+- Per-strategy JSON at ${SITE_URL}/data/<slug>.json (e.g. ${SITE_URL}/data/usdc-autopilot-base.json) — current APY, TVL, contract addresses and a history summary. Agent-native; one fetch per vault.
 - Per-strategy daily history CSV at ${SITE_URL}/history/<slug>.csv (e.g. ${SITE_URL}/history/usdc-autopilot-base.csv) — daily APY, TVL and share price, also linked from each product page's Historical Data section.
+- [Sitemap](${SITE_URL}/sitemap.xml): every indexable URL (hubs + 150 product pages).
 
 ## Optional
 

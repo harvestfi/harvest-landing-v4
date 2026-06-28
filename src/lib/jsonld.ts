@@ -21,6 +21,23 @@ export function breadcrumbSchema(crumbs: Crumb[]): object {
   };
 }
 
+// WebPage node carrying Speakable: marks the H1 title + byline (chain ·
+// protocol · vault type) as the concise, answer-ready summary for voice /
+// AI answer engines. Speakable is defined on WebPage, not FinancialProduct,
+// so it gets its own node.
+export function webPageSchema(vault: YieldVault): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: vault.productName,
+    url: `${SITE_URL}/${vault.slug}`,
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: [".uni-title", ".uni-title-byline"],
+    },
+  };
+}
+
 export function financialProductSchema(vault: YieldVault): object {
   // provider = the operator publishing the page (Harvest). seller is
   // the underlying venue (Aave, Morpho, Aerodrome, etc.) where the
@@ -191,13 +208,19 @@ export function datasetSchema(
     license: "https://creativecommons.org/licenses/by/4.0/",
     isAccessibleForFree: true,
     // CSV first (a real, parseable file Google's Dataset crawler and
-    // researchers can download), then the on-page HTML table as a
-    // human-readable secondary distribution.
+    // researchers can download), then the agent-native JSON (current
+    // metrics + history summary + addresses), then the on-page HTML table
+    // as a human-readable secondary distribution.
     distribution: [
       {
         "@type": "DataDownload",
         encodingFormat: "text/csv",
         contentUrl: `${SITE_URL}${historyCsvHref(vault.slug)}`,
+      },
+      {
+        "@type": "DataDownload",
+        encodingFormat: "application/json",
+        contentUrl: `${SITE_URL}/data/${vault.slug}.json`,
       },
       {
         "@type": "DataDownload",
