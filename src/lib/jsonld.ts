@@ -31,6 +31,15 @@ export function webPageSchema(vault: YieldVault): object {
     "@type": "WebPage",
     name: vault.productName,
     url: `${SITE_URL}/${vault.slug}`,
+    // The page's figures are derived from our documented methodology; this is
+    // a valid CreativeWork provenance link (FinancialProduct, a Service, can't
+    // carry isBasedOn, so the citation signal lives here and on the Dataset).
+    isBasedOn: `${SITE_URL}/methodology`,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
     speakable: {
       "@type": "SpeakableSpecification",
       cssSelector: [".uni-title", ".uni-title-byline"],
@@ -195,6 +204,17 @@ export function datasetSchema(
       url: SITE_URL,
     },
     temporalCoverage: `${startDate}/${endDate}`,
+    // Freshness + provenance signals AI answer engines look for: when the data
+    // was last refreshed, what it is derived from (our documented methodology),
+    // and a ready-to-use citation string.
+    dateModified: new Date(Math.max(...allTs) * 1000).toISOString(),
+    isBasedOn: `${SITE_URL}/methodology`,
+    citation: `Harvest Finance on-chain yield index. "${vault.productName} historical APY, TVL and share-price data." ${SITE_URL}/${vault.slug}. Indexed from on-chain vault-contract events; methodology at ${SITE_URL}/methodology.`,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
     keywords: [
       vault.asset,
       vault.chain,
