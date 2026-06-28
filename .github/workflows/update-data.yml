@@ -36,6 +36,7 @@ jobs:
         continue-on-error: true
 
       - name: Commit and push if changed
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -44,6 +45,7 @@ jobs:
           if [ -f data/hidden.json ]; then git add data/hidden.json; fi
           if git diff --cached --quiet; then
             echo "No data changes detected."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "chore: update vault data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -52,6 +54,7 @@ jobs:
           for attempt in 1 2 3; do
             if git push origin HEAD:main; then
               echo "Pushed on attempt $attempt."
+              echo "changed=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Push rejected on attempt $attempt, rebasing on origin/main."
@@ -60,3 +63,14 @@ jobs:
           done
           echo "Failed to push after retries."
           exit 1
+
+      # Ping IndexNow (Bing/Yandex/Seznam/Naver/...) when product pages were
+      # added or removed, so they recrawl fast. No secret needed — auth is the
+      # public /<key>.txt file. Gated on a repo VARIABLE so it stays off on
+      # forks/staging (whose host wouldn't match) and is opt-in on prod:
+      # set repository variable INDEXNOW_ENABLED=true to turn it on.
+      # The submitter is incremental (diffs data/slugs.json HEAD^..HEAD) and
+      # exits quietly when only APY/TVL changed, so it never over-submits.
+      - name: Notify IndexNow of changed URLs
+        if: steps.commit.outputs.changed == 'true' && vars.INDEXNOW_ENABLED == 'true'
+        run: node scripts/indexnow-submit.mjs

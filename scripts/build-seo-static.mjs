@@ -16,6 +16,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { INDEXNOW_KEY } from "./indexnow.config.mjs";
 
 const ROOT = process.cwd();
 const PUBLIC_DIR = join(ROOT, "public");
@@ -102,4 +103,11 @@ const llms = `# Harvest yield index
 writeFileSync(join(PUBLIC_DIR, "robots.txt"), robots, "utf-8");
 writeFileSync(join(PUBLIC_DIR, "llms.txt"), llms, "utf-8");
 
-console.log(`[seo-static] wrote robots.txt + llms.txt (origin ${SITE_URL})`);
+// IndexNow key verification file: https://<host>/<key>.txt must return the
+// key as plain text. Emitted as a static file (like robots/llms) so it is
+// served verbatim and dodges the cleanUrls `.txt` route-stripping trap.
+writeFileSync(join(PUBLIC_DIR, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY, "utf-8");
+
+console.log(
+  `[seo-static] wrote robots.txt + llms.txt + ${INDEXNOW_KEY}.txt (origin ${SITE_URL})`,
+);
