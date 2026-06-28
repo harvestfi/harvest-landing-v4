@@ -18,6 +18,10 @@ interface Props {
   pageSize?: number;
   showAssetFilter?: boolean;
   scopeLabel?: string;
+  // Platform-hub variant: render Network as the first data column (before
+  // Vault) with a smaller chain icon. Network is the key differentiator
+  // when one venue spans many chains.
+  networkFirst?: boolean;
 }
 
 function buildSparklinePath(values: number[]): string {
@@ -65,6 +69,7 @@ export function HubTable({
   pageSize,
   showAssetFilter = false,
   scopeLabel,
+  networkFirst = false,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("apy24h");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -203,9 +208,14 @@ export function HubTable({
         </span>
       </div>
 
-      <div className="hub-table" role="table" aria-label="Ranking">
+      <div
+        className={`hub-table${networkFirst ? " hub-table--net-first" : ""}`}
+        role="table"
+        aria-label="Ranking"
+      >
         <div className="hub-thead" role="row">
           <span className="hub-th hub-th-rank">#</span>
+          {networkFirst && <span className="hub-th hub-th-center">Network</span>}
           <span className="hub-th">Vault</span>
           <SortHeader
             label="24h APY"
@@ -214,7 +224,9 @@ export function HubTable({
             onClick={() => clickSort("apy24h")}
           />
           <span className="hub-th hub-th-right">Strategy</span>
-          <span className="hub-th hub-th-center">Network</span>
+          {!networkFirst && (
+            <span className="hub-th hub-th-center">Network</span>
+          )}
           <span className="hub-th hub-th-num">30d APY trend</span>
         </div>
         <div className="hub-tbody" role="rowgroup">
@@ -227,6 +239,7 @@ export function HubTable({
                 rank={pageSize ? safePage * pageSize + i + 1 : i + 1}
                 vault={v}
                 sparkline={sparklineFor(v, sparklines)}
+                networkFirst={networkFirst}
               />
             ))
           )}
@@ -310,10 +323,12 @@ function Row({
   rank,
   vault,
   sparkline,
+  networkFirst = false,
 }: {
   rank: number;
   vault: YieldVault;
   sparkline: number[] | undefined;
+  networkFirst?: boolean;
 }) {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   // If upstream history is missing for this vault but we have a live
@@ -332,9 +347,20 @@ function Row({
       ? sparkline[sparkline.length - 1] >= sparkline[0]
       : true;
 
+  const networkCell = (
+    <span
+      className="hub-cell hub-network"
+      title={vault.chain}
+      aria-label={`Network: ${vault.chain}`}
+    >
+      <ChainIcon chain={vault.chain} size={networkFirst ? 14 : 20} />
+    </span>
+  );
+
   return (
     <Link href={`/${vault.slug}`} className="hub-row">
       <span className="hub-cell hub-rank">{rank}</span>
+      {networkFirst && networkCell}
       <span className="hub-cell hub-vault">
         <AssetIcon asset={vault.asset} size={28} />
         <span className="hub-vault-name">
@@ -344,13 +370,7 @@ function Row({
       </span>
       <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
       <span className="hub-cell hub-strategy">{protocolName}</span>
-      <span
-        className="hub-cell hub-network"
-        title={vault.chain}
-        aria-label={`Network: ${vault.chain}`}
-      >
-        <ChainIcon chain={vault.chain} size={20} />
-      </span>
+      {!networkFirst && networkCell}
       <span
         className={`hub-cell hub-spark${trendUp ? " hub-spark-up" : " hub-spark-flat"}`}
         aria-hidden="true"

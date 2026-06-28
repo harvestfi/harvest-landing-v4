@@ -2,6 +2,11 @@ import Link from "next/link";
 import { getLiveVaults } from "@/lib/data";
 import { NETWORKS } from "@/lib/networks";
 import { formatTVL } from "@/lib/format";
+import {
+  PLATFORMS,
+  LIVE_PLATFORM_SLUGS,
+  platformVaults,
+} from "@/lib/platforms";
 
 const ASSET_LABELS: Record<string, string> = {
   USDC: "USDC Yield",
@@ -125,6 +130,18 @@ export async function Footer() {
     }))
     .sort((a, b) => b.tvl - a.tvl);
 
+  // === Platform sub-section: live venue hubs, by strategy count =====
+  const platformEntries = LIVE_PLATFORM_SLUGS.map((slug) => {
+    const p = PLATFORMS.find((x) => x.slug === slug);
+    return p
+      ? { slug, display: p.display, count: platformVaults(vaults, p).length }
+      : null;
+  })
+    .filter((e): e is { slug: string; display: string; count: number } =>
+      Boolean(e && e.count > 0),
+    )
+    .sort((a, b) => b.count - a.count);
+
   // === Brand column live stats ======================================
   const totalTvl = vaults.reduce((s, v) => s + v.tvl, 0);
   const networksWithCoverage = networkEntries.length;
@@ -191,7 +208,7 @@ export async function Footer() {
             ))}
           </div>
 
-          {/* Column 3: Networks */}
+          {/* Column 3: Networks + Platforms */}
           <div className="foot-col">
             <div className="foot-col-label mono dim">Yield by Network</div>
             {networkEntries.map((e) => (
@@ -199,6 +216,21 @@ export async function Footer() {
                 {e.display} <span className="foot-count">({e.count})</span>
               </Link>
             ))}
+            {platformEntries.length > 0 && (
+              <>
+                <div
+                  className="foot-col-label mono dim"
+                  style={{ marginTop: 14 }}
+                >
+                  Yield by Platform
+                </div>
+                {platformEntries.map((e) => (
+                  <Link key={e.slug} href={`/${e.slug}`} className="foot-link">
+                    {e.display} <span className="foot-count">({e.count})</span>
+                  </Link>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Column 4: Resources + Company */}
