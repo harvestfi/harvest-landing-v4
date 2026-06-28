@@ -24,6 +24,12 @@ export interface Platform {
   blurb: string;
   mechanism: string;
   distinct: string;
+  // Stable, manually-set floor for the count shown in the page TITLE (e.g.
+  // "50+"), bumped by the operator as the cohort grows — same discipline as
+  // TRACKED_STRATEGIES_LABEL. Always set it <= the live count. Omit it to
+  // drop the count from the title entirely (used when the live count is too
+  // small to carry a "N+ opportunities" headline, e.g. Aave at ~9).
+  countFloor?: string;
 }
 
 export const PLATFORMS: Platform[] = [
@@ -48,8 +54,21 @@ export const PLATFORMS: Platform[] = [
       "Morpho is built from isolated markets, each defined by a single collateral asset, a loan asset, an oracle and a liquidation threshold. Third-party curators bundle those markets into vaults with a target risk profile, and depositors earn the blended rate of the underlying markets weighted by allocation. A Harvest Morpho vault deposits into the relevant market or curated vault and compounds the accrued yield back into the position. Rates reflect the utilisation of those specific isolated markets, not a single chain-wide pool.",
     distinct:
       "What sets Morpho apart in this index is isolation and curation: risk is scoped to each individual market instead of pooled across an entire asset, and a curator's allocation choices shape both the yield and the risk. That can mean higher, more differentiated rates than a shared pool, in exchange for trusting the market parameters and the curator — the opposite end of the spectrum from a single deep pool like Aave.",
+    countFloor: "50+",
   },
 ];
+
+// Reverse lookup: given a venue label (as it appears in vault.category, e.g.
+// "Aave" or "Morpho Market"), return the LIVE platform hub it belongs to, or
+// undefined. Used by product pages to link their venue chip up to the hub.
+export function platformForVenue(venue: string): Platform | undefined {
+  const v = venue.trim().toLowerCase();
+  return PLATFORMS.find(
+    (p) =>
+      LIVE_PLATFORM_SLUGS.includes(p.slug) &&
+      p.aliases.some((a) => a.toLowerCase() === v),
+  );
+}
 
 // Platform slugs that have a live route under src/app/<slug>/page.tsx. Keep
 // in sync when you add a route — drives the sitemap and the cross-platform
@@ -70,4 +89,22 @@ export function platformVaults(
 ): YieldVault[] {
   const set = new Set(platform.aliases.map((a) => a.toLowerCase()));
   return vaults.filter((v) => set.has(venueOf(v.category).toLowerCase()));
+}
+
+// Distinct assets and networks present in a vault set, each ordered by how
+// many strategies use it (most-covered first). Feeds the meta description
+// and the H1 sub-line so they name the real coverage.
+export function platformAssetsAndNetworks(vaults: YieldVault[]): {
+  assets: string[];
+  networks: string[];
+} {
+  const byAsset: Record<string, number> = {};
+  const byChain: Record<string, number> = {};
+  for (const v of vaults) {
+    byAsset[v.asset] = (byAsset[v.asset] ?? 0) + 1;
+    byChain[v.chain] = (byChain[v.chain] ?? 0) + 1;
+  }
+  const byCountDesc = (rec: Record<string, number>) =>
+    Object.keys(rec).sort((a, b) => rec[b] - rec[a]);
+  return { assets: byCountDesc(byAsset), networks: byCountDesc(byChain) };
 }

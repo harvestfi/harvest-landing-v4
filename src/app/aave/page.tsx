@@ -6,6 +6,7 @@ import { PlatformHubBody } from "@/components/platform-hub-body";
 import {
   getPlatform,
   platformVaults,
+  platformAssetsAndNetworks,
   LIVE_PLATFORM_SLUGS,
 } from "@/lib/platforms";
 import "../_styles/asset-hub.css";
@@ -15,9 +16,15 @@ const PLATFORM_SLUG = "aave";
 export async function generateMetadata(): Promise<Metadata> {
   const platform = getPlatform(PLATFORM_SLUG)!;
   const vaults = await getLiveVaults();
-  const count = platformVaults(vaults, platform).length;
-  const title = platformHubTitle(platform.display);
-  const description = platformHubDescription(platform.display, count);
+  const live = platformVaults(vaults, platform);
+  const { assets, networks } = platformAssetsAndNetworks(live);
+  const title = platformHubTitle(platform.display, platform.countFloor);
+  const description = platformHubDescription(
+    platform.display,
+    live.length,
+    assets,
+    networks,
+  );
   const url = `${SITE_URL}/${PLATFORM_SLUG}`;
   return {
     title,

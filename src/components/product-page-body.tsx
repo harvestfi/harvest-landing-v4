@@ -11,6 +11,7 @@ import {
   isHiddenProduct,
 } from "@/lib/data";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
+import { platformForVenue } from "@/lib/platforms";
 import { isLowLiquidityTvl, LOW_LIQUIDITY_TVL_THRESHOLD } from "@/lib/admin-rules";
 import type { FullVaultHistory } from "@/lib/history-api";
 import { trackedDays as vaultTrackedDays } from "@/lib/vault-age";
@@ -136,6 +137,10 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   };
 
   const protocolName = stripChainSuffix(vault.category, vault.chain);
+  // If this vault's venue has a live platform hub (/aave, /morpho), the byline
+  // chip links up to it — a strong product->hub internal link that builds the
+  // platform topical cluster across all of that venue's product pages.
+  const platformHub = platformForVenue(protocolName);
   const crumbs = productPageCrumbs(vault);
   // Canonical name on the product page itself: LP-pair vaults expand
   // the bare database "ETH Aerodrome" into "ETH/VVV Aerodrome" so the
@@ -319,12 +324,22 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
                 {vault.vaultType !== "Autopilot" && !isLpPair && (
                   <>
                     <span className="uni-byline-sep" aria-hidden="true">·</span>
-                    <span
-                      className="uni-byline-chip"
-                      data-tooltip="Platform: the underlying protocol the strategy supplies into."
-                    >
-                      {protocolName}
-                    </span>
+                    {platformHub ? (
+                      <Link
+                        href={`/${platformHub.slug}`}
+                        className="uni-byline-chip"
+                        data-tooltip={`Platform: see all ${platformHub.display} yield strategies on Harvest.`}
+                      >
+                        {protocolName}
+                      </Link>
+                    ) : (
+                      <span
+                        className="uni-byline-chip"
+                        data-tooltip="Platform: the underlying protocol the strategy supplies into."
+                      >
+                        {protocolName}
+                      </span>
+                    )}
                   </>
                 )}
                 <span className="uni-byline-sep" aria-hidden="true">·</span>

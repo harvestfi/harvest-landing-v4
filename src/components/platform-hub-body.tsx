@@ -4,6 +4,7 @@
 // strategy routing into one platform, across all assets and networks, in a
 // single homepage-style ranking.
 
+import { Fragment } from "react";
 import Link from "next/link";
 import { getLiveVaults, getAllSparklines } from "@/lib/data";
 import { ChainIcon } from "@/components/token-icons";
@@ -108,6 +109,43 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
     chainStats.some((c) => c.chain === n.chain),
   );
 
+  // FAQ as data, so the rendered <dl> and the FAQPage JSON-LD stay in lockstep
+  // (Google requires the schema text to match the visible answer). Answers are
+  // plain text — the risk-framework link lives in the Risk article above.
+  const apyText = bestApy > 0 ? formatAPY(bestApy) : "the headline rate";
+  const assetNames = assetStats.map((a) => a.asset).join(", ");
+  const chainNames = chainStats.map((c) => c.chain).join(", ");
+  const faqs = [
+    {
+      q: `What is the best ${platform.display} yield right now?`,
+      a: `Across the ${vaults.length} ${platform.display} ${vaults.length !== 1 ? "strategies" : "strategy"} we currently index, ${apyText} is the highest 24-hour APY. The ranking above is sorted by APY by default and reflects the most recent hourly build.`,
+    },
+    {
+      q: `How does Harvest's ${platform.display} strategy work?`,
+      a: `Each vault deposits into ${platform.display} and continuously reinvests the interest and any rewards back into the position (autocompounding), so you do not have to claim or restake manually. The headline APY already reflects that compounding.`,
+    },
+    {
+      q: `Which assets and networks can I earn ${platform.display} yield on?`,
+      a:
+        assetStats.length > 0
+          ? `Our ${platform.display} cohort accepts ${assetNames} across ${chainNames}. Each product page lists the underlying asset, network and any reward tokens.`
+          : `${platform.display} coverage is populating.`,
+    },
+    {
+      q: `Is ${platform.display} yield safe?`,
+      a: `No yield is risk-free. ${platform.display} strategies carry smart-contract, oracle, deposit-token and governance risk, which can differ by chain. See the Harvest risk framework for how we weigh each surface.`,
+    },
+  ];
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <div className="uni-hub-test">
       <script
@@ -118,6 +156,12 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema(vaults, hubUrl)) }}
       />
+      {vaults.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* Breadcrumb */}
       <nav className="uni-hub-crumbs" aria-label="Breadcrumb">
@@ -153,7 +197,11 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
             <h1 className="uni-hub-h1">{platformHubH1(platform.display)}</h1>
             <p className="uni-hub-sub">
               {vaults.length > 0
-                ? `Live ranking of all ${vaults.length} ${platform.display} strategies Harvest indexes, across ${assetStats.length} ${assetStats.length === 1 ? "asset" : "assets"} and ${chainStats.length} ${chainStats.length === 1 ? "network" : "networks"}.`
+                ? `Compare all ${vaults.length} ${platform.display} yield opportunities Harvest indexes — ${assetStats
+                    .map((a) => a.asset)
+                    .join(", ")} across ${chainStats
+                    .map((c) => c.chain)
+                    .join(", ")}. Updated hourly.`
                 : `${platform.display} strategies are populating, check back shortly.`}
             </p>
           </div>
@@ -300,41 +348,12 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
             <article>
               <h3>Frequently asked questions</h3>
               <dl className="uni-hub-faq">
-                <dt>What is the best {platform.display} yield right now?</dt>
-                <dd>
-                  Across the {vaults.length}{" "}
-                  {vaults.length !== 1 ? "strategies" : "strategy"} we
-                  currently index on {platform.display},{" "}
-                  {bestApy > 0 ? formatAPY(bestApy) : "the headline rate"} is
-                  the highest 24-hour APY. The table above is sorted by APY by
-                  default and reflects the most recent build.
-                </dd>
-                <dt>How does Harvest&apos;s {platform.display} strategy work?</dt>
-                <dd>
-                  Each vault deposits into {platform.display} and continuously
-                  reinvests the interest and rewards back into the position
-                  (autocompounding), so you do not have to claim or restake
-                  manually.
-                </dd>
-                <dt>
-                  Which assets and networks can I earn {platform.display} yield
-                  on?
-                </dt>
-                <dd>
-                  {assetStats.length > 0
-                    ? `Our ${platform.display} cohort accepts ${assetStats.map((a) => a.asset).join(", ")} across ${chainStats.map((c) => c.chain).join(", ")}.`
-                    : `${platform.display} coverage is populating.`}{" "}
-                  Each product page lists the underlying asset, network and
-                  any reward tokens.
-                </dd>
-                <dt>Is {platform.display} yield safe?</dt>
-                <dd>
-                  No yield is risk-free. {platform.display} strategies carry
-                  smart-contract, oracle, deposit-token and governance risk,
-                  which can differ by chain. See the{" "}
-                  <Link href="/risk-framework">risk framework</Link> for how
-                  we think about each surface.
-                </dd>
+                {faqs.map((f) => (
+                  <Fragment key={f.q}>
+                    <dt>{f.q}</dt>
+                    <dd>{f.a}</dd>
+                  </Fragment>
+                ))}
               </dl>
             </article>
           </div>
