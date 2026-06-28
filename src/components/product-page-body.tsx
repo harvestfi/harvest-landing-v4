@@ -945,7 +945,15 @@ function ProductPageFootnote({ history }: { history: FullVaultHistory }) {
   const latestReading = formatLatestReading(ts);
   return (
     <section className="pp-footnote" aria-label="Page metadata and disclosures">
-      <p className="pp-footnote-updated">{latestReading}</p>
+      <p className="pp-footnote-updated">
+        {ts ? (
+          <time dateTime={new Date(ts * 1000).toISOString()}>
+            {latestReading}
+          </time>
+        ) : (
+          latestReading
+        )}
+      </p>
       <p className="pp-footnote-disclosure">
         Harvest is an independent onchain yield index. Performance
         data reflects historical onchain activity and is not a
