@@ -1,0 +1,48 @@
+name: IndexNow Seed (manual)
+
+# One-time / occasional FULL IndexNow submission of the whole canonical URL
+# set (home + hubs + every <loc> in public/sitemap.xml). Run this once after
+# enabling IndexNow on prod, to seed the engines; after that the hourly
+# "Update Vault Data" workflow pings only added/removed pages automatically,
+# so you normally never need this again.
+#
+# Manual only (workflow_dispatch) — there is no schedule, so it can't
+# over-submit. Tick "dry_run" first if you want to preview the payload
+# without sending anything.
+#
+# PREREQUISITES (prod):
+#   1. The change is merged + deployed, so https://<host>/<key>.txt is live.
+#   2. SITE_URL (src/lib/constants.ts) matches the live canonical host.
+# On a fork/staging this is a no-op in practice: IndexNow rejects the
+# submission because the key file isn't hosted on the claimed (prod) host.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview the payload without submitting"
+        type: boolean
+        default: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Submit full canonical set to IndexNow
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node scripts/indexnow-submit.mjs --all --dry-run
+          else
+            node scripts/indexnow-submit.mjs --all
+          fi
