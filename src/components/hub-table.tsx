@@ -154,7 +154,14 @@ export function HubTable({
   const filtersActive = asset !== "all" || chain !== "all";
 
   return (
-    <div className="hub-table-wrap">
+    // data-nosnippet: this live ranking table (rank · vault · APY ·) is the most
+    // prominent block on every hub page, so Google was lifting it verbatim into
+    // the SERP snippet - mashed cell text plus the "#" rank header and bare "%" -
+    // overriding our crafted meta description, and showing volatile APY that
+    // drifts between hourly rebuilds. nosnippet keeps the table fully crawled
+    // and indexed (no ranking impact) but bars it from the snippet so the meta
+    // description wins. Mirrors the homepage's "Top yields" treatment.
+    <div className="hub-table-wrap" data-nosnippet="">
       <div className="hub-filterbar" role="group" aria-label="Filter ranking">
         <div className="hub-filter-set">
           {showAssetFilter && (
