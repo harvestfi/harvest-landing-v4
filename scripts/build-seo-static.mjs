@@ -50,37 +50,53 @@ Disallow: /control-room/
 Sitemap: ${SITE_URL}/sitemap.xml
 `;
 
-// Mirror of the old app/llms.txt/route.ts body.
+// llms.txt — a concise, curated map of the machine-readable surface for
+// LLM crawlers (https://llmstxt.org/). Descriptions on every link, a Data
+// section pointing at the per-vault CSVs + sitemap, and an Optional section
+// of secondary pages an LLM can skip when short on context. We deliberately
+// do NOT list all 150 product pages here — that is what the sitemap is for;
+// over-stuffing llms.txt defeats its purpose as a concise index.
 const llms = `# Harvest yield index
 
-> Independent on-chain DeFi yield index. Tracks live APY, TVL, and share-price history for vetted yield strategies across Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM.
+> Independent on-chain DeFi yield index. Tracks live APY, TVL, and
+> share-price history for 150+ vetted yield strategies across Ethereum,
+> Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh hourly
+> from on-chain data.
 
 ## Canonical entry points
 
-- [Home](${SITE_URL}/): all tracked strategies, sortable rankings.
-- [Methodology](${SITE_URL}/methodology): how every metric is computed.
+- [Home](${SITE_URL}/): all tracked strategies, sortable rankings by APY, TVL and network.
+- [Methodology](${SITE_URL}/methodology): how every metric (APY, TVL, share price, tracked age) is computed.
 - [Risk framework](${SITE_URL}/risk-framework): smart-contract, oracle, and counterparty considerations.
-- [About](${SITE_URL}/about): operator background, fair-launch history.
+- [About](${SITE_URL}/about): operator background and fair-launch history.
 
 ## Asset hubs
 
-- [USDC](${SITE_URL}/usdc)
-- [USDT](${SITE_URL}/usdt)
-- [ETH](${SITE_URL}/eth)
-- [BTC](${SITE_URL}/btc)
+- [USDC](${SITE_URL}/usdc): USDC strategies ranked by live APY and TVL.
+- [USDT](${SITE_URL}/usdt): USDT strategies ranked by live APY and TVL.
+- [ETH](${SITE_URL}/eth): ETH and ETH-LST strategies ranked by live APY and TVL.
+- [BTC](${SITE_URL}/btc): BTC (WBTC / cbBTC / tBTC) strategies ranked by live APY and TVL.
 
 ## Network hubs
 
-- [Ethereum](${SITE_URL}/ethereum)
-- [Base](${SITE_URL}/base)
-- [Arbitrum](${SITE_URL}/arbitrum)
-- [Polygon](${SITE_URL}/polygon)
-- [zkSync](${SITE_URL}/zksync)
-- [HyperEVM](${SITE_URL}/hyperevm)
+- [Ethereum](${SITE_URL}/ethereum): every strategy we track on Ethereum mainnet.
+- [Base](${SITE_URL}/base): every strategy we track on Base.
+- [Arbitrum](${SITE_URL}/arbitrum): every strategy we track on Arbitrum.
+- [Polygon](${SITE_URL}/polygon): every strategy we track on Polygon.
+- [zkSync](${SITE_URL}/zksync): every strategy we track on zkSync Era.
+- [HyperEVM](${SITE_URL}/hyperevm): every strategy we track on HyperEVM.
 
-## Sitemap
+## Data
 
-- ${SITE_URL}/sitemap.xml
+- [Sitemap](${SITE_URL}/sitemap.xml): every indexable URL (hubs + 150 product pages).
+- Per-strategy daily history CSV at ${SITE_URL}/history/<slug>.csv (e.g. ${SITE_URL}/history/usdc-autopilot-base.csv) — daily APY, TVL and share price, also linked from each product page's Historical Data section.
+
+## Optional
+
+- [Security](${SITE_URL}/security): security posture and audits.
+- [Disclosures](${SITE_URL}/disclosures): editorial and conflict-of-interest disclosures.
+- [Contact](${SITE_URL}/contact): how to reach the team.
+- [Terms](${SITE_URL}/terms) · [Privacy](${SITE_URL}/privacy)
 `;
 
 writeFileSync(join(PUBLIC_DIR, "robots.txt"), robots, "utf-8");
