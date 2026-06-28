@@ -40,7 +40,7 @@ function buildBlock<T>(
 export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props) {
   const platform = getPlatform(platformSlug);
   if (!platform) {
-    // Should never happen — routes are 1:1 with the registry — but render a
+    // Should never happen (routes are 1:1 with the registry) but render a
     // minimal shell rather than throwing during static export.
     return <div className="uni-hub-test" />;
   }
@@ -76,7 +76,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
     }, {}),
   ).sort((a, b) => b.count - a.count);
 
-  // Network breakdown (a platform spans chains — this is the axis the
+  // Network breakdown (a platform spans chains; this is the axis the
   // network hubs cut the other way).
   const chainStats = Object.values(
     vaults.reduce<Record<string, { chain: string; count: number }>>((acc, v) => {
@@ -111,7 +111,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
 
   // FAQ as data, so the rendered <dl> and the FAQPage JSON-LD stay in lockstep
   // (Google requires the schema text to match the visible answer). Answers are
-  // plain text — the risk-framework link lives in the Risk article above.
+  // plain text; the risk-framework link lives in the Risk article above.
   const apyText = bestApy > 0 ? formatAPY(bestApy) : "the headline rate";
   const assetNames = assetStats.map((a) => a.asset).join(", ");
   const chainNames = chainStats.map((c) => c.chain).join(", ");
@@ -173,31 +173,11 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
       {/* Hero */}
       <header className="uni-hub-hero">
         <div className="uni-hub-hero-headline">
-          <span className="uni-hub-hero-icon" aria-hidden="true">
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 54,
-                height: 54,
-                borderRadius: 14,
-                background: "#f6c244",
-                color: "#161616",
-                fontFamily: "var(--sans)",
-                fontWeight: 800,
-                fontSize: 28,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {platform.display.charAt(0)}
-            </span>
-          </span>
           <div>
             <h1 className="uni-hub-h1">{platformHubH1(platform.display)}</h1>
             <p className="uni-hub-sub">
               {vaults.length > 0
-                ? `Compare all ${vaults.length} ${platform.display} yield opportunities Harvest indexes — ${assetStats
+                ? `Compare all ${vaults.length} ${platform.display} yield opportunities Harvest indexes: ${assetStats
                     .map((a) => a.asset)
                     .join(", ")} across ${chainStats
                     .map((c) => c.chain)
@@ -207,7 +187,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
           </div>
         </div>
 
-        <div className="uni-hub-stats" role="group" aria-label={`${platform.display} index headline stats`}>
+        <div className="uni-hub-stats uni-hub-stats--duo" role="group" aria-label={`${platform.display} index headline stats`}>
           <div className="uni-hub-stat">
             <div
               className="uni-hub-stat-label"
@@ -364,7 +344,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
       {(otherPlatforms.length > 0 || relatedNetworks.length > 0) && (
         <section className="uni-hub-cta-row">
           <p className="uni-hub-cta-meta">
-            Browse yield another way — by venue, or by the networks{" "}
+            Browse yield another way: by venue, or by the networks{" "}
             {platform.display} runs on.
           </p>
           <div className="uni-hub-cta-links">

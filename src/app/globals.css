@@ -4323,7 +4323,10 @@ body:has(.methodology-page) {
    ────────────────────────────────────────────────────────────────── */
 .hub-table--net-first .hub-thead,
 .hub-table--net-first .hub-row {
-  grid-template-columns: 50px 0.5fr minmax(220px, 2fr) 1fr 1fr 130px;
+  /* Network track is `auto` (content width) rather than a fr fraction, so the
+     glyph hugs the # column with an equal 24px gap on each side instead of
+     floating in an expanded track. */
+  grid-template-columns: 50px auto minmax(220px, 2fr) 1fr 1fr 130px;
 }
 .hub-table--net-first .hub-network img,
 .hub-table--net-first .hub-network svg {
