@@ -3,6 +3,7 @@ import { getVaults, isVaultPageIndexable } from "@/lib/data";
 import { getCanonicalSlugs } from "@/lib/canonical-vaults";
 import { SITE_URL } from "@/lib/constants";
 import { NETWORKS } from "@/lib/networks";
+import { LIVE_PLATFORM_SLUGS } from "@/lib/platforms";
 
 export const dynamic = "force-static";
 
@@ -33,6 +34,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const networkHubPages = NETWORKS.map((n) => ({
     url: `${SITE_URL}/${n.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "daily" as const,
+    priority: 0.9,
+  }));
+
+  const platformHubPages = LIVE_PLATFORM_SLUGS.map((slug) => ({
+    url: `${SITE_URL}/${slug}`,
     lastModified: new Date(),
     changeFrequency: "daily" as const,
     priority: 0.9,
@@ -95,6 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...assetHubPages,
     ...networkHubPages,
+    ...platformHubPages,
     ...vaultPages,
   ];
 }
