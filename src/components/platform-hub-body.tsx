@@ -200,6 +200,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
             vaults={vaults}
             sparklines={sparklines}
             showAssetFilter
+            networkFirst
             scopeLabel={`${platform.display} strategies`}
           />
         )}
@@ -252,14 +253,12 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
 
             <article>
               <h3>How the {platform.display} strategy works</h3>
-              <p>
-                Each vault deposits into {platform.display} and
-                autocompounds: interest (and any reward tokens) are
-                periodically harvested and reinvested into the same
-                position, so the balance grows without manual claiming or
-                restaking. The headline APY already reflects that
-                compounding. The exact mechanics live on each product page.
-              </p>
+              <p>{platform.mechanism}</p>
+            </article>
+
+            <article>
+              <h3>What makes {platform.display} different</h3>
+              <p>{platform.distinct}</p>
             </article>
 
             <article>
