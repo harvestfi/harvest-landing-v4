@@ -93,18 +93,46 @@ export function networkHubDescription(
 
 // ─── Platform (venue) hub ─────────────────────────────────────────────────────
 
-export function platformHubTitle(display: string): string {
-  return `Best ${display} Yields: APY & TVL Ranking`;
+function humanList(items: string[]): string {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+// Title: when a platform sets a stable countFloor ("50+") the headline is a
+// count-driven "List of N+ Best X Yield Opportunities"; otherwise (small
+// cohorts, e.g. Aave) it falls back to the keyword-front ranking title so a
+// weak number never undersells the headline.
+export function platformHubTitle(display: string, countFloor?: string): string {
+  return countFloor
+    ? `List of ${countFloor} Best ${display} Yield Opportunities`
+    : `Best ${display} Yields: APY & TVL Ranking`;
 }
 
 export function platformHubH1(display: string): string {
   return `Best ${display} Yields`;
 }
 
-export function platformHubDescription(display: string, count: number): string {
-  // 140-160 char floor. Frames the page as the single place to compare
-  // every Harvest-indexed strategy on this venue, across assets + chains.
-  return `Compare all ${count} ${display} yield strategies Harvest indexes in one ranking. Live APY, TVL and 30-day performance across every asset and network, refreshed daily.`;
+// Description: live count + the actual assets and networks present, so it
+// reads as a real, specific promise ("compare 52+ USDC, ETH... on Morpho
+// across Base, Ethereum..."). Networks are trimmed from the tail until the
+// string fits a ~158-char snippet budget.
+export function platformHubDescription(
+  display: string,
+  count: number,
+  assets: string[] = [],
+  networks: string[] = [],
+): string {
+  const assetList = assets.length ? humanList(assets) : "USDC, ETH and more";
+  const build = (ns: string[]) =>
+    `Discover and compare ${count}+ ${assetList} yield opportunities on ${display} across ${humanList(ns)}. Live APY & TVL, updated hourly.`;
+  let ns = networks.length ? [...networks] : ["Ethereum", "Base"];
+  let desc = build(ns);
+  while (desc.length > 158 && ns.length > 2) {
+    ns = ns.slice(0, -1);
+    desc = build(ns);
+  }
+  return desc;
 }
 
 // ─── Product page ─────────────────────────────────────────────────────────────
