@@ -91,6 +91,22 @@ export function networkHubDescription(
   return `Compare ${count}+ DeFi yield strategies on ${networkDisplay} side by side. Live APY, TVL and 30-day performance history for every product Harvest indexes, refreshed daily.`;
 }
 
+// ─── Platform (venue) hub ─────────────────────────────────────────────────────
+
+export function platformHubTitle(display: string): string {
+  return `Best ${display} Yields: APY & TVL Ranking`;
+}
+
+export function platformHubH1(display: string): string {
+  return `Best ${display} Yields`;
+}
+
+export function platformHubDescription(display: string, count: number): string {
+  // 140-160 char floor. Frames the page as the single place to compare
+  // every Harvest-indexed strategy on this venue, across assets + chains.
+  return `Compare all ${count} ${display} yield strategies Harvest indexes in one ranking. Live APY, TVL and 30-day performance across every asset and network, refreshed daily.`;
+}
+
 // ─── Product page ─────────────────────────────────────────────────────────────
 
 // Pull the disambiguator slot ("vault name") from the productName,
@@ -219,5 +235,12 @@ export function networkHubCrumbs(networkDisplay: string): Crumb[] {
   return [
     { name: "Home", url: SITE_URL },
     { name: `${networkDisplay} Ranking` },
+  ];
+}
+
+export function platformHubCrumbs(display: string): Crumb[] {
+  return [
+    { name: "Home", url: SITE_URL },
+    { name: `${display} Ranking` },
   ];
 }
