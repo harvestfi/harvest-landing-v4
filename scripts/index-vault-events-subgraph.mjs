@@ -50,7 +50,18 @@ const PAGE_SIZE = 1000;
 // every product we index, so the Deposit Activity feed can show deep history
 // (well before 1 Jan 2026). Bounded per run by MAX_PAGES_PER_RUN below.
 const BACKFILL_DAYS = 730;
-const RESUME_GUARD_SECONDS = 60;
+// Incremental re-scan window. Each run resumes at (latest written timestamp -
+// RESCAN_DAYS), NOT at latest-60s. Reason: the hosted subgraphs index events
+// with LAG and out of order - an event can appear in the subgraph hours or
+// days after its block timestamp, by which point a 60s guard has already let
+// `since` advance past it, orphaning it forever (this is exactly why recent
+// WETH Autopilot deposits were missing from the feed while older ones showed).
+// Re-sweeping a multi-day window every run catches those stragglers; the
+// on_conflict=ignore-duplicates write makes re-seeing existing rows free, and
+// a week of one chain's events is only a page or two. Override with RESCAN_DAYS.
+// Stragglers lagged longer than this window are still recovered by an
+// occasional full re-run (clear the resume / first-run backfill path).
+const RESCAN_DAYS = Number(process.env.RESCAN_DAYS) || 7;
 const MAX_PAGES_PER_RUN = 400; // ~400k rows per chain per run, hard cap
 
 // ──────────────────────────────────────────────────────────────────
@@ -291,7 +302,7 @@ async function indexChain(chain) {
   const latest = await latestTimestampForChain(name);
   const since = latest === null
     ? nowSec - BACKFILL_DAYS * 86400
-    : latest - RESUME_GUARD_SECONDS;
+    : latest - RESCAN_DAYS * 86400;
 
   console.log(
     `[${name}] indexing from ${new Date(since * 1000).toISOString()} (cursor latest=${latest ?? "none"})`,

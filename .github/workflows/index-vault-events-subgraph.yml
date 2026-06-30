@@ -23,14 +23,20 @@ name: Index Vault Events (Subgraph)
 # Pass --chain=<Name> to limit to a single network when debugging.
 
 on:
-  # Hourly ongoing fill. The indexer is incremental (resumes from the latest
-  # subgraph row it wrote, with a 60s guard), so each run only pulls new
-  # transactions - cheap to run often. Tighten to '*/15 * * * *' for a
-  # near-live feed. The Deposit Activity / Wallet History pages read only
-  # amount_usd IS NOT NULL, so this stays isolated from the RPC indexer.
+  # Hourly ongoing fill. The indexer is incremental but re-sweeps a multi-day
+  # window each run (RESCAN_DAYS, default 7) so events the hosted subgraph
+  # indexes late / out of order are still caught - a 60s guard used to orphan
+  # them. Cheap to run often (dedup makes re-seen rows free). The Deposit
+  # Activity / Wallet History pages read only amount_usd IS NOT NULL, so this
+  # stays isolated from the RPC indexer.
   schedule:
     - cron: '15 * * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      rescan_days:
+        description: "Re-scan window in days (use a large value e.g. 730 once to close old gaps)"
+        required: false
+        default: "7"
 
 jobs:
   index:
@@ -51,4 +57,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Manual runs can pass a larger window (e.g. 730) to close old gaps;
+          # scheduled runs fall back to the script default (7).
+          RESCAN_DAYS: ${{ github.event.inputs.rescan_days }}
         run: node scripts/index-vault-events-subgraph.mjs
