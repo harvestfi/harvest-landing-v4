@@ -1547,6 +1547,69 @@ body:has(.admin-shell) .foot {
   outline: none;
   border-color: var(--ink);
 }
+
+/* Searchable vault combobox (replaces the native <select>). */
+.studio-combo { position: relative; width: 100%; }
+.studio-combo-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.studio-combo-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.studio-combo-caret { flex: 0 0 auto; color: var(--ink-3); }
+.studio-combo-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+.studio-combo-search { margin-bottom: 8px; }
+.studio-combo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.studio-combo-option {
+  appearance: none;
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  color: var(--ink-2);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.studio-combo-option.active { background: rgba(127, 127, 127, 0.14); }
+.studio-combo-option.selected { color: var(--ink); font-weight: 600; }
+.studio-combo-empty {
+  padding: 12px 10px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
 .studio-segment,
 .studio-corners {
   display: inline-flex;

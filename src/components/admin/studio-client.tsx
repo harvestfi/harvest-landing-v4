@@ -8,7 +8,7 @@
 // its `vault` prop. No reimplementation - everything reuses the
 // existing CSS from _styles/home.css.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { formatAPY } from "@/lib/format";
@@ -133,19 +133,13 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         </div>
 
         <div className="studio-field">
-          <label className="studio-label" htmlFor="studio-vault">Vault</label>
-          <select
-            id="studio-vault"
-            className="studio-select"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-          >
-            {vaults.map((v) => (
-              <option key={v.slug} value={v.slug}>
-                {v.productName} - {v.chain} - {formatAPY(v.apy24h)} APY
-              </option>
-            ))}
-          </select>
+          <span className="studio-label" id="studio-vault-label">Vault</span>
+          <VaultSearchSelect
+            vaults={vaults}
+            slug={slug}
+            onChange={setSlug}
+            labelledBy="studio-vault-label"
+          />
         </div>
 
         <div className="studio-field">
@@ -305,6 +299,172 @@ export function StudioClient({ vaults }: { vaults: StudioVault[] }) {
         </div>
       </section>
     </div>
+  );
+}
+
+// Searchable replacement for the native vault <select>. A native option
+// list can't host a text input, and the catalogue is long, so this is a
+// combobox: a trigger that shows the current vault, and a popover with a
+// search field (filtering by name, chain, asset, protocol, type, category
+// or slug) plus a keyboard-navigable option list.
+function VaultSearchSelect({
+  vaults,
+  slug,
+  onChange,
+  labelledBy,
+}: {
+  vaults: StudioVault[];
+  slug: string;
+  onChange: (slug: string) => void;
+  labelledBy?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [active, setActive] = useState(0);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  const selected = vaults.find((v) => v.slug === slug);
+  const labelFor = (v: StudioVault) =>
+    `${v.productName} · ${v.chain} · ${formatAPY(v.apy24h)} APY`;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return vaults;
+    return vaults.filter((v) =>
+      `${v.productName} ${v.chain} ${v.asset} ${v.protocol} ${v.vaultType} ${v.category} ${v.slug}`
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [vaults, query]);
+
+  // Close when clicking outside the combobox.
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  // On open: clear the query, point the active row at the current vault, and
+  // focus the search field.
+  useEffect(() => {
+    if (!open) return;
+    setQuery("");
+    setActive(Math.max(0, vaults.findIndex((v) => v.slug === slug)));
+    const id = window.setTimeout(() => inputRef.current?.focus(), 0);
+    return () => window.clearTimeout(id);
+  }, [open, slug, vaults]);
+
+  // Keep the active row in range as the filter narrows.
+  useEffect(() => {
+    setActive((a) => Math.min(a, Math.max(0, filtered.length - 1)));
+  }, [filtered.length]);
+
+  // Scroll the active option into view during keyboard navigation.
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    const el = listRef.current.children[active] as HTMLElement | undefined;
+    el?.scrollIntoView({ block: "nearest" });
+  }, [active, open]);
+
+  const choose = (v: StudioVault) => {
+    onChange(v.slug);
+    setOpen(false);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((a) => Math.min(a + 1, filtered.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((a) => Math.max(a - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const v = filtered[active];
+      if (v) choose(v);
+    }
+  };
+
+  return (
+    <div className="studio-combo" ref={rootRef}>
+      <button
+        type="button"
+        className="studio-select studio-combo-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-labelledby={labelledBy}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="studio-combo-value">
+          {selected ? labelFor(selected) : "Select vault"}
+        </span>
+        <ComboCaret />
+      </button>
+      {open && (
+        <div className="studio-combo-panel">
+          <input
+            ref={inputRef}
+            type="text"
+            className="studio-input studio-combo-search"
+            placeholder="Search vaults…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onKeyDown}
+            aria-label="Search vaults"
+          />
+          <div className="studio-combo-list" role="listbox" ref={listRef}>
+            {filtered.length === 0 ? (
+              <div className="studio-combo-empty">No vaults match.</div>
+            ) : (
+              filtered.map((v, i) => (
+                <button
+                  key={v.slug}
+                  type="button"
+                  role="option"
+                  aria-selected={v.slug === slug}
+                  className={`studio-combo-option${
+                    v.slug === slug ? " selected" : ""
+                  }${i === active ? " active" : ""}`}
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => choose(v)}
+                >
+                  {labelFor(v)}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComboCaret() {
+  return (
+    <svg
+      className="studio-combo-caret"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   );
 }
 
