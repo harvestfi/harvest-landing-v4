@@ -36,6 +36,33 @@ export const AUTOPILOT_ALLOCATORS: readonly string[] = [
   // "0x13b3............................................ef5b", // USDC autopilot rebalancer
 ];
 
+// Wallets confirmed by manual review (e.g. DeBank history) to be genuine
+// users that the BEHAVIOURAL rebalancer heuristic below would otherwise flag
+// as false positives. These are power users who actively manage positions
+// across many Harvest vaults - they deposit and withdraw across more than
+// REBALANCER_MIN_VAULTS distinct vaults, which trips detectRebalancerActors,
+// even though they are real users and not internal allocators. Listing an
+// address here forces it to always count as a real user: it is exempted from
+// the behavioural detection AND from the static muted set. Only add an
+// address after confirming on DeBank/an explorer that it is a genuine user.
+export const REAL_USER_ALLOWLIST: readonly string[] = [
+  // Active multi-vault user (Base + Arbitrum), confirmed genuine on DeBank.
+  "0xba8d35b178c8cb9f1f29d86c94b5fd8aa5eff462",
+];
+
+const ALLOWLISTED = new Set<string>(
+  REAL_USER_ALLOWLIST.map((a) => a.toLowerCase()),
+);
+
+// True when an address has been manually confirmed as a real user and must
+// never be filtered, regardless of how its on-chain pattern looks.
+export function isAllowlistedUser(
+  address: string | null | undefined,
+): boolean {
+  if (!address) return false;
+  return ALLOWLISTED.has(address.toLowerCase());
+}
+
 const MUTED = new Set<string>(
   [...AUTOPILOT_VAULTS, ...AUTOPILOT_ALLOCATORS].map((a) => a.toLowerCase()),
 );
@@ -45,6 +72,9 @@ const MUTED = new Set<string>(
 // from every activity feed and ranking.
 export function isMutedActor(address: string | null | undefined): boolean {
   if (!address) return false;
+  // An explicit real-user allowlist wins over the muted set, so a confirmed
+  // user is never hidden even if its address is also listed above.
+  if (isAllowlistedUser(address)) return false;
   return MUTED.has(address.toLowerCase());
 }
 
@@ -85,6 +115,9 @@ export function detectRebalancerActors(
   }
   const rebalancers = new Set<string>();
   for (const [w, a] of agg) {
+    // Never flag a manually-confirmed real user, however many vaults it
+    // touches - the heuristic cannot tell a power user from an allocator.
+    if (ALLOWLISTED.has(w)) continue;
     if (a.deposited && a.withdrew && a.vaults.size >= REBALANCER_MIN_VAULTS) {
       rebalancers.add(w);
     }
