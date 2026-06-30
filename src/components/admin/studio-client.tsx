@@ -26,6 +26,7 @@ export type StudioVault = {
   tvl: number;
   apySpark: number[];
   tvlSpark: number[];
+  sharePriceSpark: number[];
 };
 
 type Ratio = { id: string; w: number; h: number; label: string };

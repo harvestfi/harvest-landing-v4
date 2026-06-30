@@ -56,6 +56,14 @@ export default async function StudioPage() {
           .map((p) => p.value),
         24,
       );
+      // Share price climbs smoothly as the vault compounds; plot it on its own
+      // series so the sharePrice tab shows that trend, not the APY series.
+      const sharePriceSpark = downsample(
+        (h?.sharePriceHistory ?? [])
+          .filter((p) => p.sharePrice > 0 && isFinite(p.sharePrice))
+          .map((p) => p.sharePrice),
+        24,
+      );
       return {
         slug: v.slug,
         productName: v.productName,
@@ -69,6 +77,7 @@ export default async function StudioPage() {
         tvl: v.tvl,
         apySpark,
         tvlSpark,
+        sharePriceSpark,
       };
     })
     .filter((v) => v.apy24h > 0 || v.tvl > 0)

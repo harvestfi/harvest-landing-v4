@@ -67,6 +67,10 @@ export type HeroPreviewVault = {
   tvl: number;
   apySpark: number[];
   tvlSpark: number[];
+  // Share-price series for the "sharePrice" metric tab. Optional: when
+  // absent the tab renders flat rather than borrowing the APY series (which
+  // read as a noisy up/down line instead of an autocompounder's smooth climb).
+  sharePriceSpark?: number[];
 };
 
 function formatAPY(value: number): string {
@@ -158,7 +162,13 @@ export function HomeHeroPreview({
   // active pill but reuse the same snapshot series (we only have
   // one daily-aggregated set, not per-range bucketing).
   const baseSeries = vault
-    ? normalizeSeries(metric === "tvl" ? vault.tvlSpark : vault.apySpark)
+    ? normalizeSeries(
+        metric === "tvl"
+          ? vault.tvlSpark
+          : metric === "sharePrice"
+            ? vault.sharePriceSpark ?? []
+            : vault.apySpark,
+      )
     : SERIES[metric][range];
   // Studio overrides: clamp the rightmost two bars to user-set
   // heights (0..100) when supplied, so the trailing trend can be
