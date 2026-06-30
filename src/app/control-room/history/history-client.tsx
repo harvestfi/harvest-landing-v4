@@ -334,7 +334,7 @@ export default function WalletHistoryClient({
       </header>
 
       {!loading && data && rows.length > 0 && (
-        <NetPositionChart events={data.events} />
+        <NetPositionChart conns={data.conns} />
       )}
 
       <section className="uni-hub-section" style={{ marginTop: 0 }}>
@@ -463,55 +463,62 @@ export default function WalletHistoryClient({
 const COLS =
   "100px 96px 100px minmax(170px, 1.5fr) 52px 100px 112px 52px";
 
-// Cumulative net position (deposits − withdrawals, USD) over time, as a bar
-// chart in the same register as the acquisition / SEO charts. A proxy for
-// "amount held in Harvest": the running USD basis the wallet has contributed
-// and not yet withdrawn (clamped at 0). Capped at the trailing 365 days.
-function NetPositionChart({ events }: { events: EventRow[] }) {
+// Actual Harvest balance over time, as a bar chart in the same register as
+// the acquisition / SEO charts. Plotted from the harvest_balance snapshots
+// recorded at each wallet connection (the only point at which we observe the
+// wallet's real holdings), carried forward step-wise between connections.
+// This is the truthful "amount held": its latest bar equals the "Harvest
+// balance" header stat, so the page reconciles. (Cost basis - deposits minus
+// withdrawals - is already shown by the "Net flow" stat, so we no longer
+// duplicate it here under a misleading "amount held" title.) Capped at the
+// trailing 365 days.
+function NetPositionChart({ conns }: { conns: ConnRow[] }) {
   const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
     null,
   );
   const DAY = 86_400_000;
 
   const { bins, max, latest } = useMemo(() => {
-    const evs = events
-      .filter((e) => e.event_type === "deposit" || e.event_type === "withdraw")
-      .map((e) => ({
-        ms: new Date(e.block_timestamp).getTime(),
-        usd: (e.amount_usd ?? 0) * (e.event_type === "deposit" ? 1 : -1),
+    const snaps = conns
+      .filter((c) => typeof c.harvest_balance === "number")
+      .map((c) => ({
+        ms: new Date(c.connected_at).getTime(),
+        v: c.harvest_balance as number,
       }))
-      .filter((e) => Number.isFinite(e.ms))
+      .filter((s) => Number.isFinite(s.ms))
       .sort((a, b) => a.ms - b.ms);
-    if (!evs.length) {
+    if (!snaps.length) {
       return { bins: [] as { v: number; daysAgo: number }[], max: 1, latest: 0 };
     }
     const now = Date.now();
     const spanDays = Math.min(
-      Math.max(1, Math.ceil((now - evs[0].ms) / DAY) + 1),
+      Math.max(1, Math.ceil((now - snaps[0].ms) / DAY) + 1),
       365,
     );
     const startMs = now - (spanDays - 1) * DAY;
-    let running = 0;
+    // Carry the last snapshot seen before the window into the first bar, then
+    // step the value forward as later snapshots land.
+    let last = 0;
     let i = 0;
-    while (i < evs.length && evs[i].ms < startMs) {
-      running += evs[i].usd;
+    while (i < snaps.length && snaps[i].ms < startMs) {
+      last = snaps[i].v;
       i++;
     }
     const out: { v: number; daysAgo: number }[] = [];
     for (let d = 0; d < spanDays; d++) {
       const dayEnd = startMs + (d + 1) * DAY;
-      while (i < evs.length && evs[i].ms < dayEnd) {
-        running += evs[i].usd;
+      while (i < snaps.length && snaps[i].ms < dayEnd) {
+        last = snaps[i].v;
         i++;
       }
-      out.push({ v: Math.max(0, running), daysAgo: spanDays - 1 - d });
+      out.push({ v: Math.max(0, last), daysAgo: spanDays - 1 - d });
     }
     return {
       bins: out,
       max: Math.max(1, ...out.map((b) => b.v)),
       latest: out[out.length - 1]?.v ?? 0,
     };
-  }, [events]);
+  }, [conns]);
 
   if (!bins.length) return null;
   const days = bins.length;
@@ -522,7 +529,7 @@ function NetPositionChart({ events }: { events: EventRow[] }) {
         <div className="aq-section-head-left">
           <h2 className="uni-hub-section-title">Amount held in Harvest</h2>
           <span className="uni-hub-section-meta">
-            net deposited (deposits − withdrawals), cumulative · last {days}d
+            from wallet connection snapshots, carried forward · last {days}d
           </span>
         </div>
       </header>
@@ -533,7 +540,7 @@ function NetPositionChart({ events }: { events: EventRow[] }) {
         <div className="aq-chart-bignum-label">
           {hovered
             ? `held ${labelForDaysAgo(hovered.daysAgo)}`
-            : "currently held (net contributed basis)"}
+            : "currently held (latest connection snapshot)"}
         </div>
         <div className="aq-chart">
           <div className="aq-chart-bars">
