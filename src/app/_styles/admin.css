@@ -1565,19 +1565,17 @@ body:has(.admin-shell) .foot {
   white-space: nowrap;
 }
 .studio-combo-caret { flex: 0 0 auto; color: var(--ink-3); }
+/* In-flow (not absolute): the controls column is `overflow-y: auto`, which
+   would clip a floating popover and crumple the list. Expanding in the flow
+   pushes the fields below down and lets the column scroll to it. */
 .studio-combo-panel {
-  position: absolute;
-  z-index: 40;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
   padding: 8px;
-  background: var(--panel);
+  background: var(--bg-2);
   border: 1px solid var(--line-2);
   border-radius: 9px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
 }
 .studio-combo-search { margin-bottom: 8px; }
 .studio-combo-list {
