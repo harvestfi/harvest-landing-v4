@@ -1,3 +1,5 @@
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import { getVaults } from "@/lib/data";
 import { loadHistoryFile, type FullVaultHistory } from "@/lib/data";
 import { StudioClient, type StudioVault } from "@/components/admin/studio-client";
@@ -17,11 +19,28 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+// Off-catalogue vaults (assets outside USDC/USDT/ETH/BTC, e.g. EURC) that the
+// public site doesn't list but Studio should still be able to compose cards
+// for. Emitted by scripts/fetch-data.mjs into data/studio-vaults.json; absent
+// until the next data refresh runs, in which case Studio just shows the
+// catalogue. Same element shape as getVaults() for the fields Studio reads.
+type CatalogueVault = Awaited<ReturnType<typeof getVaults>>[number];
+function loadStudioExtras(): CatalogueVault[] {
+  try {
+    const p = join(process.cwd(), "data", "studio-vaults.json");
+    if (!existsSync(p)) return [];
+    const parsed = JSON.parse(readFileSync(p, "utf-8"));
+    return Array.isArray(parsed) ? (parsed as CatalogueVault[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function StudioPage() {
   const vaults = await getVaults();
   const history = loadHistoryFile();
 
-  const cards: StudioVault[] = vaults
+  const cards: StudioVault[] = [...vaults, ...loadStudioExtras()]
     .map((v) => {
       const h: FullVaultHistory | undefined =
         history?.[v.contractAddress] ?? history?.[v.contractAddress.toLowerCase()];

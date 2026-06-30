@@ -41,6 +41,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/vaults.json data/history.json data/slugs.json
+          if [ -f data/studio-vaults.json ]; then git add data/studio-vaults.json; fi
           if [ -f data/holders.json ]; then git add data/holders.json; fi
           if [ -f data/hidden.json ]; then git add data/hidden.json; fi
           if git diff --cached --quiet; then

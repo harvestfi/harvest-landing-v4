@@ -380,7 +380,60 @@ async function fetchHarvestVaults() {
   allResults.sort((a, b) => b.apy24h - a.apy24h);
 
   log(`[harvest-api] final count: ${allResults.length}`);
-  return { vaults: allResults, slugMap: newSlugMap };
+
+  // Studio extras: every active vault that did NOT fall into one of the four
+  // public asset groups (USDC / USDT / ETH / BTC) - e.g. the EURC Autopilot.
+  // These never enter the public catalogue (no asset hub, no homepage row),
+  // but the Studio card composer should still be able to pull any live vault.
+  // Mapped to the same shape the Studio page reads; written to a separate file
+  // so the public site (which only reads vaults.json) is unaffected.
+  const studioExtras = activeVaults
+    .filter((v) => v.vaultAddress && !claimedAddresses.has(v.vaultAddress))
+    .map(buildStudioExtra)
+    .sort((a, b) => b.tvl - a.tvl);
+  log(`[harvest-api] studio extras (off-catalogue assets): ${studioExtras.length}`);
+
+  return { vaults: allResults, slugMap: newSlugMap, studioExtras };
+}
+
+// Map a raw API vault that is outside the four public asset groups into the
+// minimal shape the Studio page consumes. Mirrors the catalogue mapper's field
+// extraction (platform/strategy, estimatedApy, totalValueLocked, autopilot
+// detection) so the numbers match the app; uses a synthetic, non-persisted
+// slug since these vaults have no public product page.
+function buildStudioExtra(v) {
+  const chain = CHAIN_NAMES[v._sourceChain] || v._sourceChain;
+  const platform = v.platform?.[0] || "Harvest";
+  const platformParts = platform.split(" - ");
+  const protocol = platformParts[0].trim();
+  const strategy =
+    platformParts.length > 1 ? platformParts.slice(1).join(" - ").trim() : "";
+  const token = String((v.tokenNames || [])[0] ?? "")
+    .toUpperCase()
+    .replace(/₮/g, "T")
+    .replace(/[^A-Z0-9]/g, "");
+  const productName = (strategy
+    ? `${token} ${strategy}`
+    : `${token} ${protocol}`
+  ).trim();
+  const isAutopilot =
+    v.tags?.some((t) => String(t).toLowerCase().includes("pilot")) ||
+    productName.toLowerCase().includes("autopilot") ||
+    (protocol ?? "").toLowerCase().includes("autopilot");
+  return {
+    id: v.vaultAddress,
+    slug: `studio-${slugify(chain)}-${String(v.vaultAddress).slice(2, 10).toLowerCase()}`,
+    asset: token || "—",
+    productName: productName || v.vaultAddress,
+    protocol: { name: "Harvest Finance", slug: "harvest-finance" },
+    vaultType: isAutopilot ? "Autopilot" : "Autocompounder",
+    apy24h: parseNumber(v.estimatedApy),
+    apy30d: parseNumber(v.estimatedApy),
+    tvl: parseNumber(v.totalValueLocked),
+    chain,
+    contractAddress: v.vaultAddress,
+    category: `${protocol} - ${chain}`,
+  };
 }
 
 // ─── Short history (30d APY only, for vault listing) ─────────────────────────
@@ -700,9 +753,11 @@ async function main() {
 
   // 1. Fetch vaults
   let vaults;
+  let studioExtras = [];
   try {
     const result = await fetchHarvestVaults();
     vaults = result.vaults;
+    studioExtras = result.studioExtras || [];
     var slugMap = result.slugMap;
   } catch (err) {
     log(`[FATAL] Failed to fetch vaults: ${err}`);
@@ -767,6 +822,32 @@ async function main() {
     }
   }
 
+  // 2b. Fetch history for the Studio-only extras too, so their cards get a
+  // real sparkline. Merged into the same historyMap (history.json is keyed by
+  // address and read by address, so extra keys never surface a vault publicly).
+  if (studioExtras.length > 0) {
+    log(`\n=== Fetching history for ${studioExtras.length} Studio extras ===`);
+    for (let i = 0; i < studioExtras.length; i++) {
+      const v = studioExtras[i];
+      const chainKey = CHAIN_NAME_TO_KEY[v.chain];
+      if (!chainKey || !v.contractAddress) {
+        historyMap[v.contractAddress] = emptyHistory;
+        continue;
+      }
+      try {
+        historyMap[v.contractAddress] = await fetchFullVaultHistory(
+          v.contractAddress,
+          chainKey,
+          v.vaultType,
+        );
+      } catch (err) {
+        log(`[ERROR] extra history ${v.contractAddress}: ${err}`);
+        historyMap[v.contractAddress] = emptyHistory;
+      }
+      if (i < studioExtras.length - 1) await sleep(100);
+    }
+  }
+
   // 3. Write data files
   mkdirSync(join(ROOT, "data"), { recursive: true });
   let withData = 0;
@@ -785,6 +866,10 @@ async function main() {
 
   saveSlugMap(slugMap);
   log(`Wrote ${SLUGS_FILE} (${Object.keys(slugMap).length} slugs persisted)`);
+
+  const STUDIO_FILE = join(ROOT, "data", "studio-vaults.json");
+  writeFileSync(STUDIO_FILE, JSON.stringify(studioExtras, null, 2));
+  log(`Wrote ${STUDIO_FILE} (${studioExtras.length} off-catalogue vaults for Studio)`);
 
   log("\nDone!");
 }
