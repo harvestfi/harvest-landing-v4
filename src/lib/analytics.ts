@@ -36,36 +36,110 @@ export function setConsent(v: Consent): void {
 }
 
 // --------------------------------------------------------------------------
-// Session ID (random UUID, scoped to one tab lifespan)
+// Session ID (durable, time-windowed - GA4-style)
 // --------------------------------------------------------------------------
+//
+// The id lives in localStorage (NOT sessionStorage) so it survives the things
+// that used to mint a spurious "new session" and inflate the SEO funnel: a
+// mobile browser discarding a backgrounded tab and reloading it on return, a
+// manual refresh, or a full browser restart. Two rules bound it so it stays a
+// "session" and never a permanent fingerprint:
+//
+//   1. Inactivity rollover (SESSION_IDLE_MS, 30 min). A genuine new navigation
+//      after the visitor was idle longer than this starts a fresh session -
+//      exactly GA4's definition.
+//   2. Reload/restore reuse. When this page load is a reload or back/forward
+//      restore (Navigation Timing type), it is a continuation of the open tab,
+//      never a new acquisition from search - so we reuse the stored id
+//      regardless of the idle gap, up to a hard age cap (SESSION_MAX_AGE_MS),
+//      after which even a reload starts fresh.
+//
+// The decision is made once per document load and memoized, so every
+// trackVisit() within the same load (SPA route changes) sees a stable id and a
+// stable entry flag; each call still slides the idle window forward.
 
 const SESSION_KEY = "harvest_session_id";
+const SESSION_LAST_KEY = "harvest_session_last"; // last-activity epoch ms
+const SESSION_START_KEY = "harvest_session_start"; // session-start epoch ms
 
-export function getSessionId(): string {
-  try {
-    const existing = sessionStorage.getItem(SESSION_KEY);
-    if (existing) return existing;
-    const fresh =
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `sess-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    sessionStorage.setItem(SESSION_KEY, fresh);
-    return fresh;
-  } catch {
-    return `sess-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  }
+const SESSION_IDLE_MS = 30 * 60 * 1000; // 30-min inactivity rollover
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // reload-reuse capped at 24h
+
+function newSessionId(): string {
+  return typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `sess-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-const SESSION_INIT_KEY = "harvest_session_initialized";
+// True when this document was loaded by a reload or a back/forward restore
+// (rather than a fresh navigation). Reflects how the document was loaded, so
+// it is stable for the document's whole lifetime.
+function navIsReloadOrRestore(): boolean {
+  try {
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (nav && typeof nav.type === "string") {
+      return nav.type === "reload" || nav.type === "back_forward";
+    }
+  } catch {
+    // Navigation Timing unavailable - treat as a normal navigation.
+  }
+  return false;
+}
+
+// Memoized per document load: { id, isEntry }.
+let resolvedSession: { id: string; isEntry: boolean } | null = null;
+
+function resolveSession(): { id: string; isEntry: boolean } {
+  if (resolvedSession) return resolvedSession;
+  const now = Date.now();
+  let id: string;
+  let isEntry: boolean;
+  try {
+    const prevId = localStorage.getItem(SESSION_KEY);
+    const last = Number(localStorage.getItem(SESSION_LAST_KEY) || 0);
+    const start = Number(localStorage.getItem(SESSION_START_KEY) || 0);
+    const idle = !Number.isFinite(last) || now - last > SESSION_IDLE_MS;
+    const tooOld = !Number.isFinite(start) || now - start > SESSION_MAX_AGE_MS;
+    // Reuse the stored session when it's a reload/restore of an open tab
+    // (never a new acquisition) or the visitor was active within the idle
+    // window. Start fresh only with no usable session, a real navigation
+    // after the idle gap, or a stored session past the hard age cap.
+    const reuse = !!prevId && !tooOld && (navIsReloadOrRestore() || !idle);
+    if (reuse) {
+      id = prevId as string;
+      isEntry = false;
+    } else {
+      id = newSessionId();
+      isEntry = true;
+      localStorage.setItem(SESSION_START_KEY, String(now));
+    }
+    localStorage.setItem(SESSION_KEY, id);
+    localStorage.setItem(SESSION_LAST_KEY, String(now));
+  } catch {
+    // Storage blocked (private mode): fall back to a fresh per-load id.
+    id = newSessionId();
+    isEntry = true;
+  }
+  resolvedSession = { id, isEntry };
+  return resolvedSession;
+}
+
+export function getSessionId(): string {
+  const s = resolveSession();
+  // Slide the inactivity window forward on every tracked action so a long
+  // active session doesn't roll over mid-visit.
+  try {
+    localStorage.setItem(SESSION_LAST_KEY, String(Date.now()));
+  } catch {
+    // ignore
+  }
+  return s.id;
+}
 
 export function takeIsEntryPage(): boolean {
-  try {
-    const seen = sessionStorage.getItem(SESSION_INIT_KEY) === "1";
-    if (!seen) sessionStorage.setItem(SESSION_INIT_KEY, "1");
-    return !seen;
-  } catch {
-    return true;
-  }
+  return resolveSession().isEntry;
 }
 
 // --------------------------------------------------------------------------
