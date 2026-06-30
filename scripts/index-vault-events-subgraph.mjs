@@ -249,6 +249,31 @@ const PAGE_QUERY = `
   }
 `;
 
+// Recent sweep: the newest events on a chain, newest-first, with NO timestamp
+// filter. Run every cycle so each chain's latest activity always lands in the
+// DB regardless of how far the keyset backfill has crawled - the keyset sweep
+// is ordered by `id` (effectively random vs time), so on a chain that hasn't
+// finished backfilling, recent events can sit unwritten for a long time. This
+// is what was keeping every non-Base chain out of the Deposit Activity feed
+// even though the subgraph has fresh data for them.
+const RECENT_QUERY = `
+  query Recent($first: Int!) {
+    userTransactions(first: $first, orderBy: timestamp, orderDirection: desc) {
+      id
+      tx
+      timestamp
+      createAtBlock
+      transactionType
+      value
+      price
+      userAddress
+      txOrigin
+      vault { id decimal }
+      plasmaVault { id decimals }
+    }
+  }
+`;
+
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
 
 // USD value of a transaction leg: scale `value` from the underlying
@@ -296,6 +321,63 @@ function syntheticLogIndex(entityId) {
   return 1_000_000_000 + ((h >>> 0) % 1_000_000_000);
 }
 
+// Map raw subgraph userTransaction legs into vault_events_prod rows, keeping
+// only the real-depositor leg (the zero-address mint/burn counterpart is
+// dropped). Shared by the keyset backfill and the recent sweep.
+function buildRows(txs, name) {
+  const rows = [];
+  for (const t of txs) {
+    const event_type = mapTransactionType(t.transactionType);
+    if (!event_type) continue;
+    const wallet = String(t.userAddress ?? "").toLowerCase();
+    if (!wallet || wallet === ZERO_ADDR) continue;
+    const vaultAddr = t.vault?.id ?? t.plasmaVault?.id;
+    if (!vaultAddr) continue;
+    const decimals = t.vault?.decimal ?? t.plasmaVault?.decimals;
+    const tx_hash = t.tx ? String(t.tx).toLowerCase() : null;
+    if (!tx_hash) continue;
+    const log_index = syntheticLogIndex(t.id);
+    const tsSec = Number(t.timestamp ?? 0);
+    if (!Number.isFinite(tsSec) || tsSec === 0) continue;
+    rows.push({
+      chain: name,
+      vault_address: String(vaultAddr).toLowerCase(),
+      vault_slug: null, // joined client-side via slug-by-address lookup
+      tx_hash,
+      log_index,
+      block_number: Number(t.createAtBlock ?? 0) || 0,
+      block_timestamp: new Date(tsSec * 1000).toISOString(),
+      event_type,
+      wallet_address: wallet,
+      amount_shares: String(t.value ?? "0"),
+      amount_usd: usdValue(t.value, t.price, decimals),
+      amount_token: tokenAmount(t.value, decimals),
+    });
+  }
+  return rows;
+}
+
+// Dedupe within the batch on the table's real unique key (chain, tx_hash,
+// log_index), then upsert with ignore-duplicates so re-seen rows (resume
+// overlap, recent sweep) are absorbed for free. Returns rows sent.
+async function upsertRows(rows) {
+  const seen = new Set();
+  const unique = [];
+  for (const row of rows) {
+    const k = `${row.chain}|${row.tx_hash}|${row.log_index}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    unique.push(row);
+  }
+  if (unique.length === 0) return 0;
+  await supabase("vault_events_prod?on_conflict=chain,tx_hash,log_index", {
+    method: "POST",
+    headers: { Prefer: "resolution=ignore-duplicates" },
+    body: JSON.stringify(unique),
+  });
+  return unique.length;
+}
+
 async function indexChain(chain) {
   const { name, chainId } = chain;
   const nowSec = Math.floor(Date.now() / 1000);
@@ -308,8 +390,20 @@ async function indexChain(chain) {
     `[${name}] indexing from ${new Date(since * 1000).toISOString()} (cursor latest=${latest ?? "none"})`,
   );
 
-  let cursor = "";
+  // Recent sweep first: always pull this chain's newest events (newest-first,
+  // no timestamp filter) so fresh activity surfaces immediately, independent
+  // of how far the id-ordered keyset backfill below has progressed. This is
+  // what brings the non-Base chains into the feed.
   let totalWritten = 0;
+  try {
+    const recent = await gql(chainId, RECENT_QUERY, { first: PAGE_SIZE });
+    const n = await upsertRows(buildRows(recent?.userTransactions ?? [], name));
+    if (n) console.log(`[${name}] recent sweep wrote ${n}`);
+  } catch (e) {
+    console.error(`[${name}] recent sweep failed: ${e.message}`);
+  }
+
+  let cursor = "";
   for (let page = 0; page < MAX_PAGES_PER_RUN; page++) {
     let data;
     try {
@@ -325,69 +419,7 @@ async function indexChain(chain) {
     const txs = data?.userTransactions ?? [];
     if (txs.length === 0) break;
 
-    const rows = [];
-    for (const t of txs) {
-      const event_type = mapTransactionType(t.transactionType);
-      if (!event_type) continue;
-
-      // Drop the zero-address mint/burn counterpart leg; keep only the
-      // real depositor's leg, whose transactionType reflects what the
-      // user actually did.
-      const wallet = String(t.userAddress ?? "").toLowerCase();
-      if (!wallet || wallet === ZERO_ADDR) continue;
-
-      const vaultAddr = t.vault?.id ?? t.plasmaVault?.id;
-      if (!vaultAddr) continue;
-      const decimals = t.vault?.decimal ?? t.plasmaVault?.decimals;
-
-      const tx_hash = t.tx ? String(t.tx).toLowerCase() : null;
-      if (!tx_hash) continue;
-      const log_index = syntheticLogIndex(t.id);
-      const tsSec = Number(t.timestamp ?? 0);
-      if (!Number.isFinite(tsSec) || tsSec === 0) continue;
-
-      rows.push({
-        chain: name,
-        vault_address: String(vaultAddr).toLowerCase(),
-        vault_slug: null, // joined client-side via slug-by-address lookup
-        tx_hash,
-        log_index,
-        block_number: Number(t.createAtBlock ?? 0) || 0,
-        block_timestamp: new Date(tsSec * 1000).toISOString(),
-        event_type,
-        wallet_address: wallet,
-        amount_shares: String(t.value ?? "0"),
-        amount_usd: usdValue(t.value, t.price, decimals),
-        amount_token: tokenAmount(t.value, decimals),
-      });
-    }
-
-    // Dedupe within the batch on the table's real unique key
-    // (chain, tx_hash, log_index) before sending, so a single INSERT never
-    // carries two rows that violate the constraint.
-    const seen = new Set();
-    const unique = [];
-    for (const row of rows) {
-      const k = `${row.chain}|${row.tx_hash}|${row.log_index}`;
-      if (seen.has(k)) continue;
-      seen.add(k);
-      unique.push(row);
-    }
-
-    if (unique.length > 0) {
-      // Upsert onto the table's actual unique constraint
-      // (vault_events_prod_chain_tx_hash_log_index_key), ignoring duplicates
-      // so the ~60s resume overlap on re-runs is absorbed instead of erroring.
-      await supabase(
-        "vault_events_prod?on_conflict=chain,tx_hash,log_index",
-        {
-          method: "POST",
-          headers: { Prefer: "resolution=ignore-duplicates" },
-          body: JSON.stringify(unique),
-        },
-      );
-      totalWritten += unique.length;
-    }
+    totalWritten += await upsertRows(buildRows(txs, name));
 
     // Advance the cursor to the last id we saw. Combined with the
     // `id_gt` filter + ascending timestamp order, this gives us a
