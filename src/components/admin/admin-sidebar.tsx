@@ -37,6 +37,7 @@ const SECTIONS: Section[] = [
     items: [
       { label: "Live Feed", href: "/control-room/live-feed", icon: "activity" },
       { label: "SEO Summary", href: "/control-room/seo", icon: "globe" },
+      { label: "AI Summary", href: "/control-room/ai", icon: "sparkles" },
       {
         label: "Deposit Activity",
         href: "/control-room/deposit-activity",
@@ -216,6 +217,12 @@ const NAV_ICONS = {
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
       <line x1="3" y1="9" x2="21" y2="9" />
       <line x1="9" y1="21" x2="9" y2="9" />
+    </>
+  ),
+  sparkles: (
+    <>
+      <path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z" />
+      <path d="M18 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z" />
     </>
   ),
 } as const;
