@@ -975,10 +975,12 @@ function ChartSection({
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
 }) {
-  const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
-    null,
-  );
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [mode, setMode] = useState<ChartMode>("all");
+  // Engines toggled off via the legend (breakdown mode). Hidden engines drop
+  // out of the bars, the totals and the tooltip, so clicking every engine but
+  // one isolates that engine's trend over time.
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
 
   // Engines present, master-ordered first then any extras, each with a stable
   // palette color. Drives both the stacked segments and the legend.
@@ -995,41 +997,71 @@ function ChartSection({
     return { ordered, color };
   }, [points]);
 
-  const { bins, max, total, latest, peak } = useMemo(() => {
+  // Per-day counts, keeping the full per-engine split so visibility toggles
+  // and the tooltip can recompute without a re-bin.
+  const bins = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
     const out: {
-      v: number;
+      vAll: number;
       daysAgo: number;
       byEngine: Record<string, number>;
     }[] = [];
     for (let i = 0; i < days; i++)
-      out.push({ v: 0, daysAgo: days - 1 - i, byEngine: {} });
-    let inWindow = 0;
+      out.push({ vAll: 0, daysAgo: days - 1 - i, byEngine: {} });
     for (const p of points) {
       const daysAgo = Math.floor((now - p.ts) / dayMs);
       if (daysAgo >= 0 && daysAgo < days) {
         const bin = out[days - 1 - daysAgo];
-        bin.v++;
+        bin.vAll++;
         bin.byEngine[p.engine] = (bin.byEngine[p.engine] || 0) + 1;
-        inWindow++;
       }
     }
-    const m = Math.max(1, ...out.map((b) => b.v));
-    return {
-      bins: out,
-      max: m,
-      total: inWindow,
-      latest: out[out.length - 1]?.v ?? 0,
-      peak: m,
-    };
+    return out;
   }, [points, days]);
 
+  // Engines actually drawn: all of them in "All" mode, only the un-hidden ones
+  // in "Breakdown". The visible count per day drives bar height, totals and the
+  // tooltip, so isolating an engine rescales the chart to it.
+  const visibleEngines = useMemo(
+    () =>
+      mode === "breakdown"
+        ? engines.ordered.filter((e) => !hidden.has(e))
+        : engines.ordered,
+    [engines.ordered, hidden, mode],
+  );
+  const countOf = (b: (typeof bins)[number]) =>
+    mode === "breakdown"
+      ? visibleEngines.reduce((s, e) => s + (b.byEngine[e] || 0), 0)
+      : b.vAll;
+
+  const { max, total, latest, peak } = useMemo(() => {
+    const counts = bins.map(countOf);
+    const m = Math.max(1, ...counts);
+    return {
+      max: m,
+      total: counts.reduce((s, v) => s + v, 0),
+      latest: counts[counts.length - 1] ?? 0,
+      peak: m,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bins, visibleEngines, mode]);
+
   const noun = metricLabel.toLowerCase();
-  const displayValue = hovered ? hovered.v : total;
-  const displayLabel = hovered
-    ? `${noun} ${labelForDaysAgo(hovered.daysAgo)}`
+  const hoveredBin = hoverIdx != null ? bins[hoverIdx] : null;
+  const hoveredCount = hoveredBin ? countOf(hoveredBin) : 0;
+  const displayValue = hoveredBin ? hoveredCount : total;
+  const displayLabel = hoveredBin
+    ? `${noun} ${labelForDaysAgo(hoveredBin.daysAgo)}`
     : `${noun} across the trailing ${days} days`;
+
+  const toggleEngine = (e: string) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(e)) next.delete(e);
+      else next.add(e);
+      return next;
+    });
 
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
@@ -1073,24 +1105,23 @@ function ChartSection({
         <div className="aq-chart-bignum-label">{displayLabel}</div>
 
         <div className="aq-chart">
-          <div className="aq-chart-bars">
+          <div className="aq-chart-bars" style={{ position: "relative" }}>
             {bins.map((b, i) => {
-              const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
-              const title = `${b.v.toLocaleString("en-US")} ${noun} (${labelForDaysAgo(b.daysAgo)})`;
+              const v = countOf(b);
+              const heightPct = Math.max((v / max) * 100, v > 0 ? 4 : 0);
               return (
                 <div
                   key={i}
                   className="aq-bar-col"
-                  title={title}
-                  onMouseEnter={() => setHovered(b)}
-                  onMouseLeave={() => setHovered(null)}
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(null)}
                 >
-                  {mode === "all" || b.v === 0 ? (
+                  {mode === "all" || v === 0 ? (
                     <div className="aq-bar" style={{ height: `${heightPct}%` }} />
                   ) : (
-                    // Stacked, one colored segment per engine, bottom-anchored
-                    // by the column's flex-end. Heights are shares of the day's
-                    // total, so the whole stack matches the "All" bar height.
+                    // Stacked, one colored segment per VISIBLE engine,
+                    // bottom-anchored by the column's flex-end. Heights are
+                    // shares of the day's visible total.
                     <div
                       style={{
                         width: "100%",
@@ -1102,14 +1133,13 @@ function ChartSection({
                         overflow: "hidden",
                       }}
                     >
-                      {engines.ordered
+                      {visibleEngines
                         .filter((e) => b.byEngine[e])
                         .map((e) => (
                           <div
                             key={e}
-                            title={`${e}: ${b.byEngine[e].toLocaleString("en-US")} (${labelForDaysAgo(b.daysAgo)})`}
                             style={{
-                              height: `${(b.byEngine[e] / b.v) * 100}%`,
+                              height: `${(b.byEngine[e] / v) * 100}%`,
                               background: engines.color[e],
                             }}
                           />
@@ -1119,6 +1149,18 @@ function ChartSection({
                 </div>
               );
             })}
+
+            {hoveredBin && hoveredCount > 0 && (
+              <ChartTooltip
+                bin={hoveredBin}
+                count={hoveredCount}
+                engines={visibleEngines}
+                color={engines.color}
+                noun={noun}
+                idx={hoverIdx as number}
+                days={days}
+              />
+            )}
           </div>
           <div className="aq-chart-axis">
             <span>{days}d ago</span>
@@ -1136,32 +1178,143 @@ function ChartSection({
               marginTop: 12,
             }}
           >
-            {engines.ordered.map((e) => (
-              <span
-                key={e}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 12,
-                }}
-              >
-                <span
+            {engines.ordered.map((e) => {
+              const off = hidden.has(e);
+              return (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => toggleEngine(e)}
+                  aria-pressed={!off}
+                  title={off ? `Show ${e}` : `Hide ${e}`}
                   style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    background: engines.color[e],
-                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    padding: 0,
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "inherit",
+                    opacity: off ? 0.4 : 1,
+                    textDecoration: off ? "line-through" : "none",
                   }}
-                />
-                {e}
-              </span>
-            ))}
+                >
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 2,
+                      background: off ? "transparent" : engines.color[e],
+                      boxShadow: off ? `inset 0 0 0 1.5px ${engines.color[e]}` : "none",
+                      flexShrink: 0,
+                    }}
+                  />
+                  {e}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
     </section>
+  );
+}
+
+// Floating tooltip for a hovered day column: the per-engine split (swatch,
+// name, count, share of the day) newest-first by count, then the day total.
+// Positioned over the hovered column inside the (relative) bars container.
+function ChartTooltip({
+  bin,
+  count,
+  engines,
+  color,
+  noun,
+  idx,
+  days,
+}: {
+  bin: { daysAgo: number; byEngine: Record<string, number> };
+  count: number;
+  engines: string[];
+  color: Record<string, string>;
+  noun: string;
+  idx: number;
+  days: number;
+}) {
+  const rows = engines
+    .filter((e) => bin.byEngine[e])
+    .map((e) => ({ e, n: bin.byEngine[e] }))
+    .sort((a, b) => b.n - a.n);
+  const leftPct = ((idx + 0.5) / days) * 100;
+  // Keep the card on-screen: anchor left near the start, right near the end,
+  // centered in the middle.
+  const tx = leftPct < 18 ? "0%" : leftPct > 82 ? "-100%" : "-50%";
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: `${leftPct}%`,
+        bottom: "calc(100% + 8px)",
+        transform: `translateX(${tx})`,
+        zIndex: 5,
+        pointerEvents: "none",
+        minWidth: 200,
+        padding: "10px 12px",
+        borderRadius: 8,
+        background: "var(--uni-card, #fff)",
+        border: "1px solid var(--uni-line-2)",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+        fontSize: 12.5,
+        lineHeight: 1.5,
+      }}
+    >
+      <div
+        style={{
+          fontWeight: 600,
+          marginBottom: 6,
+          color: "var(--uni-ink-2, inherit)",
+        }}
+      >
+        {labelForDaysAgo(bin.daysAgo)}
+      </div>
+      {rows.map(({ e, n }) => (
+        <div
+          key={e}
+          style={{ display: "flex", alignItems: "center", gap: 7 }}
+        >
+          <span
+            style={{
+              width: 9,
+              height: 9,
+              borderRadius: 2,
+              background: color[e],
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ flex: 1 }}>{e}</span>
+          <span style={{ fontFamily: "var(--mono)", whiteSpace: "nowrap" }}>
+            {n.toLocaleString("en-US")} {noun} ({Math.round((n / count) * 100)}%)
+          </span>
+        </div>
+      ))}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          marginTop: 6,
+          paddingTop: 6,
+          borderTop: "1px solid var(--uni-line-2)",
+          fontWeight: 600,
+        }}
+      >
+        <span>Total</span>
+        <span style={{ fontFamily: "var(--mono)" }}>
+          {count.toLocaleString("en-US")} {noun}
+        </span>
+      </div>
+    </div>
   );
 }
 
