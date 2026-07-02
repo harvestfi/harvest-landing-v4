@@ -242,13 +242,26 @@ const SAMPLE_TX: readonly string[] = [
   "0xc1a6e3920d74b85f016c9a3e7b0d42f8e5690a1c34b7d6e2f80193a4c56e0d8b9",
 ];
 
-// Collapsible "activity heartbeat": one bar per day counting EVERY tracked
-// Live Feed action in that day - page visits, deep page exploration, app
-// clicks and on-chain deposits/withdrawals, any source, any type. A single
-// pulse of total site+app activity, independent of the stream's source/type
-// filters (it only follows the shared "Show bots" preference so crawler
-// bursts don't distort the human pulse). Collapsed by default so it doesn't
-// push the stream down until the operator opens it.
+// "Activity heartbeat": one bar per day counting EVERY tracked Live Feed
+// action that day - page visits, deep page exploration, app clicks and
+// on-chain deposits/withdrawals, any source. A single pulse of total site+app
+// activity, independent of the stream's source/type filters (it only follows
+// the shared "Show bots" preference so crawler bursts don't distort the human
+// pulse). Hidden by default; shown/hidden via the header toggle. In Breakdown
+// mode each bar splits by action type, with a click-to-isolate legend and a
+// per-type hover tooltip - the same UX as the SEO / AI Summary charts.
+const HEARTBEAT_TYPES: { key: string; label: string; color: string }[] = [
+  { key: "visit", label: "Page visit", color: "#4E79A7" },
+  { key: "click", label: "App click", color: "#F28E2B" },
+  { key: "deposit", label: "Deposit", color: "#59A14F" },
+  { key: "withdraw", label: "Withdraw", color: "#E15759" },
+];
+function heartbeatType(it: FeedItem): string {
+  if (it.kind === "visit") return "visit";
+  if (it.kind === "click") return "click";
+  return it.eventType; // "deposit" | "withdraw"
+}
+
 function HeartbeatSection({
   items,
   showBots,
@@ -256,11 +269,10 @@ function HeartbeatSection({
   items: FeedItem[];
   showBots: boolean;
 }) {
-  const [open, setOpen] = useState(false);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
-  const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
-    null,
-  );
+  const [mode, setMode] = useState<"all" | "breakdown">("all");
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   // All tracked actions, minus bots unless the operator opted in.
   const actions = useMemo(
@@ -277,120 +289,306 @@ function HeartbeatSection({
   }, [actions]);
   const days = resolveDays(timeframe, oldestMs);
 
-  const { bins, max, total, peak } = useMemo(() => {
+  const bins = useMemo(() => {
     const now = Date.now();
     const DAY = 86_400_000;
     const out = Array.from({ length: days }, (_, i) => ({
-      v: 0,
+      vAll: 0,
       daysAgo: days - 1 - i,
+      byType: {} as Record<string, number>,
     }));
-    let inWindow = 0;
     for (const it of actions) {
       const daysAgo = Math.floor((now - new Date(it.time).getTime()) / DAY);
       if (daysAgo >= 0 && daysAgo < days) {
-        out[days - 1 - daysAgo].v++;
-        inWindow++;
+        const bin = out[days - 1 - daysAgo];
+        bin.vAll++;
+        const k = heartbeatType(it);
+        bin.byType[k] = (bin.byType[k] || 0) + 1;
       }
     }
-    const m = Math.max(1, ...out.map((b) => b.v));
-    return { bins: out, max: m, total: inWindow, peak: m };
+    return out;
   }, [actions, days]);
 
-  const displayValue = hovered ? hovered.v : total;
-  const displayLabel = hovered
-    ? `actions ${heartbeatDaysAgo(hovered.daysAgo)}`
+  const visibleTypes = useMemo(
+    () =>
+      mode === "breakdown"
+        ? HEARTBEAT_TYPES.filter((t) => !hidden.has(t.key))
+        : HEARTBEAT_TYPES,
+    [mode, hidden],
+  );
+  const countOf = (b: (typeof bins)[number]) =>
+    mode === "breakdown"
+      ? visibleTypes.reduce((s, t) => s + (b.byType[t.key] || 0), 0)
+      : b.vAll;
+
+  const { max, total, latest, peak } = useMemo(() => {
+    const counts = bins.map(countOf);
+    const m = Math.max(1, ...counts);
+    return {
+      max: m,
+      total: counts.reduce((s, v) => s + v, 0),
+      latest: counts[counts.length - 1] ?? 0,
+      peak: m,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bins, visibleTypes, mode]);
+
+  const hoveredBin = hoverIdx != null ? bins[hoverIdx] : null;
+  const hoveredCount = hoveredBin ? countOf(hoveredBin) : 0;
+  const displayValue = hoveredBin ? hoveredCount : total;
+  const displayLabel = hoveredBin
+    ? `actions ${heartbeatDaysAgo(hoveredBin.daysAgo)}`
     : `tracked actions across the trailing ${days} days`;
+
+  const toggleType = (k: string) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
 
   return (
     <section className="uni-hub-section" style={{ marginTop: 28 }}>
-      <header
-        className="uni-hub-section-head"
-        role="button"
-        tabIndex={0}
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setOpen((o) => !o);
-          }
-        }}
-        style={{ cursor: "pointer" }}
-      >
-        <div
-          className="aq-section-head-left"
-          style={{ display: "flex", alignItems: "center", gap: 8 }}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            style={{
-              transform: open ? "rotate(90deg)" : "rotate(0deg)",
-              transition: "transform 0.15s ease",
-              flexShrink: 0,
-            }}
-          >
-            <path d="m9 6 6 6-6 6" />
-          </svg>
-          <div>
-            <h2 className="uni-hub-section-title">Activity heartbeat</h2>
-            <span className="uni-hub-section-meta">
-              {total.toLocaleString("en-US")} tracked actions · last {days}d ·
-              every visit, click and deposit, any source
-              {open ? "" : " · click to expand"}
-            </span>
-          </div>
+      <header className="uni-hub-section-head">
+        <div className="aq-section-head-left">
+          <h2 className="uni-hub-section-title">Activity heartbeat</h2>
+          <span className="uni-hub-section-meta">
+            {total.toLocaleString("en-US")} tracked actions · last {days}d ·
+            every visit, click and deposit, any source ·{" "}
+            {showBots ? "incl. bots" : "bots excluded"}
+          </span>
         </div>
-        {open && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <TimeframeSelector value={timeframe} onChange={setTimeframe} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            className="aq-timeframe"
+            role="tablist"
+            aria-label="Chart breakdown mode"
+          >
+            {(["all", "breakdown"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={mode === m}
+                className={`aq-timeframe-tab${mode === m ? " active" : ""}`}
+                onClick={() => setMode(m)}
+              >
+                {m === "all" ? "All" : "Breakdown"}
+              </button>
+            ))}
           </div>
-        )}
+          <TimeframeSelector value={timeframe} onChange={setTimeframe} />
+        </div>
       </header>
 
-      {open && (
-        <div className="aq-chart-card">
-          <div className="aq-chart-bignum">
-            {displayValue.toLocaleString("en-US")}
-          </div>
-          <div className="aq-chart-bignum-label">{displayLabel}</div>
-          <div className="aq-chart">
-            <div className="aq-chart-bars">
-              {bins.map((b, i) => {
-                const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
-                return (
-                  <div
-                    key={i}
-                    className="aq-bar-col"
-                    title={`${b.v.toLocaleString("en-US")} actions (${heartbeatDaysAgo(b.daysAgo)})`}
-                    onMouseEnter={() => setHovered(b)}
-                    onMouseLeave={() => setHovered(null)}
-                  >
+      <div className="aq-chart-card">
+        <div className="aq-chart-bignum">
+          {displayValue.toLocaleString("en-US")}
+        </div>
+        <div className="aq-chart-bignum-label">{displayLabel}</div>
+        <div className="aq-chart">
+          <div className="aq-chart-bars" style={{ position: "relative" }}>
+            {bins.map((b, i) => {
+              const v = countOf(b);
+              const heightPct = Math.max((v / max) * 100, v > 0 ? 4 : 0);
+              return (
+                <div
+                  key={i}
+                  className="aq-bar-col"
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(null)}
+                >
+                  {mode === "all" || v === 0 ? (
                     <div className="aq-bar" style={{ height: `${heightPct}%` }} />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="aq-chart-axis">
-              <span>{days}d ago</span>
-              <span>{Math.floor(days / 2)}d ago</span>
-              <span>today</span>
-            </div>
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: `${heightPct}%`,
+                        minHeight: 4,
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: "5px 5px 0 0",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {visibleTypes
+                        .filter((t) => b.byType[t.key])
+                        .map((t) => (
+                          <div
+                            key={t.key}
+                            style={{
+                              height: `${(b.byType[t.key] / v) * 100}%`,
+                              background: t.color,
+                            }}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {hoveredBin && hoveredCount > 0 && (
+              <HeartbeatTooltip
+                bin={hoveredBin}
+                count={hoveredCount}
+                types={visibleTypes}
+                idx={hoverIdx as number}
+                days={days}
+              />
+            )}
           </div>
-          <div className="uni-hub-section-meta" style={{ marginTop: 8 }}>
-            peak {peak.toLocaleString("en-US")}/day
-            {showBots ? " · incl. bots" : " · bots excluded"}
+          <div className="aq-chart-axis">
+            <span>{days}d ago</span>
+            <span>{Math.floor(days / 2)}d ago</span>
+            <span>today</span>
           </div>
         </div>
-      )}
+
+        <div
+          className="uni-hub-section-meta"
+          style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 14 }}
+        >
+          <span>peak {peak.toLocaleString("en-US")}/day</span>
+          {mode === "breakdown" && (
+            <span
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "6px 14px",
+                marginLeft: "auto",
+              }}
+            >
+              {HEARTBEAT_TYPES.map((t) => {
+                const off = hidden.has(t.key);
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => toggleType(t.key)}
+                    aria-pressed={!off}
+                    title={off ? `Show ${t.label}` : `Hide ${t.label}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 12,
+                      padding: 0,
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      color: "inherit",
+                      opacity: off ? 0.4 : 1,
+                      textDecoration: off ? "line-through" : "none",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 2,
+                        background: off ? "transparent" : t.color,
+                        boxShadow: off ? `inset 0 0 0 1.5px ${t.color}` : "none",
+                        flexShrink: 0,
+                      }}
+                    />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </span>
+          )}
+        </div>
+      </div>
     </section>
+  );
+}
+
+// Per-day hover tooltip for the heartbeat: the action-type split (swatch,
+// label, count, share) newest-first by count, then the day total.
+function HeartbeatTooltip({
+  bin,
+  count,
+  types,
+  idx,
+  days,
+}: {
+  bin: { daysAgo: number; byType: Record<string, number> };
+  count: number;
+  types: { key: string; label: string; color: string }[];
+  idx: number;
+  days: number;
+}) {
+  const rows = types
+    .filter((t) => bin.byType[t.key])
+    .map((t) => ({ ...t, n: bin.byType[t.key] }))
+    .sort((a, b) => b.n - a.n);
+  const leftPct = ((idx + 0.5) / days) * 100;
+  const tx = leftPct < 18 ? "0%" : leftPct > 82 ? "-100%" : "-50%";
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: `${leftPct}%`,
+        bottom: "calc(100% + 8px)",
+        transform: `translateX(${tx})`,
+        zIndex: 5,
+        pointerEvents: "none",
+        minWidth: 190,
+        padding: "10px 12px",
+        borderRadius: 8,
+        background: "var(--uni-card, #fff)",
+        border: "1px solid var(--uni-line-2)",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+        fontSize: 12.5,
+        lineHeight: 1.5,
+      }}
+    >
+      <div
+        style={{
+          fontWeight: 600,
+          marginBottom: 6,
+          color: "var(--uni-ink-2, inherit)",
+        }}
+      >
+        {heartbeatDaysAgo(bin.daysAgo)}
+      </div>
+      {rows.map((r) => (
+        <div key={r.key} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span
+            style={{
+              width: 9,
+              height: 9,
+              borderRadius: 2,
+              background: r.color,
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ flex: 1 }}>{r.label}</span>
+          <span style={{ fontFamily: "var(--mono)", whiteSpace: "nowrap" }}>
+            {r.n.toLocaleString("en-US")} ({Math.round((r.n / count) * 100)}%)
+          </span>
+        </div>
+      ))}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          marginTop: 6,
+          paddingTop: 6,
+          borderTop: "1px solid var(--uni-line-2)",
+          fontWeight: 600,
+        }}
+      >
+        <span>Total</span>
+        <span style={{ fontFamily: "var(--mono)" }}>
+          {count.toLocaleString("en-US")} actions
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -685,6 +883,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   // landing), or "deep" (explored >1 page AND first touch on a non-root
   // page). Any source either way.
   const [engagement, setEngagement] = useState<Engagement>("all");
+  // Activity heartbeat chart: hidden by default, toggled from the header.
+  const [showHeartbeat, setShowHeartbeat] = useState(false);
 
   const items = useMemo<FeedItem[]>(() => {
     if (!loaded) return [];
@@ -1111,8 +1311,11 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   return (
     <div className="uni-hub-test lf-page">
       <header className="uni-hub-hero aq-hero-slim aq-hero-fullwidth">
-        <div className="uni-hub-hero-headline">
-          <div style={{ width: "100%" }}>
+        <div
+          className="uni-hub-hero-headline"
+          style={{ display: "flex", alignItems: "flex-start", gap: 12 }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h1 className="uni-hub-h1">
               Live Feed
               <InfoTip label="About Live Feed">{description}</InfoTip>
@@ -1120,10 +1323,32 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             </h1>
             <p className="uni-hub-sub aq-sub-full">{description}</p>
           </div>
+          <button
+            type="button"
+            className={`lf-refresh${showHeartbeat ? " active" : ""}`}
+            onClick={() => setShowHeartbeat((v) => !v)}
+            aria-pressed={showHeartbeat}
+            style={{ flexShrink: 0 }}
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+            {showHeartbeat ? "Hide heartbeat" : "Show heartbeat"}
+          </button>
         </div>
       </header>
 
-      <HeartbeatSection items={items} showBots={showBots} />
+      {showHeartbeat && <HeartbeatSection items={items} showBots={showBots} />}
 
       <section className="uni-hub-section" style={{ marginTop: 28 }}>
         <header className="uni-hub-section-head">
