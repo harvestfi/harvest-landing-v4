@@ -707,13 +707,15 @@ export function FunnelSummary({
   const pctOfAcquired = (n: number) =>
     acquired > 0 ? `${Math.round((n / acquired) * 100)}% of acquired` : "no data yet";
 
-  // Chart series + table list, both for the selected metric and window.
-  const series: number[] = [];
+  // Chart points + table list, both for the selected metric and window. Each
+  // point carries its session's primary (first-touch) engine so the chart can
+  // optionally break the daily bars down by search / AI engine.
+  const points: { ts: number; engine: string }[] = [];
   const visibleSessions: SeoSession[] = [];
   for (const s of enginedSessions) {
     const ts = stageOf(s, metric);
     if (ts === null || !inWindow(ts)) continue;
-    series.push(ts);
+    points.push({ ts, engine: s.seoName });
     visibleSessions.push(s);
   }
   const metricLabel = METRIC_OPTIONS.find((o) => o.value === metric)!.label;
@@ -858,7 +860,7 @@ export function FunnelSummary({
           </div>
 
           <ChartSection
-            series={series}
+            points={points}
             days={days}
             metricLabel={metricLabel}
             timeframe={timeframe}
@@ -941,14 +943,33 @@ function StageFilterIcon() {
   );
 }
 
+// Categorical palette for the engine breakdown: distinct hues at similar
+// saturation/lightness so segments read apart in both light and dark, with the
+// legend carrying identity. Engines map to a stable color via their position
+// in the set actually present, so a given engine keeps its color across
+// timeframes and modes.
+const ENGINE_PALETTE = [
+  "#4E79A7", "#F28E2B", "#59A14F", "#E15759", "#B07AA1",
+  "#76B7B2", "#EDC948", "#FF9DA7", "#9C755F", "#BAB0AC",
+];
+// Master ordering so the common engines get sensible, consistent colors
+// regardless of which subset is present on a given page (SEO vs AI).
+const ENGINE_ORDER = [
+  "Google", "Bing", "DuckDuckGo", "Brave", "Yandex", "Baidu",
+  "Ecosia", "Startpage", "Qwant", "Naver", "Seznam", "Kagi", "Mojeek", "Ask",
+  "ChatGPT", "Perplexity", "Claude", "Gemini", "Minara",
+];
+
+type ChartMode = "all" | "breakdown";
+
 function ChartSection({
-  series,
+  points,
   days,
   metricLabel,
   timeframe,
   onTimeframeChange,
 }: {
-  series: number[];
+  points: { ts: number; engine: string }[];
   days: number;
   metricLabel: string;
   timeframe: Timeframe;
@@ -957,17 +978,40 @@ function ChartSection({
   const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
     null,
   );
+  const [mode, setMode] = useState<ChartMode>("all");
+
+  // Engines present, master-ordered first then any extras, each with a stable
+  // palette color. Drives both the stacked segments and the legend.
+  const engines = useMemo(() => {
+    const present = new Set(points.map((p) => p.engine).filter(Boolean));
+    const ordered = [
+      ...ENGINE_ORDER.filter((e) => present.has(e)),
+      ...[...present].filter((e) => !ENGINE_ORDER.includes(e)).sort(),
+    ];
+    const color: Record<string, string> = {};
+    ordered.forEach(
+      (e, i) => (color[e] = ENGINE_PALETTE[i % ENGINE_PALETTE.length]),
+    );
+    return { ordered, color };
+  }, [points]);
 
   const { bins, max, total, latest, peak } = useMemo(() => {
     const now = Date.now();
     const dayMs = 86_400_000;
-    const out: { v: number; daysAgo: number }[] = [];
-    for (let i = 0; i < days; i++) out.push({ v: 0, daysAgo: days - 1 - i });
+    const out: {
+      v: number;
+      daysAgo: number;
+      byEngine: Record<string, number>;
+    }[] = [];
+    for (let i = 0; i < days; i++)
+      out.push({ v: 0, daysAgo: days - 1 - i, byEngine: {} });
     let inWindow = 0;
-    for (const t of series) {
-      const daysAgo = Math.floor((now - t) / dayMs);
+    for (const p of points) {
+      const daysAgo = Math.floor((now - p.ts) / dayMs);
       if (daysAgo >= 0 && daysAgo < days) {
-        out[days - 1 - daysAgo].v++;
+        const bin = out[days - 1 - daysAgo];
+        bin.v++;
+        bin.byEngine[p.engine] = (bin.byEngine[p.engine] || 0) + 1;
         inWindow++;
       }
     }
@@ -979,7 +1023,7 @@ function ChartSection({
       latest: out[out.length - 1]?.v ?? 0,
       peak: m,
     };
-  }, [series, days]);
+  }, [points, days]);
 
   const noun = metricLabel.toLowerCase();
   const displayValue = hovered ? hovered.v : total;
@@ -999,7 +1043,27 @@ function ChartSection({
             {peak.toLocaleString("en-US")}/day
           </span>
         </div>
-        <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            className="aq-timeframe"
+            role="tablist"
+            aria-label="Chart breakdown mode"
+          >
+            {(["all", "breakdown"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={mode === m}
+                className={`aq-timeframe-tab${mode === m ? " active" : ""}`}
+                onClick={() => setMode(m)}
+              >
+                {m === "all" ? "All" : "Breakdown"}
+              </button>
+            ))}
+          </div>
+          <TimeframeSelector value={timeframe} onChange={onTimeframeChange} />
+        </div>
       </header>
 
       <div className="aq-chart-card">
@@ -1012,15 +1076,46 @@ function ChartSection({
           <div className="aq-chart-bars">
             {bins.map((b, i) => {
               const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
+              const title = `${b.v.toLocaleString("en-US")} ${noun} (${labelForDaysAgo(b.daysAgo)})`;
               return (
                 <div
                   key={i}
                   className="aq-bar-col"
-                  title={`${b.v.toLocaleString("en-US")} ${noun} (${labelForDaysAgo(b.daysAgo)})`}
+                  title={title}
                   onMouseEnter={() => setHovered(b)}
                   onMouseLeave={() => setHovered(null)}
                 >
-                  <div className="aq-bar" style={{ height: `${heightPct}%` }} />
+                  {mode === "all" || b.v === 0 ? (
+                    <div className="aq-bar" style={{ height: `${heightPct}%` }} />
+                  ) : (
+                    // Stacked, one colored segment per engine, bottom-anchored
+                    // by the column's flex-end. Heights are shares of the day's
+                    // total, so the whole stack matches the "All" bar height.
+                    <div
+                      style={{
+                        width: "100%",
+                        height: `${heightPct}%`,
+                        minHeight: 4,
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: "5px 5px 0 0",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {engines.ordered
+                        .filter((e) => b.byEngine[e])
+                        .map((e) => (
+                          <div
+                            key={e}
+                            title={`${e}: ${b.byEngine[e].toLocaleString("en-US")} (${labelForDaysAgo(b.daysAgo)})`}
+                            style={{
+                              height: `${(b.byEngine[e] / b.v) * 100}%`,
+                              background: engines.color[e],
+                            }}
+                          />
+                        ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1031,6 +1126,40 @@ function ChartSection({
             <span>today</span>
           </div>
         </div>
+
+        {mode === "breakdown" && engines.ordered.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "6px 14px",
+              marginTop: 12,
+            }}
+          >
+            {engines.ordered.map((e) => (
+              <span
+                key={e}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                }}
+              >
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 2,
+                    background: engines.color[e],
+                    flexShrink: 0,
+                  }}
+                />
+                {e}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
