@@ -36,6 +36,11 @@ import {
   brandFromSource,
   type SourceGroup,
 } from "@/lib/channels";
+import {
+  TimeframeSelector,
+  resolveDays,
+  type Timeframe,
+} from "@/components/admin/timeframe-selector";
 import { CountryFlag } from "@/components/admin/country-flag";
 import { DeviceIcon } from "@/components/admin/device-icon";
 import { InfoTip } from "@/components/admin/info-tip";
@@ -236,6 +241,164 @@ const SAMPLE_TX: readonly string[] = [
   "0x3b7e0d92a14c6f85309e1b4a7c0d28f6e5a9c1340b8d6e2f7019a4c83e6d50f29",
   "0xc1a6e3920d74b85f016c9a3e7b0d42f8e5690a1c34b7d6e2f80193a4c56e0d8b9",
 ];
+
+// Collapsible "activity heartbeat": one bar per day counting EVERY tracked
+// Live Feed action in that day - page visits, deep page exploration, app
+// clicks and on-chain deposits/withdrawals, any source, any type. A single
+// pulse of total site+app activity, independent of the stream's source/type
+// filters (it only follows the shared "Show bots" preference so crawler
+// bursts don't distort the human pulse). Collapsed by default so it doesn't
+// push the stream down until the operator opens it.
+function HeartbeatSection({
+  items,
+  showBots,
+}: {
+  items: FeedItem[];
+  showBots: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
+  const [hovered, setHovered] = useState<{ v: number; daysAgo: number } | null>(
+    null,
+  );
+
+  // All tracked actions, minus bots unless the operator opted in.
+  const actions = useMemo(
+    () => items.filter((it) => showBots || !it.bot),
+    [items, showBots],
+  );
+  const oldestMs = useMemo(() => {
+    let o = Infinity;
+    for (const it of actions) {
+      const t = new Date(it.time).getTime();
+      if (Number.isFinite(t) && t < o) o = t;
+    }
+    return Number.isFinite(o) ? o : null;
+  }, [actions]);
+  const days = resolveDays(timeframe, oldestMs);
+
+  const { bins, max, total, peak } = useMemo(() => {
+    const now = Date.now();
+    const DAY = 86_400_000;
+    const out = Array.from({ length: days }, (_, i) => ({
+      v: 0,
+      daysAgo: days - 1 - i,
+    }));
+    let inWindow = 0;
+    for (const it of actions) {
+      const daysAgo = Math.floor((now - new Date(it.time).getTime()) / DAY);
+      if (daysAgo >= 0 && daysAgo < days) {
+        out[days - 1 - daysAgo].v++;
+        inWindow++;
+      }
+    }
+    const m = Math.max(1, ...out.map((b) => b.v));
+    return { bins: out, max: m, total: inWindow, peak: m };
+  }, [actions, days]);
+
+  const displayValue = hovered ? hovered.v : total;
+  const displayLabel = hovered
+    ? `actions ${heartbeatDaysAgo(hovered.daysAgo)}`
+    : `tracked actions across the trailing ${days} days`;
+
+  return (
+    <section className="uni-hub-section" style={{ marginTop: 28 }}>
+      <header
+        className="uni-hub-section-head"
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        <div
+          className="aq-section-head-left"
+          style={{ display: "flex", alignItems: "center", gap: 8 }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            style={{
+              transform: open ? "rotate(90deg)" : "rotate(0deg)",
+              transition: "transform 0.15s ease",
+              flexShrink: 0,
+            }}
+          >
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+          <div>
+            <h2 className="uni-hub-section-title">Activity heartbeat</h2>
+            <span className="uni-hub-section-meta">
+              {total.toLocaleString("en-US")} tracked actions · last {days}d ·
+              every visit, click and deposit, any source
+              {open ? "" : " · click to expand"}
+            </span>
+          </div>
+        </div>
+        {open && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <TimeframeSelector value={timeframe} onChange={setTimeframe} />
+          </div>
+        )}
+      </header>
+
+      {open && (
+        <div className="aq-chart-card">
+          <div className="aq-chart-bignum">
+            {displayValue.toLocaleString("en-US")}
+          </div>
+          <div className="aq-chart-bignum-label">{displayLabel}</div>
+          <div className="aq-chart">
+            <div className="aq-chart-bars">
+              {bins.map((b, i) => {
+                const heightPct = Math.max((b.v / max) * 100, b.v > 0 ? 4 : 0);
+                return (
+                  <div
+                    key={i}
+                    className="aq-bar-col"
+                    title={`${b.v.toLocaleString("en-US")} actions (${heartbeatDaysAgo(b.daysAgo)})`}
+                    onMouseEnter={() => setHovered(b)}
+                    onMouseLeave={() => setHovered(null)}
+                  >
+                    <div className="aq-bar" style={{ height: `${heightPct}%` }} />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="aq-chart-axis">
+              <span>{days}d ago</span>
+              <span>{Math.floor(days / 2)}d ago</span>
+              <span>today</span>
+            </div>
+          </div>
+          <div className="uni-hub-section-meta" style={{ marginTop: 8 }}>
+            peak {peak.toLocaleString("en-US")}/day
+            {showBots ? " · incl. bots" : " · bots excluded"}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function heartbeatDaysAgo(d: number): string {
+  if (d === 0) return "today";
+  if (d === 1) return "yesterday";
+  return `${d} days ago`;
+}
 
 export function LiveFeed({ productNames }: { productNames: Record<string, string> }) {
   const [visits, setVisits] = useState<VisitRow[] | null>(null);
@@ -959,6 +1122,8 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
           </div>
         </div>
       </header>
+
+      <HeartbeatSection items={items} showBots={showBots} />
 
       <section className="uni-hub-section" style={{ marginTop: 28 }}>
         <header className="uni-hub-section-head">
