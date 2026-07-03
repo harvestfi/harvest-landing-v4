@@ -4265,8 +4265,8 @@ body:has(.methodology-page) {
     grid-template-columns: 40px minmax(140px, 1.6fr) 100px 48px 110px;
     gap: 18px;
   }
-  .hub-thead .hub-th:nth-child(4),
-  .hub-row .hub-cell:nth-child(4) { display: none; }
+  .hub-table:not(.hub-table--net-first) .hub-thead .hub-th:nth-child(4),
+  .hub-table:not(.hub-table--net-first) .hub-row .hub-cell:nth-child(4) { display: none; }
 }
 @media (max-width: 800px) {
   .hub-thead,
@@ -4277,8 +4277,8 @@ body:has(.methodology-page) {
     padding-right: 16px;
     gap: 12px;
   }
-  .hub-thead .hub-th:nth-child(5),
-  .hub-row .hub-cell:nth-child(5) { display: none; }
+  .hub-table:not(.hub-table--net-first) .hub-thead .hub-th:nth-child(5),
+  .hub-table:not(.hub-table--net-first) .hub-row .hub-cell:nth-child(5) { display: none; }
   .hub-filterbar { padding: 8px 0 10px; }
 }
 @media (max-width: 540px) {
@@ -4290,8 +4290,8 @@ body:has(.methodology-page) {
     padding: 10px 12px;
   }
   .hub-thead { padding: 8px 12px 7px; }
-  .hub-thead .hub-th:nth-child(6),
-  .hub-row .hub-cell:nth-child(6) { display: none; }
+  .hub-table:not(.hub-table--net-first) .hub-thead .hub-th:nth-child(6),
+  .hub-table:not(.hub-table--net-first) .hub-row .hub-cell:nth-child(6) { display: none; }
   .hub-th { font-size: 10.5px; }
   .hub-th-sort { font-size: 10.5px; gap: 3px; }
   .hub-sort-ind { font-size: 8px; }
@@ -4310,6 +4310,59 @@ body:has(.methodology-page) {
   .hub-num { font-size: 12px; font-weight: 600; }
   .hub-num-secondary { font-weight: 500; }
   .hub-filterbar { padding: 6px 0 8px; }
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Platform-hub table variant: Network is the FIRST data column (after
+   rank), with a 30%-smaller chain icon (20px -> 14px). DOM order is
+   # | Network | Vault | 24h APY | Strategy | 30d trend. The responsive
+   column-drop priority mirrors the default table (Strategy first, then
+   30d trend) but always keeps the Network glyph - it is the whole point
+   of a platform page. Higher specificity than the base rules, so it wins
+   at every breakpoint.
+   ────────────────────────────────────────────────────────────────── */
+.hub-table--net-first .hub-thead,
+.hub-table--net-first .hub-row {
+  /* Network track is `auto` (content width) rather than a fr fraction, so the
+     glyph hugs the # column with an equal 24px gap on each side instead of
+     floating in an expanded track. */
+  grid-template-columns: 50px auto minmax(220px, 2fr) 1fr 1fr 130px;
+}
+.hub-table--net-first .hub-network img,
+.hub-table--net-first .hub-network svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+@media (max-width: 1100px) {
+  .hub-table--net-first .hub-thead,
+  .hub-table--net-first .hub-row {
+    /* # | Network | Vault | APY | 30d trend (Strategy col 5 hidden) */
+    grid-template-columns: 40px 40px minmax(140px, 1.6fr) 100px 110px;
+  }
+  .hub-table--net-first .hub-thead .hub-th:nth-child(5),
+  .hub-table--net-first .hub-row .hub-cell:nth-child(5) { display: none; }
+}
+@media (max-width: 800px) {
+  .hub-table--net-first .hub-thead,
+  .hub-table--net-first .hub-row {
+    /* # | Network | Vault | APY (Strategy + 30d trend hidden) */
+    grid-template-columns: 32px 34px minmax(120px, 1.6fr) 90px;
+  }
+  .hub-table--net-first .hub-thead .hub-th:nth-child(5),
+  .hub-table--net-first .hub-row .hub-cell:nth-child(5),
+  .hub-table--net-first .hub-thead .hub-th:nth-child(6),
+  .hub-table--net-first .hub-row .hub-cell:nth-child(6) { display: none; }
+}
+@media (max-width: 540px) {
+  .hub-table--net-first .hub-thead,
+  .hub-table--net-first .hub-row {
+    /* # | Network | Vault | APY */
+    grid-template-columns: 20px 24px minmax(0, 1fr) 56px;
+  }
+  .hub-table--net-first .hub-thead .hub-th:nth-child(5),
+  .hub-table--net-first .hub-row .hub-cell:nth-child(5),
+  .hub-table--net-first .hub-thead .hub-th:nth-child(6),
+  .hub-table--net-first .hub-row .hub-cell:nth-child(6) { display: none; }
 }
 
 /* ──────────────────────────────────────────────────────────────────

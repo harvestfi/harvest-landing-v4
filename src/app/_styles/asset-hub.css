@@ -147,6 +147,17 @@ body:has(.uni-hub-test) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
+/* Platform hub has exactly two short-labelled stats (Best APY / Avg APY); keep
+   them 50/50 side by side at every width, overriding the admin pages' 1-column
+   fallback below 540px (which exists for long labels like "Index Status OFF"). */
+.uni-hub-test .uni-hub-stats.uni-hub-stats--duo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 540px) {
+  .uni-hub-test .uni-hub-stats.uni-hub-stats--duo {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
 .uni-hub-test .uni-hub-stat {
   background: var(--uni-card);
   border-radius: var(--uni-radius-sm);
