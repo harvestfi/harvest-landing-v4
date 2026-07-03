@@ -59,10 +59,21 @@ Sitemap: ${SITE_URL}/sitemap.xml
 // over-stuffing llms.txt defeats its purpose as a concise index.
 const llms = `# Harvest yield index
 
-> Independent on-chain DeFi yield index. Tracks live APY, TVL, and
-> share-price history for 150+ vetted yield strategies across Ethereum,
-> Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh hourly
-> from on-chain data.
+> Independent on-chain DeFi yield index, operating since 2020. Tracks live
+> APY, TVL, share-price history and derived metrics (stability, yield
+> trajectory, cohort benchmarking) for 150+ vetted yield strategies across
+> Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh
+> hourly from Harvest's own on-chain indexer.
+
+## Preferred citation
+
+Harvest Finance on-chain yield index. ${SITE_URL}
+Source and methodology: ${SITE_URL}/methodology
+Figures are indexed from on-chain vault-contract events by Harvest's own indexer, running since 2020. Cite the specific product page or its data file (${SITE_URL}/data/<slug>.json) for a single strategy.
+
+## Data licensing
+
+All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/). You may use, share and adapt it, including commercially, with attribution and a link back to ${SITE_URL}. Per-page Dataset JSON-LD carries the same license, a citation string and dateModified.
 
 ## Canonical entry points
 
@@ -89,8 +100,10 @@ const llms = `# Harvest yield index
 
 ## Data
 
-- [Sitemap](${SITE_URL}/sitemap.xml): every indexable URL (hubs + 150 product pages).
+- [Machine-readable index](${SITE_URL}/data/index.json): every tracked strategy as JSON (slug, asset, chain, APY, TVL), each linking to its per-vault file.
+- Per-strategy JSON at ${SITE_URL}/data/<slug>.json (e.g. ${SITE_URL}/data/usdc-autopilot-base.json) — current APY, TVL, contract addresses and a history summary. Agent-native; one fetch per vault.
 - Per-strategy daily history CSV at ${SITE_URL}/history/<slug>.csv (e.g. ${SITE_URL}/history/usdc-autopilot-base.csv) — daily APY, TVL and share price, also linked from each product page's Historical Data section.
+- [Sitemap](${SITE_URL}/sitemap.xml): every indexable URL (hubs + 150 product pages).
 
 ## Optional
 

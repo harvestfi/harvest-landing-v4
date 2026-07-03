@@ -21,6 +21,32 @@ export function breadcrumbSchema(crumbs: Crumb[]): object {
   };
 }
 
+// WebPage node carrying Speakable: marks the H1 title + byline (chain ·
+// protocol · vault type) as the concise, answer-ready summary for voice /
+// AI answer engines. Speakable is defined on WebPage, not FinancialProduct,
+// so it gets its own node.
+export function webPageSchema(vault: YieldVault): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: vault.productName,
+    url: `${SITE_URL}/${vault.slug}`,
+    // The page's figures are derived from our documented methodology; this is
+    // a valid CreativeWork provenance link (FinancialProduct, a Service, can't
+    // carry isBasedOn, so the citation signal lives here and on the Dataset).
+    isBasedOn: `${SITE_URL}/methodology`,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: [".uni-title", ".uni-title-byline"],
+    },
+  };
+}
+
 export function financialProductSchema(vault: YieldVault): object {
   // provider = the operator publishing the page (Harvest). seller is
   // the underlying venue (Aave, Morpho, Aerodrome, etc.) where the
@@ -178,6 +204,17 @@ export function datasetSchema(
       url: SITE_URL,
     },
     temporalCoverage: `${startDate}/${endDate}`,
+    // Freshness + provenance signals AI answer engines look for: when the data
+    // was last refreshed, what it is derived from (our documented methodology),
+    // and a ready-to-use citation string.
+    dateModified: new Date(Math.max(...allTs) * 1000).toISOString(),
+    isBasedOn: `${SITE_URL}/methodology`,
+    citation: `Harvest Finance on-chain yield index. "${vault.productName} historical APY, TVL and share-price data." ${SITE_URL}/${vault.slug}. Indexed from on-chain vault-contract events; methodology at ${SITE_URL}/methodology.`,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
     keywords: [
       vault.asset,
       vault.chain,
@@ -191,13 +228,19 @@ export function datasetSchema(
     license: "https://creativecommons.org/licenses/by/4.0/",
     isAccessibleForFree: true,
     // CSV first (a real, parseable file Google's Dataset crawler and
-    // researchers can download), then the on-page HTML table as a
-    // human-readable secondary distribution.
+    // researchers can download), then the agent-native JSON (current
+    // metrics + history summary + addresses), then the on-page HTML table
+    // as a human-readable secondary distribution.
     distribution: [
       {
         "@type": "DataDownload",
         encodingFormat: "text/csv",
         contentUrl: `${SITE_URL}${historyCsvHref(vault.slug)}`,
+      },
+      {
+        "@type": "DataDownload",
+        encodingFormat: "application/json",
+        contentUrl: `${SITE_URL}/data/${vault.slug}.json`,
       },
       {
         "@type": "DataDownload",

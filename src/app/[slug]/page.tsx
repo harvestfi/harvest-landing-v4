@@ -12,7 +12,12 @@ import { isCanonicalSlug } from "@/lib/canonical-vaults";
 import { formatAPY, formatTVL } from "@/lib/format";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { productPageTitle, productPageDescription, productPageCrumbs, comboKey } from "@/lib/seo";
-import { financialProductSchema, breadcrumbSchema, datasetSchema } from "@/lib/jsonld";
+import {
+  financialProductSchema,
+  breadcrumbSchema,
+  datasetSchema,
+  webPageSchema,
+} from "@/lib/jsonld";
 import type { YieldVault } from "@/lib/types";
 import type { FullVaultHistory } from "@/lib/history-api";
 import { ProductPageBody } from "@/components/product-page-body";
@@ -123,6 +128,12 @@ function ProductSchemas({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(financialProductSchema(vault)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(webPageSchema(vault)),
         }}
       />
       <script

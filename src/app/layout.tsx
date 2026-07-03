@@ -99,6 +99,36 @@ const ORGANIZATION_JSONLD = {
   url: SITE_URL,
   logo: `${SITE_URL}/icon.png`,
   description: SITE_DESCRIPTION,
+  // Entity-resolution signals: help search + AI answer engines confidently
+  // attribute facts to the "Harvest" entity (vs a generic page). foundingDate
+  // is the protocol's 2020 launch; knowsAbout enumerates the topics the index
+  // is authoritative on; contactPoint + areaServed round out the profile.
+  foundingDate: "2020",
+  slogan: "Independent onchain DeFi yield index",
+  areaServed: "Worldwide",
+  knowsAbout: [
+    "DeFi yield",
+    "yield aggregation",
+    "autocompounding vaults",
+    "APY",
+    "TVL",
+    "stablecoin yield",
+    "USDC yield",
+    "USDT yield",
+    "ETH yield",
+    "Bitcoin yield",
+    "Ethereum",
+    "Base",
+    "Arbitrum",
+    "Polygon",
+    "zkSync",
+    "HyperEVM",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    url: `${SITE_URL}/contact`,
+  },
   // Entity graph: the official surfaces that all refer to the same
   // Harvest organization. Strengthens E-E-A-T / entity resolution for
   // search and AI answer engines. Official-first, then the high-signal
