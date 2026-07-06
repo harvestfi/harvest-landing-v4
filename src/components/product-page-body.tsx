@@ -8,6 +8,7 @@ import {
   getLiveVaults,
   getVaultHistory,
   getHoldersMap,
+  getHolderGrowthMap,
   isHiddenProduct,
 } from "@/lib/data";
 import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
@@ -35,6 +36,7 @@ import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { HistoricalStats } from "@/components/historical-stats";
 import { HistoricalNarrative } from "@/components/historical-narrative";
+import { DepositorGrowth } from "@/components/depositor-growth";
 import { MarketBenchmark, EcosystemContext } from "@/components/market-sections";
 import { VaultCommentary } from "@/components/vault-commentary";
 import { VaultHistoryTable } from "@/components/vault-history-table";
@@ -64,10 +66,11 @@ function shortAddress(a: string): string {
 }
 
 export async function ProductPageBody({ vault }: { vault: YieldVault }) {
-  const [history, allVaults, holdersMap] = await Promise.all([
+  const [history, allVaults, holdersMap, growthMap] = await Promise.all([
     getVaultHistory(vault.contractAddress),
     getLiveVaults(),
     getHoldersMap(),
+    getHolderGrowthMap(),
   ]);
 
   // A hidden product has opted out of every ranking surface, so it
@@ -78,6 +81,8 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
   const hidden = isHiddenProduct(vault);
 
   const holderCount = holdersMap[vault.contractAddress.toLowerCase()] ?? null;
+  const holderGrowth =
+    growthMap[vault.contractAddress.toLowerCase()] ?? null;
   const explorerUrl = CHAIN_EXPLORERS[vault.chain]
     ? `${CHAIN_EXPLORERS[vault.chain]}${vault.contractAddress}`
     : null;
@@ -547,6 +552,8 @@ export async function ProductPageBody({ vault }: { vault: YieldVault }) {
         )}
 
         <HistoricalNarrative history={history} asset={vault.asset} currentTvl={vault.tvl} />
+
+        <DepositorGrowth growth={holderGrowth} vault={vault} />
 
         <HistoricalStats history={history} asset={vault.asset} currentTvl={vault.tvl} />
 

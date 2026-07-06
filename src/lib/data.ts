@@ -456,6 +456,39 @@ export async function getHoldersMap(): Promise<Record<string, number>> {
   }
 }
 
+// Per-vault depositor-growth data (subgraph userBalances, allocator-filtered),
+// written by scripts/fetch-holder-growth.mjs. Keyed by lowercased address.
+export interface HolderGrowth {
+  chain: string;
+  totalDepositors: number;
+  currentDepositors: number;
+  new30d: number;
+  launchDate: string | null;
+  curve: { m: string; c: number }[];
+  generatedAt: string;
+}
+const HOLDER_GROWTH_FILE = join(process.cwd(), "data", "holder-growth.json");
+let _growthCache: Record<string, HolderGrowth> | null | undefined;
+
+export async function getHolderGrowthMap(): Promise<
+  Record<string, HolderGrowth>
+> {
+  if (_growthCache !== undefined) return _growthCache ?? {};
+  try {
+    if (!existsSync(HOLDER_GROWTH_FILE)) {
+      _growthCache = null;
+      return {};
+    }
+    _growthCache = JSON.parse(
+      readFileSync(HOLDER_GROWTH_FILE, "utf-8"),
+    ) as Record<string, HolderGrowth>;
+    return _growthCache;
+  } catch {
+    _growthCache = null;
+    return {};
+  }
+}
+
 // Lifetime tracked-days per vault, derived from the earliest valid APY
 // observation in our hosted indexer. Used for "longest-tracked" footer copy
 // and similar credibility surfaces. Cheap because it reuses the in-process
