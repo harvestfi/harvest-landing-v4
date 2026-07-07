@@ -1,12 +1,18 @@
 import type { HolderGrowth } from "@/lib/data";
 
-// "Depositor growth": a unique, freshness-carrying content block built from the
+// "Holder growth": a unique, freshness-carrying content block built from the
 // subgraph userBalances timeseries (see scripts/fetch-holder-growth.mjs) -
-// how many wallets have deposited since launch, how many earn today, and the
-// cumulative curve. Gated so near-empty pass-through vaults (autopilot
+// how many wallets have held the vault since launch, how many earn today, and
+// the cumulative curve. Gated so near-empty pass-through vaults (autopilot
 // liquidity channels with a handful of internal holders) never surface a thin
-// or embarrassing count: we only render when the vault has a real depositor
-// base AND real TVL. Pure server component - static in the export.
+// or embarrassing count: we only render when the vault has a real holder base
+// AND real TVL. Pure server component - static in the export.
+//
+// Rendered copy deliberately avoids the "deposit / depositor" word family:
+// product-page prose bans it (see scripts/check-banned-words.mjs), so the
+// editorial voice here is "wallets / holders / held". Internal data field
+// names (totalDepositors, currentDepositors) keep their subgraph-derived
+// naming since they never reach the page text.
 
 const MIN_CURRENT_DEPOSITORS = 25;
 const MIN_TVL_USD = 10_000;
@@ -43,7 +49,7 @@ export function DepositorGrowth({
   const since = monthYear(launchDate);
 
   const sentence =
-    `${totalDepositors.toLocaleString("en-US")} wallets have deposited into ${vault.productName} since ${since}. ` +
+    `${totalDepositors.toLocaleString("en-US")} wallets have held ${vault.productName} since ${since}. ` +
     `${currentDepositors.toLocaleString("en-US")} are earning today` +
     (new30d > 0
       ? `, with ${new30d.toLocaleString("en-US")} joining in the last 30 days.`
@@ -63,8 +69,8 @@ export function DepositorGrowth({
   const green = "#15803d";
 
   return (
-    <section className="pp-section" id="depositors">
-      <h2>Depositor growth</h2>
+    <section className="pp-section" id="holders">
+      <h2>Holder growth</h2>
       <p style={{ maxWidth: "62ch" }}>{sentence}</p>
 
       <div
@@ -77,7 +83,7 @@ export function DepositorGrowth({
       >
         {[
           {
-            label: `Depositors since ${launchDate ? monthYear(launchDate) : "launch"}`,
+            label: `Holders since ${launchDate ? monthYear(launchDate) : "launch"}`,
             value: totalDepositors.toLocaleString("en-US"),
           },
           {
@@ -119,7 +125,7 @@ export function DepositorGrowth({
           viewBox="0 0 100 28"
           preserveAspectRatio="none"
           role="img"
-          aria-label={`Cumulative depositors for ${vault.productName} from ${since} to today`}
+          aria-label={`Cumulative holders for ${vault.productName} from ${since} to today`}
           style={{
             width: "100%",
             height: 120,
@@ -148,8 +154,8 @@ export function DepositorGrowth({
         }}
       >
         Wallet counts are derived from on-chain vault-token balances; internal
-        allocator wallets are excluded. Cumulative depositors are counted from
-        each wallet&rsquo;s first deposit.
+        allocator wallets are excluded. Cumulative holders are counted from
+        each wallet&rsquo;s first on-chain balance.
       </p>
     </section>
   );
