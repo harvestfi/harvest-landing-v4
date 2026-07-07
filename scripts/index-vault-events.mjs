@@ -342,11 +342,20 @@ async function main() {
 
         if (rows.length > 0) {
           // Upsert ignoring duplicates (on conflict tx_hash + log_index).
-          await supabase("vault_events_prod", {
-            method: "POST",
-            headers: { Prefer: "resolution=ignore-duplicates" },
-            body: JSON.stringify(rows),
-          });
+          // on_conflict is REQUIRED for resolution=ignore-duplicates to take
+          // effect: PostgREST only turns the INSERT into ON CONFLICT DO
+          // NOTHING when the conflict target is named. Without it, re-scanning
+          // an overlapping block range (normal - cursors overlap, and a second
+          // indexer writes the same table) hits the (chain, tx_hash, log_index)
+          // unique constraint and 409s, killing the whole chain job.
+          await supabase(
+            "vault_events_prod?on_conflict=chain,tx_hash,log_index",
+            {
+              method: "POST",
+              headers: { Prefer: "resolution=ignore-duplicates" },
+              body: JSON.stringify(rows),
+            },
+          );
           written += rows.length;
           totalWritten += rows.length;
         }
