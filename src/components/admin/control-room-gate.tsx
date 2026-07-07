@@ -16,6 +16,16 @@ import type { Session } from "@supabase/supabase-js";
 import { authClient } from "@/lib/supabase-auth";
 import { setSupabaseAccessToken } from "@/lib/supabase";
 
+// Feature-flagged rollout. Until NEXT_PUBLIC_CONTROL_ROOM_AUTH=1 is set on a
+// deployment, the gate stays fully open (renders children, reads use the anon
+// key) exactly as before this migration. This lets the login code ship without
+// risking an admin lockout before the Supabase side is configured: an
+// authenticated-SELECT RLS policy on the read tables, the redirect URL in the
+// Auth allowlist, and the admin's email added to Auth -> Users. Flip the env
+// var per-environment (v4-one first, then harvestfi) once all three are in
+// place; the very next build then enforces the magic-link login.
+const AUTH_ENFORCED = process.env.NEXT_PUBLIC_CONTROL_ROOM_AUTH === "1";
+
 export function ControlRoomGate({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -26,6 +36,12 @@ export function ControlRoomGate({ children }: { children: React.ReactNode }) {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
+    // Rollout flag off (or Supabase unconfigured) -> stay open, no login.
+    if (!AUTH_ENFORCED) {
+      setNoAuth(true);
+      setReady(true);
+      return;
+    }
     const client = authClient();
     if (!client) {
       setNoAuth(true);
