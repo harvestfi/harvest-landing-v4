@@ -12,6 +12,19 @@ function configured(): boolean {
   return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
 }
 
+// Control-room READS authenticate as the logged-in admin (a Supabase Auth
+// JWT), so they work under RLS where the publishable/`anon` key is INSERT-only.
+// The control-room gate sets this token on login and clears it on sign-out
+// (see supabase-auth.ts). When absent - public pages, logged-out - reads fall
+// back to the publishable key, i.e. the `anon` role. Writes always stay anon.
+let _accessToken: string | null = null;
+export function setSupabaseAccessToken(token: string | null): void {
+  _accessToken = token;
+}
+function readBearer(): string {
+  return _accessToken || SUPABASE_ANON_KEY;
+}
+
 export async function supabaseInsert(
   table: string,
   row: Record<string, unknown>,
@@ -46,7 +59,7 @@ export async function supabaseSelect<T>(
     const r = await fetch(url, {
       headers: {
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${readBearer()}`,
       },
     });
     if (!r.ok) return [];
@@ -80,7 +93,7 @@ export async function supabaseSelectAll<T>(
       const r = await fetch(url, {
         headers: {
           apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          Authorization: `Bearer ${readBearer()}`,
           Range: `${from}-${to}`,
           "Range-Unit": "items",
         },

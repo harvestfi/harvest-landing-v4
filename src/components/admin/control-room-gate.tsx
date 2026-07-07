@@ -1,94 +1,128 @@
 "use client";
 
-// Lightweight access gate for the /control-room panel. Renders a passphrase
-// prompt and only mounts the dashboards once it matches. The passphrase is
-// never stored in source - only its SHA-256 is. This is obscurity for the
-// dashboard UI, not real security: the underlying analytics are governed by
-// Supabase row-level security, and a static client gate can be bypassed by a
-// determined user. For real protection put the route behind edge auth
-// (e.g. host-level password protection).
+// Access gate for /control-room. Real auth: Supabase email + password sign-in
+// (no magic link, so it never touches Supabase's rate-limited email). Once
+// signed in, the whole control room mounts AND every Supabase read carries the
+// admin's JWT (see supabase-auth.ts -> setSupabaseAccessToken), so reads work
+// under RLS where the publishable/anon key is INSERT-only. Access is whoever
+// the project owner creates under Supabase Auth -> Users (with a password);
+// public signup is disabled in the dashboard, so there is no self-serve access.
+//
+// Feature-flagged rollout. Until NEXT_PUBLIC_CONTROL_ROOM_AUTH=1 is set on a
+// deployment, the gate stays fully open (renders children, reads use the anon
+// key) exactly as before this migration - so the login can ship without risking
+// an admin lockout before the Supabase side (authenticated-SELECT RLS + admin
+// users) is ready. Flip the env var per environment once ready; the next build
+// then enforces the password login.
+//
+// If Supabase isn't configured (a creds-less demo fork) the gate also opens -
+// there's nothing to protect and dashboards just show sample data.
 
 import { useEffect, useState, type FormEvent } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { authClient } from "@/lib/supabase-auth";
+import { setSupabaseAccessToken } from "@/lib/supabase";
 
-const SESSION_KEY = "cr_auth";
-const EXPECTED =
-  "5873102fa0951713a81154785217660a3a116274481a19fb2eea5c56182f4860";
-// Remembered logins live in localStorage so the operator isn't asked
-// for the passphrase on every visit (sessionStorage died with the
-// tab). The stored record carries the passphrase HASH + a timestamp:
-// rotating the passphrase invalidates every remembered session, and
-// the record self-expires after 30 days.
-const REMEMBER_MS = 30 * 24 * 60 * 60 * 1000;
-
-function readRemembered(): boolean {
-  try {
-    // Legacy per-tab flag from the sessionStorage era.
-    if (sessionStorage.getItem(SESSION_KEY) === "1") return true;
-  } catch {
-    /* ignore */
-  }
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return false;
-    const rec = JSON.parse(raw) as { h?: string; t?: number };
-    return (
-      rec.h === EXPECTED &&
-      typeof rec.t === "number" &&
-      Date.now() - rec.t < REMEMBER_MS
-    );
-  } catch {
-    return false;
-  }
-}
-
-function writeRemembered(): void {
-  try {
-    localStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({ h: EXPECTED, t: Date.now() }),
-    );
-  } catch {
-    /* ignore - fall back to in-memory auth for this view */
-  }
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(input),
-  );
-  return [...new Uint8Array(buf)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+const AUTH_ENFORCED = process.env.NEXT_PUBLIC_CONTROL_ROOM_AUTH === "1";
 
 export function ControlRoomGate({ children }: { children: React.ReactNode }) {
-  const [authed, setAuthed] = useState(false);
   const [ready, setReady] = useState(false);
-  const [value, setValue] = useState("");
-  const [error, setError] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [noAuth, setNoAuth] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (readRemembered()) setAuthed(true);
-    setReady(true);
+    // Rollout flag off (or Supabase unconfigured) -> stay open, no login.
+    if (!AUTH_ENFORCED) {
+      setNoAuth(true);
+      setReady(true);
+      return;
+    }
+    const client = authClient();
+    if (!client) {
+      setNoAuth(true);
+      setReady(true);
+      return;
+    }
+    let active = true;
+    client.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      setSupabaseAccessToken(data.session?.access_token ?? null);
+      setReady(true);
+    });
+    const { data: sub } = client.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      setSupabaseAccessToken(s?.access_token ?? null);
+      setReady(true);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
-  async function onSubmit(e: FormEvent) {
+  async function signIn(e: FormEvent) {
     e.preventDefault();
-    setError(false);
-    const hex = await sha256Hex(value);
-    if (hex === EXPECTED) {
-      writeRemembered();
-      setAuthed(true);
-    } else {
-      setError(true);
-      setValue("");
+    setErr(null);
+    setSubmitting(true);
+    const client = authClient();
+    if (!client) {
+      setErr("Auth is not configured for this environment.");
+      setSubmitting(false);
+      return;
     }
+    const { error } = await client.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    setSubmitting(false);
+    // On success onAuthStateChange fires, sets the session, and the gate opens.
+    if (error) setErr(error.message);
   }
 
-  // Default locked: never render the dashboards until the check resolves.
+  async function signOut() {
+    await authClient()?.auth.signOut();
+    setSession(null);
+    setSupabaseAccessToken(null);
+    setPassword("");
+  }
+
   if (!ready) return null;
-  if (authed) return <>{children}</>;
+
+  if (noAuth || session) {
+    return (
+      <>
+        {children}
+        {session && (
+          <button
+            type="button"
+            onClick={signOut}
+            title={`Signed in as ${session.user.email ?? "admin"} - sign out`}
+            style={{
+              position: "fixed",
+              left: 12,
+              bottom: 12,
+              zIndex: 60,
+              padding: "6px 10px",
+              borderRadius: 8,
+              border: "1px solid #3a3833",
+              background: "#1a1917",
+              color: "#9a9892",
+              fontSize: 11.5,
+              fontFamily: "system-ui, sans-serif",
+              cursor: "pointer",
+            }}
+          >
+            Sign out
+          </button>
+        )}
+      </>
+    );
+  }
 
   return (
     <div
@@ -101,22 +135,45 @@ export function ControlRoomGate({ children }: { children: React.ReactNode }) {
       }}
     >
       <form
-        onSubmit={onSubmit}
+        onSubmit={signIn}
         style={{
           display: "flex",
           flexDirection: "column",
           gap: 12,
-          width: 264,
+          width: 288,
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        <label style={{ color: "#9a9892", fontSize: 13 }}>Access</label>
+        <label style={{ color: "#9a9892", fontSize: 13 }}>
+          Control Room access
+        </label>
+        <input
+          type="email"
+          autoFocus
+          required
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@harvest.finance"
+          aria-label="Admin email"
+          style={{
+            padding: "10px 12px",
+            borderRadius: 8,
+            border: "1px solid #3a3833",
+            background: "#1a1917",
+            color: "#f4f4f1",
+            fontSize: 14,
+            outline: "none",
+          }}
+        />
         <input
           type="password"
-          autoFocus
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          aria-label="Passphrase"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          aria-label="Admin password"
           style={{
             padding: "10px 12px",
             borderRadius: 8,
@@ -129,6 +186,7 @@ export function ControlRoomGate({ children }: { children: React.ReactNode }) {
         />
         <button
           type="submit"
+          disabled={submitting}
           style={{
             padding: "10px 12px",
             borderRadius: 8,
@@ -137,13 +195,14 @@ export function ControlRoomGate({ children }: { children: React.ReactNode }) {
             color: "#191717",
             fontWeight: 600,
             fontSize: 14,
-            cursor: "pointer",
+            cursor: submitting ? "progress" : "pointer",
+            opacity: submitting ? 0.7 : 1,
           }}
         >
-          Enter
+          {submitting ? "Signing in…" : "Sign in"}
         </button>
-        {error && (
-          <span style={{ color: "#e5484d", fontSize: 12 }}>Incorrect.</span>
+        {err && (
+          <span style={{ color: "#e5484d", fontSize: 12 }}>{err}</span>
         )}
       </form>
     </div>
