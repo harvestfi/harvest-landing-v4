@@ -1,94 +1,117 @@
 "use client";
 
-// Lightweight access gate for the /control-room panel. Renders a passphrase
-// prompt and only mounts the dashboards once it matches. The passphrase is
-// never stored in source - only its SHA-256 is. This is obscurity for the
-// dashboard UI, not real security: the underlying analytics are governed by
-// Supabase row-level security, and a static client gate can be bypassed by a
-// determined user. For real protection put the route behind edge auth
-// (e.g. host-level password protection).
+// Access gate for /control-room. Real auth now, not a passphrase: a Supabase
+// Auth magic-link sign-in. Once signed in, the whole control room mounts AND
+// every Supabase read carries the admin's JWT (see supabase-auth.ts ->
+// setSupabaseAccessToken), so it works under RLS where the publishable key is
+// INSERT-only. Access is whoever exists in the project's Supabase Auth users
+// (shouldCreateUser:false - the magic link only works for provisioned admins).
+//
+// If Supabase isn't configured (a creds-less demo fork), there's nothing to
+// protect - reads return empty and the dashboards show sample data - so the
+// gate opens rather than locking out an env with no real data.
 
 import { useEffect, useState, type FormEvent } from "react";
-
-const SESSION_KEY = "cr_auth";
-const EXPECTED =
-  "5873102fa0951713a81154785217660a3a116274481a19fb2eea5c56182f4860";
-// Remembered logins live in localStorage so the operator isn't asked
-// for the passphrase on every visit (sessionStorage died with the
-// tab). The stored record carries the passphrase HASH + a timestamp:
-// rotating the passphrase invalidates every remembered session, and
-// the record self-expires after 30 days.
-const REMEMBER_MS = 30 * 24 * 60 * 60 * 1000;
-
-function readRemembered(): boolean {
-  try {
-    // Legacy per-tab flag from the sessionStorage era.
-    if (sessionStorage.getItem(SESSION_KEY) === "1") return true;
-  } catch {
-    /* ignore */
-  }
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return false;
-    const rec = JSON.parse(raw) as { h?: string; t?: number };
-    return (
-      rec.h === EXPECTED &&
-      typeof rec.t === "number" &&
-      Date.now() - rec.t < REMEMBER_MS
-    );
-  } catch {
-    return false;
-  }
-}
-
-function writeRemembered(): void {
-  try {
-    localStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({ h: EXPECTED, t: Date.now() }),
-    );
-  } catch {
-    /* ignore - fall back to in-memory auth for this view */
-  }
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(input),
-  );
-  return [...new Uint8Array(buf)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import type { Session } from "@supabase/supabase-js";
+import { authClient } from "@/lib/supabase-auth";
+import { setSupabaseAccessToken } from "@/lib/supabase";
 
 export function ControlRoomGate({ children }: { children: React.ReactNode }) {
-  const [authed, setAuthed] = useState(false);
   const [ready, setReady] = useState(false);
-  const [value, setValue] = useState("");
-  const [error, setError] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [noAuth, setNoAuth] = useState(false);
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (readRemembered()) setAuthed(true);
-    setReady(true);
+    const client = authClient();
+    if (!client) {
+      setNoAuth(true);
+      setReady(true);
+      return;
+    }
+    let active = true;
+    client.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      setSupabaseAccessToken(data.session?.access_token ?? null);
+      setReady(true);
+    });
+    const { data: sub } = client.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      setSupabaseAccessToken(s?.access_token ?? null);
+      setReady(true);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
-  async function onSubmit(e: FormEvent) {
+  async function sendLink(e: FormEvent) {
     e.preventDefault();
-    setError(false);
-    const hex = await sha256Hex(value);
-    if (hex === EXPECTED) {
-      writeRemembered();
-      setAuthed(true);
-    } else {
-      setError(true);
-      setValue("");
+    setErr(null);
+    setSending(true);
+    const client = authClient();
+    if (!client) {
+      setErr("Auth is not configured for this environment.");
+      setSending(false);
+      return;
     }
+    const { error } = await client.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/control-room`,
+      },
+    });
+    setSending(false);
+    if (error) setErr(error.message);
+    else setSent(true);
   }
 
-  // Default locked: never render the dashboards until the check resolves.
+  async function signOut() {
+    await authClient()?.auth.signOut();
+    setSession(null);
+    setSupabaseAccessToken(null);
+    setSent(false);
+    setEmail("");
+  }
+
   if (!ready) return null;
-  if (authed) return <>{children}</>;
+
+  if (noAuth || session) {
+    return (
+      <>
+        {children}
+        {session && (
+          <button
+            type="button"
+            onClick={signOut}
+            title={`Signed in as ${session.user.email ?? "admin"} - sign out`}
+            style={{
+              position: "fixed",
+              left: 12,
+              bottom: 12,
+              zIndex: 60,
+              padding: "6px 10px",
+              borderRadius: 8,
+              border: "1px solid #3a3833",
+              background: "#1a1917",
+              color: "#9a9892",
+              fontSize: 11.5,
+              fontFamily: "system-ui, sans-serif",
+              cursor: "pointer",
+            }}
+          >
+            Sign out
+          </button>
+        )}
+      </>
+    );
+  }
 
   return (
     <div
@@ -101,49 +124,64 @@ export function ControlRoomGate({ children }: { children: React.ReactNode }) {
       }}
     >
       <form
-        onSubmit={onSubmit}
+        onSubmit={sendLink}
         style={{
           display: "flex",
           flexDirection: "column",
           gap: 12,
-          width: 264,
+          width: 288,
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        <label style={{ color: "#9a9892", fontSize: 13 }}>Access</label>
-        <input
-          type="password"
-          autoFocus
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          aria-label="Passphrase"
-          style={{
-            padding: "10px 12px",
-            borderRadius: 8,
-            border: "1px solid #3a3833",
-            background: "#1a1917",
-            color: "#f4f4f1",
-            fontSize: 14,
-            outline: "none",
-          }}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: "10px 12px",
-            borderRadius: 8,
-            border: 0,
-            background: "#ffb936",
-            color: "#191717",
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: "pointer",
-          }}
-        >
-          Enter
-        </button>
-        {error && (
-          <span style={{ color: "#e5484d", fontSize: 12 }}>Incorrect.</span>
+        <label style={{ color: "#9a9892", fontSize: 13 }}>
+          Control Room access
+        </label>
+        {sent ? (
+          <p style={{ color: "#c9c7c1", fontSize: 13, lineHeight: 1.5 }}>
+            Check <strong style={{ color: "#f4f4f1" }}>{email}</strong> for a
+            sign-in link. Open it in this browser to enter.
+          </p>
+        ) : (
+          <>
+            <input
+              type="email"
+              autoFocus
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@harvest.finance"
+              aria-label="Admin email"
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "1px solid #3a3833",
+                background: "#1a1917",
+                color: "#f4f4f1",
+                fontSize: 14,
+                outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={sending}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: 0,
+                background: "#ffb936",
+                color: "#191717",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: sending ? "progress" : "pointer",
+                opacity: sending ? 0.7 : 1,
+              }}
+            >
+              {sending ? "Sending…" : "Send magic link"}
+            </button>
+          </>
+        )}
+        {err && (
+          <span style={{ color: "#e5484d", fontSize: 12 }}>{err}</span>
         )}
       </form>
     </div>
