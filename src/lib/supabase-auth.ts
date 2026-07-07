@@ -3,10 +3,12 @@
 // code-split into the admin chunks and never ships in the public bundle - the
 // public site keeps using the raw-fetch helpers in ./supabase.
 //
-// Its whole job: run the magic-link sign-in flow, persist + auto-refresh the
-// session, and mirror the current access token into the raw-fetch read helpers
-// (setSupabaseAccessToken) so control-room reads authenticate as the logged-in
-// admin (RLS `authenticated`) rather than the INSERT-only publishable key.
+// Its whole job: run the email + password sign-in flow, persist + auto-refresh
+// the session, and mirror the current access token into the raw-fetch read
+// helpers (setSupabaseAccessToken) so control-room reads authenticate as the
+// logged-in admin (RLS `authenticated`) rather than the INSERT-only publishable
+// key. Password auth (not magic link) keeps it off Supabase's rate-limited
+// email entirely - admins are provisioned with a password in the dashboard.
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -25,10 +27,8 @@ export function authClient(): SupabaseClient | null {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      // Parse the magic-link callback (?code / #tokens) on load and exchange
-      // it for a session automatically.
-      detectSessionInUrl: true,
-      flowType: "pkce",
+      // Password flow: no email/OAuth redirect to parse, so this stays off.
+      detectSessionInUrl: false,
       storageKey: "harvest_cr_auth",
     },
   });
