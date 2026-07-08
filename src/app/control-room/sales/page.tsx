@@ -89,6 +89,50 @@ const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
 const fmtPct = (v: number) => `${v.toFixed(1)}%`;
 const fmtNum = (v: number) => v.toLocaleString("en-US");
 
+// Heatmap tint: green whose opacity ramps with the value relative to the
+// column's max. Reads on both light and dark themes; empty for zero so the
+// grid stays calm where there's nothing to see.
+function heat(value: number, max: number): React.CSSProperties {
+  if (!(max > 0) || value <= 0) return {};
+  const a = 0.07 + 0.45 * Math.min(1, value / max);
+  return { backgroundColor: `rgba(21, 128, 61, ${a.toFixed(3)})` };
+}
+
+type SortDir = "asc" | "desc";
+function SortHead({
+  label,
+  active,
+  dir,
+  onClick,
+  align = "left",
+}: {
+  label: string;
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+  align?: "left" | "right";
+}) {
+  return (
+    <span
+      className="hub-th"
+      onClick={onClick}
+      style={{
+        cursor: "pointer",
+        userSelect: "none",
+        textAlign: align,
+        color: active ? "var(--uni-ink, inherit)" : undefined,
+        fontWeight: active ? 700 : undefined,
+      }}
+      title="Sort by this column"
+    >
+      {label}
+      <span style={{ opacity: active ? 0.9 : 0.25, marginLeft: 4 }}>
+        {active ? (dir === "desc" ? "▼" : "▲") : "▲"}
+      </span>
+    </span>
+  );
+}
+
 export default function SalesPage() {
   const [visits, setVisits] = useState<VisitRow[] | null>(null);
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
@@ -330,7 +374,7 @@ export default function SalesPage() {
   const loading = recs === null && !error;
 
   return (
-    <>
+    <div className="uni-hub-test">
       <section className="aq-step-header">
         <h2 className="aq-step-title">Sales funnel</h2>
         <p className="aq-step-sub">
@@ -458,13 +502,13 @@ export default function SalesPage() {
           <header className="uni-hub-section-head">
             <h2 className="uni-hub-section-title">Product leaderboard</h2>
             <span className="uni-hub-section-meta">
-              ranked by impressions · {leaderboard.length} products
+              click a column to sort · {leaderboard.length} products
             </span>
           </header>
-          <Leaderboard rows={leaderboard.slice(0, 40)} onPick={setProduct} />
+          <Leaderboard rows={leaderboard} onPick={setProduct} />
         </section>
       )}
-    </>
+    </div>
   );
 }
 
@@ -505,6 +549,24 @@ function PosTable({
 }: {
   buckets: Record<string, { impr: number; pv: number; app: number }>;
 }) {
+  const keys = ["1", "2", "3", "4–10"];
+  const rows = keys.map((k) => {
+    const b = buckets[k];
+    return {
+      k,
+      impr: b.impr,
+      pvRate: pct(b.pv, b.impr),
+      pv: b.pv,
+      appRate: pct(b.app, b.pv),
+      app: b.app,
+      e2e: pct(b.app, b.impr),
+    };
+  });
+  const max = {
+    pv: Math.max(...rows.map((r) => r.pvRate), 0),
+    app: Math.max(...rows.map((r) => r.appRate), 0),
+    e2e: Math.max(...rows.map((r) => r.e2e), 0),
+  };
   return (
     <div className="hub-table-wrap">
       <div className="hub-table">
@@ -515,32 +577,25 @@ function PosTable({
           <span className="hub-th">→ Into app</span>
           <span className="hub-th">End-to-end</span>
         </div>
-        {["1", "2", "3", "4–10"].map((k) => {
-          const b = buckets[k];
-          return (
-            <div className="hub-row" key={k} style={{ gridTemplateColumns: POS_COLS }}>
-              <span className="hub-cell hub-rank">
-                {k === "4–10" ? "4–10" : `Top ${k}`}
-              </span>
-              <span className="hub-cell aq-cell-text">{fmtNum(b.impr)}</span>
-              <span className="hub-cell aq-cell-text">
-                {fmtPct(pct(b.pv, b.impr))}{" "}
-                <span style={{ color: "var(--hub-ink-3,#6e6c66)" }}>
-                  ({fmtNum(b.pv)})
-                </span>
-              </span>
-              <span className="hub-cell aq-cell-text">
-                {fmtPct(pct(b.app, b.pv))}{" "}
-                <span style={{ color: "var(--hub-ink-3,#6e6c66)" }}>
-                  ({fmtNum(b.app)})
-                </span>
-              </span>
-              <span className="hub-cell aq-cell-text">
-                {fmtPct(pct(b.app, b.impr))}
-              </span>
-            </div>
-          );
-        })}
+        {rows.map((r) => (
+          <div className="hub-row" key={r.k} style={{ gridTemplateColumns: POS_COLS }}>
+            <span className="hub-cell hub-rank">
+              {r.k === "4–10" ? "4–10" : `Top ${r.k}`}
+            </span>
+            <span className="hub-cell aq-cell-text">{fmtNum(r.impr)}</span>
+            <span className="hub-cell aq-cell-text" style={heat(r.pvRate, max.pv)}>
+              {fmtPct(r.pvRate)}{" "}
+              <span style={{ color: "var(--hub-ink-3,#6e6c66)" }}>({fmtNum(r.pv)})</span>
+            </span>
+            <span className="hub-cell aq-cell-text" style={heat(r.appRate, max.app)}>
+              {fmtPct(r.appRate)}{" "}
+              <span style={{ color: "var(--hub-ink-3,#6e6c66)" }}>({fmtNum(r.app)})</span>
+            </span>
+            <span className="hub-cell aq-cell-text" style={heat(r.e2e, max.e2e)}>
+              {fmtPct(r.e2e)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -581,6 +636,8 @@ function SurfaceTable({
 
 const LB_COLS = "minmax(160px,2fr) 80px 110px 1fr 1fr 1fr";
 
+type LbKey = "name" | "bestPos" | "impr" | "pv" | "app" | "e2e";
+
 function Leaderboard({
   rows,
   onPick,
@@ -595,18 +652,74 @@ function Leaderboard({
   }[];
   onPick: (slug: string) => void;
 }) {
+  // Default: most valuable products first - by end-to-end conversion.
+  const [sort, setSort] = useState<{ key: LbKey; dir: SortDir }>({
+    key: "e2e",
+    dir: "desc",
+  });
+
+  const enriched = useMemo(
+    () =>
+      rows.map((r) => ({
+        ...r,
+        pvRate: pct(r.pv, r.impr),
+        appRate: pct(r.app, r.pv),
+        e2e: pct(r.app, r.impr),
+      })),
+    [rows],
+  );
+
+  const max = useMemo(
+    () => ({
+      pv: Math.max(...enriched.map((r) => r.pvRate), 0),
+      app: Math.max(...enriched.map((r) => r.appRate), 0),
+      e2e: Math.max(...enriched.map((r) => r.e2e), 0),
+    }),
+    [enriched],
+  );
+
+  const sorted = useMemo(() => {
+    const s = [...enriched];
+    const val = (r: (typeof enriched)[number]) =>
+      sort.key === "name"
+        ? r.name.toLowerCase()
+        : sort.key === "bestPos"
+          ? r.bestPos
+          : sort.key === "pv"
+            ? r.pvRate
+            : sort.key === "app"
+              ? r.appRate
+              : sort.key === "e2e"
+                ? r.e2e
+                : r.impr;
+    s.sort((a, b) => {
+      const av = val(a);
+      const bv = val(b);
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sort.dir === "asc" ? cmp : -cmp;
+    });
+    return s;
+  }, [enriched, sort]);
+
+  const onSort = (key: LbKey) =>
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === "desc" ? "asc" : "desc" }
+        : { key, dir: key === "name" ? "asc" : "desc" },
+    );
+
   return (
     <div className="hub-table-wrap">
       <div className="hub-table">
         <div className="hub-thead" style={{ gridTemplateColumns: LB_COLS }}>
-          <span className="hub-th">Product</span>
-          <span className="hub-th">Best pos</span>
-          <span className="hub-th">Impressions</span>
-          <span className="hub-th">Product page</span>
-          <span className="hub-th">Into app</span>
-          <span className="hub-th">End-to-end</span>
+          <SortHead label="Product" active={sort.key === "name"} dir={sort.dir} onClick={() => onSort("name")} />
+          <SortHead label="Best pos" active={sort.key === "bestPos"} dir={sort.dir} onClick={() => onSort("bestPos")} />
+          <SortHead label="Impressions" active={sort.key === "impr"} dir={sort.dir} onClick={() => onSort("impr")} />
+          <SortHead label="Product page" active={sort.key === "pv"} dir={sort.dir} onClick={() => onSort("pv")} />
+          <SortHead label="Into app" active={sort.key === "app"} dir={sort.dir} onClick={() => onSort("app")} />
+          <SortHead label="End-to-end" active={sort.key === "e2e"} dir={sort.dir} onClick={() => onSort("e2e")} />
         </div>
-        {rows.map((r) => (
+        {sorted.map((r) => (
           <div
             className="hub-row"
             key={r.slug}
@@ -626,9 +739,15 @@ function Leaderboard({
               {r.bestPos < 99 ? `#${r.bestPos}` : "—"}
             </span>
             <span className="hub-cell aq-cell-text">{fmtNum(r.impr)}</span>
-            <span className="hub-cell aq-cell-text">{fmtPct(pct(r.pv, r.impr))}</span>
-            <span className="hub-cell aq-cell-text">{fmtPct(pct(r.app, r.pv))}</span>
-            <span className="hub-cell aq-cell-text">{fmtPct(pct(r.app, r.impr))}</span>
+            <span className="hub-cell aq-cell-text" style={heat(r.pvRate, max.pv)}>
+              {fmtPct(r.pvRate)}
+            </span>
+            <span className="hub-cell aq-cell-text" style={heat(r.appRate, max.app)}>
+              {fmtPct(r.appRate)}
+            </span>
+            <span className="hub-cell aq-cell-text" style={heat(r.e2e, max.e2e)}>
+              {fmtPct(r.e2e)}
+            </span>
           </div>
         ))}
       </div>
