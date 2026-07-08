@@ -50,6 +50,7 @@ import { TablePager } from "@/components/admin/table-pager";
 import { WalletLabel } from "@/components/admin/wallet-label";
 import { isBotRow, detectSpoofedFingerprints, fingerprintKey } from "@/lib/bots";
 import { FilterHint } from "@/components/admin/filter-hint";
+import { SearchSelect } from "@/components/admin/search-select";
 import "../../_styles/asset-hub.css";
 
 interface VaultEventRow {
@@ -876,6 +877,10 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
 
   const [activity, setActivity] = useState<ActivityFilter>("all");
   const [sourceFilter, setSourceFilter] = useState<SourceGroup>("all");
+  // Product drill-down: "" = all products, otherwise a vault slug. Filters
+  // the stream to activity tied to that product (its product-page visits,
+  // its into-app clicks, its on-chain deposits/withdrawals).
+  const [productFilter, setProductFilter] = useState<string>("");
   // Human-first by default: bots (crawlers, scanners, link unfurlers) are
   // hidden until the operator opts in via the "Show bots" toggle.
   const [showBots, setShowBots] = useState(false);
@@ -1140,6 +1145,17 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         }
         if (sourceFilter !== "all" && channelGroup(it.channel) !== sourceFilter)
           return false;
+        if (productFilter) {
+          // Keep only rows tied to the chosen product: its product-page
+          // visit, or a click/on-chain event carrying its slug.
+          if (it.kind === "visit") {
+            if (it.pagePath.toLowerCase() !== "/" + productFilter) return false;
+          } else if (it.kind === "click" || it.kind === "event") {
+            if ((it.vaultSlug || "").toLowerCase() !== productFilter) return false;
+          } else {
+            return false;
+          }
+        }
         switch (activity) {
           case "visits":
             return it.kind === "visit";
@@ -1153,8 +1169,29 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             return true;
         }
       }),
-    [items, activity, sourceFilter, showBots, engagement, sessionMeta],
+    [items, activity, sourceFilter, showBots, engagement, sessionMeta, productFilter],
   );
+
+  // Products that actually appear in the loaded activity, for the drill-down
+  // dropdown - a click/deposit slug, or a product-page visit whose path maps
+  // to a known product. Deduped and labelled with the product name.
+  const productOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const it of items) {
+      let slug: string | null = null;
+      if (it.kind === "click" || it.kind === "event") slug = it.vaultSlug;
+      else if (it.kind === "visit" && it.pagePath.startsWith("/")) {
+        const s = it.pagePath.slice(1).toLowerCase();
+        if (productNames[s]) slug = s;
+      }
+      if (!slug) continue;
+      const key = slug.toLowerCase();
+      if (!seen.has(key)) seen.set(key, productNames[key] ?? slug);
+    }
+    return [...seen.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [items, productNames]);
 
   // Clusters the operator has expanded to see the individual page views.
   const [expandedClusters, setExpandedClusters] = useState<Set<string>>(
@@ -1395,6 +1432,25 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             webviews), Email (webmail), a named Referral site, or Direct (no
             referrer, a typed URL, or an app share).
           </FilterHint>
+          </span>
+          <span className="lf-filter-grp">
+            <SearchSelect
+              value={productFilter}
+              onChange={(v) => {
+                setProductFilter(v);
+                setPage(0);
+              }}
+              options={productOptions}
+              allLabel="All products"
+              searchPlaceholder="Search products…"
+              ariaLabel="Product filter"
+            />
+            <FilterHint label="About the product filter">
+              Drill the stream down to a single product: its product-page
+              visits, its into-app clicks, and its on-chain deposits and
+              withdrawals. Type to search the {productOptions.length} products
+              with activity.
+            </FilterHint>
           </span>
           <span className="lf-filter-grp">
           <label className="lf-filter" aria-label="Activity filter">

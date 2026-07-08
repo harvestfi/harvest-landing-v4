@@ -1766,3 +1766,79 @@ body:has(.admin-shell) .foot {
 .adm-url a:hover { color: var(--ink); }
 
 .admin-shell .hub-thead { top: 0; }
+
+/* Searchable single-select (components/admin/search-select.tsx). Used in the
+   Live Feed product drill-down. Panel is absolutely positioned so it overlays
+   the filter bar instead of pushing the row down. */
+.adm-combo { position: relative; display: inline-flex; }
+.adm-combo-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  max-width: 240px;
+}
+.adm-combo-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adm-combo-caret { flex: 0 0 auto; opacity: 0.7; }
+.adm-combo-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+.adm-combo-search {
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--bg-1);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  outline: none;
+}
+.adm-combo-search:focus { border-color: var(--line-1); }
+.adm-combo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.adm-combo-option {
+  appearance: none;
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  color: var(--ink-2);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.adm-combo-option.active { background: rgba(127, 127, 127, 0.14); }
+.adm-combo-option.selected { color: var(--ink); font-weight: 600; }
+.adm-combo-empty {
+  padding: 12px 10px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
