@@ -46,6 +46,12 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    label: "Sales",
+    items: [
+      { label: "Funnel", href: "/control-room/sales", icon: "funnel" },
+    ],
+  },
+  {
     label: "Acquisition",
     items: [
       { label: "Traffic", href: "/control-room/acquisition", icon: "users", exact: true },
@@ -225,6 +231,7 @@ const NAV_ICONS = {
       <path d="M18 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z" />
     </>
   ),
+  funnel: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />,
 } as const;
 
 type IconName = keyof typeof NAV_ICONS;
