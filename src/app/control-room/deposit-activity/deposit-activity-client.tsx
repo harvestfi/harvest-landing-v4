@@ -11,6 +11,7 @@ import { supabaseSelectAll } from "@/lib/supabase";
 import { isMutedActor, detectRebalancerActors } from "@/lib/muted-actors";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { TablePager } from "@/components/admin/table-pager";
+import { SearchSelect } from "@/components/admin/search-select";
 import {
   TimeframeSelector,
   resolveDays,
@@ -64,6 +65,8 @@ export default function DepositActivityClient({
   const [network, setNetwork] = useState<string>("all");
   const [type, setType] = useState<TypeFilter>("all");
   const [minUsd, setMinUsd] = useState<number>(0);
+  // Vault drill-down: "" = all vaults, otherwise a lowercased vault_address.
+  const [vaultFilter, setVaultFilter] = useState<string>("");
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -120,9 +123,30 @@ export default function DepositActivityClient({
       (e) =>
         (network === "all" || e.chain === network) &&
         (type === "all" || e.event_type === type) &&
+        (vaultFilter === "" ||
+          (e.vault_address || "").toLowerCase() === vaultFilter) &&
         (e.amount_usd ?? 0) >= minUsd,
     );
-  }, [realEvents, network, type, minUsd]);
+  }, [realEvents, network, type, minUsd, vaultFilter]);
+
+  // Vaults that actually have events, for the drill-down dropdown; labelled
+  // by product name (falling back to slug / short address).
+  const vaultOptions = useMemo(() => {
+    if (!realEvents) return [] as { value: string; label: string }[];
+    const seen = new Map<string, string>();
+    for (const e of realEvents) {
+      const addr = (e.vault_address || "").toLowerCase();
+      if (!addr || seen.has(addr)) continue;
+      const meta = vaultMeta[addr];
+      seen.set(
+        addr,
+        meta?.name ?? e.vault_slug ?? shortenAddress(e.vault_address),
+      );
+    }
+    return [...seen.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [realEvents, vaultMeta]);
 
   const oldestMs = useMemo(() => {
     if (!filtered || filtered.length === 0) return null;
@@ -238,6 +262,16 @@ export default function DepositActivityClient({
               alignItems: "center",
             }}
           >
+            <FilterGroup label="Vault">
+              <SearchSelect
+                value={vaultFilter}
+                onChange={setVaultFilter}
+                options={vaultOptions}
+                allLabel="All vaults"
+                searchPlaceholder="Search vaults…"
+                ariaLabel="Vault filter"
+              />
+            </FilterGroup>
             <FilterGroup label="Network">
               <select
                 aria-label="Network filter"
@@ -308,7 +342,13 @@ export default function DepositActivityClient({
           />
           <EventsFeed
             events={windowed}
-            scope={network === "all" ? "all networks" : network}
+            scope={
+              vaultFilter
+                ? (vaultMeta[vaultFilter]?.name ?? "selected vault")
+                : network === "all"
+                  ? "all networks"
+                  : network
+            }
             vaultMeta={vaultMeta}
           />
         </>
