@@ -18,8 +18,27 @@
 // unreachable or the filter comes back empty, the existing snapshot is kept -
 // the report degrades to "as of <last date>", never to a blank page.
 
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+
+// Optional local cache for offline / proxied dev (Node's fetch ignores
+// HTTPS_PROXY, unlike curl). Set XRP_LLAMA_CACHE=<dir> holding pools.json,
+// protocols.json and chart-<poolId>.json to read those instead of the network.
+// Unset in CI, so CI always fetches live.
+const CACHE_DIR = process.env.XRP_LLAMA_CACHE || null;
+function cacheFor(url) {
+  if (!CACHE_DIR) return null;
+  let name = null;
+  if (url.endsWith("/pools")) name = "pools.json";
+  else if (url.endsWith("/protocols")) name = "protocols.json";
+  else {
+    const m = url.match(/\/chart\/([^/?]+)/);
+    if (m) name = `chart-${m[1]}.json`;
+  }
+  if (!name) return null;
+  const p = join(CACHE_DIR, name);
+  return existsSync(p) ? p : null;
+}
 
 const ROOT = process.cwd();
 const OUT_FILE = join(ROOT, "data", "xrp-yield.json");
@@ -33,6 +52,14 @@ const DETAIL_POOLS = 15;
 const MAX_POOLS = 40;
 
 async function getJson(url, tries = 3) {
+  const cached = cacheFor(url);
+  if (cached) {
+    try {
+      return JSON.parse(readFileSync(cached, "utf-8"));
+    } catch {
+      /* fall through to network */
+    }
+  }
   for (let i = 0; i < tries; i++) {
     try {
       const r = await fetch(url, {
