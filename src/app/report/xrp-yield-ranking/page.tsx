@@ -3,18 +3,20 @@ import Link from "next/link";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import "../../_styles/home.css";
 import "../../_styles/report.css";
 
-// /report/xrp-yield-ranking - a continuously updated data report on where
-// XRP-family assets (XRP, wrapped XRP variants, RLUSD) actually earn onchain
-// yield. Every venue listed is EXTERNAL: none are Harvest products, and the
-// page is deliberately isolated from the product pipeline - it reads only
-// data/xrp-yield.json, written by scripts/fetch-xrp-yield.mjs from the free
-// DeFiLlama API in the hourly data workflow. No Supabase reads, no vaults.json.
+// /report/xrp-yield-ranking - a continuously updated, externally-fed data
+// report on where XRP-family assets (XRP, wrapped XRP variants, RLUSD) earn
+// onchain yield. Every venue is EXTERNAL - none are Harvest products. The page
+// is isolated from the product pipeline: it reads only data/xrp-yield.json,
+// written by scripts/fetch-xrp-yield.mjs from the free DeFiLlama API in the
+// hourly data workflow. No Supabase, no vaults.json.
 //
-// Shape: TL;DR intro (live numbers), the ranking table (network / platform /
-// product / historical rate / discover), then per-venue detail cards covering
-// where each rate comes from and how long the venue has been operating.
+// Layout mirrors the site: the homepage gold hero (with a featured single
+// exposure venue as the hook), then two hub-table-styled rankings split by
+// single- vs dual-exposure, then a human-readable article on where the rates
+// come from.
 
 const PAGE_URL = `${SITE_URL}/report/xrp-yield-ranking`;
 
@@ -44,15 +46,6 @@ interface XrpPool {
 }
 interface XrpYieldData {
   generatedAt: string;
-  source: string;
-  minTvlUsd: number;
-  stats: {
-    venues: number;
-    chains: string[];
-    totalTvlUsd: number;
-    medianApy: number;
-    incentivized: number;
-  };
   pools: XrpPool[];
 }
 
@@ -67,23 +60,18 @@ function loadData(): XrpYieldData | null {
   }
 }
 
-const RANK_ROWS = 20;
-
-// DeFiLlama chain ids -> display names where they differ.
 const CHAIN_LABEL: Record<string, string> = {
   XRPL: "XRP Ledger",
-  Xrpl: "XRP Ledger",
-  Ripple: "XRP Ledger",
+  "XRPL EVM": "XRPL EVM",
 };
 const chainLabel = (c: string) => CHAIN_LABEL[c] ?? c;
 
-const pct = (v: number | null) =>
-  v == null ? "-" : `${v.toFixed(2)}%`;
+const pct = (v: number | null) => (v == null ? "-" : `${v.toFixed(2)}%`);
 const usd = (n: number) =>
   n >= 1_000_000_000
     ? `$${(n / 1_000_000_000).toFixed(2)}B`
     : n >= 1_000_000
-      ? `$${(n / 1_000_000).toFixed(2)}M`
+      ? `$${(n / 1_000_000).toFixed(1)}M`
       : `$${Math.round(n / 1_000)}k`;
 const monthYear = (iso: string | null) => {
   if (!iso) return null;
@@ -93,40 +81,33 @@ const monthYear = (iso: string | null) => {
 };
 const histRate = (p: XrpPool) => p.apyMean30d ?? p.apy;
 
-// Where the base (non-incentive) part of the rate comes from, by protocol
-// category. Falls back to a neutral phrasing for categories we don't map.
+// Two-asset (LP) exposure vs single-sided. DeFiLlama's `exposure` field is the
+// signal; a dash in the symbol (XRP-USDC) is the fallback.
+const isDual = (p: XrpPool) => p.exposure === "multi" || /[-/]/.test(p.symbol);
+const isRlusdOnly = (p: XrpPool) => /^RLUSD$/i.test(p.symbol.trim());
+
 function baseSource(p: XrpPool): string {
   const c = (p.category || "").toLowerCase();
-  if (c.includes("dex")) return "trading fees paid by swappers in the pool";
-  if (c.includes("lending")) return "interest paid by borrowers of the supplied asset";
-  if (c.includes("liquid staking") || c.includes("staking"))
-    return "staking rewards passed through to holders";
-  if (c.includes("restaking")) return "restaking rewards passed through to holders";
-  if (c.includes("yield")) return "an automated strategy compounding underlying market yield";
-  if (c.includes("cdp")) return "stability and borrowing fees paid by vault users";
-  if (c.includes("derivative") || c.includes("perp"))
-    return "a share of trading fees and funding from the venue's markets";
-  if (c.includes("farm")) return "protocol token emissions";
-  return "activity fees distributed by the protocol to suppliers";
+  if (c.includes("dex")) return "trading fees paid by swappers";
+  if (c.includes("lending")) return "interest paid by borrowers";
+  if (c.includes("liquid staking") || c.includes("staking")) return "staking rewards passed through to holders";
+  if (c.includes("restaking")) return "restaking rewards";
+  if (c.includes("yield")) return "an automated strategy compounding market yield";
+  if (c.includes("cdp")) return "stability and borrowing fees";
+  if (c.includes("derivative") || c.includes("perp")) return "a share of trading fees and funding";
+  return "activity fees the protocol distributes to suppliers";
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   const data = loadData();
-  const desc = data
-    ? `${data.stats.venues} venues where XRP, wrapped XRP and RLUSD earn onchain yield, ranked by 30-day average rate across ${data.stats.chains.length} networks. Live data, refreshed hourly from DeFiLlama.`
-    : "Where XRP, wrapped XRP and RLUSD earn onchain yield, ranked by 30-day average rate. Live data from DeFiLlama.";
-  const title = "XRP Yield Ranking: Live Rates Across Networks";
+  const n = data?.pools.length ?? 20;
+  const title = "XRP Yield Ranking: Live Rates Across DeFi";
+  const desc = `${n}+ XRP-denominated yield sources ranked by real 30-day rate history - single-exposure vaults and dual-asset pools - from XRP, wrapped XRP and RLUSD across DeFi. Live data, refreshed hourly.`;
   return {
     title: { absolute: `${title} | ${SITE_NAME}` },
     description: desc,
     alternates: { canonical: PAGE_URL },
-    openGraph: {
-      title,
-      description: desc,
-      url: PAGE_URL,
-      siteName: SITE_NAME,
-      type: "article",
-    },
+    openGraph: { title, description: desc, url: PAGE_URL, siteName: SITE_NAME, type: "article" },
   };
 }
 
@@ -135,350 +116,314 @@ export default function XrpYieldRankingPage() {
 
   if (!data) {
     return (
-      <main className="methodology-page">
-        <div className="meth-header">
-          <Crumbs />
-          <h1 className="meth-title">XRP Yield Ranking</h1>
-          <p className="meth-subtitle">
-            The first data snapshot for this report is still being generated.
-            Check back shortly.
-          </p>
-        </div>
-      </main>
+      <div className="uni-home-test">
+        <Crumbs />
+        <section className="uni-home-hero">
+          <div className="rp-hero-grid">
+            <div className="rp-hero-copy">
+              <h1 className="uni-home-h1">XRP Yield Ranking</h1>
+              <p className="uni-home-sub">
+                The first data snapshot is being generated. Check back shortly.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
     );
   }
 
-  const { stats, pools } = data;
-  const ranked = pools.slice(0, RANK_ROWS);
-  const detailed = pools.filter((p) => p.inception || p.range90d);
-  const rates = ranked.map(histRate).filter((v): v is number => v != null);
-  const lo = Math.min(...rates);
-  const hi = Math.max(...rates);
+  const { pools } = data;
+  const singles = pools.filter((p) => !isDual(p));
+  const duals = pools.filter((p) => isDual(p));
+
+  // Hero hook: the top single-exposure venue on actual XRP (not the RLUSD
+  // stablecoin), falling back to the best single-exposure venue.
+  const featured =
+    singles.find((p) => /XRP/i.test(p.symbol) && !isRlusdOnly(p)) ?? singles[0];
+
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: "UTC",
   });
-  const incShare = Math.round((stats.incentivized / stats.venues) * 100);
+
+  // Venues that anchor the article, pulled live so the prose stays current.
+  const rlusd = pools
+    .filter((p) => /RLUSD/i.test(p.symbol))
+    .sort((a, b) => b.tvlUsd - a.tvlUsd);
+  const xrpSingles = singles.filter((p) => /XRP/i.test(p.symbol) && !isRlusdOnly(p));
+  const topPair = duals[0];
 
   return (
-    <main className="methodology-page">
-      <div className="meth-header">
-        <Crumbs />
-        <h1 className="meth-title">XRP Yield Ranking</h1>
-        <p className="meth-subtitle">
-          Where XRP-family assets actually earn onchain, ranked by real rate
-          history rather than headline promises. External venues, tracked and
-          contextualised by {SITE_NAME}.
-        </p>
-        <p className="meth-version mono dim">
-          Updated {updated} · source: DeFiLlama · refreshed hourly
-        </p>
+    <div className="uni-home-test">
+      <Crumbs />
 
-        <div className="meth-stats" role="list">
-          <div className="meth-stat" role="listitem">
-            <span className="meth-stat-val">{stats.venues}</span>
-            <span className="meth-stat-lbl">venues tracked</span>
+      <section className="uni-home-hero">
+        <div className="rp-hero-grid">
+          <div className="rp-hero-copy">
+            <h1 className="uni-home-h1">XRP Yield Ranking</h1>
+            <p className="uni-home-sub">
+              We&rsquo;ve analysed {pools.length}+ XRP-denominated yield sources
+              across DeFi &mdash; from single-exposure vaults to dual-asset
+              pools. Here&rsquo;s what we found out about where XRP actually
+              earns, and what really pays each rate.
+            </p>
+            <a href="#rankings" className="uni-home-cta-primary">
+              Explore the ranking
+              <span aria-hidden="true">↓</span>
+            </a>
           </div>
-          <div className="meth-stat" role="listitem">
-            <span className="meth-stat-val">{stats.chains.length}</span>
-            <span className="meth-stat-lbl">networks</span>
+
+          {featured && (
+            <div className="rp-hero-card">
+              <span className="rp-hero-card-label">Top single-exposure venue</span>
+              <span className="rp-hero-card-rate">
+                {pct(histRate(featured))} <small>30d avg</small>
+              </span>
+              <span className="rp-hero-card-name">{featured.symbol}</span>
+              <span className="rp-hero-card-meta">
+                {featured.platform} · {chainLabel(featured.chain)}
+              </span>
+              <span className="rp-hero-card-note">
+                {featured.inception ? `tracked since ${monthYear(featured.inception)}` : "external venue"}
+                {" · "}
+                {usd(featured.tvlUsd)} TVL
+              </span>
+              <a
+                className="rp-hero-card-cta"
+                href={featured.platformUrl ?? featured.llamaUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
+                Discover
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <main className="uni-home-shell">
+        <section className="uni-home-section" id="rankings">
+          <header className="uni-home-section-head">
+            <div>
+              <h2 className="uni-home-section-title">Single-exposure XRP yield</h2>
+              <p className="uni-home-section-sub">
+                One-sided positions on XRP, wrapped XRP or RLUSD &mdash; no
+                second asset, no impermanent loss. Ranked by 30-day average rate.
+              </p>
+            </div>
+          </header>
+          <RankTable rows={singles} />
+        </section>
+
+        <section className="uni-home-section">
+          <header className="uni-home-section-head">
+            <div>
+              <h2 className="uni-home-section-title">Dual-exposure pools</h2>
+              <p className="uni-home-section-sub">
+                Two-asset liquidity pools pairing an XRP-family token with
+                another asset. Higher headline rates, but they carry
+                impermanent-loss exposure.
+              </p>
+            </div>
+          </header>
+          <RankTable rows={duals} />
+          <p className="uni-home-section-sub" style={{ marginTop: 10 }}>
+            Rates and TVL from DeFiLlama as of {updated}, refreshed hourly.
+            &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
+          </p>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="where-title">
+          <h2 id="where-title">Where these rates come from</h2>
+          <div className="rp-article">
+            <p>
+              XRP has no native staking, so every rate on this page comes from
+              putting an XRP-family asset to work in a market. What pays it, and
+              how durable it is, splits cleanly into three stories.
+            </p>
+
+            {rlusd.length > 0 && (
+              <>
+                <h3>RLUSD is where the real depth is</h3>
+                <p>
+                  The largest, steadiest pools aren&rsquo;t XRP at all &mdash;
+                  they&rsquo;re Ripple&rsquo;s dollar stablecoin, RLUSD. The
+                  biggest here is{" "}
+                  <strong>
+                    {rlusd[0].symbol} on {rlusd[0].platform}
+                  </strong>{" "}
+                  ({chainLabel(rlusd[0].chain)}), holding {usd(rlusd[0].tvlUsd)}{" "}
+                  at {pct(histRate(rlusd[0]))}
+                  {rlusd[1] ? (
+                    <>
+                      , with {rlusd[1].symbol} on {rlusd[1].platform} close
+                      behind at {pct(histRate(rlusd[1]))}
+                    </>
+                  ) : null}
+                  . These are dollar-denominated and mostly incentive-driven, so
+                  read them as earning on <em>dollars inside the XRP ecosystem</em>{" "}
+                  rather than yield on XRP itself.
+                </p>
+              </>
+            )}
+
+            {xrpSingles.length > 0 && (
+              <>
+                <h3>Single-sided XRP: wrapped and staked</h3>
+                <p>
+                  For exposure to XRP itself without taking on a second asset,
+                  the options are wrapped or staked forms. The best-paying right
+                  now is{" "}
+                  <strong>
+                    {xrpSingles[0].symbol} on {xrpSingles[0].platform}
+                  </strong>{" "}
+                  at {pct(histRate(xrpSingles[0]))}, where the rate is{" "}
+                  {baseSource(xrpSingles[0])}. Rates here are modest next to the
+                  liquidity pools, but the position is one-sided: no pair to
+                  diverge, no impermanent loss.
+                </p>
+              </>
+            )}
+
+            {topPair && (
+              <>
+                <h3>Liquidity pairs pay more, and swing more</h3>
+                <p>
+                  The double-digit headline rates all come from two-asset pools.{" "}
+                  <strong>
+                    {topPair.symbol} on {topPair.platform}
+                  </strong>{" "}
+                  tops the list at {pct(histRate(topPair))}
+                  {topPair.range90d
+                    ? `, but over the last 90 days that rate ranged from ${pct(topPair.range90d.min)} to ${pct(topPair.range90d.max)}`
+                    : ""}
+                  {topPair.incentivized
+                    ? " — most of it incentive emissions rather than organic fees, which fade when the program ends"
+                    : ""}
+                  . The higher number is real, but so is the impermanent-loss
+                  exposure and the volatility: these rates reward active
+                  management, not set-and-forget.
+                </p>
+              </>
+            )}
+
+            <div className="rp-callout">
+              Every venue on this page is an external protocol tracked for
+              research. None are {SITE_NAME} products, this page is informational
+              only, and past rate history is no assurance of what a venue pays
+              next.
+            </div>
           </div>
-          <div className="meth-stat" role="listitem">
-            <span className="meth-stat-val">{pct(stats.medianApy)}</span>
-            <span className="meth-stat-lbl">median 30d rate</span>
-          </div>
-          <div className="meth-stat" role="listitem">
-            <span className="meth-stat-val">{usd(stats.totalTvlUsd)}</span>
-            <span className="meth-stat-lbl">combined TVL</span>
-          </div>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="method-title">
+          <h2 id="method-title">Method &amp; scope</h2>
+          <dl className="rp-method">
+            <dt>Inclusion</dt>
+            <dd>
+              Every pool DeFiLlama tracks whose symbol contains an XRP-family
+              asset (XRP, wrapped variants such as FXRP/WXRP/cbXRP, or RLUSD),
+              holding at least $25k TVL. Flagged outliers are excluded.
+            </dd>
+            <dt>Ranking</dt>
+            <dd>
+              By 30-day average rate, so short-lived emission spikes don&rsquo;t
+              decide the order. Today&rsquo;s spot rate is shown alongside. An
+              <span className="rp-flag">incentives</span> tag marks venues where
+              more than half the rate is emissions.
+            </dd>
+            <dt>Freshness</dt>
+            <dd>Refreshed hourly from the free DeFiLlama API; this page reflects the {updated} snapshot.</dd>
+            <dt>What this is not</dt>
+            <dd>
+              Not an endorsement and not financial advice. {SITE_NAME} indexes
+              DeFi yield data; the venues above are external. Our own coverage
+              is{" "}
+              <Link href="/usdc">USDC</Link>, <Link href="/eth">ETH</Link> and{" "}
+              <Link href="/btc">BTC</Link> strategies, indexed with the same
+              methodology used on every product page (see{" "}
+              <Link href="/methodology">Methodology</Link>).
+            </dd>
+          </dl>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+const RANK_COLS = "44px minmax(120px,1.5fr) minmax(96px,1fr) 96px 1fr 0.8fr 100px";
+
+function RankTable({ rows }: { rows: XrpPool[] }) {
+  if (rows.length === 0) {
+    return <div className="hub-empty">No venues in this category right now.</div>;
+  }
+  return (
+    <div className="hub-table-wrap rp-rank" data-nosnippet="">
+      <div className="hub-table" role="table" aria-label="XRP yield ranking">
+        <div className="hub-thead" role="row" style={{ gridTemplateColumns: RANK_COLS }}>
+          <span className="hub-th hub-th-rank">#</span>
+          <span className="hub-th">Product</span>
+          <span className="hub-th">Platform</span>
+          <span className="hub-th hub-th-center">Network</span>
+          <span className="hub-th hub-th-num">30d rate</span>
+          <span className="hub-th hub-th-num">TVL</span>
+          <span className="hub-th hub-th-right" />
+        </div>
+        <div className="hub-tbody" role="rowgroup">
+          {rows.map((p, i) => (
+            <div className="hub-row" role="row" key={p.id} style={{ gridTemplateColumns: RANK_COLS }}>
+              <span className="hub-cell hub-rank">{i + 1}</span>
+              <span className="hub-cell hub-vault">
+                <span className="hub-vault-name" style={{ display: "block" }}>
+                  {p.symbol}
+                  {p.incentivized && (
+                    <span className="rp-flag" title="Over half the rate is incentive emissions">
+                      incentives
+                    </span>
+                  )}
+                  {p.poolMeta && <span className="rp-vault-sub">{p.poolMeta}</span>}
+                </span>
+              </span>
+              <span className="hub-cell hub-strategy">{p.platform}</span>
+              <span className="hub-cell hub-strategy hub-th-center" style={{ textAlign: "center" }}>
+                {chainLabel(p.chain)}
+              </span>
+              <span className="hub-cell hub-num hub-apy">
+                {pct(histRate(p))}
+                <span className="rp-rate-sub">
+                  today {pct(p.apy)}
+                  {p.range90d ? ` · 90d ${pct(p.range90d.min)}–${pct(p.range90d.max)}` : ""}
+                </span>
+              </span>
+              <span className="hub-cell hub-num">{usd(p.tvlUsd)}</span>
+              <span className="hub-cell" style={{ textAlign: "right" }}>
+                <a
+                  className="rp-discover"
+                  href={p.platformUrl ?? p.llamaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                >
+                  Discover
+                </a>
+              </span>
+            </div>
+          ))}
         </div>
       </div>
-
-      <div className="meth-layout">
-        <aside className="meth-toc" aria-label="Page sections">
-          <p className="meth-toc-label mono">On this page</p>
-          <ul className="meth-toc-list">
-            {[
-              { id: "tldr", label: "TL;DR" },
-              { id: "ranking", label: "The ranking" },
-              { id: "venues", label: "Where each rate comes from" },
-              { id: "method", label: "Method & scope" },
-            ].map((s) => (
-              <li key={s.id}>
-                <a href={`#${s.id}`} className="meth-toc-link">
-                  {s.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </aside>
-
-        <article className="meth-body">
-          <section className="meth-section" id="tldr">
-            <h2 className="meth-h2">TL;DR</h2>
-            <p>
-              XRP has no native staking, so every real XRP yield comes from
-              putting the asset to work in a market: providing liquidity on a
-              DEX, supplying a lending market, or holding a wrapped form of XRP
-              (or Ripple&rsquo;s RLUSD stablecoin) inside a DeFi protocol. As
-              of {updated}, DeFiLlama tracks{" "}
-              <strong>{stats.venues} such venues</strong> holding at least{" "}
-              {usd(data.minTvlUsd)} each, across{" "}
-              <strong>
-                {stats.chains.length} networks (
-                {stats.chains.map(chainLabel).join(", ")})
-              </strong>
-              . Thirty-day average rates in the top {ranked.length} run from{" "}
-              <strong>
-                {pct(lo)} to {pct(hi)}
-              </strong>
-              , with a median of <strong>{pct(stats.medianApy)}</strong> across
-              all tracked venues. A caution that shapes the whole list:{" "}
-              <strong>
-                {stats.incentivized} of {stats.venues} venues ({incShare}%)
-              </strong>{" "}
-              draw most of their headline rate from incentive emissions rather
-              than organic fees or interest, and those rates tend to fall once
-              the emissions program ends. Venues where more than half the rate
-              is emissions are flagged in the table.
-            </p>
-            <div className="meth-callout">
-              Every venue on this page is an external protocol tracked for
-              research purposes. None are {SITE_NAME} products, this page is
-              informational only, and rate history is no assurance of what a
-              venue pays next.
-            </div>
-          </section>
-
-          <section className="meth-section" id="ranking">
-            <h2 className="meth-h2">The ranking</h2>
-            <p>
-              Ranked by <strong>30-day average rate</strong> (not the spot rate,
-              which a one-day emissions spike can distort). Venues under{" "}
-              {usd(data.minTvlUsd)} TVL and DeFiLlama-flagged outliers are
-              excluded.
-            </p>
-            <div className="rp-table-wrap">
-              <table className="rp-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Product</th>
-                    <th>Platform</th>
-                    <th>Network</th>
-                    <th>30d avg rate</th>
-                    <th>Today</th>
-                    <th>TVL</th>
-                    <th aria-label="Link" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {ranked.map((p, i) => (
-                    <tr key={p.id}>
-                      <td className="rp-rank">{i + 1}</td>
-                      <td className="rp-product">
-                        {p.symbol}
-                        {p.incentivized && (
-                          <span
-                            className="rp-flag"
-                            title="More than half of the current rate comes from incentive emissions"
-                          >
-                            incentives
-                          </span>
-                        )}
-                        {p.poolMeta && (
-                          <span className="rp-meta">{p.poolMeta}</span>
-                        )}
-                      </td>
-                      <td>{p.platform}</td>
-                      <td>{chainLabel(p.chain)}</td>
-                      <td className="rp-rate">
-                        {pct(histRate(p))}
-                        {p.range90d && (
-                          <span className="rp-rate-sub">
-                            90d: {pct(p.range90d.min)}&ndash;
-                            {pct(p.range90d.max)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="rp-rate">{pct(p.apy)}</td>
-                      <td>{usd(p.tvlUsd)}</td>
-                      <td>
-                        <a
-                          className="rp-discover"
-                          href={p.platformUrl ?? p.llamaUrl}
-                          target="_blank"
-                          rel="noopener noreferrer nofollow"
-                        >
-                          Discover
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="meth-version mono dim" style={{ marginTop: 6 }}>
-              Rates and TVL from DeFiLlama as of {updated}. &ldquo;Discover&rdquo;
-              opens the platform&rsquo;s own site (or its DeFiLlama pool page).
-            </p>
-          </section>
-
-          <section className="meth-section" id="venues">
-            <h2 className="meth-h2">Where each rate comes from</h2>
-            <p>
-              The part of this page a headline number can&rsquo;t give you: what
-              actually pays each rate, how much of it is emissions, and how long
-              the venue has been running.
-            </p>
-            {detailed.map((p) => {
-              const rank = pools.indexOf(p) + 1;
-              const since = monthYear(p.inception);
-              return (
-                <div className="rp-card" key={p.id} id={`venue-${rank}`}>
-                  <h3>
-                    {rank}. {p.symbol} on {p.platform}
-                  </h3>
-                  <p className="rp-card-sub">
-                    {chainLabel(p.chain)}
-                    {p.category ? ` · ${p.category}` : ""}
-                    {p.poolMeta ? ` · ${p.poolMeta}` : ""}
-                  </p>
-                  <ul className="rp-facts">
-                    <li>
-                      30d avg <strong>{pct(histRate(p))}</strong>
-                    </li>
-                    <li>
-                      today <strong>{pct(p.apy)}</strong>
-                    </li>
-                    <li>
-                      TVL <strong>{usd(p.tvlUsd)}</strong>
-                    </li>
-                    {since && (
-                      <li>
-                        tracked since <strong>{since}</strong>
-                        {p.observations
-                          ? ` (${p.observations.toLocaleString("en-US")} daily observations)`
-                          : ""}
-                      </li>
-                    )}
-                  </ul>
-                  <p>
-                    <strong>Yield source.</strong>{" "}
-                    {p.apyBase != null && p.apyBase > 0 ? (
-                      <>
-                        The base rate ({pct(p.apyBase)}) comes from{" "}
-                        {baseSource(p)}.
-                      </>
-                    ) : (
-                      <>
-                        This venue currently pays no organic base rate; the
-                        figure is driven by incentives.
-                      </>
-                    )}{" "}
-                    {p.apyReward != null && p.apyReward > 0 && (
-                      <>
-                        On top of that, {pct(p.apyReward)} comes from incentive
-                        emissions,{" "}
-                        {Math.round(p.rewardShare * 100)}% of the current
-                        headline rate.{" "}
-                        {p.incentivized &&
-                          "Emissions programs are finite: treat this portion as temporary rather than structural."}
-                      </>
-                    )}
-                  </p>
-                  {p.range90d && (
-                    <p>
-                      <strong>Rate behaviour.</strong> Over the trailing 90
-                      tracked days the rate moved between {pct(p.range90d.min)}{" "}
-                      and {pct(p.range90d.max)}
-                      {p.range90d.max > 0 &&
-                      p.range90d.max >= p.range90d.min * 3
-                        ? ", a wide band that usually signals emissions-driven or volume-sensitive yield."
-                        : ", a comparatively steady band."}
-                    </p>
-                  )}
-                  {(p.exposure === "multi" || p.ilRisk === "yes") && (
-                    <p>
-                      <strong>Pair exposure.</strong>{" "}This is a two-asset
-                      liquidity pool, so the position carries impermanent-loss
-                      exposure: if the pair&rsquo;s prices diverge, the pool
-                      position can be worth less than simply holding the assets.
-                    </p>
-                  )}
-                  {p.stablecoin && p.symbol.toUpperCase().includes("RLUSD") && (
-                    <p>
-                      <strong>RLUSD note.</strong>{" "}RLUSD is Ripple&rsquo;s
-                      dollar stablecoin, so this venue is dollar-denominated
-                      yield inside the XRP ecosystem rather than yield paid on
-                      XRP itself.
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </section>
-
-          <section className="meth-section" id="method">
-            <h2 className="meth-h2">Method &amp; scope</h2>
-            <dl className="meth-defs">
-              <dt>Inclusion</dt>
-              <dd>
-                Every pool DeFiLlama tracks whose symbol contains an XRP-family
-                asset (XRP, wrapped variants such as FXRP/WXRP/cbXRP, or RLUSD),
-                with at least {usd(data.minTvlUsd)} TVL. DeFiLlama-flagged
-                outliers are excluded.
-              </dd>
-              <dt>Ranking</dt>
-              <dd>
-                By 30-day average rate, so short-lived emission spikes
-                don&rsquo;t decide the order. The spot rate is shown alongside
-                for comparison.
-              </dd>
-              <dt>Freshness</dt>
-              <dd>
-                The snapshot refreshes hourly from the free DeFiLlama API; this
-                page was generated from the {updated} snapshot.
-              </dd>
-              <dt>What this page is not</dt>
-              <dd>
-                Not an endorsement, not a listing fee arrangement, and not
-                financial advice. {SITE_NAME} indexes DeFi yield data; the
-                venues above are external protocols we track, not products we
-                operate. Our own coverage focuses on{" "}
-                <Link href="/usdc" className="meth-link">
-                  USDC
-                </Link>
-                ,{" "}
-                <Link href="/eth" className="meth-link">
-                  ETH
-                </Link>{" "}
-                and{" "}
-                <Link href="/btc" className="meth-link">
-                  BTC
-                </Link>{" "}
-                strategies, indexed with the same methodology used on every
-                product page (see{" "}
-                <Link href="/methodology" className="meth-link">
-                  Methodology
-                </Link>
-                ).
-              </dd>
-            </dl>
-          </section>
-        </article>
-      </div>
-    </main>
+    </div>
   );
 }
 
 function Crumbs() {
   return (
-    <nav className="meth-crumbs mono dim" aria-label="Breadcrumb">
-      <Link href="/">{SITE_NAME}</Link> <span className="sep">/</span>{" "}
-      <span>Report</span> <span className="sep">/</span>{" "}
+    <nav className="rp-crumbs" aria-label="Breadcrumb">
+      <Link href="/">{SITE_NAME}</Link>
+      <span className="sep">/</span>
+      <span>Report</span>
+      <span className="sep">/</span>
       <span>XRP Yield Ranking</span>
     </nav>
   );
