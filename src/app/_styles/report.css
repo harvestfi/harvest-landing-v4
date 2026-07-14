@@ -1,0 +1,136 @@
+/* Styles for /report/* pages. The page reuses the methodology article shell
+   (.methodology-page / .meth-*); this file adds only the report-specific
+   pieces: the ranking table and the per-venue detail cards. */
+
+.rp-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  margin: 18px 0 8px;
+}
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 720px;
+}
+.rp-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+.rp-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line-2);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.rp-table tr:last-child td { border-bottom: none; }
+.rp-rank {
+  font-family: var(--mono);
+  color: var(--ink-3);
+  width: 34px;
+}
+.rp-product {
+  font-weight: 600;
+  color: var(--ink);
+}
+.rp-product .rp-meta {
+  display: block;
+  font-weight: 400;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  margin-top: 1px;
+}
+.rp-rate {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--ink);
+}
+.rp-rate-sub {
+  display: block;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.rp-flag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1.5px 6px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  vertical-align: middle;
+}
+.rp-discover {
+  display: inline-block;
+  padding: 6px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--line-1);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.rp-discover:hover {
+  background: #ffb936;
+  border-color: #ffb936;
+  color: #191717;
+}
+
+/* Per-venue detail cards */
+.rp-card {
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 0 0 14px;
+}
+.rp-card h3 {
+  margin: 0 0 4px;
+  font-size: 15.5px;
+  letter-spacing: -0.01em;
+}
+.rp-card-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  margin: 0 0 10px;
+}
+.rp-card p {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.rp-card p:last-child { margin-bottom: 0; }
+.rp-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.rp-facts li {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.rp-facts li strong {
+  color: var(--ink);
+  font-weight: 600;
+}

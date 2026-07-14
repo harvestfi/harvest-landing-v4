@@ -39,6 +39,10 @@ jobs:
         run: node scripts/fetch-holder-growth.mjs
         continue-on-error: true
 
+      - name: Fetch XRP yield report data (DeFiLlama)
+        run: node scripts/fetch-xrp-yield.mjs
+        continue-on-error: true
+
       - name: Commit and push if changed
         id: commit
         run: |
@@ -48,6 +52,7 @@ jobs:
           if [ -f data/studio-vaults.json ]; then git add data/studio-vaults.json; fi
           if [ -f data/holders.json ]; then git add data/holders.json; fi
           if [ -f data/holder-growth.json ]; then git add data/holder-growth.json; fi
+          if [ -f data/xrp-yield.json ]; then git add data/xrp-yield.json; fi
           if [ -f data/hidden.json ]; then git add data/hidden.json; fi
           if git diff --cached --quiet; then
             echo "No data changes detected."
