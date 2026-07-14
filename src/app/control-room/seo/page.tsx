@@ -94,6 +94,16 @@ const METRIC_OPTIONS: ReadonlyArray<{ value: Metric; label: string }> = [
 ];
 
 const SEO_ROWS_PER_PAGE = 25;
+
+// On-chain events (deposit/withdraw) are pinned to the wallet's acquisition
+// session. Only attribute an event to that session when it lands within this
+// window of the session's web activity, so a single visit doesn't absorb the
+// wallet's entire lifetime of transactions (and isn't stamped "Deposited" off a
+// deposit made long before/after the visit). New/Existing status still consults
+// the wallet's full history - only the per-session action/stage attribution is
+// windowed.
+const EVENT_ATTRIBUTION_WINDOW_MS = 72 * 60 * 60 * 1000; // 72h after last web touch
+const EVENT_ATTRIBUTION_GRACE_MS = 10 * 60 * 1000; // 10m before first web touch (tx-time skew)
 // Same column rhythm as the Live Feed stream so the two read alike
 // (Time, Source, Country, Stage, Activity, Device, Wallet, Tx).
 const SEO_FEED_COLS =
@@ -532,8 +542,16 @@ export default function SeoSummaryPage() {
       }
     }
 
+    // Snapshot each session's WEB-only latest activity before events fold in,
+    // so the attribution window below is measured against real browsing rather
+    // than a latestMs that the events themselves would inflate.
+    const webLatestMs = new Map<string, number>();
+    for (const [sid, av] of acc) webLatestMs.set(sid, av.latestMs);
+
     // Deposits / withdrawals attributed to a session, deduped by tx+vault and
-    // with autopilot/allocator reallocations excluded.
+    // with autopilot/allocator reallocations excluded. Only events inside the
+    // session's attribution window are attached, so a session reflects its own
+    // timeframe, not the wallet's whole on-chain history.
     const rebalancers = detectRebalancerActors(events!);
     const seen = new Set<string>();
     for (const e of events!) {
@@ -549,6 +567,12 @@ export default function SeoSummaryPage() {
       seen.add(key);
       const ms = new Date(e.block_timestamp).getTime();
       if (!Number.isFinite(ms)) continue;
+      // Windowed attribution: skip events outside this session's web timeframe
+      // so a visit doesn't inherit the wallet's entire transaction history.
+      const webStart = Math.min(a.firstVisitMs, a.firstClickMs);
+      const wStart = webStart - EVENT_ATTRIBUTION_GRACE_MS;
+      const wEnd = (webLatestMs.get(sid) ?? webStart) + EVENT_ATTRIBUTION_WINDOW_MS;
+      if (ms < wStart || ms > wEnd) continue;
       if (ms > a.latestMs) a.latestMs = ms;
       if (e.event_type === "deposit" && ms < a.firstDepositMs)
         a.firstDepositMs = ms;
