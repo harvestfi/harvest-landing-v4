@@ -717,6 +717,12 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   // page view. device + domain ride along so a click/event row can show
   // the device and referring domain of the session that drove it (only
   // visits carry a referrer, so domain is null for click-only sessions).
+  // First touch per session: the earliest visit/click, carrying the session's
+  // ACQUISITION channel. This channel is the single source of truth for every
+  // row of the session, so a Bing session's later internal-nav pages don't get
+  // re-classified as Direct per-row (which was inflating Direct and diverging
+  // from the SEO Summary, which attributes at the session first-touch). The
+  // channel is referrer-aware (classifyVisit), matching funnel-summary.tsx.
   const sessionFirstTouch = useMemo(() => {
     const m = new Map<
       string,
@@ -725,6 +731,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         country: string | null;
         device: string | null;
         domain: string | null;
+        channel: string;
         t: number;
       }
     >();
@@ -734,24 +741,32 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       country: string | null,
       device: string | null,
       domain: string | null,
+      channel: string,
       iso: string,
     ) => {
       if (!sid) return;
       const t = new Date(iso).getTime();
       const prev = m.get(sid);
-      if (!prev || t < prev.t) m.set(sid, { source, country, device, domain, t });
+      if (!prev || t < prev.t)
+        m.set(sid, { source, country, device, domain, channel, t });
     };
-    for (const v of visits ?? [])
-      consider(
-        v.session_id,
-        v.source,
-        v.country,
-        v.device_type,
-        sourceDomain(v.referrer),
-        v.created_at,
-      );
+    for (const v of visits ?? []) {
+      const dom = sourceDomain(v.referrer);
+      const base = classifyVisit(v.source, v.referrer);
+      // Referral sources show the referrer's brand, mirroring the row logic.
+      const ch = channelTone(base) === "referral" && dom ? brandFromSource(dom) : base;
+      consider(v.session_id, v.source, v.country, v.device_type, dom, ch, v.created_at);
+    }
     for (const c of clicks ?? [])
-      consider(c.session_id, c.source, c.country, c.device_type, null, c.created_at);
+      consider(
+        c.session_id,
+        c.source,
+        c.country,
+        c.device_type,
+        null,
+        appChannel(c.source),
+        c.created_at,
+      );
     return m;
   }, [visits, clicks]);
 
@@ -1030,15 +1045,23 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         // whose stored source was a subdomain.
         const dom = sourceDomain(v.referrer);
         const baseCh = classifyVisit(v.source, v.referrer);
+        // Attribute the row to the SESSION's first-touch channel so every page
+        // of a session (entry + internal navigation) reads one acquisition
+        // source, matching the SEO Summary. Falls back to the per-row channel
+        // for anonymous visits with no session id.
+        const sessCh = v.session_id
+          ? sessionFirstTouch.get(v.session_id)?.channel
+          : null;
         return {
           kind: "visit" as const,
           bot: isBotRow(v) || poisonedFp.has(fingerprintKey(v)),
           id: `v-${v.session_id}-${v.created_at}-${i}`,
           time: v.created_at,
           channel:
-            channelTone(baseCh) === "referral" && dom
+            sessCh ??
+            (channelTone(baseCh) === "referral" && dom
               ? brandFromSource(dom)
-              : baseCh,
+              : baseCh),
           country: v.country,
           device: v.device_type,
           srcDomain: dom,
@@ -1055,19 +1078,21 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         // Clicks carry no referrer; fall back to the session's first visit
         // domain, and prefer its brand for an unrecognised referral so the
         // pill shows the root domain, not a subdomain.
-        const cDom = c.session_id
-          ? sessionFirstTouch.get(c.session_id)?.domain ?? null
-          : null;
+        const ftc = c.session_id ? sessionFirstTouch.get(c.session_id) : undefined;
+        const cDom = ftc?.domain ?? null;
         const cBaseCh = appChannel(c.source);
         return {
           kind: "click" as const,
           bot: isBotRow({ is_bot: c.is_bot, user_agent: c.user_agent, page_path: c.source_page }),
           id: `c-${c.session_id}-${c.created_at}-${i}`,
           time: c.created_at,
+          // Same session-first-touch attribution as visits, so a click inside a
+          // Bing session reads Bing, not Direct.
           channel:
-            channelTone(cBaseCh) === "referral" && cDom
+            ftc?.channel ??
+            (channelTone(cBaseCh) === "referral" && cDom
               ? brandFromSource(cDom)
-              : cBaseCh,
+              : cBaseCh),
           country: c.country,
           device: c.device_type,
           srcDomain: cDom,
