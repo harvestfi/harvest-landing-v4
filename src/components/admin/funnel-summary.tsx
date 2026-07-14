@@ -282,10 +282,13 @@ function buildSampleSeoSessions(
   return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
 }
 
-// Sessions within this gap that also share a device fingerprint + country +
-// primary engine are folded into one visitor - covering concurrent first-touch
-// tabs (which each mint a separate session id) and quick back-to-back searches.
-const VISITOR_MERGE_GAP_MS = 30 * 60 * 1000;
+// Hard cap on how far a coalesced visitor can span. Sessions sharing a device
+// fingerprint + country + primary engine merge only when their WEB first-touch
+// times (firstVisitMs) fall inside this window of each other - so a merged
+// visitor is at most ~1h wide. Keyed on firstVisitMs, never latestMs, because a
+// session's latestMs is dragged months out by the wallet's on-chain events
+// pinned to it; using it would chain the merge across the whole relationship.
+const VISITOR_MERGE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // A fingerprint is only trustworthy for coalescing when it carries a real
 // user-agent (the leading field in fingerprintKey); a blank one would over
@@ -379,24 +382,22 @@ function coalesceVisitors(sessions: SeoSession[]): SeoSession[] {
     }
     grp.sort((a, b) => a.firstVisitMs - b.firstVisitMs);
     let bucket: SeoSession[] = [];
-    let windowLatest = -Infinity;
+    let bucketStart = 0; // firstVisitMs of the bucket's earliest session
     const flush = () => {
       if (bucket.length === 1) out.push(bucket[0]);
       else if (bucket.length > 1) out.push(mergeVisitorGroup(bucket));
       bucket = [];
-      windowLatest = -Infinity;
     };
     for (const s of grp) {
-      if (
-        bucket.length === 0 ||
-        s.firstVisitMs - windowLatest <= VISITOR_MERGE_GAP_MS
-      ) {
+      if (bucket.length === 0) {
+        bucket = [s];
+        bucketStart = s.firstVisitMs;
+      } else if (s.firstVisitMs - bucketStart <= VISITOR_MERGE_WINDOW_MS) {
         bucket.push(s);
-        windowLatest = Math.max(windowLatest, s.latestMs);
       } else {
         flush();
         bucket = [s];
-        windowLatest = s.latestMs;
+        bucketStart = s.firstVisitMs;
       }
     }
     flush();
