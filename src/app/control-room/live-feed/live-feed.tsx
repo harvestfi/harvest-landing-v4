@@ -185,11 +185,14 @@ const ACTIVITY_OPTIONS: ReadonlyArray<{ value: ActivityFilter; label: string }> 
   { value: "withdrawals", label: "Withdrawals" },
 ];
 
-// Engagement filter: off, or isolate sessions that explored more than one
-// page - either from any landing, or only deep (non-root) first touches.
-type Engagement = "all" | "engaged" | "deep";
+// Engagement / landing filter. "engaged"/"deep" isolate multi-page sessions;
+// "subpage" isolates every session whose FIRST touch was a non-root page,
+// regardless of how many pages it saw - the "a sub-page surfaced as a new
+// access point" signal (e.g. Direct landing straight on a product page).
+type Engagement = "all" | "engaged" | "deep" | "subpage";
 const ENGAGEMENT_OPTIONS: ReadonlyArray<{ value: Engagement; label: string }> = [
   { value: "all", label: "All sessions" },
+  { value: "subpage", label: "Sub-page first touch" },
   { value: "engaged", label: "Engaged (any landing)" },
   { value: "deep", label: "Engaged (deep landing)" },
 ];
@@ -1140,8 +1143,14 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
         if (!showBots && it.bot) return false;
         if (engagement !== "all") {
           const s = it.hsid ? sessionMeta.get(it.hsid) : undefined;
-          if (!s || s.pages.size <= 1) return false;
-          if (engagement === "deep" && s.entryPage === "/") return false;
+          if (!s) return false;
+          if (engagement === "subpage") {
+            // Non-root first touch, any page count (single-page included).
+            if (s.entryPage === "/") return false;
+          } else {
+            if (s.pages.size <= 1) return false;
+            if (engagement === "deep" && s.entryPage === "/") return false;
+          }
         }
         if (sourceFilter !== "all" && channelGroup(it.channel) !== sourceFilter)
           return false;
@@ -1508,12 +1517,13 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               ))}
             </select>
             <FilterHint label="About the engagement filter">
-              Isolate engaged visitors - sessions that explored more than one
-              page - across any source. "Engaged (any landing)" counts every
+              "Sub-page first touch" isolates every session whose first page was
+              a non-root page (a product or hub), single-page visits included -
+              pair it with the Direct source to catch a product page surfacing
+              as a new access point. "Engaged (any landing)" counts every
               multi-page session, homepage or not. "Engaged (deep landing)"
-              keeps only those whose first touch was a content page rather than
-              the homepage, the highest-intent cohort. Single-page bounces are
-              excluded once either mode is on.
+              keeps only multi-page sessions whose first touch was a content
+              page rather than the homepage, the highest-intent cohort.
             </FilterHint>
           </span>
         </div>

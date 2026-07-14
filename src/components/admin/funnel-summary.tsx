@@ -710,12 +710,12 @@ export function FunnelSummary({
   // Chart points + table list, both for the selected metric and window. Each
   // point carries its session's primary (first-touch) engine so the chart can
   // optionally break the daily bars down by search / AI engine.
-  const points: { ts: number; engine: string }[] = [];
+  const points: { ts: number; engine: string; landing: string }[] = [];
   const visibleSessions: SeoSession[] = [];
   for (const s of enginedSessions) {
     const ts = stageOf(s, metric);
     if (ts === null || !inWindow(ts)) continue;
-    points.push({ ts, engine: s.seoName });
+    points.push({ ts, engine: s.seoName, landing: s.entryPage });
     visibleSessions.push(s);
   }
   const metricLabel = METRIC_OPTIONS.find((o) => o.value === metric)!.label;
@@ -868,6 +868,10 @@ export function FunnelSummary({
               setTimeframe(tf);
               setPage(0);
             }}
+            // When "Isolate direct" is on we're looking at non-root first-touch
+            // SEO sessions, so the natural breakdown is by the landing sub-page
+            // (which pages pull SEO traffic), not by engine.
+            dimension={deepLandingOnly ? "landing" : "engine"}
           />
 
           {(() => {
@@ -961,6 +965,21 @@ const ENGINE_ORDER = [
 ];
 
 type ChartMode = "all" | "breakdown";
+type ChartDimension = "engine" | "landing";
+
+// Landing-page breakdowns can have a long tail of rarely-hit sub-pages; cap
+// the chart/legend to the busiest TOP_LANDINGS and fold the rest into "Other"
+// so the stack and legend stay readable. Engines are few, so they're never
+// capped.
+const TOP_LANDINGS = 12;
+const OTHER = "Other";
+
+// Legend/tooltip label: strip the leading slash off landing paths so they read
+// compactly; engines and "Other" pass through unchanged.
+function catLabel(cat: string, dimension: ChartDimension): string {
+  if (dimension === "landing" && cat !== OTHER) return cat.replace(/^\//, "");
+  return cat;
+}
 
 function ChartSection({
   points,
@@ -968,34 +987,73 @@ function ChartSection({
   metricLabel,
   timeframe,
   onTimeframeChange,
+  dimension = "engine",
 }: {
-  points: { ts: number; engine: string }[];
+  points: { ts: number; engine: string; landing: string }[];
   days: number;
   metricLabel: string;
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
+  dimension?: ChartDimension;
 }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [mode, setMode] = useState<ChartMode>("all");
-  // Engines toggled off via the legend (breakdown mode). Hidden engines drop
-  // out of the bars, the totals and the tooltip, so clicking every engine but
-  // one isolates that engine's trend over time.
+  // Categories toggled off via the legend (breakdown mode). Hidden ones drop
+  // out of the bars, the totals and the tooltip, so clicking every category but
+  // one isolates that one's trend over time.
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
 
-  // Engines present, master-ordered first then any extras, each with a stable
-  // palette color. Drives both the stacked segments and the legend.
+  // Reset legend isolation when the breakdown dimension flips, so hidden engine
+  // names don't linger as we switch to landing pages. Switching to the landing
+  // dimension (Isolate direct on) also auto-engages Breakdown, so the per
+  // sub-page bars show without a second click.
+  useEffect(() => {
+    setHidden(new Set());
+    if (dimension === "landing") setMode("breakdown");
+  }, [dimension]);
+
+  const catRaw = (p: { engine: string; landing: string }) =>
+    dimension === "landing" ? p.landing || "/" : p.engine;
+
+  // Categories present, ordered (master engine order, or landing pages by
+  // volume with a capped tail), each with a stable palette color. Drives the
+  // stacked segments and the legend. `top` is the set of categories drawn
+  // individually; anything outside it folds into "Other".
   const engines = useMemo(() => {
-    const present = new Set(points.map((p) => p.engine).filter(Boolean));
-    const ordered = [
-      ...ENGINE_ORDER.filter((e) => present.has(e)),
-      ...[...present].filter((e) => !ENGINE_ORDER.includes(e)).sort(),
-    ];
+    const counts = new Map<string, number>();
+    for (const p of points) {
+      const k = catRaw(p);
+      if (k) counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    let ordered: string[];
+    if (dimension === "engine") {
+      const present = [...counts.keys()];
+      ordered = [
+        ...ENGINE_ORDER.filter((e) => counts.has(e)),
+        ...present.filter((e) => !ENGINE_ORDER.includes(e)).sort(),
+      ];
+    } else {
+      const present = [...counts.keys()].sort(
+        (a, b) => (counts.get(b) || 0) - (counts.get(a) || 0),
+      );
+      ordered =
+        present.length > TOP_LANDINGS
+          ? [...present.slice(0, TOP_LANDINGS), OTHER]
+          : present;
+    }
     const color: Record<string, string> = {};
     ordered.forEach(
       (e, i) => (color[e] = ENGINE_PALETTE[i % ENGINE_PALETTE.length]),
     );
-    return { ordered, color };
-  }, [points]);
+    return { ordered, color, top: new Set(ordered) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points, dimension]);
+
+  // Map a point to the category actually drawn (tail -> "Other").
+  const catOf = (p: { engine: string; landing: string }) => {
+    const k = catRaw(p);
+    return engines.top.has(k) ? k : OTHER;
+  };
 
   // Per-day counts, keeping the full per-engine split so visibility toggles
   // and the tooltip can recompute without a re-bin.
@@ -1014,11 +1072,13 @@ function ChartSection({
       if (daysAgo >= 0 && daysAgo < days) {
         const bin = out[days - 1 - daysAgo];
         bin.vAll++;
-        bin.byEngine[p.engine] = (bin.byEngine[p.engine] || 0) + 1;
+        const cat = catOf(p);
+        bin.byEngine[cat] = (bin.byEngine[cat] || 0) + 1;
       }
     }
     return out;
-  }, [points, days]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points, days, engines]);
 
   // Engines actually drawn: all of them in "All" mode, only the un-hidden ones
   // in "Breakdown". The visible count per day drives bar height, totals and the
@@ -1159,6 +1219,7 @@ function ChartSection({
                 noun={noun}
                 idx={hoverIdx as number}
                 days={days}
+                labelOf={(e) => catLabel(e, dimension)}
               />
             )}
           </div>
@@ -1211,7 +1272,7 @@ function ChartSection({
                       flexShrink: 0,
                     }}
                   />
-                  {e}
+                  {catLabel(e, dimension)}
                 </button>
               );
             })}
@@ -1233,6 +1294,7 @@ function ChartTooltip({
   noun,
   idx,
   days,
+  labelOf = (e) => e,
 }: {
   bin: { daysAgo: number; byEngine: Record<string, number> };
   count: number;
@@ -1241,6 +1303,7 @@ function ChartTooltip({
   noun: string;
   idx: number;
   days: number;
+  labelOf?: (e: string) => string;
 }) {
   const rows = engines
     .filter((e) => bin.byEngine[e])
@@ -1292,7 +1355,7 @@ function ChartTooltip({
               flexShrink: 0,
             }}
           />
-          <span style={{ flex: 1 }}>{e}</span>
+          <span style={{ flex: 1 }}>{labelOf(e)}</span>
           <span style={{ fontFamily: "var(--mono)", whiteSpace: "nowrap" }}>
             {n.toLocaleString("en-US")} {noun} ({Math.round((n / count) * 100)}%)
           </span>
