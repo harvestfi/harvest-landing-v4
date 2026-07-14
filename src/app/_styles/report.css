@@ -1,8 +1,8 @@
 /* Styles for /report/* pages. The page reuses the homepage shell (.uni-home-*
-   for the gold hero + content sections) and the global hub-table ranking
-   classes (.hub-*), so this file only adds report-specific pieces: the
-   breadcrumb row, the hero's two-column layout + featured-venue card, the
-   ranking cells that aren't in the vault table, and the article prose. */
+   for the gold hero + content sections, and HomeHeroPreview for the hero card)
+   and the global hub-table ranking classes (.hub-*). This file adds only the
+   report-specific pieces: breadcrumbs, ranking cells the vault table lacks, the
+   token-pair icons, the leaving-site modal, and the article prose. */
 
 /* Breadcrumbs above the hero */
 .rp-crumbs {
@@ -11,118 +11,17 @@
   color: var(--uni-ink-3);
   margin: 4px 0 16px;
 }
-.rp-crumbs a {
-  color: var(--uni-ink-3);
-  text-decoration: none;
-}
+.rp-crumbs a { color: var(--uni-ink-3); text-decoration: none; }
 .rp-crumbs a:hover { color: var(--uni-ink); }
 .rp-crumbs .sep { opacity: 0.5; margin: 0 6px; }
 
-/* Hero: two columns inside the gold box - copy on the left, featured venue
-   card on the right. Collapses to one column on narrow screens. */
-.rp-hero-grid {
-  display: grid;
-  grid-template-columns: 1fr minmax(280px, 400px);
-  gap: 48px;
-  align-items: center;
-  position: relative;
-  z-index: 3;
-}
-.rp-hero-copy .uni-home-h1 { margin-bottom: 16px; }
-.rp-hero-copy .uni-home-sub { margin-bottom: 28px; max-width: 52ch; }
-@media (max-width: 860px) {
-  .rp-hero-grid { grid-template-columns: 1fr; gap: 28px; }
-}
-
-/* Featured-venue card - the hook. White card floating on the gold. */
-.rp-hero-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 22px 24px 24px;
-  box-shadow:
-    0 18px 32px -16px rgba(25, 23, 23, 0.32),
-    0 1px 0 rgba(25, 23, 23, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.rp-hero-card-label {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--uni-ink-3);
-}
-.rp-hero-card-rate {
-  font-family: var(--display, var(--sans));
-  font-size: 46px;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  color: var(--uni-ink);
-  margin: 6px 0 2px;
-}
-.rp-hero-card-rate small {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--uni-ink-3);
-  letter-spacing: 0;
-}
-.rp-hero-card-name {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--uni-ink);
-}
-.rp-hero-card-meta {
-  font-size: 13px;
-  color: var(--uni-ink-3);
-  margin-bottom: 4px;
-}
-.rp-hero-card-note {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--uni-ink-3);
-  margin-bottom: 14px;
-}
-.rp-hero-card-cta {
-  align-self: flex-start;
+/* Token icons in the Product cell. Single token = one icon; a pair overlaps
+   the two, each ringed in the row background so they read apart. */
+.rp-toks { display: inline-flex; align-items: center; flex-shrink: 0; }
+.rp-tok {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: 999px;
-  background: var(--uni-ink);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: transform 0.14s ease;
-}
-.rp-hero-card-cta:hover { transform: translateY(-1px); }
-
-/* Ranking: reuses global .hub-* classes; these are the cells the vault table
-   doesn't have. Grid template is set inline per-table. */
-.rp-rate-sub {
-  display: block;
-  font-family: var(--mono);
-  font-weight: 400;
-  font-size: 10.5px;
-  color: var(--hub-ink-3, #6e6c66);
-  margin-top: 1px;
-}
-.rp-flag {
-  display: inline-block;
-  margin-left: 7px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  font-family: var(--mono);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #92400e;
-  background: rgba(245, 158, 11, 0.14);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  vertical-align: middle;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--hub-bg, #fff);
 }
 .rp-vault-sub {
   display: block;
@@ -134,21 +33,97 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.rp-rate-sub {
+  display: block;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 10.5px;
+  color: var(--hub-ink-3, #6e6c66);
+  margin-top: 1px;
+}
+
+/* Discover button (opens the leaving-site modal) */
 .rp-discover {
   display: inline-block;
   padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid var(--hub-line, #e2e3e5);
+  background: transparent;
+  font: inherit;
   font-size: 12px;
   font-weight: 600;
   color: var(--hub-ink, #191717);
-  text-decoration: none;
+  cursor: pointer;
   white-space: nowrap;
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 .rp-discover:hover { background: #ffb936; border-color: #ffb936; color: #191717; }
 
-/* Article - "Where these rates come from". Flowing prose, not cards. */
+/* Leaving-site modal */
+.rp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(20, 18, 16, 0.55);
+  backdrop-filter: blur(2px);
+}
+.rp-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--uni-card-2, #fff);
+  color: var(--uni-ink, #191717);
+  border-radius: 16px;
+  padding: 24px 24px 20px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5);
+  font-family: var(--sans);
+}
+.rp-modal-title {
+  margin: 0 0 8px;
+  font-family: var(--display, var(--sans));
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.rp-modal-body {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--uni-ink-2, #32312b);
+}
+.rp-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.rp-modal-cancel {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--uni-line, #dddee0);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uni-ink-2, #32312b);
+  cursor: pointer;
+}
+.rp-modal-cancel:hover { background: rgba(0, 0, 0, 0.04); }
+.rp-modal-confirm {
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: #ffb936;
+  color: #191717;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.rp-modal-confirm:hover { background: #ffc857; transform: translateY(-1px); }
+
+/* Article prose - "Where XRP yield comes from" */
 .rp-article { max-width: 68ch; }
 .rp-article h3 {
   font-family: var(--display, var(--sans));
@@ -189,10 +164,16 @@
   line-height: 1.6;
   color: var(--uni-ink-2);
 }
-.rp-method a, .rp-article a { color: #b26a00; text-decoration: none; border-bottom: 1px solid rgba(178,106,0,0.3); }
+.rp-method a, .rp-article a {
+  color: #b26a00;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(178, 106, 0, 0.3);
+}
 .rp-method a:hover, .rp-article a:hover { border-bottom-color: #b26a00; }
 
-/* Report rankings don't need the sticky header the homepage/asset tables use
-   (they scroll under the site nav); keep it in-flow so the first row is never
-   tucked under it. */
+/* Report rankings don't need the sticky header the homepage tables use. */
 .rp-rank .hub-thead { position: static; top: auto; backdrop-filter: none; }
+
+/* Hero card is the homepage preview 1:1, but on the report we drop its
+   decorative "View" pill (no call-to-action in the hero). */
+.rp-hero .prevcard-cta { display: none; }

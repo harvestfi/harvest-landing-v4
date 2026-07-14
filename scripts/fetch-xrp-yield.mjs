@@ -46,6 +46,14 @@ const OUT_FILE = join(ROOT, "data", "xrp-yield.json");
 // Ignore dust so the ranking can't be gamed by a $3k pool paying 400%
 // emissions for a week.
 const MIN_TVL_USD = 25_000;
+// Venues to omit by keyword (matched against symbol / poolMeta / project /
+// platform, case-insensitive). mXRP is a Midas RWA wrapper, not a DeFi yield
+// venue in the sense this report covers.
+const EXCLUDE_KEYWORDS = ["mxrp", "midas"];
+function isExcluded(p) {
+  const hay = `${p.symbol ?? ""} ${p.poolMeta ?? ""} ${p.project ?? ""}`.toLowerCase();
+  return EXCLUDE_KEYWORDS.some((k) => hay.includes(k));
+}
 // Pools that get the expensive per-pool history call (inception + 90d range).
 const DETAIL_POOLS = 15;
 // Hard cap on rows kept in the snapshot.
@@ -76,19 +84,20 @@ async function getJson(url, tries = 3) {
   return null;
 }
 
-// A symbol token counts as XRP-family when it IS XRP, a short wrapped variant
-// (WXRP, FXRP, CBXRP, EXRP...), or RLUSD. Token-wise match on the
-// dash-separated pool symbol so "XRP-USDC" LPs qualify but "TOKENXRPX" noise
-// doesn't.
-function isXrpFamilyToken(t) {
+// A symbol token counts as XRP-denominated when it IS XRP or a short wrapped
+// variant (WXRP, FXRP, CBXRP, STXRP, SXRP...). RLUSD - Ripple's dollar
+// stablecoin - is intentionally NOT XRP-denominated, so pools whose only
+// XRP-adjacent token is RLUSD are excluded (an XRP-RLUSD pair still qualifies
+// on its XRP leg). Token-wise match on the dash-separated symbol so "XRP-USDC"
+// qualifies but "TOKENXRPX" noise doesn't.
+function isXrpToken(t) {
   const u = (t || "").toUpperCase();
-  if (u === "XRP" || u === "RLUSD") return true;
-  return u.endsWith("XRP") && u.length <= 6;
+  return u === "XRP" || (u.endsWith("XRP") && u.length <= 6);
 }
 function poolMatches(symbol) {
   return (symbol || "")
     .split(/[-_/\s]+/)
-    .some((t) => isXrpFamilyToken(t));
+    .some((t) => isXrpToken(t));
 }
 
 const main = async () => {
@@ -126,6 +135,7 @@ const main = async () => {
     .filter(
       (p) =>
         poolMatches(p.symbol) &&
+        !isExcluded(p) &&
         !p.outlier &&
         Number.isFinite(p.tvlUsd) &&
         p.tvlUsd >= MIN_TVL_USD &&
@@ -165,6 +175,9 @@ const main = async () => {
         range90d: null, // { min, max } APY over trailing 90 tracked days
       };
     });
+
+  // Drop venues paying nothing (0% headline rate): they're not opportunities.
+  pools = pools.filter((p) => (p.apyMean30d ?? p.apy ?? 0) > 0);
 
   // Historical rate first: rank by 30d mean APY (falls back to spot APY), so a
   // one-day emissions spike can't top the table.

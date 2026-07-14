@@ -5,6 +5,8 @@ import ethIcon from "@/assets/icons/ETH.png";
 import wbtcIcon from "@/assets/icons/WBTC.png";
 import cbbtcIcon from "@/assets/icons/cbBTC.png";
 import eurcIcon from "@/assets/icons/EURC.png";
+import stxrpIcon from "@/assets/icons/stXRP.svg";
+import fxrpIcon from "@/assets/icons/FXRP.webp";
 
 import baseIcon from "@/assets/icons/base.png";
 import arbitrumIcon from "@/assets/icons/arbitrum.png";
@@ -27,6 +29,11 @@ const ASSET_ICONS: Record<string, { src: string }> = {
   wBTC: wbtcIcon,
   cbBTC: cbbtcIcon,
   EURC: eurcIcon,
+  // XRP-family tokens for the /report/xrp-yield-ranking page.
+  stXRP: stxrpIcon,
+  STXRP: stxrpIcon,
+  FXRP: fxrpIcon,
+  fxrp: fxrpIcon,
 };
 
 const CHAIN_ICONS: Record<string, { src: string }> = {
