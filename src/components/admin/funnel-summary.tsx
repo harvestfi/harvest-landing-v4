@@ -149,6 +149,7 @@ interface SeoSession {
   status: "new" | "existing" | null;
   bot: boolean;
   entryPage: string; // page_path of the first visit ("/" = homepage)
+  fp: string; // device fingerprint (ua + screen), for visitor coalescing
   firstVisitMs: number;
   firstClickMs: number; // Infinity if it never clicked into the app
   firstDepositMs: number; // Infinity if it never deposited
@@ -156,6 +157,7 @@ interface SeoSession {
   reached: boolean;
   deposited: boolean;
   pageCount: number;
+  mergedCount: number; // how many raw sessions folded into this visitor (1 = none)
   actions: SeoAction[]; // newest first
 }
 
@@ -263,6 +265,7 @@ function buildSampleSeoSessions(
       // something to reveal on a data-less fork.
       bot: i % 13 === 0,
       entryPage: visitPages[i % visitPages.length],
+      fp: `sample-ua-${i}|1170x2532|1170x2532`,
       firstVisitMs,
       firstClickMs,
       firstDepositMs,
@@ -270,12 +273,136 @@ function buildSampleSeoSessions(
       reached,
       deposited,
       pageCount,
+      mergedCount: 1,
       actions,
     });
     if (firstVisitMs < oldest) oldest = firstVisitMs;
   }
   sessions.sort((a, b) => b.latestMs - a.latestMs);
   return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
+}
+
+// Sessions within this gap that also share a device fingerprint + country +
+// primary engine are folded into one visitor - covering concurrent first-touch
+// tabs (which each mint a separate session id) and quick back-to-back searches.
+const VISITOR_MERGE_GAP_MS = 30 * 60 * 1000;
+
+// A fingerprint is only trustworthy for coalescing when it carries a real
+// user-agent (the leading field in fingerprintKey); a blank one would over
+// merge unrelated visitors, so those are always left standalone.
+function usableFingerprint(fp: string): boolean {
+  return !!fp && !fp.startsWith("|");
+}
+
+// Fold a time-ordered group of same-visitor sessions into one.
+function mergeVisitorGroup(group: SeoSession[]): SeoSession {
+  const base = group[0]; // earliest firstVisitMs
+  const engines = new Set<string>();
+  let firstVisitMs = Infinity;
+  let firstClickMs = Infinity;
+  let firstDepositMs = Infinity;
+  let latestMs = -Infinity;
+  let pageCount = 0;
+  let bot = false;
+  let wallet: string | null = null;
+  let netWorth: number | null = null;
+  let status: "new" | "existing" | null = null;
+  let entryPage = base.entryPage;
+  let entryMs = Infinity;
+  const actions: SeoAction[] = [];
+  for (const s of group) {
+    s.seoEngines.forEach((e) => engines.add(e));
+    firstVisitMs = Math.min(firstVisitMs, s.firstVisitMs);
+    firstClickMs = Math.min(firstClickMs, s.firstClickMs);
+    firstDepositMs = Math.min(firstDepositMs, s.firstDepositMs);
+    latestMs = Math.max(latestMs, s.latestMs);
+    pageCount += s.pageCount;
+    bot = bot || s.bot;
+    if (!wallet && s.wallet) {
+      wallet = s.wallet;
+      netWorth = s.netWorth;
+      status = s.status;
+    }
+    if (s.firstVisitMs < entryMs) {
+      entryMs = s.firstVisitMs;
+      entryPage = s.entryPage;
+    }
+    actions.push(...s.actions);
+  }
+  actions.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+  return {
+    sessionId: base.sessionId,
+    seoName: base.seoName,
+    seoEngines: [...engines],
+    country: base.country,
+    device: base.device,
+    srcDomain: base.srcDomain,
+    wallet,
+    netWorth,
+    status,
+    bot,
+    entryPage,
+    fp: base.fp,
+    firstVisitMs,
+    firstClickMs,
+    firstDepositMs,
+    latestMs,
+    reached: Number.isFinite(firstClickMs),
+    deposited: Number.isFinite(firstDepositMs),
+    pageCount,
+    mergedCount: group.length,
+    actions,
+  };
+}
+
+// Coalesce tab-fragmented visitors into one row each. Groups by fingerprint +
+// country + primary engine, then merges within-group sessions whose activity
+// windows sit within VISITOR_MERGE_GAP_MS. Sessions with no usable fingerprint
+// stay standalone.
+function coalesceVisitors(sessions: SeoSession[]): SeoSession[] {
+  const groups = new Map<string, SeoSession[]>();
+  const out: SeoSession[] = [];
+  for (const s of sessions) {
+    if (!usableFingerprint(s.fp)) {
+      out.push(s);
+      continue;
+    }
+    const key = `${s.fp}||${s.country ?? ""}||${s.seoName}`;
+    const arr = groups.get(key);
+    if (arr) arr.push(s);
+    else groups.set(key, [s]);
+  }
+  for (const grp of groups.values()) {
+    if (grp.length === 1) {
+      out.push(grp[0]);
+      continue;
+    }
+    grp.sort((a, b) => a.firstVisitMs - b.firstVisitMs);
+    let bucket: SeoSession[] = [];
+    let windowLatest = -Infinity;
+    const flush = () => {
+      if (bucket.length === 1) out.push(bucket[0]);
+      else if (bucket.length > 1) out.push(mergeVisitorGroup(bucket));
+      bucket = [];
+      windowLatest = -Infinity;
+    };
+    for (const s of grp) {
+      if (
+        bucket.length === 0 ||
+        s.firstVisitMs - windowLatest <= VISITOR_MERGE_GAP_MS
+      ) {
+        bucket.push(s);
+        windowLatest = Math.max(windowLatest, s.latestMs);
+      } else {
+        flush();
+        bucket = [s];
+        windowLatest = s.latestMs;
+      }
+    }
+    flush();
+  }
+  out.sort((x, y) => y.latestMs - x.latestMs);
+  return out;
 }
 
 export function FunnelSummary({
@@ -409,6 +536,7 @@ export function FunnelSummary({
       pageCount: number;
       bot: boolean;
       entryPage: string;
+      fp: string; // device fingerprint, to coalesce tab-fragmented visitors
       actions: SeoAction[];
     }
     const acc = new Map<string, Acc>();
@@ -429,6 +557,7 @@ export function FunnelSummary({
           pageCount: 0,
           bot: false,
           entryPage: "/",
+          fp: "",
           actions: [],
         };
         acc.set(id, a);
@@ -456,6 +585,7 @@ export function FunnelSummary({
         a.firstVisitMs = t;
         a.entryPage = v.page_path || "/";
       }
+      if (!a.fp) a.fp = fingerprintKey(v);
       if (t > a.latestMs) a.latestMs = t;
       if (a.country === null && v.country) a.country = v.country;
       if (a.device === null && v.device_type) a.device = v.device_type;
@@ -647,6 +777,7 @@ export function FunnelSummary({
         status,
         bot: a.bot,
         entryPage: a.entryPage,
+        fp: a.fp,
         firstVisitMs: a.firstVisitMs,
         firstClickMs: a.firstClickMs,
         firstDepositMs: a.firstDepositMs,
@@ -654,13 +785,24 @@ export function FunnelSummary({
         reached: Number.isFinite(a.firstClickMs),
         deposited: Number.isFinite(a.firstDepositMs),
         pageCount: a.pageCount,
+        mergedCount: 1,
         actions: a.actions,
       });
       if (a.firstVisitMs < oldest) oldest = a.firstVisitMs;
     }
-    sessions.sort((x, y) => y.latestMs - x.latestMs);
 
-    return { sessions, oldestMs: Number.isFinite(oldest) ? oldest : null };
+    // Coalesce tab-fragmented visitors: several tabs opened at once as a first
+    // touch each mint their own session id (no shared session existed yet), so
+    // one person shows up as several 1-page "Acquired" sessions. Merge sessions
+    // that share a device fingerprint + country + primary engine and whose
+    // activity windows sit within VISITOR_MERGE_GAP_MS of each other into one
+    // visitor, so the funnel counts people, not tabs.
+    const coalesced = coalesceVisitors(sessions);
+
+    return {
+      sessions: coalesced,
+      oldestMs: Number.isFinite(oldest) ? oldest : null,
+    };
   }, [loaded, realEmpty, visits, clicks, conns, events, group, copy]);
 
   // Search-engine options + the engine-filtered base set every funnel
@@ -1552,6 +1694,7 @@ function SessionRows({
             <span className="lf-lbl-full">
               {s.pageCount} page{s.pageCount === 1 ? "" : "s"}
               {s.deposited ? " · deposit" : s.reached ? " · click" : ""}
+              {s.mergedCount > 1 ? ` · ${s.mergedCount} tabs` : ""}
             </span>
             <span className="lf-lbl-short lf-count-pill">{s.pageCount}</span>
           </span>
