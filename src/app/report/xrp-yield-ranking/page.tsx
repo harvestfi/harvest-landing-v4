@@ -43,6 +43,10 @@ interface XrpPool {
   llamaUrl: string;
   inception: string | null;
   range90d: { min: number; max: number } | null;
+  // Set by the curated-override layer (scripts/apply-xrp-overrides.mjs).
+  curated?: boolean;
+  productType?: string;
+  venueSlug?: string;
 }
 interface XrpYieldData {
   generatedAt: string;
@@ -67,7 +71,7 @@ function loadData(): XrpYieldData | null {
   }
 }
 
-const CHAIN_LABEL: Record<string, string> = { "XRPL EVM": "XRPL EVM" };
+const CHAIN_LABEL: Record<string, string> = { "XRPL EVM": "XRPL EVM", BSC: "BNB Chain" };
 const chainLabel = (c: string) => CHAIN_LABEL[c] ?? c;
 
 const pct = (v: number | null) => (v == null ? "-" : `${v.toFixed(2)}%`);
@@ -77,12 +81,6 @@ const usd = (n: number) =>
     : n >= 1_000_000
       ? `$${(n / 1_000_000).toFixed(1)}M`
       : `$${Math.round(n / 1_000)}k`;
-const monthYear = (iso: string | null) => {
-  if (!iso) return null;
-  const d = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
-};
 const histRate = (p: XrpPool) => p.apyMean30d ?? p.apy;
 
 // Nicer casing for display (icons still key off the raw token).
@@ -97,15 +95,6 @@ const nice = (s: string) =>
 const tokensOf = (symbol: string) =>
   symbol.split(/[-/]/).map((t) => t.trim()).filter(Boolean);
 const isDual = (p: XrpPool) => p.exposure === "multi" || tokensOf(p.symbol).length > 1;
-
-function baseSource(p: XrpPool): string {
-  const c = (p.category || "").toLowerCase();
-  if (c.includes("dex")) return "trading fees paid by people swapping through the pool";
-  if (c.includes("lending")) return "interest paid by people borrowing the asset";
-  if (c.includes("liquid staking") || c.includes("staking")) return "staking rewards passed through to holders";
-  if (c.includes("yield")) return "an automated strategy compounding the underlying market yield";
-  return "activity fees the protocol shares with suppliers";
-}
 
 // Decorative spark for the hero card (the homepage card uses dummy data too).
 function synthSpark(p: XrpPool): number[] {
@@ -135,7 +124,7 @@ export default function XrpYieldRankingPage() {
 
   if (!data) {
     return (
-      <div className="uni-home-test">
+      <div className="uni-home-test rp-page">
         <Crumbs />
         <section className="uni-home-hero">
           <div className="uni-home-hero-inner">
@@ -150,11 +139,18 @@ export default function XrpYieldRankingPage() {
   }
 
   const { pools, stats } = data;
-  const singles = pools.filter((p) => !isDual(p));
-  const duals = pools.filter((p) => isDual(p));
 
-  // Hero hook: the best-paying single-exposure venue.
-  const featured = singles[0];
+  // Hero hook: the best-paying single-sided venue (no impermanent loss to
+  // explain in the card).
+  const featured = pools.find((p) => !isDual(p)) ?? pools[0];
+
+  // Group the ranking by product type, the same shape as the source table
+  // (Lending markets, Vaults, Fixed-term pools, Liquidity pools). Pools keep
+  // their 30d-rate order within each group.
+  const categories = RANK_CATEGORIES.map((c) => ({
+    ...c,
+    rows: pools.filter((p) => productTypeOf(p) === c.key),
+  })).filter((c) => c.rows.length > 0);
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -166,11 +162,6 @@ export default function XrpYieldRankingPage() {
   const rates = pools.map(histRate).filter((v): v is number => v != null);
   const lo = Math.min(...rates);
   const hi = Math.max(...rates);
-
-  // Venues that anchor the article, pulled live.
-  const topSingle = singles[0];
-  const deepestSingle = [...singles].sort((a, b) => b.tvlUsd - a.tvlUsd)[0];
-  const topPair = duals[0];
 
   const heroVault = featured
     ? {
@@ -188,7 +179,7 @@ export default function XrpYieldRankingPage() {
     : undefined;
 
   return (
-    <div className="uni-home-test">
+    <div className="uni-home-test rp-page">
       <Crumbs />
 
       <section className="uni-home-hero rp-hero">
@@ -220,62 +211,57 @@ export default function XrpYieldRankingPage() {
           <h2 id="overview-title">Overview</h2>
           <div className="rp-article">
             <p>
-              XRP doesn&rsquo;t stake natively, so there&rsquo;s no protocol
-              rate to simply claim. Every number on this page is earned by
-              putting XRP, or a wrapped version of it, to work in a live market:
-              lending it out, or supplying it to a trading pool. As of {updated}
-              , we track <strong>{stats.venues} venues</strong> holding at least
-              $25k each, spread across{" "}
+              Earning on XRP has quietly grown into one of the more active
+              corners of DeFi. Since XRP settles on its own ledger, the way to
+              put it to work is to bring it onto a smart-contract chain as a
+              wrapped token, then supply it to a lending market, a vault, or a
+              trading pool that pays a rate. This page gathers those venues in
+              one place and ranks them by the rate they have actually paid over
+              the past 30 days.
+            </p>
+            <p>
+              As of {updated} we track <strong>{stats.venues} venues</strong>{" "}
+              holding at least $25k each, across{" "}
               <strong>
                 {stats.chains.length} networks ({stats.chains.map(chainLabel).join(", ")})
               </strong>
-              . Rates run from <strong>{pct(lo)}</strong> to{" "}
+              . Rates span <strong>{pct(lo)}</strong> to{" "}
               <strong>{pct(hi)}</strong>, with a median of{" "}
-              <strong>{pct(stats.medianApy)}</strong> across every venue we list.
-              The one caveat worth knowing up front:{" "}
-              <strong>
-                {stats.incentivized} of the {stats.venues}
-              </strong>{" "}
-              lean on incentive emissions for most of their headline rate, which
-              tends to fade once the rewards program winds down. Everything here
-              is an external protocol we track for research, not a {SITE_NAME}{" "}
-              product.
+              <strong>{pct(stats.medianApy)}</strong>. One number worth keeping
+              in mind: <strong>{stats.incentivized} of the {stats.venues}</strong>{" "}
+              lean on reward-token incentives for most of their headline rate, so
+              those tend to ease off once the rewards program winds down.
+              Everything here is an external protocol we track for research, not
+              a {SITE_NAME} product.
             </p>
           </div>
         </section>
 
-        <section className="uni-home-section" id="rankings">
-          <header className="uni-home-section-head">
-            <div>
-              <h2 className="uni-home-section-title">Single-exposure XRP yield</h2>
-              <p className="uni-home-section-sub">
-                One-sided positions on XRP or a wrapped version of it. There is
-                no second asset to drift against, which means no impermanent
-                loss to manage. These are the closest thing to a plain
-                &ldquo;earn on your XRP&rdquo; rate, ranked by their 30-day
-                average.
-              </p>
+        <section className="uni-home-content" id="rankings" aria-labelledby="rankings-title">
+          <h2 id="rankings-title">The ranking</h2>
+          <p className="rp-lead">
+            Every XRP venue we track, ranked by its 30-day average rate and
+            grouped by the kind of product it is, so you can compare like with
+            like. Lending markets and vaults are single-sided; liquidity pools
+            pair XRP with a second asset for a higher rate and a bit more to
+            keep an eye on.
+          </p>
+          {categories.map((c) => (
+            <div className="rp-rank-group" key={c.key}>
+              <div className="rp-rank-head">
+                <h3>
+                  {c.label}
+                  <span className="rp-rank-count">
+                    {c.rows.length} {c.rows.length === 1 ? "venue" : "venues"}
+                  </span>
+                </h3>
+                <p>{c.blurb}</p>
+              </div>
+              <RankTable rows={c.rows} />
             </div>
-          </header>
-          <RankTable rows={singles} />
-        </section>
-
-        <section className="uni-home-section">
-          <header className="uni-home-section-head">
-            <div>
-              <h2 className="uni-home-section-title">Dual-exposure XRP pools</h2>
-              <p className="uni-home-section-sub">
-                Two-asset liquidity pools that pair an XRP token with something
-                else and earn from swap fees, usually topped up with incentive
-                rewards. The headline rates are higher, but supplying to a
-                two-asset pool means taking on impermanent loss if the two
-                prices move apart.
-              </p>
-            </div>
-          </header>
-          <RankTable rows={duals} />
-          <p className="uni-home-section-sub" style={{ marginTop: 10 }}>
-            Rates and TVL from DeFiLlama as of {updated}, refreshed hourly.
+          ))}
+          <p className="rp-source-note">
+            Rates and TVL from DeFiLlama, as of {updated}, refreshed hourly.
             &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
           </p>
         </section>
@@ -284,99 +270,53 @@ export default function XrpYieldRankingPage() {
           <h2 id="where-title">Where XRP yield comes from</h2>
           <div className="rp-article">
             <p>
-              A yield number on its own tells you almost nothing. Two venues can
-              both advertise &ldquo;8% on XRP&rdquo; while one pays it from real
-              borrowing demand that has held for a year, and the other from a
-              token-emissions campaign that ends next month. So it helps to know
-              what is actually behind each rate. For XRP, it splits into two
-              clear shapes.
+              The rates on this page all trace back to one of a few simple
+              places. Once you can see where a number is coming from, it gets
+              much easier to tell a steady, organic rate from one that is mostly
+              short-term rewards. Here is the friendly version.
             </p>
 
-            {topSingle && (
-              <>
-                <h3>Single-sided XRP: wrapped and staked</h3>
-                <p>
-                  The cleanest way to earn on XRP is to hold a wrapped or staked
-                  form of it and let a single protocol pay you. There is no pair
-                  to manage and no impermanent loss, so the rate is simply
-                  whatever that one venue generates. The best-paying single-sided
-                  venue right now is{" "}
-                  <strong>
-                    {nice(topSingle.symbol)} on {topSingle.platform}
-                  </strong>{" "}
-                  ({chainLabel(topSingle.chain)}) at {pct(histRate(topSingle))},
-                  where the rate comes from {baseSource(topSingle)}.
-                </p>
-                <p>
-                  Depth matters as much as the headline number. The single-sided
-                  venue holding the most XRP is{" "}
-                  {deepestSingle ? (
-                    <>
-                      <strong>
-                        {nice(deepestSingle.symbol)} on {deepestSingle.platform}
-                      </strong>{" "}
-                      with {usd(deepestSingle.tvlUsd)} at{" "}
-                      {pct(histRate(deepestSingle))}
-                    </>
-                  ) : (
-                    "still small"
-                  )}
-                  , which is the trade-off you see across this whole category:
-                  the venues that pay the most tend to be the smallest and
-                  newest, while the deepest, most-battle-tested ones pay
-                  noticeably less. A modest rate on a large, long-running pool is
-                  often the more durable choice than a big rate on a thin one.
-                </p>
-              </>
-            )}
-
-            {topPair && (
-              <>
-                <h3>XRP liquidity pairs pay more, and swing more</h3>
-                <p>
-                  Every double-digit rate on this page comes from a two-asset
-                  liquidity pool, and there is a reason. You are being paid to
-                  provide liquidity that traders swap against, plus, in most
-                  cases, a layer of incentive tokens on top. Right now{" "}
-                  <strong>
-                    {nice(topPair.symbol)} on {topPair.platform}
-                  </strong>{" "}
-                  leads at {pct(histRate(topPair))}
-                  {topPair.range90d
-                    ? `, but over the last 90 days that same pool has paid anywhere between ${pct(topPair.range90d.min)} and ${pct(topPair.range90d.max)}`
-                    : ""}
-                  {topPair.incentivized
-                    ? ", and most of today's number is emissions rather than trading fees, so treat it as temporary rather than a rate you can count on"
-                    : ""}
-                  .
-                </p>
-                <p>
-                  The higher number is real, but it comes with two strings. The
-                  first is impermanent loss: if the two tokens in the pair move
-                  apart in price, your position can end up worth less than if you
-                  had simply held them. The second is that emissions-driven rates
-                  are, by design, temporary. Liquidity pools can be a good way to
-                  earn on XRP, but they reward attention, not set-and-forget.
-                </p>
-              </>
-            )}
-
-            <h3>How to read the ranking</h3>
+            <h3>Lending it out</h3>
             <p>
-              We rank by the 30-day average rate rather than today&rsquo;s spot
-              number, so a single big day of emissions can&rsquo;t flatter a pool
-              to the top. Each row also shows today&rsquo;s rate and, where we
-              have the history, the range that pool has paid over the last 90
-              days, which is the quickest tell for how stable a rate really is: a
-              tight band is steady, organic yield, and a wide one usually means
-              emissions or volume-sensitive fees.
+              Supply your wrapped XRP to a money market like Kinetic, Venus or
+              Moonwell and borrowers pay you interest for the loan. It is
+              single-sided, so there is no second asset to track, and on Flare
+              the base rate is often topped up with rFLR reward tokens. This is
+              about as close as XRP gets to a plain savings rate.
+            </p>
+
+            <h3>Handing it to a vault</h3>
+            <p>
+              Vaults and liquid-staking tokens do the work for you. A curated
+              vault such as Spectra, Upshift, Mystic or Superform, or a staking
+              token like Firelight&rsquo;s stXRP, takes your wrapped XRP, runs a
+              strategy with it and compounds the results, so you hold a single
+              token and let a manager handle the rest. The rate blends whatever
+              the strategy earns with any reward incentives on top.
+            </p>
+
+            <h3>Providing liquidity</h3>
+            <p>
+              Pair your XRP with another token in a pool on SparkDEX, Aerodrome
+              or Enosys and you earn a share of the swap fees, usually with extra
+              reward tokens layered on. The headline rates are the highest on the
+              page, with one trade-off: if the two tokens drift apart in price
+              you can face impermanent loss, so these suit people who are happy
+              to keep an eye on things.
+            </p>
+
+            <h3>How we rank</h3>
+            <p>
+              We sort by the 30-day average rate rather than today&rsquo;s spot
+              number, so a single big day of rewards cannot flatter a venue to
+              the top, and we group by product type so each table compares like
+              with like.
             </p>
 
             <div className="rp-callout">
-              Every venue on this page is an external protocol tracked for
+              Every venue on this page is an external protocol we track for
               research. None are {SITE_NAME} products, this page is informational
-              only, and past rate history is no assurance of what a venue pays
-              next.
+              only, and past rates are no promise of what a venue pays next.
             </div>
           </div>
         </section>
@@ -420,7 +360,6 @@ export default function XrpYieldRankingPage() {
               <div className="rp-chain-group" key={g.chain}>
                 <div className="rp-chain-head">
                   <h3>{g.chain}</h3>
-                  {g.tag && <span>{g.tag}</span>}
                 </div>
                 {g.intro && <p className="rp-chain-intro">{g.intro}</p>}
                 <div className="rp-venues">
@@ -468,7 +407,63 @@ export default function XrpYieldRankingPage() {
   );
 }
 
-const RANK_COLS = "40px minmax(150px,1.7fr) minmax(96px,1fr) 92px 1fr 0.8fr 104px";
+// Ranking columns: # | Product | Platform | Network | 30d rate | TVL | Discover.
+const RANK_COLS = "34px minmax(150px,1.7fr) minmax(110px,1fr) minmax(84px,0.8fr) 92px 84px 104px";
+
+// Product-type buckets, mirroring the source table's categories. Order is the
+// display order; a bucket with no rows is skipped.
+const RANK_CATEGORIES: { key: string; label: string; blurb: string }[] = [
+  {
+    key: "Lending market",
+    label: "Lending markets",
+    blurb:
+      "Supply wrapped XRP and earn the interest borrowers pay. Single-sided, with no second asset to manage.",
+  },
+  {
+    key: "Vault",
+    label: "Vaults",
+    blurb:
+      "A curated strategy or aggregator puts your wrapped XRP to work and compounds it for you. You hold one token.",
+  },
+  {
+    key: "Fixed-term pool",
+    label: "Fixed-term pools",
+    blurb:
+      "Fixed-rate and yield-trading markets built on staked XRP, each with a set maturity date.",
+  },
+  {
+    key: "Liquidity pool",
+    label: "Liquidity pools",
+    blurb:
+      "Pair XRP with a second token to earn swap fees plus rewards. Higher rates, with impermanent loss to keep an eye on.",
+  },
+];
+
+// Resolve a pool to one of the RANK_CATEGORIES keys. Curated rows carry an
+// explicit productType; everything else is inferred from the DeFiLlama
+// category / project / exposure.
+function productTypeOf(p: XrpPool): string {
+  const t = (p.productType || "").toLowerCase();
+  if (t.includes("lending")) return "Lending market";
+  if (t.includes("fixed")) return "Fixed-term pool";
+  if (t.includes("vault")) return "Vault"; // covers MetaVault
+  if (t.includes("pool")) return "Liquidity pool";
+  const c = (p.category || "").toLowerCase();
+  const proj = (p.project || "").toLowerCase();
+  if (c.includes("lending")) return "Lending market";
+  if (proj.startsWith("spectra-v2") || (c === "yield" && p.exposure === "single"))
+    return "Fixed-term pool";
+  if (
+    c.includes("aggregator") ||
+    c.includes("allocator") ||
+    c.includes("curator") ||
+    c.includes("metavault") ||
+    c === "yield"
+  )
+    return "Vault";
+  if (c.includes("dex")) return "Liquidity pool";
+  return p.exposure === "single" ? "Vault" : "Liquidity pool";
+}
 
 function TokenIcons({ symbol }: { symbol: string }) {
   const toks = tokensOf(symbol).slice(0, 2);
@@ -498,7 +493,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
           <span className="hub-th hub-th-rank">#</span>
           <span className="hub-th">Product</span>
           <span className="hub-th">Platform</span>
-          <span className="hub-th hub-th-center">Network</span>
+          <span className="hub-th">Network</span>
           <span className="hub-th hub-th-num">30d rate</span>
           <span className="hub-th hub-th-num">TVL</span>
           <span className="hub-th hub-th-right" />
@@ -509,25 +504,20 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
               <span className="hub-cell hub-rank">{i + 1}</span>
               <span className="hub-cell hub-vault">
                 <TokenIcons symbol={p.symbol} />
-                <span className="hub-vault-name" style={{ display: "block" }}>
-                  {nice(p.symbol)}
-                  {p.poolMeta && <span className="rp-vault-sub">{p.poolMeta}</span>}
-                </span>
+                <span className="hub-vault-name">{nice(p.symbol)}</span>
               </span>
-              <span className="hub-cell hub-strategy">{p.platform}</span>
-              <span className="hub-cell hub-strategy" style={{ textAlign: "center" }}>
-                {chainLabel(p.chain)}
-              </span>
-              <span className="hub-cell hub-num hub-apy">
-                {pct(histRate(p))}
-                <span className="rp-rate-sub">
-                  today {pct(p.apy)}
-                  {p.range90d ? ` · 90d ${pct(p.range90d.min)}-${pct(p.range90d.max)}` : ""}
-                </span>
-              </span>
+              <span className="hub-cell rp-cell-text">{p.platform}</span>
+              <span className="hub-cell rp-cell-text">{chainLabel(p.chain)}</span>
+              <span className="hub-cell hub-num hub-apy">{pct(histRate(p))}</span>
               <span className="hub-cell hub-num">{usd(p.tvlUsd)}</span>
-              <span className="hub-cell" style={{ textAlign: "right" }}>
-                <DiscoverButton href={p.platformUrl ?? p.llamaUrl} platform={p.platform} />
+              <span className="hub-cell rp-cell-action">
+                <DiscoverButton
+                  href={p.platformUrl ?? p.llamaUrl}
+                  platform={p.platform}
+                  source={`ranking:${p.venueSlug ?? p.project}`}
+                  product={nice(p.symbol)}
+                  chain={p.chain}
+                />
               </span>
             </div>
           ))}
@@ -538,6 +528,13 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
 }
 
 function VenueCard({ v }: { v: VenueNote }) {
+  // Type + Network lead the facts as plain key/value pairs (clearer to read
+  // and to parse than the old header badges), then the researched facts.
+  const facts = [
+    { label: "Type", value: v.type },
+    { label: "Network", value: chainLabel(v.chain) },
+    ...v.facts,
+  ];
   return (
     <article className="rp-venue">
       <div className="rp-venue-head">
@@ -546,12 +543,15 @@ function VenueCard({ v }: { v: VenueNote }) {
           <span className="rp-venue-name">{nice(v.product)}</span>
           <span className="rp-venue-plat">{v.platform}</span>
         </span>
-        <span className="rp-badges">
-          <span className="rp-badge">{v.type}</span>
-          <span className="rp-badge rp-badge-chain">{chainLabel(v.chain)}</span>
-        </span>
         <span className="rp-visit-wrap">
-          <DiscoverButton href={v.url} platform={v.platform} label="Visit" />
+          <DiscoverButton
+            href={v.url}
+            platform={v.platform}
+            label="Visit"
+            source={`venue:${v.slug}`}
+            product={nice(v.product)}
+            chain={v.chain}
+          />
         </span>
       </div>
       <div className="rp-venue-body">
@@ -560,16 +560,14 @@ function VenueCard({ v }: { v: VenueNote }) {
             <p key={i}>{p}</p>
           ))}
         </div>
-        {v.facts.length > 0 && (
-          <div className="rp-facts">
-            {v.facts.map((f, i) => (
-              <div className="rp-fact" key={i}>
-                <span className="rp-fact-k">{f.label}</span>
-                <span className="rp-fact-v">{f.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="rp-facts">
+          {facts.map((f, i) => (
+            <div className="rp-fact" key={i}>
+              <span className="rp-fact-k">{f.label}</span>
+              <span className="rp-fact-v">{f.value}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </article>
   );

@@ -1,22 +1,52 @@
 "use client";
 
-// "Discover" button used on /report/* venue rankings. Because every target is
-// an external platform Harvest doesn't operate, the click opens a leaving-site
-// confirmation instead of navigating straight out: a small modal with a yellow
-// "I understand" (proceeds, opens the destination in a new tab) and a Cancel.
+// "Discover" / "Visit" button used on /report/* pages. Because every target is
+// an external, third-party platform, the click opens a short leave-site
+// confirmation instead of navigating straight out.
+//
+// Three things happen here beyond the modal:
+//   1. ref=harvest.finance is appended to the outbound URL so destination
+//      platforms can attribute the traffic to us.
+//   2. The open (Discover/Visit) and the confirm ("I understand") are each
+//      tracked into the separate report_outbound_clicks channel.
+//   3. The confirm opens the destination in a new tab.
 
 import { useEffect, useState } from "react";
+import { trackReportOutbound } from "@/lib/report-tracking";
+
+const OUTBOUND_REF = "harvest.finance";
+
+// Append ref=harvest.finance as a query param. String-based (not a URL
+// re-parse) so we never re-encode already-encoded deep-links such as
+// Aerodrome's /connect?to=%2Fdeposit... URL. Idempotent, and inserts the
+// param before any #hash fragment.
+function withRef(url: string): string {
+  if (!url) return url;
+  if (/[?&]ref=/.test(url)) return url;
+  const hashAt = url.indexOf("#");
+  const base = hashAt === -1 ? url : url.slice(0, hashAt);
+  const hash = hashAt === -1 ? "" : url.slice(hashAt);
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}ref=${OUTBOUND_REF}${hash}`;
+}
 
 export function DiscoverButton({
   href,
   platform,
   label = "Discover",
+  source,
+  product,
+  chain,
 }: {
   href: string;
   platform: string;
   label?: string;
+  source?: string;
+  product?: string;
+  chain?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const outHref = withRef(href);
 
   useEffect(() => {
     if (!open) return;
@@ -32,9 +62,29 @@ export function DiscoverButton({
     };
   }, [open]);
 
+  function track(event: "open" | "confirm") {
+    trackReportOutbound({
+      event,
+      platform,
+      product,
+      chain,
+      venueRef: source,
+      targetUrl: outHref,
+    });
+  }
+
+  const where = platform || "an external site";
+
   return (
     <>
-      <button type="button" className="rp-discover" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className="rp-discover"
+        onClick={() => {
+          track("open");
+          setOpen(true);
+        }}
+      >
         {label}
       </button>
       {open && (
@@ -51,13 +101,14 @@ export function DiscoverButton({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="rp-modal-title" className="rp-modal-title">
-              You&rsquo;re leaving Harvest
+              Heading to {where}
             </h3>
             <p className="rp-modal-body">
-              You&rsquo;re heading to an external platform
-              {platform ? ` (${platform})` : ""}. It isn&rsquo;t operated by
-              Harvest, and we don&rsquo;t control its contracts, rates or
-              security. Do your own research before using it.
+              This takes you to {platform ? platform : "an external platform"},
+              an independent platform we track for research but don&rsquo;t run
+              ourselves. Harvest doesn&rsquo;t control its contracts, rates or
+              security, so it&rsquo;s worth a quick look of your own before you
+              use it.
             </p>
             <div className="rp-modal-actions">
               <button
@@ -69,10 +120,13 @@ export function DiscoverButton({
               </button>
               <a
                 className="rp-modal-confirm"
-                href={href}
+                href={outHref}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  track("confirm");
+                  setOpen(false);
+                }}
               >
                 I understand
               </a>
