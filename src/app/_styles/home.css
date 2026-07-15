@@ -549,6 +549,112 @@ body:has(.uni-home-test) {
   margin-bottom: 56px;
 }
 .uni-home-test .uni-home-section:last-child { margin-bottom: 0; }
+
+/* === Sponsored row ================================================
+   A paid placement pinned above the Top yields ranking. Echoes a
+   ranking row but is fenced off by an animated rainbow gradient border
+   (a 2px gradient frame around an inner card) and a "Sponsored" badge. */
+.uni-home-test .uni-home-sponsor {
+  margin-bottom: 18px;
+  border-radius: 16px;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    #ff5f6d, #ffc371, #f9f871, #4ade80, #38bdf8, #a78bfa, #f472b6, #ff5f6d
+  );
+  background-size: 300% 100%;
+  animation: uni-sponsor-rainbow 8s linear infinite;
+}
+@keyframes uni-sponsor-rainbow {
+  to { background-position: 300% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-home-test .uni-home-sponsor { animation: none; }
+}
+.uni-home-test .uni-home-sponsor-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 15px 20px;
+  background: var(--uni-card-2, #fff);
+  border-radius: 14px;
+}
+.uni-home-test .uni-home-sponsor-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--uni-ink-3);
+  border: 1px solid var(--uni-line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.uni-home-test .uni-home-sponsor-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+.uni-home-test .uni-home-sponsor-main img {
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
+}
+.uni-home-test .uni-home-sponsor-name {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--uni-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-home-test .uni-home-sponsor-apy {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-left: auto;
+}
+.uni-home-test .uni-home-sponsor-apy-val {
+  font-family: var(--display);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.uni-home-test .uni-home-sponsor-apy-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+}
+.uni-home-test .uni-home-sponsor-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 20px;
+  border-radius: 10px;
+  background: #ffb936;
+  color: #191717;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.uni-home-test .uni-home-sponsor-cta:hover {
+  background: #ffc857;
+  transform: translateY(-1px);
+}
+@media (max-width: 560px) {
+  .uni-home-test .uni-home-sponsor-apy { margin-left: 0; }
+  .uni-home-test .uni-home-sponsor-cta { margin-left: auto; }
+}
 .uni-home-test .uni-home-section-head {
   display: flex;
   align-items: flex-end;

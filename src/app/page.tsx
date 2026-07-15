@@ -9,6 +9,7 @@ import { formatAPY, formatTVL } from "@/lib/format";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/constants";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { HubTable } from "@/components/hub-table";
+import { SponsoredRow } from "@/components/sponsored-row";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { RankingDataNote } from "@/components/ranking-data-note";
 import { TrackedAppLink } from "@/components/tracked-app-link";
@@ -124,6 +125,8 @@ export default async function HomePage() {
               <span aria-hidden="true">→</span>
             </Link>
           </header>
+
+          <SponsoredRow />
 
           <HubTable
             vaults={vaults}
