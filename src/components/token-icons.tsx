@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import usdcIcon from "@/assets/icons/USDC.png";
+import usdcIcon from "@/assets/icons/usdc.svg";
 import usdtIcon from "@/assets/icons/USDT.png";
 import ethIcon from "@/assets/icons/ETH.png";
 import wbtcIcon from "@/assets/icons/WBTC.png";
