@@ -15,7 +15,14 @@
 // sessions that got that far. Expand a row to see that session's actions.
 // The two pages differ only by `group` + display `copy`.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import Link from "next/link";
 import {
   TimeframeSelector,
@@ -442,6 +449,25 @@ export function FunnelSummary({
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
+  // Chart breakdown mode + legend isolation, lifted here so isolating a legend
+  // item (e.g. /usdc) also filters the Acquired sessions table below the chart.
+  const [chartMode, setChartMode] = useState<ChartMode>("all");
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+
+  // Clear legend isolation when the breakdown dimension flips (engine <->
+  // landing), and auto-engage Breakdown when Isolate direct turns on, so the
+  // per sub-page bars show without a second click. Matches the old in-chart
+  // behaviour, now that this state is lifted.
+  useEffect(() => {
+    setHidden(new Set());
+    if (deepLandingOnly) setChartMode("breakdown");
+  }, [deepLandingOnly]);
+
+  // Isolating (or resetting) the legend re-scopes the table, so jump back to
+  // its first page rather than stranding the operator on an out-of-range page.
+  useEffect(() => {
+    setPage(0);
+  }, [hidden, chartMode]);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -887,6 +913,29 @@ export function FunnelSummary({
   }
   const metricLabel = METRIC_OPTIONS.find((o) => o.value === metric)!.label;
 
+  // Breakdown dimension mirrors the chart: landing sub-page when Isolate direct
+  // is on, else search/AI engine.
+  const dimension: ChartDimension = deepLandingOnly ? "landing" : "engine";
+  // Same bucketing the chart legend uses, so the table can filter to exactly
+  // the categories the legend leaves visible (tail folded into "Other").
+  const categories = buildCategories(points, dimension);
+
+  // Table follows legend isolation: while categories are hidden in breakdown
+  // mode, drop sessions whose category is hidden so the table matches the chart.
+  const tableSessions =
+    chartMode === "breakdown" && hidden.size > 0
+      ? visibleSessions.filter(
+          (s) =>
+            !hidden.has(
+              categoryOf(
+                { engine: s.seoName, landing: s.entryPage },
+                dimension,
+                categories.top,
+              ),
+            ),
+        )
+      : visibleSessions;
+
   const description = copy.description;
 
   return (
@@ -1038,16 +1087,20 @@ export function FunnelSummary({
             // When "Isolate direct" is on we're looking at non-root first-touch
             // SEO sessions, so the natural breakdown is by the landing sub-page
             // (which pages pull SEO traffic), not by engine.
-            dimension={deepLandingOnly ? "landing" : "engine"}
+            dimension={dimension}
+            mode={chartMode}
+            setMode={setChartMode}
+            hidden={hidden}
+            setHidden={setHidden}
           />
 
           {(() => {
             const totalPages = Math.max(
               1,
-              Math.ceil(visibleSessions.length / SEO_ROWS_PER_PAGE),
+              Math.ceil(tableSessions.length / SEO_ROWS_PER_PAGE),
             );
             const safePage = Math.min(page, totalPages - 1);
-            const pageSessions = visibleSessions.slice(
+            const pageSessions = tableSessions.slice(
               safePage * SEO_ROWS_PER_PAGE,
               safePage * SEO_ROWS_PER_PAGE + SEO_ROWS_PER_PAGE,
             );
@@ -1063,7 +1116,7 @@ export function FunnelSummary({
                 <TablePager
                   page={safePage}
                   totalPages={totalPages}
-                  totalRows={visibleSessions.length}
+                  totalRows={tableSessions.length}
                   onPage={setPage}
                   unit="sessions"
                 />
@@ -1148,6 +1201,61 @@ function catLabel(cat: string, dimension: ChartDimension): string {
   return cat;
 }
 
+// The raw category a point falls under (engine name, or landing path).
+function catRawOf(
+  p: { engine: string; landing: string },
+  dimension: ChartDimension,
+): string {
+  return dimension === "landing" ? p.landing || "/" : p.engine;
+}
+
+// Categories present, ordered (master engine order, or landing pages by volume
+// with a capped tail), each with a stable palette color. Drives the stacked
+// segments and the legend; `top` is the set drawn individually, anything else
+// folds into "Other". Extracted so the chart AND the sessions table bucket
+// points identically - the table filters to exactly the legend's visible set.
+function buildCategories(
+  points: { engine: string; landing: string }[],
+  dimension: ChartDimension,
+): { ordered: string[]; color: Record<string, string>; top: Set<string> } {
+  const counts = new Map<string, number>();
+  for (const p of points) {
+    const k = catRawOf(p, dimension);
+    if (k) counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  let ordered: string[];
+  if (dimension === "engine") {
+    const present = [...counts.keys()];
+    ordered = [
+      ...ENGINE_ORDER.filter((e) => counts.has(e)),
+      ...present.filter((e) => !ENGINE_ORDER.includes(e)).sort(),
+    ];
+  } else {
+    const present = [...counts.keys()].sort(
+      (a, b) => (counts.get(b) || 0) - (counts.get(a) || 0),
+    );
+    ordered =
+      present.length > TOP_LANDINGS
+        ? [...present.slice(0, TOP_LANDINGS), OTHER]
+        : present;
+  }
+  const color: Record<string, string> = {};
+  ordered.forEach(
+    (e, i) => (color[e] = ENGINE_PALETTE[i % ENGINE_PALETTE.length]),
+  );
+  return { ordered, color, top: new Set(ordered) };
+}
+
+// Category a point actually maps to for a given drawn-set (tail -> "Other").
+function categoryOf(
+  p: { engine: string; landing: string },
+  dimension: ChartDimension,
+  top: Set<string>,
+): string {
+  const k = catRawOf(p, dimension);
+  return top.has(k) ? k : OTHER;
+}
+
 function ChartSection({
   points,
   days,
@@ -1155,6 +1263,10 @@ function ChartSection({
   timeframe,
   onTimeframeChange,
   dimension = "engine",
+  mode,
+  setMode,
+  hidden,
+  setHidden,
 }: {
   points: { ts: number; engine: string; landing: string }[];
   days: number;
@@ -1162,65 +1274,25 @@ function ChartSection({
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
   dimension?: ChartDimension;
+  // Breakdown mode + legend isolation are lifted to the parent so the Acquired
+  // sessions table can filter to the same visible categories.
+  mode: ChartMode;
+  setMode: (m: ChartMode) => void;
+  hidden: Set<string>;
+  setHidden: Dispatch<SetStateAction<Set<string>>>;
 }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-  const [mode, setMode] = useState<ChartMode>("all");
-  // Categories toggled off via the legend (breakdown mode). Hidden ones drop
-  // out of the bars, the totals and the tooltip, so clicking every category but
-  // one isolates that one's trend over time.
-  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
 
-  // Reset legend isolation when the breakdown dimension flips, so hidden engine
-  // names don't linger as we switch to landing pages. Switching to the landing
-  // dimension (Isolate direct on) also auto-engages Breakdown, so the per
-  // sub-page bars show without a second click.
-  useEffect(() => {
-    setHidden(new Set());
-    if (dimension === "landing") setMode("breakdown");
-  }, [dimension]);
-
-  const catRaw = (p: { engine: string; landing: string }) =>
-    dimension === "landing" ? p.landing || "/" : p.engine;
-
-  // Categories present, ordered (master engine order, or landing pages by
-  // volume with a capped tail), each with a stable palette color. Drives the
-  // stacked segments and the legend. `top` is the set of categories drawn
-  // individually; anything outside it folds into "Other".
-  const engines = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of points) {
-      const k = catRaw(p);
-      if (k) counts.set(k, (counts.get(k) || 0) + 1);
-    }
-    let ordered: string[];
-    if (dimension === "engine") {
-      const present = [...counts.keys()];
-      ordered = [
-        ...ENGINE_ORDER.filter((e) => counts.has(e)),
-        ...present.filter((e) => !ENGINE_ORDER.includes(e)).sort(),
-      ];
-    } else {
-      const present = [...counts.keys()].sort(
-        (a, b) => (counts.get(b) || 0) - (counts.get(a) || 0),
-      );
-      ordered =
-        present.length > TOP_LANDINGS
-          ? [...present.slice(0, TOP_LANDINGS), OTHER]
-          : present;
-    }
-    const color: Record<string, string> = {};
-    ordered.forEach(
-      (e, i) => (color[e] = ENGINE_PALETTE[i % ENGINE_PALETTE.length]),
-    );
-    return { ordered, color, top: new Set(ordered) };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, dimension]);
+  // Categories present, ordered, colored. Same helper the table uses so the
+  // legend and the filtered table always agree on the drawn set + "Other" fold.
+  const engines = useMemo(
+    () => buildCategories(points, dimension),
+    [points, dimension],
+  );
 
   // Map a point to the category actually drawn (tail -> "Other").
-  const catOf = (p: { engine: string; landing: string }) => {
-    const k = catRaw(p);
-    return engines.top.has(k) ? k : OTHER;
-  };
+  const catOf = (p: { engine: string; landing: string }) =>
+    categoryOf(p, dimension, engines.top);
 
   // Per-day counts, keeping the full per-engine split so visibility toggles
   // and the tooltip can recompute without a re-bin.
