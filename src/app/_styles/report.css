@@ -123,8 +123,10 @@
 }
 .rp-modal-confirm:hover { background: #ffc857; transform: translateY(-1px); }
 
-/* Article prose - "Where XRP yield comes from" */
-.rp-article { max-width: 68ch; }
+/* Article prose - "Where XRP yield comes from". Full-width: the prose spans
+   the whole content shell (like the ranking tables) rather than sitting in a
+   narrow reading column. */
+.rp-article { max-width: 100%; }
 .rp-article h3 {
   font-family: var(--display, var(--sans));
   font-size: 19px;
@@ -173,6 +175,177 @@
 
 /* Report rankings don't need the sticky header the homepage tables use. */
 .rp-rank .hub-thead { position: static; top: auto; backdrop-filter: none; }
+
+/* === Wrapped-XRP glossary ==========================================
+   Compact reference for the token forms (FXRP, cbXRP, stXRP, csXRP)
+   that sit under most of the ranking. Auto-fitting cards, full width. */
+.rp-glossary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+  margin: 18px 0 4px;
+}
+.rp-gloss {
+  border: 1px solid var(--uni-line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: var(--uni-card-2);
+}
+.rp-gloss-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+.rp-gloss-tok {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--uni-ink);
+}
+.rp-gloss-chain {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rp-gloss p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+}
+
+/* === Venue directory ("in depth") =================================
+   One card per curated venue, grouped by chain. Header row (icons +
+   title + type/chain badges + Visit), then a two-column body: prose on
+   the left, a facts grid (curator / points / incentives / backers /
+   audits) on the right. Stacks on narrow screens. Full width. */
+.rp-chain-group { margin-top: 34px; }
+.rp-chain-group:first-of-type { margin-top: 18px; }
+.rp-chain-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+.rp-chain-head h3 {
+  font-family: var(--display, var(--sans));
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--uni-ink);
+  margin: 0;
+}
+.rp-chain-head span {
+  font-size: 13px;
+  color: var(--uni-ink-3);
+}
+.rp-chain-intro {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+  margin: 6px 0 16px;
+}
+
+.rp-venues { display: grid; gap: 16px; }
+.rp-venue {
+  border: 1px solid var(--uni-line);
+  border-radius: 16px;
+  padding: 18px 20px 20px;
+  background: var(--uni-card-2);
+}
+.rp-venue-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.rp-venue-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.rp-venue-name {
+  font-family: var(--display, var(--sans));
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+}
+.rp-venue-plat {
+  font-size: 12.5px;
+  color: var(--uni-ink-3);
+}
+.rp-badges { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.rp-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 185, 54, 0.14);
+  color: #9a6a00;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] .uni-home-test .rp-badge { color: #ffce6b; }
+.rp-badge.rp-badge-chain {
+  background: var(--uni-card);
+  color: var(--uni-ink-2);
+}
+.rp-venue-head .rp-visit-wrap { margin-left: auto; }
+
+.rp-venue-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 22px;
+}
+.rp-venue-prose p {
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  line-height: 1.66;
+  color: var(--uni-ink-2);
+}
+.rp-venue-prose p:last-child { margin-bottom: 0; }
+.rp-venue-prose strong { color: var(--uni-ink); font-weight: 600; }
+
+.rp-facts {
+  border-left: 1px solid var(--uni-line);
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.rp-fact { display: flex; flex-direction: column; gap: 2px; }
+.rp-fact-k {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--uni-ink-3);
+}
+.rp-fact-v {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--uni-ink);
+}
+@media (max-width: 760px) {
+  .rp-venue-body { grid-template-columns: 1fr; gap: 16px; }
+  .rp-facts {
+    border-left: none;
+    border-top: 1px solid var(--uni-line);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+  .rp-venue-head .rp-visit-wrap { margin-left: 0; width: 100%; }
+}
+
+/* Hero card is the homepage preview 1:1, but on the report we drop its
+   decorative "View" pill (no call-to-action in the hero). */
+.rp-hero .prevcard-cta { display: none; }
 
 /* Hero card is the homepage preview 1:1, but on the report we drop its
    decorative "View" pill (no call-to-action in the hero). */

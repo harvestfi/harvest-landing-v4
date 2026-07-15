@@ -20,6 +20,7 @@
 
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { loadVenues, applyOverrides } from "./apply-xrp-overrides.mjs";
 
 // Optional local cache for offline / proxied dev (Node's fetch ignores
 // HTTPS_PROXY, unlike curl). Set XRP_LLAMA_CACHE=<dir> holding pools.json,
@@ -213,6 +214,13 @@ const main = async () => {
     process.exit(0);
   }
 
+  // Curated overrides: swap generic platform links for real product deep-links
+  // on matching rows, and embed the curated venue list for the report's info
+  // section. Kept here (not the report page) so the hourly cron preserves them.
+  const venues = loadVenues(ROOT);
+  const overridden = applyOverrides(pools, venues);
+  if (overridden > 0) console.log(`[xrp-yield] applied ${overridden} curated link override(s).`);
+
   const apys = pools.map((p) => p.apyMean30d ?? p.apy ?? 0).sort((a, b) => a - b);
   const median = apys[Math.floor(apys.length / 2)] ?? 0;
   const out = {
@@ -226,6 +234,7 @@ const main = async () => {
       medianApy: Math.round(median * 100) / 100,
       incentivized: pools.filter((p) => p.incentivized).length,
     },
+    venues,
     pools,
   };
 

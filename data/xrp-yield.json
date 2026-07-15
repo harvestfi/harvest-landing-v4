@@ -48,7 +48,7 @@
       "chain": "Flare",
       "project": "sparkdex-v4",
       "platform": "SparkDEX V4",
-      "platformUrl": "https://sparkdex.ai/home",
+      "platformUrl": "https://sparkdex.ai/pool/v4/add/steer/0x490e6bf329c6760f989fefbe6c77d7a34e0a5078",
       "category": "Dexs",
       "symbol": "WFLR-FXRP",
       "poolMeta": null,
@@ -68,7 +68,10 @@
       "range90d": {
         "min": 11.28,
         "max": 61.69
-      }
+      },
+      "curated": true,
+      "productType": "Pool",
+      "venueSlug": "sparkdex-wflr-fxrp"
     },
     {
       "id": "0f5a8491-ed86-4486-a55a-4617eaaa4776",
@@ -264,7 +267,7 @@
       "chain": "Base",
       "project": "aerodrome-slipstream",
       "platform": "Aerodrome Slipstream",
-      "platformUrl": "https://aerodrome.finance/",
+      "platformUrl": "https://aerodrome.finance/connect?to=%2Fdeposit%3Ftoken0%3D0x4200000000000000000000000000000000000006%26token1%3D0xcb585250f852C6c6bf90434AB21A00f02833a4af%26type%3D100%26chain0%3D8453%26chain1%3D8453%26factory%3D0xf8f2eB4940CFE7d13603DDDD87f123820Fc061Ef",
       "category": "Dexs",
       "symbol": "CBXRP-CBBTC",
       "poolMeta": "CL100 - 0.2%",
@@ -284,14 +287,17 @@
       "range90d": {
         "min": 0.66,
         "max": 50.48
-      }
+      },
+      "curated": true,
+      "productType": "Pool",
+      "venueSlug": "aerodrome-cbxrp-cbbtc"
     },
     {
       "id": "af2be81f-fa29-4562-ab9f-f103748f2233",
       "chain": "Flare",
       "project": "spectra-metavaults",
       "platform": "Spectra MetaVaults",
-      "platformUrl": "https://app.spectra.finance/metavaults",
+      "platformUrl": "https://app.spectra.finance/metavaults/flare:0x0c4f32c53d4b91a019c7c9d8da14af140295eef6",
       "category": "Onchain Capital Allocator",
       "symbol": "FXRP",
       "poolMeta": "Flare XRP Yield Prime",
@@ -311,7 +317,10 @@
       "range90d": {
         "min": 3.26,
         "max": 7.7
-      }
+      },
+      "curated": true,
+      "productType": "MetaVault",
+      "venueSlug": "spectra-metavault-fxrp"
     },
     {
       "id": "02b9bb25-4320-47d5-91ca-817dafa32d4d",
@@ -426,7 +435,7 @@
       "chain": "Flare",
       "project": "mystic-finance-lending",
       "platform": "Mystic Finance Lending",
-      "platformUrl": "https://www.mysticfinance.xyz/",
+      "platformUrl": "https://app.mysticfinance.xyz/vault?vaultAddress=0x53184adabf312b490bf1ebcfdc896feff6019a14&chainId=14",
       "category": "Lending",
       "symbol": "CSXRP",
       "poolMeta": null,
@@ -443,7 +452,10 @@
       "observations": 124,
       "llamaUrl": "https://defillama.com/yields/pool/ae77c3b6-f9ca-49a8-b24d-08c12ac2d7b4",
       "inception": null,
-      "range90d": null
+      "range90d": null,
+      "curated": true,
+      "productType": "Vault",
+      "venueSlug": "mystic-vault"
     },
     {
       "id": "c279bec9-4f14-4d9d-8543-50aa2758c9b3",
@@ -522,7 +534,7 @@
       "chain": "Flare",
       "project": "kinetic",
       "platform": "Kinetic",
-      "platformUrl": "https://kinetic.market",
+      "platformUrl": "https://app.kinetic.market/market",
       "category": "Lending",
       "symbol": "FXRP",
       "poolMeta": null,
@@ -539,7 +551,10 @@
       "observations": 285,
       "llamaUrl": "https://defillama.com/yields/pool/28c0f086-2e1a-40f0-a5f5-763d706c0806",
       "inception": null,
-      "range90d": null
+      "range90d": null,
+      "curated": true,
+      "productType": "Lending Market",
+      "venueSlug": "kinetic-fxrp"
     },
     {
       "id": "0204c8ff-0805-4515-a27e-742d23a15719",
@@ -684,6 +699,200 @@
       "llamaUrl": "https://defillama.com/yields/pool/06a72d18-1db3-4ace-8c86-c8ed4c45884d",
       "inception": null,
       "range90d": null
+    }
+  ],
+  "venues": [
+    {
+      "slug": "spectra-metavault-fxrp",
+      "platform": "Spectra",
+      "productName": "Flare XRP Yield Prime",
+      "productType": "MetaVault",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "FXRP"
+      ],
+      "address": "0x0c4f32c53d4b91a019c7c9d8da14af140295eef6",
+      "url": "https://app.spectra.finance/metavaults/flare:0x0c4f32c53d4b91a019c7c9d8da14af140295eef6",
+      "match": {
+        "project": "spectra-metavaults",
+        "symbol": "FXRP",
+        "chain": "Flare"
+      }
+    },
+    {
+      "slug": "spectra-fixed-term-1",
+      "platform": "Spectra",
+      "productName": "Fixed-Term Pool",
+      "productType": "Fixed-Term Pool",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "stXRP"
+      ],
+      "address": "0x22ebdb0a469a9f7ba4a287ea3c1c420762d98db9",
+      "url": "https://app.spectra.finance/pools/flare:0x22ebdb0a469a9f7ba4a287ea3c1c420762d98db9",
+      "match": null
+    },
+    {
+      "slug": "spectra-fixed-term-2",
+      "platform": "Spectra",
+      "productName": "Fixed-Term Pool",
+      "productType": "Fixed-Term Pool",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "stXRP"
+      ],
+      "address": "0x966d1f376457a3aca5fbc2a6be985f6e5e7708eb",
+      "url": "https://app.spectra.finance/pools/flare:0x966d1f376457a3aca5fbc2a6be985f6e5e7708eb",
+      "match": null
+    },
+    {
+      "slug": "kinetic-fxrp",
+      "platform": "Kinetic",
+      "productName": "FXRP Lending Market",
+      "productType": "Lending Market",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "FXRP"
+      ],
+      "address": null,
+      "url": "https://app.kinetic.market/market",
+      "match": {
+        "project": "kinetic",
+        "symbol": "FXRP",
+        "chain": "Flare"
+      }
+    },
+    {
+      "slug": "sparkdex-wflr-fxrp",
+      "platform": "SparkDEX",
+      "productName": "WFLR-FXRP (Steer)",
+      "productType": "Pool",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "WFLR",
+        "FXRP"
+      ],
+      "address": "0x490e6bf329c6760f989fefbe6c77d7a34e0a5078",
+      "url": "https://sparkdex.ai/pool/v4/add/steer/0x490e6bf329c6760f989fefbe6c77d7a34e0a5078",
+      "match": {
+        "project": "sparkdex-v4",
+        "symbol": "WFLR-FXRP",
+        "chain": "Flare"
+      }
+    },
+    {
+      "slug": "mystic-vault",
+      "platform": "Mystic Finance",
+      "productName": "XRP Vault",
+      "productType": "Vault",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "csXRP"
+      ],
+      "address": "0x53184adabf312b490bf1ebcfdc896feff6019a14",
+      "url": "https://app.mysticfinance.xyz/vault?vaultAddress=0x53184adabf312b490bf1ebcfdc896feff6019a14&chainId=14",
+      "match": {
+        "project": "mystic-finance-lending",
+        "symbol": "CSXRP",
+        "chain": "Flare"
+      }
+    },
+    {
+      "slug": "aerodrome-cbxrp-cbbtc",
+      "platform": "Aerodrome",
+      "productName": "cbXRP / cbBTC",
+      "productType": "Pool",
+      "chain": "Base",
+      "chainId": 8453,
+      "assets": [
+        "cbXRP",
+        "cbBTC"
+      ],
+      "address": null,
+      "url": "https://aerodrome.finance/connect?to=%2Fdeposit%3Ftoken0%3D0x4200000000000000000000000000000000000006%26token1%3D0xcb585250f852C6c6bf90434AB21A00f02833a4af%26type%3D100%26chain0%3D8453%26chain1%3D8453%26factory%3D0xf8f2eB4940CFE7d13603DDDD87f123820Fc061Ef",
+      "match": {
+        "project": "aerodrome-slipstream",
+        "symbol": "CBXRP-CBBTC",
+        "chain": "Base"
+      }
+    },
+    {
+      "slug": "aerodrome-cbxrp-cbeth",
+      "platform": "Aerodrome",
+      "productName": "cbXRP / cbETH",
+      "productType": "Pool",
+      "chain": "Base",
+      "chainId": 8453,
+      "assets": [
+        "cbXRP",
+        "cbETH"
+      ],
+      "address": null,
+      "url": "https://aerodrome.finance/connect?to=%2Fdeposit%3Ftoken0%3D0xcb585250f852C6c6bf90434AB21A00f02833a4af%26token1%3D0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf%26type%3D100%26chain0%3D8453%26chain1%3D8453%26factory%3D0xf8f2eB4940CFE7d13603DDDD87f123820Fc061Ef",
+      "match": null
+    },
+    {
+      "slug": "upshift-fxrp-1",
+      "platform": "Upshift",
+      "productName": "FXRP Vault",
+      "productType": "Vault",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "FXRP"
+      ],
+      "address": "0x373D7d201C8134D4a2f7b5c63560da217e3dEA28",
+      "url": "https://app.upshift.finance/pools/14/0x373D7d201C8134D4a2f7b5c63560da217e3dEA28",
+      "match": null
+    },
+    {
+      "slug": "upshift-fxrp-2",
+      "platform": "Upshift",
+      "productName": "Vault",
+      "productType": "Vault",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "FXRP"
+      ],
+      "address": "0x2439D4bb753A0f3777d4C9011AFacc475ba6B951",
+      "url": "https://app.upshift.finance/pools/14/0x2439D4bb753A0f3777d4C9011AFacc475ba6B951",
+      "match": null
+    },
+    {
+      "slug": "enosys-fxrp-usdt",
+      "platform": "Enosys",
+      "productName": "FXRP - USDT",
+      "productType": "Pool",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "FXRP",
+        "USDT"
+      ],
+      "address": "0x686f53F0950Ef193C887527eC027E6A574A4DbE1",
+      "url": "https://dex.enosys.global/liquidity/0x686f53F0950Ef193C887527eC027E6A574A4DbE1",
+      "match": null
+    },
+    {
+      "slug": "superform-fxrp",
+      "platform": "Superform",
+      "productName": "FXRP Vault",
+      "productType": "Vault",
+      "chain": "Flare",
+      "chainId": 14,
+      "assets": [
+        "FXRP"
+      ],
+      "address": "0x34f90dfa0f1b2f691ee3a3a87954f8d282193c16",
+      "url": "https://app.superform.xyz/vault/14_0x34f90dfa0f1b2f691ee3a3a87954f8d282193c16",
+      "match": null
     }
   ]
 }

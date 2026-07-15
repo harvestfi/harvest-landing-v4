@@ -10,9 +10,11 @@ import { useEffect, useState } from "react";
 export function DiscoverButton({
   href,
   platform,
+  label = "Discover",
 }: {
   href: string;
   platform: string;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -33,7 +35,7 @@ export function DiscoverButton({
   return (
     <>
       <button type="button" className="rp-discover" onClick={() => setOpen(true)}>
-        Discover
+        {label}
       </button>
       {open && (
         <div
