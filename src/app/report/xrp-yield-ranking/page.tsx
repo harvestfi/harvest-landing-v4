@@ -6,6 +6,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { AssetIcon } from "@/components/token-icons";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { DiscoverButton } from "@/components/report/discover-button";
+import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import "../../_styles/home.css";
 import "../../_styles/report.css";
 
@@ -380,6 +381,58 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
+        <section className="uni-home-content" aria-labelledby="tokens-title">
+          <h2 id="tokens-title">The wrapped forms of XRP</h2>
+          <div className="rp-article">
+            <p>
+              XRP can&rsquo;t earn on its own ledger, so every rate on this page
+              starts by moving XRP onto a smart-contract chain in a wrapped form.
+              Which wrapper you hold matters as much as the venue: some are
+              trustless and collateral-backed, others rest on a single custodian.
+              Here are the four you&rsquo;ll see most, plus the Solana form.
+            </p>
+            <div className="rp-glossary">
+              {WRAPPED_TOKENS.map((t) => (
+                <div className="rp-gloss" key={t.token}>
+                  <div className="rp-gloss-head">
+                    <AssetIcon asset={t.icon} size={22} />
+                    <span className="rp-gloss-tok">{nice(t.token)}</span>
+                    <span className="rp-gloss-chain">{t.chain}</span>
+                  </div>
+                  <p>{t.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="venues-title">
+          <h2 id="venues-title">XRP yield venues, explained</h2>
+          <div className="rp-article">
+            <p>
+              A rate is only as good as what pays it. We looked into each venue
+              in the ranking: what it actually is, where the yield comes from,
+              who curates or manages it, and what points, incentives and backing
+              sit behind it. Grouped by network, starting with Flare, where most
+              XRP yield now lives.
+            </p>
+            {VENUE_GROUPS.map((g) => (
+              <div className="rp-chain-group" key={g.chain}>
+                <div className="rp-chain-head">
+                  <h3>{g.chain}</h3>
+                  {g.tag && <span>{g.tag}</span>}
+                </div>
+                {g.intro && <p className="rp-chain-intro">{g.intro}</p>}
+                <div className="rp-venues">
+                  {g.venues.map((v) => (
+                    <VenueCard key={v.slug} v={v} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="uni-home-content" aria-labelledby="method-title">
           <h2 id="method-title">Method &amp; scope</h2>
           <dl className="rp-method">
@@ -481,6 +534,44 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function VenueCard({ v }: { v: VenueNote }) {
+  return (
+    <article className="rp-venue">
+      <div className="rp-venue-head">
+        <TokenIcons symbol={v.assets.join("-")} />
+        <span className="rp-venue-title">
+          <span className="rp-venue-name">{nice(v.product)}</span>
+          <span className="rp-venue-plat">{v.platform}</span>
+        </span>
+        <span className="rp-badges">
+          <span className="rp-badge">{v.type}</span>
+          <span className="rp-badge rp-badge-chain">{chainLabel(v.chain)}</span>
+        </span>
+        <span className="rp-visit-wrap">
+          <DiscoverButton href={v.url} platform={v.platform} label="Visit" />
+        </span>
+      </div>
+      <div className="rp-venue-body">
+        <div className="rp-venue-prose">
+          {v.blurb.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
+        {v.facts.length > 0 && (
+          <div className="rp-facts">
+            {v.facts.map((f, i) => (
+              <div className="rp-fact" key={i}>
+                <span className="rp-fact-k">{f.label}</span>
+                <span className="rp-fact-v">{f.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </article>
   );
 }
 
