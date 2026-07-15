@@ -1290,6 +1290,14 @@ function ChartSection({
       return next;
     });
 
+  // Legend select-all / deselect-all. All visible => clear hidden set is a
+  // no-op, so the control flips: everything on -> hide everything, otherwise
+  // -> show everything. `someHidden` drives the indeterminate box state.
+  const allShown = hidden.size === 0;
+  const someHidden = hidden.size > 0 && hidden.size < engines.ordered.length;
+  const toggleAll = () =>
+    setHidden((prev) => (prev.size === 0 ? new Set(engines.ordered) : new Set()));
+
   return (
     <section className="uni-hub-section" style={{ marginTop: 0 }}>
       <header className="uni-hub-section-head">
@@ -1398,51 +1406,115 @@ function ChartSection({
         </div>
 
         {mode === "breakdown" && engines.ordered.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "6px 14px",
-              marginTop: 12,
-            }}
-          >
-            {engines.ordered.map((e) => {
-              const off = hidden.has(e);
-              return (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => toggleEngine(e)}
-                  aria-pressed={!off}
-                  title={off ? `Show ${e}` : `Hide ${e}`}
+          <div style={{ marginTop: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "6px 14px",
+              }}
+            >
+              {engines.ordered.map((e) => {
+                const off = hidden.has(e);
+                return (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => toggleEngine(e)}
+                    aria-pressed={!off}
+                    title={off ? `Show ${e}` : `Hide ${e}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 12,
+                      padding: 0,
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      color: "inherit",
+                      opacity: off ? 0.4 : 1,
+                      textDecoration: off ? "line-through" : "none",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 2,
+                        background: off ? "transparent" : engines.color[e],
+                        boxShadow: off ? `inset 0 0 0 1.5px ${engines.color[e]}` : "none",
+                        flexShrink: 0,
+                      }}
+                    />
+                    {catLabel(e, dimension)}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Select all / deselect all, bottom-right of the legend. */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+              <button
+                type="button"
+                onClick={toggleAll}
+                aria-pressed={allShown}
+                title={allShown ? "Deselect all categories" : "Select all categories"}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 7,
+                  fontSize: 12,
+                  padding: "2px 2px",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  color: "inherit",
+                  opacity: 0.85,
+                }}
+              >
+                <span
+                  aria-hidden="true"
                   style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: 3,
+                    flexShrink: 0,
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 6,
-                    fontSize: 12,
-                    padding: 0,
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    color: "inherit",
-                    opacity: off ? 0.4 : 1,
-                    textDecoration: off ? "line-through" : "none",
+                    justifyContent: "center",
+                    background: allShown ? "#ffb936" : "transparent",
+                    color: allShown ? "#191717" : "currentColor",
+                    boxShadow: allShown ? "none" : "inset 0 0 0 1.5px currentColor",
                   }}
                 >
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 2,
-                      background: off ? "transparent" : engines.color[e],
-                      boxShadow: off ? `inset 0 0 0 1.5px ${engines.color[e]}` : "none",
-                      flexShrink: 0,
-                    }}
-                  />
-                  {catLabel(e, dimension)}
-                </button>
-              );
-            })}
+                  {allShown ? (
+                    <svg
+                      width="9"
+                      height="9"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  ) : someHidden ? (
+                    <span
+                      style={{
+                        width: 7,
+                        height: 2,
+                        borderRadius: 1,
+                        background: "currentColor",
+                      }}
+                    />
+                  ) : null}
+                </span>
+                {allShown ? "Deselect all" : "Select all"}
+              </button>
+            </div>
           </div>
         )}
       </div>
