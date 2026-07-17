@@ -174,6 +174,43 @@ export function reportWebPageSchema(o: {
   };
 }
 
+// Dataset node for report pages (e.g. /report/xrp-yield-ranking). Unlike the
+// per-vault datasetSchema above, this describes an externally-sourced ranking
+// dataset (DeFiLlama + Spectra), so provenance points at those sources.
+export function reportDatasetSchema(o: {
+  name: string;
+  description: string;
+  url: string;
+  dateModified: string;
+  numberOfItems?: number;
+  keywords?: string[];
+  sources?: string[];
+}): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: o.name,
+    description: o.description,
+    url: o.url,
+    creator: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    dateModified: o.dateModified,
+    isBasedOn: (o.sources ?? []).map((s) => s),
+    ...(o.numberOfItems ? { size: `${o.numberOfItems} venues` } : {}),
+    keywords: o.keywords ?? ["XRP", "DeFi", "yield", "APY", "TVL"],
+    isAccessibleForFree: true,
+    license: "https://creativecommons.org/licenses/by/4.0/",
+  };
+}
+
 export function articleSchema({
   title,
   description,

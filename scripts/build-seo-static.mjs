@@ -98,6 +98,10 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 - [zkSync](${SITE_URL}/zksync): every strategy we track on zkSync Era.
 - [HyperEVM](${SITE_URL}/hyperevm): every strategy we track on HyperEVM.
 
+## Reports
+
+- [XRP Yield Ranking](${SITE_URL}/report/xrp-yield-ranking): every XRP-denominated DeFi yield source (XRP, FXRP, stXRP, cbXRP, wXRP) ranked by real 30-day rate. Covers lending, vaults, liquid staking, fixed-rate Spectra Principal Tokens and liquidity pools, split by single- vs dual-exposure, across Flare, XRPL EVM, Base and more. XRP has no native staking, so these are the real on-chain rates. Externally sourced from DeFiLlama and Spectra, refreshed hourly. All venues are third-party protocols, not Harvest products.
+
 ## Data
 
 - [Machine-readable index](${SITE_URL}/data/index.json): every tracked strategy as JSON (slug, asset, chain, APY, TVL), each linking to its per-vault file.

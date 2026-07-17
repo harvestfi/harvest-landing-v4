@@ -10,6 +10,7 @@ import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import {
   breadcrumbSchema,
   faqPageSchema,
+  reportDatasetSchema,
   reportItemListSchema,
   reportWebPageSchema,
 } from "@/lib/jsonld";
@@ -178,6 +179,17 @@ export default function XrpYieldRankingPage() {
     ? Math.max(...ptRows.map((p) => histRate(p) ?? 0))
     : 0;
 
+  // Early-answer snippet inputs: the top 30-day rate in each exposure bucket
+  // plus the top fixed-rate PT. Lists arrive sorted by rate, so [0] is the
+  // leader; PT is picked by max rate. All derived, so the block never drifts
+  // from the tables.
+  const topSingle = singles[0];
+  const topDual = duals[0];
+  const topPt = ptRows.reduce<XrpPool | null>(
+    (best, p) => (best && (histRate(best) ?? 0) >= (histRate(p) ?? 0) ? best : p),
+    null,
+  );
+
   // Structured-data inputs (rendered as JSON-LD at the top of the page).
   const itemListItems = pools.map((p) => ({
     name: `${nice(p.displayName ?? p.symbol)} on ${p.platform}`,
@@ -243,6 +255,32 @@ export default function XrpYieldRankingPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema(FAQ)) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            reportDatasetSchema({
+              name: "XRP DeFi yield ranking dataset",
+              description: `Real 30-day rates, spot APY, TVL and 90-day range for ${stats.venues} XRP-denominated DeFi venues (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Sourced from DeFiLlama and the Spectra API; informational research, not financial advice.`,
+              url: PAGE_URL,
+              dateModified: data.generatedAt,
+              numberOfItems: stats.venues,
+              keywords: [
+                "XRP",
+                "FXRP",
+                "stXRP",
+                "cbXRP",
+                "DeFi",
+                "yield",
+                "APY",
+                "TVL",
+                "Principal Token",
+              ],
+              sources: ["https://defillama.com", "https://spectra.finance"],
+            }),
+          ),
+        }}
       />
       <Crumbs />
 
@@ -317,6 +355,43 @@ export default function XrpYieldRankingPage() {
             <a href="#faq">FAQ</a>
             <a href="#method-title">Method</a>
           </nav>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="snapshot-title">
+          <h2 id="snapshot-title" className="rp-snapshot-h">
+            XRP yield right now
+          </h2>
+          <div className="rp-snapshot">
+            <p>
+              As of {updated}, the highest 30-day single-exposure rate is{" "}
+              <strong>{pct(histRate(topSingle))}</strong> on{" "}
+              {nice(topSingle.displayName ?? topSingle.symbol)} via{" "}
+              {topSingle.platform}
+              {topDual ? (
+                <>
+                  , while dual-exposure liquidity pools reach{" "}
+                  <strong>{pct(histRate(topDual))}</strong> on{" "}
+                  {nice(topDual.displayName ?? topDual.symbol)} ({topDual.platform})
+                </>
+              ) : null}
+              {topPt ? (
+                <>
+                  . Fixed-rate Principal Tokens sit near{" "}
+                  <strong>{pct(histRate(topPt))}</strong>, locked to maturity
+                </>
+              ) : null}
+              . The median across {stats.venues} tracked sources is{" "}
+              <strong>{pct(stats.medianApy)}</strong>.
+            </p>
+            <p className="rp-snapshot-note">
+              Headline dual-exposure and pool rates often include reward-token
+              incentives and carry impermanent loss, so they tend to ease once a
+              rewards program tapers. {stats.incentivized} of the {stats.venues}{" "}
+              venues here rely on incentives for the bulk of their rate. The
+              30-day average, used throughout the ranking below, is the steadier
+              guide.
+            </p>
+          </div>
         </section>
 
         <section className="uni-home-content" id="rankings" aria-labelledby="rankings-title">

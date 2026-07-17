@@ -7,6 +7,7 @@ import cbbtcIcon from "@/assets/icons/cbBTC.png";
 import eurcIcon from "@/assets/icons/EURC.png";
 import stxrpIcon from "@/assets/icons/stXRP.svg";
 import fxrpIcon from "@/assets/icons/FXRP.webp";
+import xrpIcon from "@/assets/icons/xrp.svg";
 
 import baseIcon from "@/assets/icons/base.png";
 import arbitrumIcon from "@/assets/icons/arbitrum.png";
@@ -61,7 +62,10 @@ export function AssetIcon({
   size = 22,
   priority = false,
 }: { asset: string } & IconProps) {
-  const icon = ASSET_ICONS[asset];
+  // Exact match first; then any unmapped XRP-family token (XRP, cbXRP, csXRP,
+  // wXRP...) falls back to the generic XRP mark rather than a letter monogram.
+  // Keeps the map open for exact per-token icons to be added later.
+  const icon = ASSET_ICONS[asset] ?? (/xrp/i.test(asset) ? xrpIcon : undefined);
   if (icon) {
     return (
       <img
