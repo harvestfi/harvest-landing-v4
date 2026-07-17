@@ -116,6 +116,64 @@ export function itemListSchema(vaults: YieldVault[], hubUrl: string): object {
   };
 }
 
+// Report pages (e.g. /report/xrp-yield-ranking) aren't per-vault, so they use
+// these plain builders instead of the YieldVault-typed ones above.
+
+export function faqPageSchema(faqs: { q: string; a: string }[]): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+}
+
+// Ranking as an ItemList. Kept to plain name + url ListItems (not
+// FinancialProduct): the ranked venues are external protocols, not our
+// products, so we avoid schema that would read as if we offer them.
+export function reportItemListSchema(
+  items: { name: string; url: string }[],
+  listUrl: string,
+): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    url: listUrl,
+    numberOfItems: items.length,
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.name,
+      url: it.url,
+    })),
+  };
+}
+
+export function reportWebPageSchema(o: {
+  name: string;
+  url: string;
+  description: string;
+  dateModified: string;
+}): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: o.name,
+    url: o.url,
+    description: o.description,
+    dateModified: o.dateModified,
+    isBasedOn: `${SITE_URL}/methodology`,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  };
+}
+
 export function articleSchema({
   title,
   description,

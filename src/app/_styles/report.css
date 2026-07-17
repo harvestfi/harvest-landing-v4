@@ -507,3 +507,65 @@
   line-height: 1.5;
   color: var(--uni-ink-3);
 }
+
+/* Hero freshness line (under the subtitle, on the gold hero). */
+.rp-updated {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--uni-ink);
+  opacity: 0.72;
+  margin: -18px 0 26px;
+}
+
+/* On-this-page jump links, below the Overview. */
+.rp-toc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px 15px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--uni-line);
+}
+.rp-toc-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--uni-ink-3);
+}
+.rp-toc a {
+  font-size: 13px;
+  color: var(--uni-ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.rp-toc a:hover {
+  color: var(--uni-ink);
+  border-bottom-color: var(--uni-gold, #ffb936);
+}
+
+/* FAQ list (visible copy mirrors the FAQPage schema). */
+.rp-faq { max-width: 100%; }
+.rp-faq-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--uni-line);
+}
+.rp-faq-item:first-child { padding-top: 4px; }
+.rp-faq-item:last-child { border-bottom: none; }
+.rp-faq dt {
+  font-family: var(--display, var(--sans));
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+  margin-bottom: 7px;
+}
+.rp-faq dd {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.66;
+  color: var(--uni-ink-2);
+  max-width: 80ch;
+}
