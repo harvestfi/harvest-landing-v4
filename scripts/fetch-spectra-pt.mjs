@@ -107,7 +107,7 @@ const mean = (arr) => (arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length 
 // Downsample the raw (roughly 4-hourly) chart into one point per calendar day
 // (the last reading of each day) so the report can draw a clean daily
 // max-fixed-APY line. Capped to the most recent `capDays`.
-function dailySeries(chart, capDays = 120) {
+function dailySeries(chart, capDays = 400) {
   const byDay = new Map();
   for (const r of chart) {
     byDay.set(new Date(r.t).toISOString().slice(0, 10), round2(r.apy));

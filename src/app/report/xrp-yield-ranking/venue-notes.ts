@@ -55,7 +55,7 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     token: "csXRP",
     icon: "csXRP",
     chain: "Flare",
-    desc: "The share token of the Clearstar-curated XRP vault on Mystic Finance. Supplying FXRP mints csXRP, which represents your FXRP plus the interest earned as the curator lends it across Morpho markets on Flare.",
+    desc: "The share token of the Clearstar-curated XRP vault on Mystic Finance. Supplying FXRP mints csXRP, which represents the deposited FXRP plus the interest earned as the curator lends it across Morpho markets on Flare.",
   },
   {
     token: "cbXRP",
@@ -128,7 +128,7 @@ export const VENUE_GROUPS: VenueGroup[] = [
         url: "https://sparkdex.ai/pool/v4/add/steer/0x490e6bf329c6760f989fefbe6c77d7a34e0a5078",
         blurb: [
           "SparkDEX is the leading DEX on Flare, spanning concentrated-liquidity pools (v3.1 and a v4 built on Algebra) and a perps venue. The WFLR / FXRP pool pairs wrapped FLR with wrapped XRP.",
-          "This pool runs an Automatic strategy managed by Steer Protocol, an automated liquidity manager that keeps the position in range and rebalances it for you, so LPs capture more swap fees without tuning the range by hand. Rewards are swap fees plus rFLR from Flare's emissions program, which vests over roughly 12 months.",
+          "This pool runs an Automatic strategy managed by Steer Protocol, an automated liquidity manager that keeps the position in range and rebalances it, so LPs capture more swap fees without tuning the range by hand. Rewards are swap fees plus rFLR from Flare's emissions program, which vests over roughly 12 months.",
         ],
         facts: [
           { label: "Yield source", value: "Swap fees plus rFLR emissions" },
@@ -148,8 +148,8 @@ export const VENUE_GROUPS: VenueGroup[] = [
         assets: ["csXRP"],
         url: "https://app.mysticfinance.xyz/vault?vaultAddress=0x53184adabf312b490bf1ebcfdc896feff6019a14&chainId=14",
         blurb: [
-          "Mystic Finance is the front end for Morpho-powered lending on Flare. Supplying FXRP into its Clearstar-curated vault mints csXRP, a share token that represents your FXRP plus the interest it earns as the curator allocates it across Morpho markets.",
-          "The yield is borrow interest from those markets, net of a fee (documented at 5 to 20 percent of interest) split between Mystic and the curator. Because a curator actively moves the money, you are trusting their allocation as well as the underlying contracts.",
+          "Mystic Finance is the front end for Morpho-powered lending on Flare. Supplying FXRP into its Clearstar-curated vault mints csXRP, a share token that represents the deposited FXRP plus the interest it earns as the curator allocates it across Morpho markets.",
+          "The yield is borrow interest from those markets, net of a fee (documented at 5 to 20 percent of interest) split between Mystic and the curator. Because a curator actively moves the money, depositors rely on that allocation as well as the underlying contracts.",
         ],
         facts: [
           { label: "Yield source", value: "Borrow interest from Morpho lending markets" },

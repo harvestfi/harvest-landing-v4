@@ -157,18 +157,26 @@ export default function XrpYieldRankingPage() {
   // explain in the card).
   const featured = pools.find((p) => !isDual(p)) ?? pools[0];
 
-  // Group the ranking by product type, the same shape as the source table
-  // (Lending markets, Vaults, Fixed-term pools, Liquidity pools). Pools keep
-  // their 30d-rate order within each group.
-  const categories = RANK_CATEGORIES.map((c) => ({
-    ...c,
-    rows: pools.filter((p) => productTypeOf(p) === c.key),
-  })).filter((c) => c.rows.length > 0);
+  // Split the ranking by exposure. Single-exposure = one-sided positions (no
+  // impermanent loss); dual-exposure = two-asset liquidity pools. Pools arrive
+  // sorted by 30d rate, so each list stays APY-sorted. The product type is
+  // surfaced per row in the Type column.
+  const singles = pools.filter((p) => !isDual(p));
+  const duals = pools.filter((p) => isDual(p));
 
   // Principal Tokens with a daily history feed the max-fixed-rate chart.
   const ptRows = pools.filter(
     (p) => productTypeOf(p) === "Fixed-rate" && (p.history?.length ?? 0) >= 2,
   );
+  // Trajectory + TVL blend for the PT commentary (derived, so it stays accurate
+  // between snapshots).
+  const ptTvl = ptRows.reduce((s, p) => s + p.tvlUsd, 0);
+  const ptOpenHi = ptRows.length
+    ? Math.max(...ptRows.map((p) => p.history?.[0]?.apy ?? 0))
+    : 0;
+  const ptNowHi = ptRows.length
+    ? Math.max(...ptRows.map((p) => histRate(p) ?? 0))
+    : 0;
 
   // Structured-data inputs (rendered as JSON-LD at the top of the page).
   const itemListItems = pools.map((p) => ({
@@ -252,9 +260,8 @@ export default function XrpYieldRankingPage() {
           <p className="uni-home-sub">
             The clearest way to earn yield on XRP, ranked by real rates. We track{" "}
             {pools.length}+ XRP DeFi sources, from lending and vaults to
-            fixed-rate Principal Tokens and liquidity pools, and rank them by the
-            rate each has actually paid over the last 30 days, not the headline
-            number they advertise.
+            fixed-rate Principal Tokens and liquidity pools, and rank every one by
+            the rate it has actually paid over the last 30 days.
           </p>
           <p className="rp-updated">
             Last updated {updated} · refreshed hourly from DeFiLlama and Spectra
@@ -273,12 +280,12 @@ export default function XrpYieldRankingPage() {
             <p>
               Earning yield on XRP has quietly grown into one of the more active
               corners of DeFi. XRP is not a proof-of-stake asset, so there is no
-              native staking rate to claim. It can earn a little on its own
-              ledger through the XRP Ledger&rsquo;s native AMM, and on-ledger
-              lending is starting to arrive, but the deeper and more varied rates
-              live on smart-contract chains. You bring XRP across as a wrapped
-              token (FXRP, cbXRP, or a staked form such as stXRP), then supply it
-              to a lending market, a vault, a fixed-rate Principal Token, or a
+              native staking rate to claim. The XRP Ledger&rsquo;s native AMM
+              already pays trading fees on-ledger, and on-ledger lending is
+              starting to arrive, while the deeper and more varied rates live on
+              smart-contract chains. There, XRP is held as a wrapped token
+              (FXRP, cbXRP, or a staked form such as stXRP) and supplied to a
+              lending market, a vault, a fixed-rate Principal Token, or a
               liquidity pool. This page gathers those venues and ranks them by
               the rate each has actually paid over the last 30 days.
             </p>
@@ -290,8 +297,8 @@ export default function XrpYieldRankingPage() {
               </strong>
               . Rates span <strong>{pct(lo)}</strong> to{" "}
               <strong>{pct(hi)}</strong>, with a median of{" "}
-              <strong>{pct(stats.medianApy)}</strong>. One number worth keeping
-              in mind: <strong>{stats.incentivized} of the {stats.venues}</strong>{" "}
+              <strong>{pct(stats.medianApy)}</strong>. One caveat:{" "}
+              <strong>{stats.incentivized} of the {stats.venues}</strong>{" "}
               lean on reward-token incentives for most of their headline rate, so
               those tend to ease off once the rewards program winds down.
               Everything here is an external protocol we track for research, not
@@ -315,29 +322,42 @@ export default function XrpYieldRankingPage() {
         <section className="uni-home-content" id="rankings" aria-labelledby="rankings-title">
           <h2 id="rankings-title">The ranking</h2>
           <p className="rp-lead">
-            Every XRP venue we track, ranked by its 30-day average rate and
-            grouped by the kind of product it is, so you can compare like with
-            like. Lending markets and vaults are single-sided; liquidity pools
-            pair XRP with a second asset for a higher rate and a bit more to
-            keep an eye on.
+            Every XRP venue we track, ranked by its 30-day average rate and split
+            by exposure. Single-exposure positions sit on one side of the market;
+            dual-exposure positions pair an XRP token with a second asset. The
+            Type column names each product.
           </p>
-          {categories.map((c) => (
-            <div className="rp-rank-group" key={c.key}>
-              <div className="rp-rank-head">
-                <h3>
-                  {c.label}
-                  <span className="rp-rank-count">
-                    {c.rows.length} {c.rows.length === 1 ? "venue" : "venues"}
-                  </span>
-                </h3>
-                <p>{c.blurb}</p>
-              </div>
-              <RankTable rows={c.rows} />
+          <div className="rp-rank-group">
+            <div className="rp-rank-head">
+              <h3>
+                Single-exposure XRP yield
+                <span className="rp-rank-count">{singles.length} venues</span>
+              </h3>
+              <p>
+                One-sided positions with no second asset and no impermanent loss:
+                lending markets, curated vaults, liquid staking, and fixed-rate
+                Principal Tokens. Sorted by 30-day rate.
+              </p>
             </div>
-          ))}
+            <RankTable rows={singles} />
+          </div>
+          <div className="rp-rank-group">
+            <div className="rp-rank-head">
+              <h3>
+                Dual-exposure XRP pools
+                <span className="rp-rank-count">{duals.length} venues</span>
+              </h3>
+              <p>
+                Two-asset liquidity pools that pair an XRP token with something
+                else and earn swap fees plus rewards. Higher headline rates, with
+                impermanent loss to manage. Sorted by 30-day rate.
+              </p>
+            </div>
+            <RankTable rows={duals} />
+          </div>
           <p className="rp-source-note">
-            Rates and TVL from DeFiLlama, as of {updated}, refreshed hourly.
-            &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
+            Rates and TVL from DeFiLlama and Spectra, as of {updated}, refreshed
+            hourly. &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
           </p>
         </section>
 
@@ -345,16 +365,23 @@ export default function XrpYieldRankingPage() {
           <section className="uni-home-content" aria-labelledby="ptchart-title">
             <h2 id="ptchart-title">PT max fixed rate, daily</h2>
             <p className="rp-lead">
-              How the locked-in fixed rate on each staked-XRP Principal Token has
-              moved, day by day, straight from Spectra. This is the rate a buyer
-              secures to maturity, not a floating yield, so the line is the whole
-              story: buy when it is high, and that is what you keep.
+              The locked-in fixed rate on each staked-XRP Principal Token, tracked
+              day by day since the market opened, straight from Spectra. A PT
+              secures this rate to maturity, so the line is the full record of
+              what each maturity has offered.
             </p>
             <div className="rp-charts">
               {ptRows.map((p) => (
                 <PtRateChart key={p.id} p={p} />
               ))}
             </div>
+            <p className="rp-source-note">
+              Both maturities opened near {pct(ptOpenHi)} and have eased into the
+              low single digits since, a gentle downtrend as early demand settled.
+              The top fixed rate now sits around {pct(ptNowHi)}, still competitive
+              with the single-sided field, and the two Spectra pools together hold{" "}
+              {usd(ptTvl)} in liquidity.
+            </p>
           </section>
         )}
 
@@ -363,65 +390,65 @@ export default function XrpYieldRankingPage() {
           <div className="rp-article">
             <p>
               The rates on this page all trace back to one of a few simple
-              places. Once you can see where a number is coming from, it gets
-              much easier to tell a steady, organic rate from one that is mostly
-              short-term rewards. Here is the friendly version.
+              sources. Knowing which source is behind a number makes it much
+              easier to tell a steady, organic rate from one that is mostly
+              short-term rewards.
             </p>
 
-            <h3>Lending it out</h3>
+            <h3>Lending</h3>
             <p>
-              Supply your wrapped XRP to a money market like Kinetic, Venus or
-              Moonwell and borrowers pay you interest for the loan. It is
-              single-sided, so there is no second asset to track, and on Flare
-              the base rate is often topped up with rFLR reward tokens. This is
-              about as close as XRP gets to a plain savings rate.
+              Wrapped XRP supplied to a money market such as Kinetic, Venus or
+              Moonwell earns the interest borrowers pay on their loans. It is
+              single-sided, so there is no second asset to track, and on Flare the
+              base rate is often topped up with rFLR reward tokens. This is the
+              closest thing XRP has to a plain savings rate.
             </p>
 
-            <h3>Handing it to a vault</h3>
+            <h3>Vaults and liquid staking</h3>
             <p>
-              Vaults and liquid-staking tokens do the work for you. A curated
-              vault such as Spectra, Upshift, Mystic or Superform, or a staking
-              token like Firelight&rsquo;s stXRP, takes your wrapped XRP, runs a
-              strategy with it and compounds the results, so you hold a single
-              token and let a manager handle the rest. The rate blends whatever
-              the strategy earns with any reward incentives on top.
+              Vaults and liquid-staking tokens do the work automatically. A
+              curated vault such as Spectra, Upshift, Mystic or Superform, or a
+              staking token like Firelight&rsquo;s stXRP, takes the wrapped XRP,
+              runs a strategy with it and compounds the results into a single
+              token managed by a curator. The rate blends whatever the strategy
+              earns with any reward incentives on top.
             </p>
 
-            <h3>Providing liquidity</h3>
+            <h3>Liquidity provision</h3>
             <p>
-              Pair your XRP with another token in a pool on SparkDEX, Aerodrome
-              or Enosys and you earn a share of the swap fees, usually with extra
-              reward tokens layered on. The headline rates are the highest on the
-              page, with one trade-off: if the two tokens drift apart in price
-              you can face impermanent loss, so these suit people who are happy
-              to keep an eye on things.
+              Pairing an XRP token with another asset in a pool on SparkDEX,
+              Aerodrome or Enosys earns a share of the swap fees, usually with
+              extra reward tokens layered on. The headline rates are the highest
+              on the page, with one trade-off: if the two tokens drift apart in
+              price the position can suffer impermanent loss, so these pools
+              reward active management.
             </p>
 
-            <h3>Locking a rate with Principal Tokens</h3>
+            <h3>Fixed-rate Principal Tokens</h3>
             <p>
-              Spectra adds one more angle that is unique on this list: the
-              Principal Token, or PT. When you buy the PT for staked XRP you pay
-              a discount today and redeem it one-for-one for the underlying at a
-              set maturity date. The gap between that discounted price and the
-              full redemption value is a fixed rate you lock in up front, so
-              unlike everything else here the number does not drift day to day.
-              It is single-sided with no impermanent loss; the trade-off is that
-              the position runs to maturity, and selling early means taking
-              whatever the market will pay. Spectra publishes each PT&rsquo;s
-              current max fixed rate, which is the figure we track.
+              Spectra adds one more mechanism that is unique on this list: the
+              Principal Token, or PT. A PT for staked XRP trades at a discount
+              today and redeems one-for-one for the underlying at a set maturity
+              date. The gap between that discounted price and the full redemption
+              value is a fixed rate locked in up front, so unlike everything else
+              here the number does not drift day to day. It is single-sided with
+              no impermanent loss; the trade-off is that the position runs to
+              maturity, and an early exit takes whatever the market will pay.
+              Spectra publishes each PT&rsquo;s current max fixed rate, which is
+              the figure this report tracks.
             </p>
 
-            <h3>How we rank</h3>
+            <h3>How the ranking is sorted</h3>
             <p>
-              We sort by the 30-day average rate rather than today&rsquo;s spot
-              number, so a single big day of rewards cannot flatter a venue to
-              the top, and we group by product type so each table compares like
-              with like.
+              Venues are sorted by the 30-day average rate rather than
+              today&rsquo;s spot number, so a single big day of rewards cannot
+              flatter a venue to the top. The tables are split by exposure, and a
+              Type column names each product so like compares with like.
             </p>
 
             <div className="rp-callout">
-              Every venue on this page is an external protocol we track for
-              research. None are {SITE_NAME} products, this page is informational
+              Every venue on this page is an external protocol tracked for
+              research. None are {SITE_NAME} products. This page is informational
               only, and past rates are no promise of what a venue pays next.
             </div>
           </div>
@@ -432,20 +459,20 @@ export default function XrpYieldRankingPage() {
           <div className="rp-article">
             <p>
               Beyond the XRP Ledger&rsquo;s own native AMM, every rate on this
-              page starts by moving XRP onto a smart-contract chain in a wrapped
-              form. Which wrapper you hold matters as much as the venue: some are
-              trustless and collateral-backed, others rest on a single custodian.
-              Here are the four you&rsquo;ll see most, plus the Solana form.
+              page starts with XRP moved onto a smart-contract chain in a wrapped
+              form. The wrapper matters as much as the venue: some are trustless
+              and collateral-backed, others rest on a single custodian. These are
+              the four that appear most, plus the Solana form.
             </p>
-            <div className="rp-glossary">
+            <div className="rp-gloss-list">
               {WRAPPED_TOKENS.map((t) => (
-                <div className="rp-gloss" key={t.token}>
-                  <div className="rp-gloss-head">
-                    <AssetIcon asset={t.icon} size={22} />
+                <div className="rp-gloss-row" key={t.token}>
+                  <div className="rp-gloss-id">
+                    <AssetIcon asset={t.icon} size={24} />
                     <span className="rp-gloss-tok">{nice(t.token)}</span>
                     <span className="rp-gloss-chain">{t.chain}</span>
                   </div>
-                  <p>{t.desc}</p>
+                  <p className="rp-gloss-desc">{t.desc}</p>
                 </div>
               ))}
             </div>
@@ -456,22 +483,21 @@ export default function XrpYieldRankingPage() {
           <h2 id="staking-title">Can you stake XRP?</h2>
           <div className="rp-article">
             <p>
-              Short answer: not in the proof-of-stake sense. XRP secures the XRP
-              Ledger through a consensus protocol that has no validator staking
-              and no native staking rewards, so anyone advertising an
-              &ldquo;XRP staking&rdquo; rate is really describing something else.
-              Every number on this page comes from putting XRP to work, not from
-              staking it.
+              Short answer: no. XRP is not a proof-of-stake asset, and the XRP
+              Ledger has no validator staking and no native staking rewards, so
+              an advertised &ldquo;XRP staking&rdquo; rate is really describing
+              something else. Every rate on this page comes from putting XRP to
+              work in a market.
             </p>
             <p>
-              What people usually mean by staking XRP is one of three things:
-              lending it out and earning the interest borrowers pay; supplying it
-              to a liquidity pool and earning swap fees; or holding a liquid
-              staking token such as stXRP, where a protocol stakes the wrapped
-              XRP behind the scenes and passes a rate back to you. The XRP
-              Ledger&rsquo;s native AMM also lets you earn trading fees on-ledger.
-              None of these are native staking, and each carries its own risk,
-              which is why we label every venue by what it actually does.
+              The label usually covers one of three mechanisms: lending XRP and
+              earning the interest borrowers pay; supplying it to a liquidity
+              pool and earning swap fees; or holding a liquid staking token such
+              as stXRP, where a protocol stakes the wrapped XRP behind the scenes
+              and passes a rate through. The XRP Ledger&rsquo;s native AMM also
+              pays trading fees on-ledger. None are native staking, and each
+              carries its own risk, which is why every venue here is labelled by
+              what it actually does.
             </p>
           </div>
         </section>
@@ -480,33 +506,31 @@ export default function XrpYieldRankingPage() {
           <h2 id="cefi-title">CeFi vs DeFi XRP yield</h2>
           <div className="rp-article">
             <p>
-              You can also earn on XRP through centralized &ldquo;Earn&rdquo;
-              programs on exchanges and lenders. They are worth understanding,
-              because they chase the same searches and make a different
-              trade-off.
+              XRP can also earn through centralized &ldquo;Earn&rdquo; programs
+              on exchanges and lenders. They are worth understanding, because they
+              compete for the same searches and make a different trade-off.
             </p>
             <p>
-              Centralized programs are simple: you hold XRP on the platform and
-              it pays you a rate, sometimes higher than DeFi thanks to
-              promotional or token incentives. The catch is custody. Your XRP
-              sits with the provider, so you take on their solvency and
-              counterparty risk, and the rate can change or be pulled at will.
-              This report focuses on DeFi instead, because the positions are
-              onchain and verifiable: you can see the contract, the collateral
-              and the real rate, and in most cases you keep self-custody. The
-              trade-off there is smart-contract and bridge risk rather than
-              counterparty risk. Neither is strictly safer; they fail in
-              different ways.
+              Centralized programs are simple: XRP is held on the platform, which
+              pays a rate, sometimes higher than DeFi thanks to promotional or
+              token incentives. The trade-off is custody. The XRP sits with the
+              provider, which introduces solvency and counterparty risk, and the
+              rate can change or be pulled at will. This report focuses on DeFi
+              instead, because the positions are onchain and verifiable: the
+              contract, the collateral and the real rate are all visible, and
+              self-custody is usually retained. There the trade-off is
+              smart-contract and bridge risk rather than counterparty risk.
+              Neither is strictly safer; they fail in different ways.
             </p>
           </div>
         </section>
 
         <section className="uni-home-content" id="risks" aria-labelledby="risks-title">
-          <h2 id="risks-title">Risks worth knowing</h2>
+          <h2 id="risks-title">Key risks</h2>
           <div className="rp-article">
             <p>
-              XRP yield is real, but none of it is free money. These are the
-              risks that sit behind the rates on this page.
+              Every rate on this page carries risk. These are the main ones that
+              sit behind the numbers.
             </p>
             <dl className="rp-method">
               <dt>Bridge and wrapper risk</dt>
@@ -520,8 +544,8 @@ export default function XrpYieldRankingPage() {
               <dt>Impermanent loss</dt>
               <dd>
                 Liquidity pools pair XRP with a second asset. If the two prices
-                move apart, your position can be worth less than simply holding,
-                which can outweigh the fees and rewards you earned.
+                move apart, the position can be worth less than simply holding,
+                which can outweigh the fees and rewards it earned.
               </dd>
               <dt>Incentive dependency</dt>
               <dd>
@@ -533,7 +557,7 @@ export default function XrpYieldRankingPage() {
               <dt>Curator and manager risk</dt>
               <dd>
                 Vaults are actively run by curators such as Clearstar, Gami Labs,
-                Byzantine Labs and Monarq. You are trusting their allocation
+                Byzantine Labs and Monarq. Depositors rely on their allocation
                 choices and controls on top of the underlying contracts.
               </dd>
               <dt>Smart-contract and oracle risk</dt>
@@ -544,9 +568,9 @@ export default function XrpYieldRankingPage() {
               </dd>
             </dl>
             <div className="rp-callout">
-              This page is informational only and not financial advice. Past
-              rates are no promise of future ones, and no DeFi yield is
-              risk-free.
+              This page is informational only. It does not constitute financial
+              advice. Past rates are no promise of future ones, and no DeFi yield
+              is risk-free.
             </div>
           </div>
         </section>
@@ -579,14 +603,17 @@ export default function XrpYieldRankingPage() {
 
         <section className="uni-home-content" id="faq" aria-labelledby="faq-title">
           <h2 id="faq-title">XRP yield, answered</h2>
-          <dl className="rp-faq">
+          <div className="rp-faq">
             {FAQ.map((f, i) => (
-              <div className="rp-faq-item" key={i}>
-                <dt>{f.q}</dt>
-                <dd>{f.a}</dd>
-              </div>
+              <details className="rp-faq-item" key={i} open={i === 0}>
+                <summary className="rp-faq-q">
+                  <span>{f.q}</span>
+                  <span className="rp-faq-mark" aria-hidden="true" />
+                </summary>
+                <p className="rp-faq-a">{f.a}</p>
+              </details>
             ))}
-          </dl>
+          </div>
         </section>
 
         <section className="uni-home-content" aria-labelledby="method-title">
@@ -609,11 +636,12 @@ export default function XrpYieldRankingPage() {
               shown alongside.
             </dd>
             <dt>Freshness</dt>
-            <dd>Refreshed hourly from the free DeFiLlama API; this page reflects the {updated} snapshot.</dd>
+            <dd>Refreshed hourly from the free DeFiLlama API and the Spectra API; this page reflects the {updated} snapshot.</dd>
             <dt>What this is not</dt>
             <dd>
-              Not an endorsement and not financial advice. {SITE_NAME} indexes
-              DeFi yield data; the venues above are external. Our own coverage is{" "}
+              The figures are informational only and are not an endorsement or
+              financial advice. {SITE_NAME} indexes DeFi yield data; the venues
+              above are external. Our own coverage is{" "}
               <Link href="/usdc">USDC</Link>, <Link href="/eth">ETH</Link> and{" "}
               <Link href="/btc">BTC</Link> strategies, indexed with the same
               methodology used on every product page (see{" "}
@@ -632,73 +660,45 @@ export default function XrpYieldRankingPage() {
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Can you stake XRP?",
-    a: "No. XRP is not a proof-of-stake asset and has no native staking or validator rewards. The rates people call XRP staking actually come from lending XRP, providing liquidity, or holding a liquid staking token such as stXRP that stakes wrapped XRP on your behalf.",
+    a: "No. XRP is not a proof-of-stake asset and has no native staking or validator rewards. The rates people call XRP staking actually come from lending XRP, providing liquidity, or holding a liquid staking token such as stXRP that stakes wrapped XRP on the holder's behalf.",
   },
   {
     q: "What is the best XRP yield right now?",
-    a: "It depends on how much risk you want. Single-sided options (lending and vaults) are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually rely on incentives. The ranking above sorts every venue by its real 30-day average so you can compare like with like.",
+    a: "It depends on the level of risk. Single-sided options (lending and vaults) are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually rely on incentives. The ranking above sorts every venue by its real 30-day average, so like compares with like.",
   },
   {
     q: "What are FXRP, stXRP and cbXRP?",
-    a: "They are wrapped forms of XRP. FXRP is XRP bridged trustlessly onto Flare through the FAssets system; cbXRP is Coinbase-custodied wrapped XRP on Base; stXRP is Firelight's liquid staking token for FXRP. Which one you hold changes the trust model and the risk.",
+    a: "They are wrapped forms of XRP. FXRP is XRP bridged trustlessly onto Flare through the FAssets system; cbXRP is Coinbase-custodied wrapped XRP on Base; stXRP is Firelight's liquid staking token for FXRP. The choice of wrapper changes the trust model and the risk.",
   },
   {
     q: "Is earning yield on XRP safe?",
-    a: "No DeFi yield is risk-free. On top of ordinary market risk, XRP yield adds bridge or custody risk on the wrapper, smart-contract and oracle risk on each venue, impermanent loss in pools, and reliance on incentive tokens that can fade. Treat this page as informational research, not advice.",
+    a: "No DeFi yield is risk-free. On top of ordinary market risk, XRP yield adds bridge or custody risk on the wrapper, smart-contract and oracle risk on each venue, impermanent loss in pools, and reliance on incentive tokens that can fade. This page is informational research only.",
   },
   {
     q: "What is impermanent loss in an XRP liquidity pool?",
-    a: "It is the gap between simply holding two tokens and supplying them to a pool. When the two prices drift apart, the pool rebalances against you, so you can end up with less value than if you had held, even after the fees and rewards you earned.",
+    a: "It is the gap between simply holding two tokens and supplying them to a pool. When the two prices drift apart, the pool rebalances against the position, so it can end up worth less than holding, even after the fees and rewards it earned.",
   },
   {
     q: "CeFi vs DeFi XRP yield, which is better?",
-    a: "Neither is strictly better. Centralized Earn programs are simpler and sometimes pay more, but you give up custody and take counterparty risk. DeFi keeps positions onchain and verifiable with self-custody, but adds smart-contract and bridge risk. This report tracks the DeFi side.",
+    a: "Neither is strictly better. Centralized Earn programs are simpler and sometimes pay more, but custody is given up and counterparty risk is taken on. DeFi keeps positions onchain and verifiable with self-custody, but adds smart-contract and bridge risk. This report tracks the DeFi side.",
   },
   {
     q: "What is the highest APY for XRP?",
-    a: "The highest numbers here are almost always two-asset liquidity pools boosted by reward emissions, which is why they also carry impermanent loss and tend to fade. A steadier single-sided rate on a deep, long-running venue is often the more durable choice. Read the 30-day figure, not the spot number.",
+    a: "The highest numbers here are almost always two-asset liquidity pools boosted by reward emissions, which is why they also carry impermanent loss and tend to fade. A steadier single-sided rate on a deep, long-running venue is often the more durable choice. The 30-day figure is the better guide than the spot number.",
   },
 ];
 
-// Ranking columns: # | Product | Platform | Network | 30d rate | TVL | Discover.
-const RANK_COLS = "34px minmax(150px,1.7fr) minmax(110px,1fr) minmax(84px,0.8fr) 92px 84px 104px";
+// Short display labels for the Type column, derived from productTypeOf.
+function typeLabel(p: XrpPool): string {
+  const k = productTypeOf(p);
+  if (k === "Lending market") return "Lending";
+  if (k === "Fixed-rate") return "Fixed-Rate PT";
+  if (k === "Fixed-term pool") return "Fixed-Term";
+  if (k === "Vault") return "Vault";
+  return "Pool";
+}
 
-// Product-type buckets, mirroring the source table's categories. Order is the
-// display order; a bucket with no rows is skipped.
-const RANK_CATEGORIES: { key: string; label: string; blurb: string }[] = [
-  {
-    key: "Lending market",
-    label: "Lending markets",
-    blurb:
-      "Supply wrapped XRP and earn the interest borrowers pay. Single-sided, with no second asset to manage.",
-  },
-  {
-    key: "Vault",
-    label: "Vaults",
-    blurb:
-      "A curated strategy or aggregator puts your wrapped XRP to work and compounds it for you. You hold one token.",
-  },
-  {
-    key: "Fixed-rate",
-    label: "Fixed-rate (Principal Tokens)",
-    blurb:
-      "Buy a staked-XRP Principal Token at a discount and redeem it one-for-one at maturity, locking a fixed rate today. Single-sided, no impermanent loss, only found on Spectra.",
-  },
-  {
-    key: "Fixed-term pool",
-    label: "Fixed-term pools",
-    blurb:
-      "Provide liquidity to a staked-XRP yield market with a set maturity date, earning swap fees plus rewards.",
-  },
-  {
-    key: "Liquidity pool",
-    label: "Liquidity pools",
-    blurb:
-      "Pair XRP with a second token to earn swap fees plus rewards. Higher rates, with impermanent loss to keep an eye on.",
-  },
-];
-
-// Resolve a pool to one of the RANK_CATEGORIES keys. Curated rows carry an
+// Resolve a pool to one of the product-type keys. Curated rows carry an
 // explicit productType; everything else is inferred from the DeFiLlama
 // category / project / exposure.
 function productTypeOf(p: XrpPool): string {
@@ -752,9 +752,10 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
   return (
     <div className="hub-table-wrap rp-rank" data-nosnippet="">
       <div className="hub-table" role="table" aria-label="XRP yield ranking">
-        <div className="hub-thead" role="row" style={{ gridTemplateColumns: RANK_COLS }}>
+        <div className="hub-thead" role="row">
           <span className="hub-th hub-th-rank">#</span>
           <span className="hub-th">Product</span>
+          <span className="hub-th">Type</span>
           <span className="hub-th">Platform</span>
           <span className="hub-th">Network</span>
           <span className="hub-th hub-th-num">30d rate</span>
@@ -763,11 +764,14 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
         </div>
         <div className="hub-tbody" role="rowgroup">
           {rows.map((p, i) => (
-            <div className="hub-row" role="row" key={p.id} style={{ gridTemplateColumns: RANK_COLS }}>
+            <div className="hub-row" role="row" key={p.id}>
               <span className="hub-cell hub-rank">{i + 1}</span>
               <span className="hub-cell hub-vault">
                 <TokenIcons symbol={p.symbol} />
                 <span className="hub-vault-name">{nice(p.displayName ?? p.symbol)}</span>
+              </span>
+              <span className="hub-cell rp-cell-text">
+                <span className="rp-type">{typeLabel(p)}</span>
               </span>
               <span className="hub-cell rp-cell-text">{p.platform}</span>
               <span className="hub-cell rp-cell-text">{chainLabel(p.chain)}</span>
@@ -778,7 +782,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                   href={p.platformUrl ?? p.llamaUrl}
                   platform={p.platform}
                   source={`ranking:${p.venueSlug ?? p.project}`}
-                  product={nice(p.symbol)}
+                  product={nice(p.displayName ?? p.symbol)}
                   chain={p.chain}
                 />
               </span>
@@ -875,7 +879,10 @@ function PtRateChart({ p }: { p: XrpPool }) {
   return (
     <div className="rp-chart-card">
       <div className="rp-chart-head">
-        <span className="rp-chart-title">{label}</span>
+        <span className="rp-chart-title">
+          {label}
+          <span className="rp-chart-tvl">{usd(p.tvlUsd)} TVL</span>
+        </span>
         <span className="rp-chart-now">
           {pct(last.apy)}
           <small>max fixed</small>

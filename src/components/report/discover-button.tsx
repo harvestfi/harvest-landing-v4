@@ -80,12 +80,16 @@ export function DiscoverButton({
       <button
         type="button"
         className="rp-discover"
+        aria-label={label}
         onClick={() => {
           track("open");
           setOpen(true);
         }}
       >
-        {label}
+        <span className="rp-discover-label">{label}</span>
+        <span className="rp-discover-arrow" aria-hidden="true">
+          →
+        </span>
       </button>
       {open && (
         <div

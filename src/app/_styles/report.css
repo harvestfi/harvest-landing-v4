@@ -224,11 +224,21 @@
   margin-bottom: 10px;
 }
 .rp-chart-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   font-family: var(--display, var(--sans));
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.008em;
   color: var(--uni-ink);
+}
+.rp-chart-tvl {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--uni-ink-3);
 }
 .rp-chart-now {
   font-family: var(--display, var(--sans));
@@ -285,46 +295,110 @@
 }
 .rp-rank .rp-cell-action { display: flex; justify-content: flex-end; }
 
+/* Type pill (small, muted) in the Type column. */
+.rp-type {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--hub-card, #f1f5f4);
+  color: var(--hub-ink-2, #47463f);
+  white-space: nowrap;
+}
+
+/* Ranking grid track. Kept in CSS (not inline) so the mobile media query can
+   collapse it to icon + name + rate + arrow, like the asset-page tables.
+   # | Product | Type | Platform | Network | 30d rate | TVL | action */
+.rp-rank .hub-thead,
+.rp-rank .hub-row {
+  grid-template-columns:
+    34px minmax(140px, 1.7fr) 104px minmax(96px, 1fr)
+    minmax(80px, 0.8fr) 92px 78px 100px;
+  gap: 16px;
+}
+/* The Discover button shows its text label on desktop; the arrow is mobile. */
+.rp-discover-arrow { display: none; }
+
+@media (max-width: 640px) {
+  .rp-rank .hub-thead,
+  .rp-rank .hub-row {
+    grid-template-columns: minmax(0, 1fr) 68px 40px;
+    gap: 10px;
+  }
+  /* Hide #, Type, Platform, Network, TVL - leave Product, 30d rate, action. */
+  .rp-rank .hub-thead > :nth-child(1),
+  .rp-rank .hub-row > :nth-child(1),
+  .rp-rank .hub-thead > :nth-child(3),
+  .rp-rank .hub-row > :nth-child(3),
+  .rp-rank .hub-thead > :nth-child(4),
+  .rp-rank .hub-row > :nth-child(4),
+  .rp-rank .hub-thead > :nth-child(5),
+  .rp-rank .hub-row > :nth-child(5),
+  .rp-rank .hub-thead > :nth-child(7),
+  .rp-rank .hub-row > :nth-child(7) {
+    display: none;
+  }
+  /* The global HubTable phone rules hide .hub-cell nth-child 4-6 for the
+     asset-page column order; our rate column is nth-child 6, so re-show it at
+     higher specificity (0,6,0 beats the global 0,5,0). */
+  .hub-table-wrap.rp-rank .hub-table .hub-thead > .hub-th:nth-child(6),
+  .hub-table-wrap.rp-rank .hub-table .hub-row > .hub-cell:nth-child(6) {
+    display: block;
+  }
+  /* Compact arrow CTA instead of the "Discover" text. */
+  .rp-rank .rp-discover { padding: 6px 9px; }
+  .rp-rank .rp-discover-label { display: none; }
+  .rp-rank .rp-discover-arrow { display: inline; font-size: 15px; line-height: 1; }
+  /* Tighten the row + product name so the three items fit one clean line. */
+  .rp-rank .hub-row { padding: 14px 14px; }
+  .rp-rank .hub-vault { gap: 9px; }
+  .rp-rank .hub-vault-name { font-size: 14.5px; }
+}
+
 /* === Wrapped-XRP glossary ==========================================
-   Compact reference for the token forms (FXRP, cbXRP, stXRP, csXRP)
-   that sit under most of the ranking. Auto-fitting cards, full width. */
-.rp-glossary {
+   Compact reference for the token forms (FXRP, cbXRP, stXRP, csXRP, wXRP).
+   Even full-width rows (token id on the left, description on the right) so
+   the layout never leaves a lonely last card. */
+.rp-gloss-list {
+  border-top: 1px solid var(--uni-line);
+  margin: 22px 0 4px;
+}
+.rp-gloss-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-  gap: 20px;
-  margin: 26px 0 10px;
+  grid-template-columns: minmax(150px, 210px) 1fr;
+  gap: 8px 28px;
+  align-items: baseline;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--uni-line);
 }
-.rp-gloss {
-  border: 1px solid var(--uni-line);
-  border-radius: 16px;
-  padding: 22px 24px;
-  background: var(--uni-card-2);
-}
-.rp-gloss-head {
+.rp-gloss-id {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
 }
+.rp-gloss-id img { border-radius: 50%; flex-shrink: 0; }
 .rp-gloss-tok {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--uni-ink);
 }
 .rp-gloss-chain {
-  margin-left: auto;
   font-size: 11px;
   font-weight: 600;
   color: var(--uni-ink-3);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.rp-gloss p {
+.rp-gloss-desc {
   margin: 0;
   font-size: 14px;
   line-height: 1.66;
   color: var(--uni-ink-2);
+}
+@media (max-width: 620px) {
+  .rp-gloss-row { grid-template-columns: 1fr; gap: 6px; }
 }
 
 /* === Venue directory ("in depth") =================================
@@ -546,26 +620,52 @@
   border-bottom-color: var(--uni-gold, #ffb936);
 }
 
-/* FAQ list (visible copy mirrors the FAQPage schema). */
-.rp-faq { max-width: 100%; }
-.rp-faq-item {
+/* FAQ accordion (native <details>; visible copy mirrors the FAQPage schema).
+   Full-width answers, first item open by default. */
+.rp-faq { max-width: 100%; border-top: 1px solid var(--uni-line); }
+.rp-faq-item { border-bottom: 1px solid var(--uni-line); }
+.rp-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 18px 0;
-  border-bottom: 1px solid var(--uni-line);
-}
-.rp-faq-item:first-child { padding-top: 4px; }
-.rp-faq-item:last-child { border-bottom: none; }
-.rp-faq dt {
+  cursor: pointer;
+  list-style: none;
   font-family: var(--display, var(--sans));
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.008em;
   color: var(--uni-ink);
-  margin-bottom: 7px;
 }
-.rp-faq dd {
+.rp-faq-q::-webkit-details-marker { display: none; }
+.rp-faq-q:hover { color: var(--uni-ink-2); }
+/* Chevron built from two spans of the pseudo-element border. */
+.rp-faq-mark {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.rp-faq-mark::before,
+.rp-faq-mark::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--uni-ink-3);
+}
+.rp-faq-mark::before { left: 0; transform: rotate(45deg); }
+.rp-faq-mark::after { right: 0; transform: rotate(-45deg); }
+.rp-faq-item[open] .rp-faq-mark { transform: rotate(180deg); }
+.rp-faq-a {
   margin: 0;
-  font-size: 14.5px;
-  line-height: 1.66;
+  padding: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.7;
   color: var(--uni-ink-2);
-  max-width: 80ch;
+  max-width: 100%;
 }
