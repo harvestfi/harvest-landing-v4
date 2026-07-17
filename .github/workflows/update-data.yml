@@ -39,8 +39,12 @@ jobs:
         run: node scripts/fetch-holder-growth.mjs
         continue-on-error: true
 
-      - name: Fetch XRP yield report data (DeFiLlama)
+      - name: Fetch XRP yield report data (DeFiLlama + Spectra PTs)
         run: node scripts/fetch-xrp-yield.mjs
+        env:
+          # Include Spectra Principal Token fixed rates (single-exposure
+          # Fixed-Rate rows). CI has direct network access to api.spectra.finance.
+          XRP_SPECTRA_PT: "1"
         continue-on-error: true
 
       - name: Commit and push if changed

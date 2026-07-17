@@ -47,6 +47,9 @@ interface XrpPool {
   curated?: boolean;
   productType?: string;
   venueSlug?: string;
+  // Optional display label overriding `symbol` (e.g. Spectra PTs show the
+  // maturity); the icon still keys off `symbol`.
+  displayName?: string;
 }
 interface XrpYieldData {
   generatedAt: string;
@@ -530,7 +533,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
               <span className="hub-cell hub-rank">{i + 1}</span>
               <span className="hub-cell hub-vault">
                 <TokenIcons symbol={p.symbol} />
-                <span className="hub-vault-name">{nice(p.symbol)}</span>
+                <span className="hub-vault-name">{nice(p.displayName ?? p.symbol)}</span>
               </span>
               <span className="hub-cell rp-cell-text">{p.platform}</span>
               <span className="hub-cell rp-cell-text">{chainLabel(p.chain)}</span>

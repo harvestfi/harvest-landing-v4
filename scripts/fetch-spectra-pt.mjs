@@ -55,50 +55,46 @@ async function getJson(url, cacheName, tries = 3) {
   return null;
 }
 
-const num = (v) => (Number.isFinite(+v) ? +v : null);
+const num = (v) => (v == null || v === "" || Number.isNaN(+v) ? null : +v);
+const toMs = (t) => {
+  const n = num(t);
+  if (n == null) return new Date(t).getTime();
+  return n < 1e12 ? n * 1000 : n; // epoch seconds -> ms
+};
 
-// pools[0].ptApy per the Spectra team; handle {pools:[...]}, a bare array, or a
-// bare object defensively.
-function readPool(data) {
-  if (!data) return null;
-  if (Array.isArray(data)) return data[0] ?? null;
-  if (Array.isArray(data.pools)) return data.pools[0] ?? null;
-  return data;
+// The PT object. Confirmed shape: { data: [ { name, symbol, maturity, ibt,
+// underlying, tvl, pools: [ { ptApy, liquidity, ... } ] } ] }.
+function readPT(doc) {
+  const d = doc?.data;
+  if (Array.isArray(d)) return d[0] ?? null;
+  return d ?? null;
 }
-function maturityOf(pool) {
-  const m = pool?.maturity ?? pool?.maturityTimestamp ?? pool?.expiry;
-  if (m == null) return null;
-  const ms = String(m).length <= 10 ? Number(m) * 1000 : Number(m);
-  const d = new Date(ms);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-function tvlOf(pool) {
-  return (
-    num(pool?.liquidity?.usd) ??
-    num(pool?.tvl) ??
-    num(pool?.tvlUsd) ??
-    num(pool?.liquidity) ??
-    0
-  );
+const poolOf = (pt) => pt?.pools?.[0] ?? null;
+const ptApyOf = (pt) => num(poolOf(pt)?.ptApy);
+const tvlOf = (pt) => num(poolOf(pt)?.liquidity?.usd) ?? num(pt?.tvl?.usd) ?? 0;
+const assetOf = (pt, fallback) => pt?.ibt?.symbol || pt?.underlying?.symbol || fallback;
+function maturityOf(pt) {
+  const ms = pt?.maturity != null ? toMs(pt.maturity) : NaN;
+  return Number.isFinite(ms) ? new Date(ms) : null;
 }
 
-// Normalise a chart payload into [{ t: ms, apy }]. Field names vary between
-// providers, so try the common ones; confirmed against a real sample before CI.
+// Chart rows are [epochSeconds, { apy: "3.54", buyUsd, sellUsd, ... }]. apy is
+// a percent string. Normalise to [{ t: ms, apy }].
 function readChart(data) {
-  const rows = Array.isArray(data)
-    ? data
-    : data?.data ?? data?.points ?? data?.chart ?? [];
+  const rows = Array.isArray(data) ? data : data?.data ?? [];
   const out = [];
   for (const r of rows) {
-    const tRaw = r.timestamp ?? r.time ?? r.date ?? r.t;
-    const aRaw = r.ptApy ?? r.apy ?? r.maxFixedApy ?? r.value ?? r.y;
+    let tRaw, aRaw;
+    if (Array.isArray(r)) {
+      tRaw = r[0];
+      aRaw = r[1]?.apy ?? r[1];
+    } else {
+      tRaw = r.timestamp ?? r.time ?? r.t ?? r.date;
+      aRaw = r.apy ?? r.value ?? r.y;
+    }
     const a = num(aRaw);
-    if (a == null || tRaw == null) continue;
-    const isEpoch = /^\d+$/.test(String(tRaw));
-    const ms = isEpoch
-      ? (String(tRaw).length <= 10 ? Number(tRaw) * 1000 : Number(tRaw))
-      : new Date(tRaw).getTime();
-    if (!Number.isFinite(ms)) continue;
+    const ms = tRaw != null ? toMs(tRaw) : NaN;
+    if (a == null || !Number.isFinite(ms)) continue;
     out.push({ t: ms, apy: a });
   }
   out.sort((a, b) => a.t - b.t);
@@ -111,8 +107,8 @@ const mean = (arr) => (arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length 
 export async function fetchSpectraPTs() {
   const rows = [];
   for (const { address, asset } of SPECTRA_PT_POOLS) {
-    const pool = readPool(await getJson(`${API}/${address}`, `pt-${address}.json`));
-    const ptApy = pool ? num(pool.ptApy) : null;
+    const pt = readPT(await getJson(`${API}/${address}`, `pt-${address}.json`));
+    const ptApy = ptApyOf(pt);
     if (ptApy == null || ptApy <= 0) {
       console.error(`[spectra-pt] ${address}: no usable ptApy, skipping`);
       continue;
@@ -128,7 +124,11 @@ export async function fetchSpectraPTs() {
     const inception = chart.length
       ? new Date(chart[0].t).toISOString().slice(0, 10)
       : null;
-    const maturity = maturityOf(pool);
+    const maturity = maturityOf(pt);
+    const matLabel = maturity
+      ? maturity.toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
+      : null;
+    const sym = assetOf(pt, asset); // "stXRP" - drives the row icon
 
     rows.push({
       id: `spectra-pt-${address}`,
@@ -137,15 +137,16 @@ export async function fetchSpectraPTs() {
       platform: "Spectra",
       platformUrl: `https://app.spectra.finance/pools/flare:${address}`,
       category: "Fixed-Rate",
-      symbol: asset,
-      poolMeta: maturity
-        ? `Matures ${maturity.toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })}`
-        : "Principal Token",
-      tvlUsd: Math.round(tvlOf(pool)),
-      apy: ptApy,
-      apyBase: ptApy,
+      symbol: sym,
+      // Icon keys off `symbol`; `displayName` shows the PT + maturity so the two
+      // maturities read apart in the ranking.
+      displayName: matLabel ? `${sym} PT ${matLabel}` : `${sym} PT`,
+      poolMeta: pt?.name ?? "Principal Token",
+      tvlUsd: Math.round(tvlOf(pt)),
+      apy: round2(ptApy),
+      apyBase: round2(ptApy),
       apyReward: 0,
-      apyMean30d: tail30.length ? round2(mean(tail30)) : ptApy,
+      apyMean30d: tail30.length ? round2(mean(tail30)) : round2(ptApy),
       rewardShare: 0,
       incentivized: false,
       ilRisk: "no",
