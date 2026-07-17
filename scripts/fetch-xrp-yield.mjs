@@ -221,6 +221,24 @@ const main = async () => {
   const overridden = applyOverrides(pools, venues);
   if (overridden > 0) console.log(`[xrp-yield] applied ${overridden} curated link override(s).`);
 
+  // Spectra Principal Token fixed rates (single-exposure "Fixed-Rate" rows).
+  // Gated OFF until the api.spectra.finance response shape is confirmed; enable
+  // by setting XRP_SPECTRA_PT=1 (locally with SPECTRA_CACHE, or in the workflow
+  // once verified). Failure never blocks the DeFiLlama snapshot.
+  if (process.env.XRP_SPECTRA_PT === "1") {
+    try {
+      const { fetchSpectraPTs } = await import("./fetch-spectra-pt.mjs");
+      const pts = await fetchSpectraPTs();
+      if (pts.length) {
+        pools.push(...pts);
+        pools.sort((a, b) => (b.apyMean30d ?? b.apy ?? 0) - (a.apyMean30d ?? a.apy ?? 0));
+        console.log(`[xrp-yield] added ${pts.length} Spectra PT row(s).`);
+      }
+    } catch (e) {
+      console.error("[xrp-yield] Spectra PT fetch failed:", e?.message ?? e);
+    }
+  }
+
   const apys = pools.map((p) => p.apyMean30d ?? p.apy ?? 0).sort((a, b) => a - b);
   const median = apys[Math.floor(apys.length / 2)] ?? 0;
   const out = {

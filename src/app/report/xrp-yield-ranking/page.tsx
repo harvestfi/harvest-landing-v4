@@ -305,6 +305,20 @@ export default function XrpYieldRankingPage() {
               to keep an eye on things.
             </p>
 
+            <h3>Locking a rate with Principal Tokens</h3>
+            <p>
+              Spectra adds one more angle that is unique on this list: the
+              Principal Token, or PT. When you buy the PT for staked XRP you pay
+              a discount today and redeem it one-for-one for the underlying at a
+              set maturity date. The gap between that discounted price and the
+              full redemption value is a fixed rate you lock in up front, so
+              unlike everything else here the number does not drift day to day.
+              It is single-sided with no impermanent loss; the trade-off is that
+              the position runs to maturity, and selling early means taking
+              whatever the market will pay. Spectra publishes each PT&rsquo;s
+              current max fixed rate, which is the figure we track.
+            </p>
+
             <h3>How we rank</h3>
             <p>
               We sort by the 30-day average rate rather than today&rsquo;s spot
@@ -381,7 +395,9 @@ export default function XrpYieldRankingPage() {
               XRP-denominated token (XRP, or a wrapped variant such as FXRP,
               stXRP, cbXRP or wXRP), holding at least $25k TVL. RLUSD, Ripple&rsquo;s
               dollar stablecoin, is excluded because it is not XRP-denominated,
-              and pools paying nothing are dropped.
+              and pools paying nothing are dropped. Fixed-rate Principal Tokens
+              come from Spectra&rsquo;s own API, which supplies each PT&rsquo;s
+              current max fixed rate and its history.
             </dd>
             <dt>Ranking</dt>
             <dd>
@@ -426,10 +442,16 @@ const RANK_CATEGORIES: { key: string; label: string; blurb: string }[] = [
       "A curated strategy or aggregator puts your wrapped XRP to work and compounds it for you. You hold one token.",
   },
   {
+    key: "Fixed-rate",
+    label: "Fixed-rate (Principal Tokens)",
+    blurb:
+      "Buy a staked-XRP Principal Token at a discount and redeem it one-for-one at maturity, locking a fixed rate today. Single-sided, no impermanent loss, only found on Spectra.",
+  },
+  {
     key: "Fixed-term pool",
     label: "Fixed-term pools",
     blurb:
-      "Fixed-rate and yield-trading markets built on staked XRP, each with a set maturity date.",
+      "Provide liquidity to a staked-XRP yield market with a set maturity date, earning swap fees plus rewards.",
   },
   {
     key: "Liquidity pool",
@@ -444,12 +466,16 @@ const RANK_CATEGORIES: { key: string; label: string; blurb: string }[] = [
 // category / project / exposure.
 function productTypeOf(p: XrpPool): string {
   const t = (p.productType || "").toLowerCase();
+  // Principal Tokens first: their productType/category is "Fixed-Rate", which
+  // also contains "fixed", so it must be caught before the fixed-term rule.
+  if (t.includes("fixed-rate") || t.includes("principal")) return "Fixed-rate";
   if (t.includes("lending")) return "Lending market";
   if (t.includes("fixed")) return "Fixed-term pool";
   if (t.includes("vault")) return "Vault"; // covers MetaVault
   if (t.includes("pool")) return "Liquidity pool";
   const c = (p.category || "").toLowerCase();
   const proj = (p.project || "").toLowerCase();
+  if (c.includes("fixed-rate") || c.includes("principal")) return "Fixed-rate";
   if (c.includes("lending")) return "Lending market";
   if (proj.startsWith("spectra-v2") || (c === "yield" && p.exposure === "single"))
     return "Fixed-term pool";
