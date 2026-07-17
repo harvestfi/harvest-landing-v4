@@ -50,6 +50,8 @@ interface XrpPool {
   // Optional display label overriding `symbol` (e.g. Spectra PTs show the
   // maturity); the icon still keys off `symbol`.
   displayName?: string;
+  // Daily max-fixed-APY series for Spectra Principal Tokens (chart source).
+  history?: { d: string; apy: number }[];
 }
 interface XrpYieldData {
   generatedAt: string;
@@ -154,6 +156,11 @@ export default function XrpYieldRankingPage() {
     ...c,
     rows: pools.filter((p) => productTypeOf(p) === c.key),
   })).filter((c) => c.rows.length > 0);
+
+  // Principal Tokens with a daily history feed the max-fixed-rate chart.
+  const ptRows = pools.filter(
+    (p) => productTypeOf(p) === "Fixed-rate" && (p.history?.length ?? 0) >= 2,
+  );
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -268,6 +275,23 @@ export default function XrpYieldRankingPage() {
             &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
           </p>
         </section>
+
+        {ptRows.length > 0 && (
+          <section className="uni-home-content" aria-labelledby="ptchart-title">
+            <h2 id="ptchart-title">PT max fixed rate, daily</h2>
+            <p className="rp-lead">
+              How the locked-in fixed rate on each staked-XRP Principal Token has
+              moved, day by day, straight from Spectra. This is the rate a buyer
+              secures to maturity, not a floating yield, so the line is the whole
+              story: buy when it is high, and that is what you keep.
+            </p>
+            <div className="rp-charts">
+              {ptRows.map((p) => (
+                <PtRateChart key={p.id} p={p} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="uni-home-content" aria-labelledby="where-title">
           <h2 id="where-title">Where XRP yield comes from</h2>
@@ -599,6 +623,70 @@ function VenueCard({ v }: { v: VenueNote }) {
         </div>
       </div>
     </article>
+  );
+}
+
+// Static SVG line chart of a Principal Token's daily max fixed APY. Server
+// rendered (no client JS): area fill + line + end dot, auto-scaled to the
+// series with a little headroom, first/last dates below the plot.
+function PtRateChart({ p }: { p: XrpPool }) {
+  const h = p.history ?? [];
+  if (h.length < 2) return null;
+
+  const W = 680;
+  const H = 190;
+  const padX = 6;
+  const padT = 12;
+  const padB = 6;
+  const apys = h.map((r) => r.apy);
+  let lo = Math.min(...apys);
+  let hi = Math.max(...apys);
+  const room = Math.max((hi - lo) * 0.15, 0.2);
+  lo -= room;
+  hi += room;
+  const innerW = W - padX * 2;
+  const innerH = H - padT - padB;
+  const xAt = (i: number) => padX + (i / (h.length - 1)) * innerW;
+  const yAt = (v: number) => padT + (1 - (v - lo) / (hi - lo || 1)) * innerH;
+
+  const line = h
+    .map((r, i) => `${i ? "L" : "M"}${xAt(i).toFixed(1)},${yAt(r.apy).toFixed(1)}`)
+    .join(" ");
+  const area = `${line} L${xAt(h.length - 1).toFixed(1)},${(H - padB).toFixed(1)} L${xAt(0).toFixed(1)},${(H - padB).toFixed(1)} Z`;
+  const last = h[h.length - 1];
+  const label = nice(p.displayName ?? p.symbol);
+  const fmt = (d: string) =>
+    new Date(`${d}T00:00:00Z`).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+
+  return (
+    <div className="rp-chart-card">
+      <div className="rp-chart-head">
+        <span className="rp-chart-title">{label}</span>
+        <span className="rp-chart-now">
+          {pct(last.apy)}
+          <small>max fixed</small>
+        </span>
+      </div>
+      <div className="rp-chart">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          role="img"
+          aria-label={`${label} daily max fixed rate, ${pct(h[0].apy)} to ${pct(last.apy)}`}
+        >
+          <path d={area} className="rp-chart-area" />
+          <path d={line} className="rp-chart-line" fill="none" vectorEffect="non-scaling-stroke" />
+          <circle cx={xAt(h.length - 1)} cy={yAt(last.apy)} r="3.5" className="rp-chart-dot" />
+        </svg>
+      </div>
+      <div className="rp-chart-axis">
+        <span>{fmt(h[0].d)}</span>
+        <span>{fmt(last.d)}</span>
+      </div>
+    </div>
   );
 }
 

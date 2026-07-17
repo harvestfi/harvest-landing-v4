@@ -104,6 +104,20 @@ function readChart(data) {
 const round2 = (v) => Math.round(v * 100) / 100;
 const mean = (arr) => (arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null);
 
+// Downsample the raw (roughly 4-hourly) chart into one point per calendar day
+// (the last reading of each day) so the report can draw a clean daily
+// max-fixed-APY line. Capped to the most recent `capDays`.
+function dailySeries(chart, capDays = 120) {
+  const byDay = new Map();
+  for (const r of chart) {
+    byDay.set(new Date(r.t).toISOString().slice(0, 10), round2(r.apy));
+  }
+  return [...byDay.entries()]
+    .map(([d, apy]) => ({ d, apy }))
+    .sort((a, b) => (a.d < b.d ? -1 : 1))
+    .slice(-capDays);
+}
+
 export async function fetchSpectraPTs() {
   const rows = [];
   for (const { address, asset } of SPECTRA_PT_POOLS) {
@@ -156,6 +170,8 @@ export async function fetchSpectraPTs() {
       llamaUrl: `https://app.spectra.finance/pools/flare:${address}`,
       inception,
       range90d,
+      // Daily max-fixed-APY series for the report's PT rate chart.
+      history: dailySeries(chart),
       productType: "Fixed-Rate",
       curated: true,
       venueSlug: `spectra-pt-${address}`,

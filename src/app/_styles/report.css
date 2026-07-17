@@ -201,6 +201,77 @@
 /* Report rankings don't need the sticky header the homepage tables use. */
 .rp-rank .hub-thead { position: static; top: auto; backdrop-filter: none; }
 
+/* === PT max fixed rate charts =====================================
+   One card per Principal Token, each a static SVG line of the daily max
+   fixed APY (source: Spectra). Auto-fitting grid, full width. */
+.rp-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin: 18px 0 4px;
+}
+.rp-chart-card {
+  border: 1px solid var(--uni-line);
+  border-radius: 16px;
+  padding: 18px 20px 14px;
+  background: var(--uni-card-2);
+}
+.rp-chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.rp-chart-title {
+  font-family: var(--display, var(--sans));
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+}
+.rp-chart-now {
+  font-family: var(--display, var(--sans));
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+  white-space: nowrap;
+}
+.rp-chart-now small {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  margin-left: 5px;
+}
+.rp-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.rp-chart-line {
+  stroke: #d99400;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.rp-chart-area { fill: rgba(255, 185, 54, 0.14); stroke: none; }
+.rp-chart-dot { fill: #d99400; }
+:root[data-theme="dark"] .uni-home-test .rp-chart-line { stroke: #ffc857; }
+:root[data-theme="dark"] .uni-home-test .rp-chart-dot { fill: #ffc857; }
+:root[data-theme="dark"] .uni-home-test .rp-chart-area {
+  fill: rgba(255, 185, 54, 0.12);
+}
+.rp-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--uni-ink-3);
+}
+
 /* Ranking cells: platform + network read as plain left-aligned text, the
    Discover action sits hard right, everything on one line so rows match the
    asset-ranking height (no stacked sub-lines). */
