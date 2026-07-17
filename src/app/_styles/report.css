@@ -308,13 +308,13 @@
 }
 
 /* Ranking grid track. Kept in CSS (not inline) so the mobile media query can
-   collapse it to icon + name + rate + arrow, like the asset-page tables.
-   # | Product | Type | Platform | Network | 30d rate | TVL | action */
+   collapse it to icon + name + APY + arrow, like the asset-page tables.
+   # | Product | 30d APY | Type | Platform | Network | TVL | action */
 .rp-rank .hub-thead,
 .rp-rank .hub-row {
   grid-template-columns:
-    34px minmax(140px, 1.7fr) 104px minmax(96px, 1fr)
-    minmax(80px, 0.8fr) 92px 78px 100px;
+    34px minmax(140px, 1.7fr) 92px 104px minmax(96px, 1fr)
+    minmax(80px, 0.8fr) 78px 100px;
   gap: 16px;
 }
 /* The Discover button shows its text label on desktop; the arrow is mobile. */
@@ -323,33 +323,36 @@
 @media (max-width: 640px) {
   .rp-rank .hub-thead,
   .rp-rank .hub-row {
-    grid-template-columns: minmax(0, 1fr) 68px 40px;
+    grid-template-columns: minmax(0, 1fr) 72px 44px;
     gap: 10px;
   }
-  /* Hide #, Type, Platform, Network, TVL - leave Product, 30d rate, action. */
+  /* Show only Product (2), 30d APY (3), action (8). Hide #, Type, Platform,
+     Network, TVL explicitly (do not rely on the global phone rules, which only
+     cover 4-5 above 540px). */
   .rp-rank .hub-thead > :nth-child(1),
   .rp-rank .hub-row > :nth-child(1),
-  .rp-rank .hub-thead > :nth-child(3),
-  .rp-rank .hub-row > :nth-child(3),
   .rp-rank .hub-thead > :nth-child(4),
   .rp-rank .hub-row > :nth-child(4),
   .rp-rank .hub-thead > :nth-child(5),
   .rp-rank .hub-row > :nth-child(5),
+  .rp-rank .hub-thead > :nth-child(6),
+  .rp-rank .hub-row > :nth-child(6),
   .rp-rank .hub-thead > :nth-child(7),
   .rp-rank .hub-row > :nth-child(7) {
     display: none;
   }
-  /* The global HubTable phone rules hide .hub-cell nth-child 4-6 for the
-     asset-page column order; our rate column is nth-child 6, so re-show it at
-     higher specificity (0,6,0 beats the global 0,5,0). */
-  .hub-table-wrap.rp-rank .hub-table .hub-thead > .hub-th:nth-child(6),
-  .hub-table-wrap.rp-rank .hub-table .hub-row > .hub-cell:nth-child(6) {
-    display: block;
+  /* Compact square-ish arrow CTA (far right) instead of the "Discover" text. */
+  .rp-rank .rp-discover {
+    padding: 0;
+    width: 36px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
-  /* Compact arrow CTA instead of the "Discover" text. */
-  .rp-rank .rp-discover { padding: 6px 9px; }
   .rp-rank .rp-discover-label { display: none; }
-  .rp-rank .rp-discover-arrow { display: inline; font-size: 15px; line-height: 1; }
+  .rp-rank .rp-discover-arrow { display: inline; font-size: 16px; line-height: 1; }
   /* Tighten the row + product name so the three items fit one clean line. */
   .rp-rank .hub-row { padding: 14px 14px; }
   .rp-rank .hub-vault { gap: 9px; }

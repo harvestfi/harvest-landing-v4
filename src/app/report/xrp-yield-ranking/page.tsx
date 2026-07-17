@@ -755,10 +755,10 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
         <div className="hub-thead" role="row">
           <span className="hub-th hub-th-rank">#</span>
           <span className="hub-th">Product</span>
+          <span className="hub-th hub-th-num">30d APY</span>
           <span className="hub-th">Type</span>
           <span className="hub-th">Platform</span>
           <span className="hub-th">Network</span>
-          <span className="hub-th hub-th-num">30d rate</span>
           <span className="hub-th hub-th-num">TVL</span>
           <span className="hub-th hub-th-right" />
         </div>
@@ -770,12 +770,12 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                 <TokenIcons symbol={p.symbol} />
                 <span className="hub-vault-name">{nice(p.displayName ?? p.symbol)}</span>
               </span>
+              <span className="hub-cell hub-num hub-apy">{pct(histRate(p))}</span>
               <span className="hub-cell rp-cell-text">
                 <span className="rp-type">{typeLabel(p)}</span>
               </span>
               <span className="hub-cell rp-cell-text">{p.platform}</span>
               <span className="hub-cell rp-cell-text">{chainLabel(p.chain)}</span>
-              <span className="hub-cell hub-num hub-apy">{pct(histRate(p))}</span>
               <span className="hub-cell hub-num">{usd(p.tvlUsd)}</span>
               <span className="hub-cell rp-cell-action">
                 <DiscoverButton
