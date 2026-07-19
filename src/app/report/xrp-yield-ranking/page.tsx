@@ -11,6 +11,7 @@ import { ReportChart } from "@/components/report/report-chart";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import {
+  articleSchema,
   breadcrumbSchema,
   faqPageSchema,
   reportDatasetSchema,
@@ -29,6 +30,9 @@ import "../../_styles/report.css";
 // No Supabase, no vaults.json.
 
 const PAGE_URL = `${SITE_URL}/report/xrp-yield-ranking`;
+// Editorial publish date for the report (Article schema datePublished). The
+// live figures still refresh hourly via dateModified.
+const DATE_PUBLISHED = "2026-07-01T00:00:00Z";
 
 interface XrpPool {
   id: string;
@@ -148,7 +152,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const n = data?.pools.length ?? 20;
   const chains = data?.stats.chains?.length ?? 5;
   const median = data?.stats.medianApy;
-  const title = `XRP Yield Ranking: ${n} DeFi Products by Real Rate`;
+  const title = `Best XRP Yield: ${n} DeFi Products Ranked by Real APY`;
   const desc = `Where to earn yield on XRP, ranked by real rates. ${n} curated XRP-denominated DeFi products across ${chains} networks${median ? `, median ${median.toFixed(2)}%` : ""}: lending, vaults, fixed-rate Principal Tokens and liquidity pools for XRP, FXRP, stXRP and cbXRP. XRP has no native staking, so these are the real onchain rates. Refreshed hourly from DeFiLlama, Spectra and Portals.`;
   return {
     title: { absolute: `${title} | ${SITE_NAME}` },
@@ -390,6 +394,20 @@ export default function XrpYieldRankingPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema(faqs)) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            articleSchema({
+              title: "XRP Yield Ranking: Where XRP Actually Earns",
+              description: `Where to earn yield on XRP across ${stats.venues} DeFi products (XRP, FXRP, stXRP and cbXRP) on ${stats.chains.length} networks, ranked by real 30-day rate. Lending, vaults, fixed-rate Principal Tokens and liquidity pools; XRP has no native staking, so these are the real onchain rates. Informational research, refreshed hourly.`,
+              url: PAGE_URL,
+              datePublished: DATE_PUBLISHED,
+              dateModified: data.generatedAt,
+            }),
+          ),
+        }}
       />
       <script
         type="application/ld+json"
@@ -1030,6 +1048,14 @@ const FAQ: { q: string; a: string }[] = [
     a: "No. XRP is not a proof-of-stake asset and has no native staking or validator rewards. The rates people call XRP staking actually come from lending XRP, providing liquidity, or holding a liquid staking token such as stXRP that stakes wrapped XRP on the holder's behalf.",
   },
   {
+    q: "Does XRP have staking rewards?",
+    a: "No. XRP has no native staking or validator rewards, so there is no protocol staking rate. What is marketed as XRP staking rewards is really lending interest, liquidity-pool fees, or the yield on a liquid staking token such as stXRP that stakes wrapped XRP behind the scenes. Each is a market rate with its own risk, not an inflation reward.",
+  },
+  {
+    q: "How do you earn interest on XRP?",
+    a: "You move XRP onto a smart-contract chain as a wrapped token such as FXRP or cbXRP, then put it to work: supply it to a lending market to earn borrower interest, deposit it in a curated vault, hold a fixed-rate Principal Token, or add it to a liquidity pool for swap fees. The rate depends on the venue and the wrapper; this report ranks the main options by their real 30-day rate.",
+  },
+  {
     // The rendered answer is replaced at request time with live, data-backed
     // figures (see `faqs` in the component); this static copy is the fallback.
     q: "What is the best XRP yield right now?",
@@ -1038,6 +1064,10 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "What are FXRP, stXRP and cbXRP?",
     a: "They are wrapped forms of XRP. FXRP is XRP bridged trustlessly onto Flare through the FAssets system; cbXRP is Coinbase-custodied wrapped XRP on Base; stXRP is Firelight's liquid staking token for FXRP. The choice of wrapper changes the trust model and the risk.",
+  },
+  {
+    q: "FXRP vs cbXRP: what is the difference?",
+    a: "Both are wrapped XRP, but the trust model differs. FXRP is minted trustlessly on Flare through the FAssets system, over-collateralized by independent agents while the real XRP stays on the XRP Ledger. cbXRP is Coinbase-custodied wrapped XRP on Base, backed 1:1 by XRP that Coinbase holds, with published proof of reserves. FXRP leans on onchain collateral; cbXRP leans on a single custodian.",
   },
   {
     q: "Is earning yield on XRP safe?",
