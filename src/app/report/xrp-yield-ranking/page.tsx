@@ -149,16 +149,23 @@ function synthSpark(p: XrpPool): number[] {
 
 export async function generateMetadata(): Promise<Metadata> {
   const data = loadData();
-  const n = data?.pools.length ?? 20;
-  const chains = data?.stats.chains?.length ?? 5;
-  const median = data?.stats.medianApy;
-  const title = `Best XRP Yield: ${n} DeFi Products Ranked by Real APY`;
-  const desc = `Where to earn yield on XRP, ranked by real rates. ${n} curated XRP-denominated DeFi products across ${chains} networks${median ? `, median ${median.toFixed(2)}%` : ""}: lending, vaults, fixed-rate Principal Tokens and liquidity pools for XRP, FXRP, stXRP and cbXRP. XRP has no native staking, so these are the real onchain rates. Refreshed hourly from DeFiLlama, Spectra and Portals.`;
+  const chains = data?.stats.chains?.length ?? 2;
+  const title = "Best XRP Yield 2026: List of 10+ DeFi Products ranked by APY";
+  const desc = `Where to earn yield on XRP, ranked by top rates. Over 10 XRP-denominated yield sources across ${chains} networks. Discover vaults, lending markets, Principal Tokens, and liquidity pools for XRP, FXRP, stXRP, and cbXRP.`;
+  // Kept consistent across every head surface (page title, canonical, Open
+  // Graph and Twitter) so the snippet renders the same everywhere.
   return {
     title: { absolute: `${title} | ${SITE_NAME}` },
     description: desc,
     alternates: { canonical: PAGE_URL },
-    openGraph: { title, description: desc, url: PAGE_URL, siteName: SITE_NAME, type: "article" },
+    openGraph: {
+      title,
+      description: desc,
+      url: PAGE_URL,
+      siteName: SITE_NAME,
+      type: "article",
+    },
+    twitter: { card: "summary_large_image", title, description: desc },
   };
 }
 

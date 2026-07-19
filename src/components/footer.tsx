@@ -26,7 +26,7 @@ const ASSET_HREF: Record<string, string> = {
 const RESOURCES = [
   { label: "Methodology", href: "/methodology" },
   { label: "Risk Framework", href: "/risk-framework" },
-  { label: "XRP Yield Report", href: "/report/xrp-yield-ranking" },
+  { label: "XRP Yield Ranking", href: "/report/xrp-yield-ranking" },
 ];
 
 // Legitimacy-signal pages.
