@@ -312,7 +312,12 @@ export default function XrpYieldRankingPage() {
         apy24h: featured.apy ?? 0,
         apy30d: featured.apyMean30d ?? 0,
         tvl: featured.tvlUsd,
-        apySpark: synthSpark(featured),
+        // Real PT rate history drives the card's bars so it mirrors the
+        // stXRP PT · Aug 2026 opportunity, not a decorative series.
+        apySpark:
+          featured.history && featured.history.length >= 2
+            ? featured.history.map((h) => h.apy)
+            : synthSpark(featured),
         tvlSpark: [featured.tvlUsd * 0.7, featured.tvlUsd * 0.86, featured.tvlUsd],
       }
     : undefined;
@@ -527,16 +532,15 @@ export default function XrpYieldRankingPage() {
             </p>
             {pop1 && pop2 ? (
               <p>
-                A better gauge of popularity than raw deposits is capital set
-                against what it pays, value locked weighed by rate. On that
-                blend <strong>{pop1.name}</strong> and{" "}
-                <strong>{pop2.name}</strong> lead the page: {pop1.name} carries{" "}
+                Weighing how much capital sits on each platform against the
+                rate it pays, <strong>{pop1.name}</strong> and{" "}
+                <strong>{pop2.name}</strong> hold the largest, most active
+                positions on the page: {pop1.name} with{" "}
                 <strong>{usd(pop1.tvl)}</strong> across {pop1.products}{" "}
                 {pop1.products === 1 ? "product" : "products"} at an average{" "}
-                <strong>{pct(pop1.avgApy)}</strong>, {pop2.name}{" "}
+                <strong>{pct(pop1.avgApy)}</strong>, and {pop2.name} with{" "}
                 <strong>{usd(pop2.tvl)}</strong> at{" "}
-                <strong>{pct(pop2.avgApy)}</strong>, the deepest and most
-                productive share of XRP-yield capital.
+                <strong>{pct(pop2.avgApy)}</strong>.
               </p>
             ) : null}
           </div>
