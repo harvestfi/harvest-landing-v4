@@ -320,6 +320,15 @@
 /* The Discover button shows its text label on desktop; the arrow is mobile. */
 .rp-discover-arrow { display: none; }
 
+/* Product name + (mobile) network·platform sub-line. The sub-line is hidden on
+   desktop, where Platform and Network have their own columns. */
+.rp-rank-nameblock {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rp-rank-sub { display: none; }
+
 @media (max-width: 640px) {
   .rp-rank .hub-thead,
   .rp-rank .hub-row {
@@ -355,8 +364,19 @@
   .rp-rank .rp-discover-arrow { display: inline; font-size: 16px; line-height: 1; }
   /* Tighten the row + product name so the three items fit one clean line. */
   .rp-rank .hub-row { padding: 14px 14px; }
-  .rp-rank .hub-vault { gap: 9px; }
-  .rp-rank .hub-vault-name { font-size: 14.5px; }
+  .rp-rank .hub-vault { gap: 9px; align-items: center; }
+  .rp-rank .hub-vault-name { font-size: 14.5px; line-height: 1.25; }
+  /* Network · Platform under the ticker, small and muted. */
+  .rp-rank .rp-rank-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 10.5px;
+    line-height: 1.2;
+    color: var(--uni-ink-3, #8a887f);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* === Wrapped-XRP glossary ==========================================

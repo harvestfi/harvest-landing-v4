@@ -537,7 +537,7 @@ export default function XrpYieldRankingPage() {
               page starts with XRP moved onto a smart-contract chain in a wrapped
               form. The wrapper matters as much as the venue: some are trustless
               and collateral-backed, others rest on a single custodian. These are
-              the four that appear most, plus the Solana form.
+              the four forms that appear most across the venues here.
             </p>
             <div className="rp-gloss-list">
               {WRAPPED_TOKENS.map((t) => (
@@ -843,7 +843,14 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
               <span className="hub-cell hub-rank">{i + 1}</span>
               <span className="hub-cell hub-vault">
                 <TokenIcons symbol={p.symbol} />
-                <span className="hub-vault-name">{nice(p.displayName ?? p.symbol)}</span>
+                <span className="rp-rank-nameblock">
+                  <span className="hub-vault-name">{nice(p.displayName ?? p.symbol)}</span>
+                  {/* Mobile-only sub-line: the Platform + Network columns are
+                      hidden on phones, so surface them under the ticker. */}
+                  <span className="rp-rank-sub">
+                    {chainLabel(p.chain)} · {p.platform}
+                  </span>
+                </span>
               </span>
               <span className="hub-cell hub-num hub-apy">{pct(histRate(p))}</span>
               <span className="hub-cell rp-cell-text">

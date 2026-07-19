@@ -52,12 +52,6 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     desc: "Firelight's liquid staking token, minted 1:1 from FXRP. Its yield is designed to come from DeFi insurance, where other protocols pay cover fees that flow back to stXRP holders, rather than from token inflation. Firelight was incubated by Sentora, and stXRP is used across SparkDEX and Spectra.",
   },
   {
-    token: "csXRP",
-    icon: "csXRP",
-    chain: "Flare",
-    desc: "The share token of the Clearstar-curated XRP vault on Mystic Finance. Supplying FXRP mints csXRP, which represents the deposited FXRP plus the interest earned as the curator lends it across Morpho markets on Flare.",
-  },
-  {
     token: "cbXRP",
     icon: "cbXRP",
     chain: "Base",
@@ -256,7 +250,7 @@ export const VENUE_GROUPS: VenueGroup[] = [
         type: "Lending Market",
         chain: "Base",
         assets: ["cbXRP"],
-        url: "https://moonwell.fi",
+        url: "https://moonwell.fi/markets/supply/base/cbxrp",
         blurb: [
           "Moonwell was the first lending app on Base to list cbXRP. Supply cbXRP to earn borrow interest, with WELL incentives layered on top in some markets. It is a straightforward, single-sided way to earn on XRP with no second asset to manage.",
         ],
