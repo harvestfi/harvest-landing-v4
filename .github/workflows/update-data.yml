@@ -39,12 +39,14 @@ jobs:
         run: node scripts/fetch-holder-growth.mjs
         continue-on-error: true
 
-      - name: Fetch XRP yield report data (DeFiLlama + Spectra PTs)
+      - name: Fetch XRP yield report data (DeFiLlama + Spectra + Portals)
         run: node scripts/fetch-xrp-yield.mjs
         env:
-          # Include Spectra Principal Token fixed rates (single-exposure
-          # Fixed-Rate rows). CI has direct network access to api.spectra.finance.
-          XRP_SPECTRA_PT: "1"
+          # Portals current APY for the products DeFiLlama/Spectra don't cover
+          # (Upshift earnXRP/MXRPY, Superform). Optional: without the secret the
+          # pipeline falls back to each venue's staticApy snapshot in
+          # data/xrp-venues.json. DeFiLlama + Spectra need no key.
+          PORTALS_API_KEY: ${{ secrets.PORTALS_API_KEY }}
         continue-on-error: true
 
       - name: Commit and push if changed

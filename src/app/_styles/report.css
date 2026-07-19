@@ -334,6 +334,18 @@
   flex-direction: column;
   min-width: 0;
 }
+/* Product detail under the clean asset headline (e.g. "PT · Aug 2026"),
+   always visible. */
+.rp-rank-detail {
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: var(--uni-ink-3, #8a887f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+/* Network · platform line, mobile only (those columns are hidden on phones). */
 .rp-rank-sub { display: none; }
 
 @media (max-width: 640px) {

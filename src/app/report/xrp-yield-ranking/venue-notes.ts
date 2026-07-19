@@ -113,21 +113,20 @@ export const VENUE_GROUPS: VenueGroup[] = [
         ],
       },
       {
-        slug: "sparkdex-wflr-fxrp",
+        slug: "sparkdex-stxrp-fxrp",
         platform: "SparkDEX",
-        product: "WFLR / FXRP (Steer)",
+        product: "stXRP / FXRP",
         type: "Pool",
         chain: "Flare",
-        assets: ["WFLR", "FXRP"],
-        url: "https://sparkdex.ai/pool/v4/add/steer/0x490e6bf329c6760f989fefbe6c77d7a34e0a5078",
+        assets: ["stXRP", "FXRP"],
+        url: "https://sparkdex.ai/pool/v4/add",
         blurb: [
-          "SparkDEX is the leading DEX on Flare, spanning concentrated-liquidity pools (v3.1 and a v4 built on Algebra) and a perps venue. The WFLR / FXRP pool pairs wrapped FLR with wrapped XRP.",
-          "This pool runs an Automatic strategy managed by Steer Protocol, an automated liquidity manager that keeps the position in range and rebalances it, so LPs capture more swap fees without tuning the range by hand. Rewards are swap fees plus rFLR from Flare's emissions program, which vests over roughly 12 months.",
+          "SparkDEX is the leading DEX on Flare, spanning concentrated-liquidity pools (v3.1 and a v4 built on Algebra) and a perps venue. The stXRP / FXRP pool pairs Firelight's staked XRP with wrapped XRP, so both legs track XRP and the pair stays tight.",
+          "LPs earn swap fees plus rFLR from Flare's emissions program, which vests over roughly 12 months. Because both sides are XRP-denominated, impermanent loss is limited compared with a pool against an unrelated asset. On the v4 app the two tokens are entered by hand into the add-liquidity form.",
         ],
         facts: [
           { label: "Yield source", value: "Swap fees plus rFLR emissions" },
-          { label: "Liquidity manager", value: "Steer Protocol (also ICHI)" },
-          { label: "Wrapped asset", value: "FXRP (Flare FAssets)" },
+          { label: "Wrapped assets", value: "stXRP (Firelight) and FXRP (Flare FAssets)" },
           { label: "Token", value: "SPRK, stakes to xSPRK for fee sharing" },
           { label: "Audits", value: "Protofire (v3, perps, token)" },
           { label: "Backing", value: "Independent, IDO launch via TrustSwap, no VC round" },
@@ -226,14 +225,14 @@ export const VENUE_GROUPS: VenueGroup[] = [
       {
         slug: "aerodrome",
         platform: "Aerodrome",
-        product: "cbXRP / cbBTC and cbXRP / cbETH",
+        product: "cbXRP / cbBTC and cbXRP / WETH",
         type: "Pool",
         chain: "Base",
         assets: ["cbXRP", "cbBTC"],
-        url: "https://aerodrome.finance/connect?to=%2Fdeposit%3Ftoken0%3D0x4200000000000000000000000000000000000006%26token1%3D0xcb585250f852C6c6bf90434AB21A00f02833a4af%26type%3D100%26chain0%3D8453%26chain1%3D8453%26factory%3D0xf8f2eB4940CFE7d13603DDDD87f123820Fc061Ef",
+        url: "https://aerodrome.finance/connect?to=%2Fdeposit%3Ftoken0%3D0xcb585250f852C6c6bf90434AB21A00f02833a4af%26token1%3D0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf%26type%3D100%26chain0%3D8453%26chain1%3D8453%26factory%3D0xf8f2eB4940CFE7d13603DDDD87f123820Fc061Ef",
         blurb: [
           "Aerodrome is the main ve(3,3) DEX on Base, built by the Velodrome team. Its Slipstream pools are Uniswap v3 style concentrated liquidity, and XRP comes in as Coinbase Wrapped XRP.",
-          "The cbXRP / cbBTC and cbXRP / cbETH pools pay swap fees plus AERO emissions that veAERO voters steer to each pool every week. Gauntlet has also run a USDC reward campaign to bootstrap the cbAsset pools. Rates move with vote weight and campaigns, and concentrated liquidity carries impermanent loss if the two sides drift apart.",
+          "The cbXRP / cbBTC and cbXRP / WETH pools pay swap fees plus AERO emissions that veAERO voters steer to each pool every week. Gauntlet has also run a USDC reward campaign to bootstrap the cbAsset pools. Rates move with vote weight and campaigns, and concentrated liquidity carries impermanent loss if the two sides drift apart.",
         ],
         facts: [
           { label: "Yield source", value: "Swap fees plus AERO emissions, and a USDC bootstrap campaign" },
@@ -257,62 +256,6 @@ export const VENUE_GROUPS: VenueGroup[] = [
         facts: [
           { label: "Yield source", value: "Borrow interest, plus WELL incentives" },
           { label: "Wrapped asset", value: "cbXRP (Coinbase, 1:1 custody)" },
-        ],
-      },
-    ],
-  },
-  {
-    chain: "Other networks",
-    intro:
-      "XRP also earns on chains where it arrives through a different wrapper. These are the venues our ranking picks up beyond Flare and Base.",
-    venues: [
-      {
-        slug: "venus",
-        platform: "Venus",
-        product: "XRP Lending",
-        type: "Lending Market",
-        chain: "BNB Chain",
-        assets: ["XRP"],
-        url: "https://app.venus.io/",
-        blurb: [
-          "Venus is a large money market on BNB Chain. Supply Binance-Peg XRP to earn borrow interest and receive a vXRP receipt token. It is one of the longest-running, deepest single-sided XRP lending venues, though the XRP here is Binance-bridged rather than trustless.",
-        ],
-        facts: [
-          { label: "Yield source", value: "Borrow interest, plus possible XVS incentives" },
-          { label: "Wrapped asset", value: "Binance-Peg XRP (BEP-20)" },
-          { label: "Audits", value: "Multiple firms, on-chain risk monitoring with Chaos Labs" },
-        ],
-      },
-      {
-        slug: "raydium",
-        platform: "Raydium",
-        product: "wXRP Pools",
-        type: "Pool",
-        chain: "Solana",
-        assets: ["wXRP", "USDC"],
-        url: "https://raydium.io/liquidity-pools/",
-        blurb: [
-          "Raydium is a leading Solana DEX. Its wXRP pools pay swap fees to liquidity providers, sometimes topped up with RAY farm rewards. The XRP here is Hex Trust issued wXRP, bridged to Solana via LayerZero.",
-        ],
-        facts: [
-          { label: "Yield source", value: "Swap fees, plus possible RAY farm rewards" },
-          { label: "Wrapped asset", value: "wXRP (Hex Trust, LayerZero)" },
-        ],
-      },
-      {
-        slug: "amm-pairs",
-        platform: "PancakeSwap and Uniswap",
-        product: "XRP Trading Pairs",
-        type: "Pool",
-        chain: "BNB Chain and Ethereum",
-        assets: ["XRP", "USDC"],
-        url: "https://pancakeswap.finance/",
-        blurb: [
-          "Classic AMM pairs such as XRP / USDC and XRP / WBNB on PancakeSwap and Uniswap pay liquidity providers a share of swap fees. On BNB the token is Binance-Peg XRP. These are pure fee pools: no emissions unless a farm is attached, and the rate tracks trading volume.",
-        ],
-        facts: [
-          { label: "Yield source", value: "Swap fees (plus CAKE farm rewards where offered)" },
-          { label: "Wrapped asset", value: "Binance-Peg XRP or bridged ERC-20 XRP" },
         ],
       },
     ],

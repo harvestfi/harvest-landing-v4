@@ -1,74 +1,54 @@
 #!/usr/bin/env node
-// Fetches every XRP-family yield venue DeFiLlama tracks (XRP, wrapped XRP
-// variants like FXRP/WXRP/cbXRP, and Ripple's RLUSD stablecoin) and writes
-// data/xrp-yield.json for the /report/xrp-yield-ranking page.
+// Builds data/xrp-yield.json for the /report/xrp-yield-ranking page.
 //
-// This powers an EXTERNAL-data report: none of these venues are Harvest
-// products, and this pipeline deliberately touches nothing else - no
-// vaults.json, no Supabase, no product data. Free DeFiLlama endpoints only:
+// This is an ALLOWLIST hydrator, not a scanner: the report shows exactly the
+// products in data/xrp-venues.json, and this script fills each one's live rate
+// and TVL from its `source`:
+//   - defillama:        yields.llama.fi/pools by poolId (+ /chart -> 30-day
+//                       history for the report charts and the 90-day range)
+//   - spectra-pt:       Spectra API PT max fixed rate + daily history
+//   - spectra-pool:     Spectra API pool LP APY + TVL (same market address)
+//   - spectra-metavault Spectra API MetaVault liveApy + TVL
+//   - portals:          api.portals.fi current APY (products DeFiLlama misses;
+//                       needs PORTALS_API_KEY, else falls back to the venue's
+//                       staticApy/staticTvl snapshot)
+//   - none:             no public rate feed -> rate shown as n/a on the page
 //
-//   yields.llama.fi/pools        current APY (base/reward split), TVL,
-//                                30d mean APY, per-pool observation count
-//   yields.llama.fi/chart/{id}   daily history -> first-tracked date and the
-//                                90-day rate range (top pools only)
-//   api.llama.fi/protocols       platform name, website, category (drives the
-//                                Discover link + yield-source classification)
+// Every venue is an EXTERNAL protocol, not a Harvest product. This pipeline
+// touches nothing else (no vaults.json, no Supabase). Runs hourly in the
+// update-data workflow (continue-on-error); on failure the existing snapshot is
+// kept, so the report degrades to "as of <last date>", never to a blank page.
 //
-// Runs in the hourly update-data workflow (continue-on-error). If the API is
-// unreachable or the filter comes back empty, the existing snapshot is kept -
-// the report degrades to "as of <last date>", never to a blank page.
+// Offline/proxied dev (Node's fetch ignores HTTPS_PROXY): set XRP_LLAMA_CACHE
+// (pools.json, chart-<id>.json), SPECTRA_CACHE (pt-<addr>.json,
+// pt-<addr>-chart.json, metavaults.json) and PORTALS_CACHE (portals-<key>.json)
+// to read cached responses instead of the network.
 
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { loadVenues, applyOverrides } from "./apply-xrp-overrides.mjs";
-
-// Optional local cache for offline / proxied dev (Node's fetch ignores
-// HTTPS_PROXY, unlike curl). Set XRP_LLAMA_CACHE=<dir> holding pools.json,
-// protocols.json and chart-<poolId>.json to read those instead of the network.
-// Unset in CI, so CI always fetches live.
-const CACHE_DIR = process.env.XRP_LLAMA_CACHE || null;
-function cacheFor(url) {
-  if (!CACHE_DIR) return null;
-  let name = null;
-  if (url.endsWith("/pools")) name = "pools.json";
-  else if (url.endsWith("/protocols")) name = "protocols.json";
-  else {
-    const m = url.match(/\/chart\/([^/?]+)/);
-    if (m) name = `chart-${m[1]}.json`;
-  }
-  if (!name) return null;
-  const p = join(CACHE_DIR, name);
-  return existsSync(p) ? p : null;
-}
+import { loadVenues } from "./apply-xrp-overrides.mjs";
+import { fetchSpectraMarket, fetchSpectraMetavault } from "./fetch-spectra.mjs";
 
 const ROOT = process.cwd();
 const OUT_FILE = join(ROOT, "data", "xrp-yield.json");
 
-// Ignore dust so the ranking can't be gamed by a $3k pool paying 400%
-// emissions for a week.
-const MIN_TVL_USD = 25_000;
-// Venues to omit by keyword (matched against symbol / poolMeta / project /
-// platform, case-insensitive). mXRP is a Midas RWA wrapper, not a DeFi yield
-// venue in the sense this report covers.
-const EXCLUDE_KEYWORDS = ["mxrp", "midas"];
-function isExcluded(p) {
-  const hay = `${p.symbol ?? ""} ${p.poolMeta ?? ""} ${p.project ?? ""}`.toLowerCase();
-  return EXCLUDE_KEYWORDS.some((k) => hay.includes(k));
-}
-// Pools that get the expensive per-pool history call (inception + 90d range).
-const DETAIL_POOLS = 15;
-// Hard cap on rows kept in the snapshot.
-const MAX_POOLS = 40;
+const LLAMA_CACHE = process.env.XRP_LLAMA_CACHE || null;
+const PORTALS_CACHE = process.env.PORTALS_CACHE || null;
+const PORTALS_KEY = process.env.PORTALS_API_KEY || null;
 
-async function getJson(url, tries = 3) {
-  const cached = cacheFor(url);
-  if (cached) {
-    try {
-      return JSON.parse(readFileSync(cached, "utf-8"));
-    } catch {
-      /* fall through to network */
-    }
+function readCache(dir, name) {
+  if (!dir) return null;
+  const p = join(dir, name);
+  if (!existsSync(p)) return null;
+  try {
+    return JSON.parse(readFileSync(p, "utf-8"));
+  } catch {
+    return null;
   }
+}
+
+async function getJson(url, cache, tries = 3) {
+  if (cache) return cache;
   for (let i = 0; i < tries; i++) {
     try {
       const r = await fetch(url, {
@@ -85,9 +65,10 @@ async function getJson(url, tries = 3) {
   return null;
 }
 
-// Downsample a DeFiLlama chart (roughly daily {timestamp, apy} rows) to one
-// point per calendar day, {d:"YYYY-MM-DD", apy}. Feeds the report's per-venue
-// 30-day rate charts (the component slices the last 30). Capped to capDays.
+const round2 = (v) => (v == null ? null : Math.round(v * 100) / 100);
+const mean = (a) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
+
+// One point per calendar day from a DeFiLlama chart, {d, apy}, capped.
 function dailySeries(rows, capDays = 90) {
   const byDay = new Map();
   for (const r of rows || []) {
@@ -100,179 +81,223 @@ function dailySeries(rows, capDays = 90) {
     .slice(-capDays);
 }
 
-// A symbol token counts as XRP-denominated when it IS XRP or a short wrapped
-// variant (WXRP, FXRP, CBXRP, STXRP, SXRP...). RLUSD - Ripple's dollar
-// stablecoin - is intentionally NOT XRP-denominated, so pools whose only
-// XRP-adjacent token is RLUSD are excluded (an XRP-RLUSD pair still qualifies
-// on its XRP leg). Token-wise match on the dash-separated symbol so "XRP-USDC"
-// qualifies but "TOKENXRPX" noise doesn't.
-function isXrpToken(t) {
-  const u = (t || "").toUpperCase();
-  return u === "XRP" || (u.endsWith("XRP") && u.length <= 6);
+// Base row shared by every product, from its venue display fields. Live metrics
+// are filled per source below.
+function baseRow(v) {
+  return {
+    id: v.slug,
+    chain: v.chain,
+    project: v.slug,
+    platform: v.platform,
+    platformUrl: v.url,
+    category: v.productType ?? null,
+    symbol: v.symbol,
+    poolMeta: v.detail ?? null,
+    // Ranking Product column: clean asset headline + smaller detail sub-line.
+    asset: v.asset,
+    detail: v.detail ?? null,
+    entity: v.entity ?? null,
+    tvlUsd: 0,
+    apy: null,
+    apyBase: null,
+    apyReward: null,
+    apyMean30d: null,
+    rewardShare: 0,
+    incentivized: false,
+    ilRisk: v.exposure === "multi" ? "yes" : "no",
+    exposure: v.exposure ?? "single",
+    stablecoin: false,
+    observations: null,
+    llamaUrl: v.url,
+    inception: null,
+    range90d: null,
+    curated: true,
+    productType: v.productType ?? null,
+    venueSlug: v.slug,
+    displayName: v.asset,
+    // "30d" when the rate is a 30-day average / fixed rate; "current" when it is
+    // a live spot APY (Portals, Spectra pool/metavault); "na" when unavailable.
+    rateBasis: "30d",
+    rateNa: false,
+  };
 }
-function poolMatches(symbol) {
-  return (symbol || "")
-    .split(/[-_/\s]+/)
-    .some((t) => isXrpToken(t));
+
+async function portalsCurrent(key) {
+  const safe = key.replace(/[:]/g, "_");
+  const cached = readCache(PORTALS_CACHE, `portals-${safe}.json`);
+  if (cached) return cached;
+  if (!PORTALS_KEY) return null;
+  const url = `https://api.portals.fi/v2/tokens?addresses=${encodeURIComponent(key)}`;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(url, {
+        signal: AbortSignal.timeout(30_000),
+        headers: { accept: "application/json", Authorization: `Bearer ${PORTALS_KEY}` },
+      });
+      if (r.ok) return await r.json();
+      console.error(`[xrp-yield] portals ${key} -> HTTP ${r.status}`);
+    } catch (e) {
+      console.error(`[xrp-yield] portals ${key} -> ${e.message ?? e}`);
+    }
+    await new Promise((res) => setTimeout(res, 1200 * (i + 1)));
+  }
+  return null;
 }
 
 const main = async () => {
-  const [poolsRes, protocolsRes] = await Promise.all([
-    getJson("https://yields.llama.fi/pools"),
-    getJson("https://api.llama.fi/protocols"),
-  ]);
-  const all = poolsRes?.data;
-  if (!Array.isArray(all) || all.length === 0) {
-    console.error("[xrp-yield] pools endpoint empty/unreachable; keeping existing snapshot.");
-    process.exit(0);
-  }
-
-  // project slug -> { name, url, category } for Discover links + classification.
-  const protoMeta = new Map();
-  if (Array.isArray(protocolsRes)) {
-    for (const p of protocolsRes) {
-      if (p?.slug) {
-        protoMeta.set(p.slug, {
-          name: p.name ?? p.slug,
-          url: typeof p.url === "string" ? p.url : null,
-          category: p.category ?? null,
-        });
-      }
-    }
-  }
-
-  const prettify = (slug) =>
-    (slug || "")
-      .split("-")
-      .map((w) => (w.length <= 3 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
-      .join(" ");
-
-  let pools = all
-    .filter(
-      (p) =>
-        poolMatches(p.symbol) &&
-        !isExcluded(p) &&
-        !p.outlier &&
-        Number.isFinite(p.tvlUsd) &&
-        p.tvlUsd >= MIN_TVL_USD &&
-        (Number.isFinite(p.apy) || Number.isFinite(p.apyMean30d)),
-    )
-    .map((p) => {
-      const meta = protoMeta.get(p.project) ?? null;
-      const apy = Number.isFinite(p.apy) ? p.apy : null;
-      const apyBase = Number.isFinite(p.apyBase) ? p.apyBase : null;
-      const apyReward = Number.isFinite(p.apyReward) ? p.apyReward : null;
-      const rewardShare =
-        apy && apy > 0 && apyReward != null ? apyReward / apy : 0;
-      return {
-        id: p.pool,
-        chain: p.chain,
-        project: p.project,
-        platform: meta?.name ?? prettify(p.project),
-        platformUrl: meta?.url ?? null,
-        category: meta?.category ?? null,
-        symbol: p.symbol,
-        poolMeta: p.poolMeta ?? null,
-        tvlUsd: Math.round(p.tvlUsd),
-        apy,
-        apyBase,
-        apyReward,
-        apyMean30d: Number.isFinite(p.apyMean30d) ? p.apyMean30d : null,
-        // "heavily incentivised": most of the headline rate is emissions.
-        rewardShare: Math.round(rewardShare * 100) / 100,
-        incentivized: rewardShare > 0.5,
-        ilRisk: p.ilRisk ?? null,
-        exposure: p.exposure ?? null, // "single" | "multi"
-        stablecoin: !!p.stablecoin,
-        // Daily observations DeFiLlama holds for this pool (track-record proxy).
-        observations: Number.isFinite(p.count) ? p.count : null,
-        llamaUrl: `https://defillama.com/yields/pool/${p.pool}`,
-        inception: null, // filled from chart below for top pools
-        range90d: null, // { min, max } APY over trailing 90 tracked days
-      };
-    });
-
-  // Drop venues paying nothing (0% headline rate): they're not opportunities.
-  pools = pools.filter((p) => (p.apyMean30d ?? p.apy ?? 0) > 0);
-
-  // Historical rate first: rank by 30d mean APY (falls back to spot APY), so a
-  // one-day emissions spike can't top the table.
-  pools.sort(
-    (a, b) => (b.apyMean30d ?? b.apy ?? 0) - (a.apyMean30d ?? a.apy ?? 0),
-  );
-  pools = pools.slice(0, MAX_POOLS);
-
-  if (pools.length === 0) {
-    console.error("[xrp-yield] zero pools matched the XRP/RLUSD filter; keeping existing snapshot.");
-    process.exit(0);
-  }
-
-  // Curated overrides: swap generic platform links for real product deep-links
-  // on matching rows, and embed the curated venue list for the report's info
-  // section. Kept here (not the report page) so the hourly cron preserves them.
-  // Applied BEFORE the history loop so curated rows are always detailed.
   const venues = loadVenues(ROOT);
-  const overridden = applyOverrides(pools, venues);
-  if (overridden > 0) console.log(`[xrp-yield] applied ${overridden} curated link override(s).`);
-
-  // Per-pool history: first-tracked date, 90d rate range, and a daily rate
-  // series for the report's charts. Detailed for the top of the ranking plus
-  // every curated venue (so each featured product can be charted regardless of
-  // its rank). One chart call per pool, sequential + throttled; failures leave
-  // the fields null. The Discover deep-link / curated flags are already set.
-  const detail = new Set(pools.slice(0, DETAIL_POOLS));
-  for (const p of pools) if (p.curated) detail.add(p);
-  for (const p of detail) {
-    const chart = await getJson(`https://yields.llama.fi/chart/${p.id}`, 2);
-    const rows = chart?.data;
-    if (Array.isArray(rows) && rows.length > 0) {
-      const first = rows[0]?.timestamp;
-      if (first) p.inception = String(first).slice(0, 10);
-      const tail = rows
-        .slice(-90)
-        .map((r) => r.apy)
-        .filter((v) => Number.isFinite(v));
-      if (tail.length >= 7) {
-        p.range90d = {
-          min: Math.round(Math.min(...tail) * 100) / 100,
-          max: Math.round(Math.max(...tail) * 100) / 100,
-        };
-      }
-      const hist = dailySeries(rows);
-      if (hist.length >= 2) p.history = hist;
-    }
-    await new Promise((res) => setTimeout(res, 300));
+  if (!venues.length) {
+    console.error("[xrp-yield] no canonical venues; keeping existing snapshot.");
+    process.exit(0);
   }
 
-  // Spectra Principal Token fixed rates (single-exposure "Fixed-Rate" rows).
-  // Gated OFF until the api.spectra.finance response shape is confirmed; enable
-  // by setting XRP_SPECTRA_PT=1 (locally with SPECTRA_CACHE, or in the workflow
-  // once verified). Failure never blocks the DeFiLlama snapshot.
-  if (process.env.XRP_SPECTRA_PT === "1") {
+  // DeFiLlama pools once, indexed by poolId for the defillama-sourced rows.
+  const needLlama = venues.some((v) => v.source?.kind === "defillama");
+  let byId = new Map();
+  if (needLlama) {
+    const poolsRes = await getJson(
+      "https://yields.llama.fi/pools",
+      readCache(LLAMA_CACHE, "pools.json"),
+    );
+    const all = poolsRes?.data;
+    if (Array.isArray(all)) for (const p of all) byId.set(p.pool, p);
+    else console.error("[xrp-yield] DeFiLlama pools unreachable; defillama rows may be rate-n/a.");
+  }
+
+  const pools = [];
+  for (const v of venues) {
+    const row = baseRow(v);
+    const src = v.source ?? { kind: "none" };
     try {
-      const { fetchSpectraPTs } = await import("./fetch-spectra-pt.mjs");
-      const pts = await fetchSpectraPTs();
-      if (pts.length) {
-        pools.push(...pts);
-        pools.sort((a, b) => (b.apyMean30d ?? b.apy ?? 0) - (a.apyMean30d ?? a.apy ?? 0));
-        console.log(`[xrp-yield] added ${pts.length} Spectra PT row(s).`);
+      if (src.kind === "defillama") {
+        const p = byId.get(src.poolId);
+        if (p) {
+          row.id = p.pool;
+          row.llamaUrl = `https://defillama.com/yields/pool/${p.pool}`;
+          row.apy = Number.isFinite(p.apy) ? p.apy : null;
+          row.apyBase = Number.isFinite(p.apyBase) ? p.apyBase : null;
+          row.apyReward = Number.isFinite(p.apyReward) ? p.apyReward : null;
+          row.apyMean30d = Number.isFinite(p.apyMean30d) ? p.apyMean30d : null;
+          row.tvlUsd = Math.round(p.tvlUsd ?? 0);
+          row.stablecoin = !!p.stablecoin;
+          row.observations = Number.isFinite(p.count) ? p.count : null;
+          const rs = row.apy && row.apy > 0 && row.apyReward != null ? row.apyReward / row.apy : 0;
+          row.rewardShare = Math.round(rs * 100) / 100;
+          row.incentivized = rs > 0.5;
+          // Daily history + 90-day range for the charts.
+          const chart = await getJson(
+            `https://yields.llama.fi/chart/${p.pool}`,
+            readCache(LLAMA_CACHE, `chart-${p.pool}.json`),
+            2,
+          );
+          const rows = chart?.data;
+          if (Array.isArray(rows) && rows.length) {
+            row.inception = String(rows[0]?.timestamp ?? "").slice(0, 10) || null;
+            const tail = rows.slice(-90).map((r) => r.apy).filter(Number.isFinite);
+            if (tail.length >= 7) {
+              row.range90d = {
+                min: Math.round(Math.min(...tail) * 100) / 100,
+                max: Math.round(Math.max(...tail) * 100) / 100,
+              };
+            }
+            const hist = dailySeries(rows);
+            if (hist.length >= 2) row.history = hist;
+          }
+          await new Promise((res) => setTimeout(res, 300));
+        } else {
+          row.rateNa = true;
+          row.rateBasis = "na";
+          console.error(`[xrp-yield] defillama pool ${src.poolId} not found for ${v.slug}.`);
+        }
+      } else if (src.kind === "spectra-pt") {
+        const m = await fetchSpectraMarket(src.address);
+        if (m && m.ptApy != null) {
+          row.apy = m.ptApy;
+          row.apyBase = m.ptApy;
+          row.apyMean30d = m.ptMean30d ?? m.ptApy;
+          row.tvlUsd = m.tvlUsd;
+          row.observations = m.observations;
+          row.inception = m.inception;
+          row.range90d = m.range90d;
+          if ((m.history?.length ?? 0) >= 2) row.history = m.history;
+          if (m.matLabel) row.detail = v.detail ?? `PT · ${m.matLabel}`;
+        } else {
+          row.rateNa = true;
+          row.rateBasis = "na";
+        }
+      } else if (src.kind === "spectra-pool") {
+        const m = await fetchSpectraMarket(src.address);
+        if (m && m.lpApy != null) {
+          row.apy = m.lpApy;
+          row.tvlUsd = m.tvlUsd;
+          row.rewardShare = m.lpRewardShare ?? 0;
+          row.incentivized = (m.lpRewardShare ?? 0) > 0.5;
+          row.rateBasis = "current";
+        } else {
+          row.rateNa = true;
+          row.rateBasis = "na";
+          if (src.staticTvl) row.tvlUsd = src.staticTvl;
+        }
+      } else if (src.kind === "spectra-metavault") {
+        const mv = await fetchSpectraMetavault(src.address);
+        if (mv && mv.apy != null) {
+          row.apy = mv.apy;
+          row.tvlUsd = mv.tvlUsd;
+          row.rewardShare = mv.rewardShare ?? 0;
+          row.incentivized = (mv.rewardShare ?? 0) > 0.5;
+          row.rateBasis = "current";
+        } else {
+          row.rateNa = true;
+          row.rateBasis = "na";
+        }
+      } else if (src.kind === "portals") {
+        const doc = await portalsCurrent(src.portalsKey);
+        const t = doc?.tokens?.[0];
+        const m = t?.metrics ?? {};
+        const apy = m.apy != null ? +m.apy : src.staticApy ?? null;
+        row.apy = apy;
+        row.apyBase = m.baseApy != null ? +m.baseApy : null;
+        row.apyReward = m.rewardApy != null ? +m.rewardApy : null;
+        row.tvlUsd = Math.round(t?.liquidity ?? src.staticTvl ?? 0);
+        const rs = apy && apy > 0 && row.apyReward != null ? row.apyReward / apy : 0;
+        row.rewardShare = Math.round(rs * 100) / 100;
+        row.incentivized = rs > 0.5;
+        row.rateBasis = "current";
+        if (apy == null) {
+          row.rateNa = true;
+          row.rateBasis = "na";
+        }
+      } else {
+        // kind === "none": tracked, but no public rate feed.
+        row.rateNa = true;
+        row.rateBasis = "na";
+        if (src.staticTvl) row.tvlUsd = src.staticTvl;
       }
     } catch (e) {
-      console.error("[xrp-yield] Spectra PT fetch failed:", e?.message ?? e);
+      console.error(`[xrp-yield] ${v.slug} hydrate failed:`, e?.message ?? e);
+      row.rateNa = true;
+      row.rateBasis = "na";
     }
+    pools.push(row);
   }
 
-  const apys = pools.map((p) => p.apyMean30d ?? p.apy ?? 0).sort((a, b) => a - b);
-  const median = apys[Math.floor(apys.length / 2)] ?? 0;
+  // Rank by best available rate (30-day mean or current), n/a rows last.
+  const rateOf = (p) => (p.rateNa ? -Infinity : p.apyMean30d ?? p.apy ?? -Infinity);
+  pools.sort((a, b) => rateOf(b) - rateOf(a));
+
+  const rated = pools.filter((p) => !p.rateNa).map((p) => p.apyMean30d ?? p.apy);
+  const sorted = [...rated].sort((a, b) => a - b);
+  const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+
   const out = {
     generatedAt: new Date().toISOString(),
-    source: "DeFiLlama (yields.llama.fi), free API",
-    minTvlUsd: MIN_TVL_USD,
+    source: "DeFiLlama, Spectra and Portals APIs",
     stats: {
       venues: pools.length,
+      rated: rated.length,
       chains: [...new Set(pools.map((p) => p.chain))],
-      totalTvlUsd: Math.round(pools.reduce((s, p) => s + p.tvlUsd, 0)),
-      medianApy: Math.round(median * 100) / 100,
+      totalTvlUsd: Math.round(pools.reduce((s, p) => s + (p.tvlUsd || 0), 0)),
+      medianApy: round2(median),
       incentivized: pools.filter((p) => p.incentivized).length,
     },
     venues,
@@ -282,12 +307,11 @@ const main = async () => {
   mkdirSync(join(ROOT, "data"), { recursive: true });
   writeFileSync(OUT_FILE, JSON.stringify(out, null, 2), "utf-8");
   console.log(
-    `[xrp-yield] wrote ${pools.length} venues across ${out.stats.chains.length} chains (median 30d APY ${out.stats.medianApy}%) -> data/xrp-yield.json`,
+    `[xrp-yield] wrote ${pools.length} products (${rated.length} rated) across ${out.stats.chains.length} chains, median ${out.stats.medianApy}% -> data/xrp-yield.json`,
   );
 };
 
 main().catch((e) => {
-  // Never fail the data workflow over the report feed.
   console.error("[xrp-yield] fatal:", e);
   process.exit(0);
 });

@@ -50,20 +50,30 @@ interface XrpPool {
   llamaUrl: string;
   inception: string | null;
   range90d: { min: number; max: number } | null;
-  // Set by the curated-override layer (scripts/apply-xrp-overrides.mjs).
+  // Set by the allowlist hydrator (scripts/fetch-xrp-yield.mjs) from the
+  // canonical registry (data/xrp-venues.json).
   curated?: boolean;
   productType?: string;
   venueSlug?: string;
   // Optional display label overriding `symbol` (e.g. Spectra PTs show the
   // maturity); the icon still keys off `symbol`.
   displayName?: string;
-  // Daily max-fixed-APY series for Spectra Principal Tokens (chart source).
+  // Ranking Product column: `asset` is the clean headline (e.g. "stXRP",
+  // "cbXRP / WETH"), `detail` the smaller sub-line under it ("PT · Aug 2026").
+  asset?: string;
+  detail?: string | null;
+  entity?: string | null;
+  // "30d" (30-day mean / fixed rate), "current" (live spot APY), "na" (no feed).
+  rateBasis?: string;
+  rateNa?: boolean;
+  // Daily rate series for the charts (Spectra PT history + DeFiLlama daily).
   history?: { d: string; apy: number }[];
 }
 interface XrpYieldData {
   generatedAt: string;
   stats: {
     venues: number;
+    rated?: number;
     chains: string[];
     totalTvlUsd: number;
     medianApy: number;
@@ -94,6 +104,9 @@ const usd = (n: number) =>
       ? `$${(n / 1_000_000).toFixed(1)}M`
       : `$${Math.round(n / 1_000)}k`;
 const histRate = (p: XrpPool) => p.apyMean30d ?? p.apy;
+// Clean asset headline for the ranking Product column (falls back to the raw
+// symbol for older snapshots that predate the `asset` field).
+const assetHead = (p: XrpPool) => p.asset ?? nice(p.displayName ?? p.symbol);
 
 // Nicer casing for display (icons still key off the raw token).
 const nice = (s: string) =>
@@ -123,8 +136,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const n = data?.pools.length ?? 20;
   const chains = data?.stats.chains?.length ?? 5;
   const median = data?.stats.medianApy;
-  const title = `XRP Yield Ranking: ${n} DeFi Sources by Real 30-Day Rate`;
-  const desc = `Where to earn yield on XRP, ranked by real 30-day rates. ${n} XRP-denominated DeFi venues across ${chains} networks${median ? `, median ${median.toFixed(2)}%` : ""}: lending, vaults, fixed-rate Principal Tokens and liquidity pools for XRP, FXRP, stXRP and cbXRP. XRP has no native staking, so these are the real onchain rates. Refreshed hourly from DeFiLlama.`;
+  const title = `XRP Yield Ranking: ${n} DeFi Products by Real Rate`;
+  const desc = `Where to earn yield on XRP, ranked by real rates. ${n} curated XRP-denominated DeFi products across ${chains} networks${median ? `, median ${median.toFixed(2)}%` : ""}: lending, vaults, fixed-rate Principal Tokens and liquidity pools for XRP, FXRP, stXRP and cbXRP. XRP has no native staking, so these are the real onchain rates. Refreshed hourly from DeFiLlama, Spectra and Portals.`;
   return {
     title: { absolute: `${title} | ${SITE_NAME}` },
     description: desc,
@@ -191,20 +204,22 @@ export default function XrpYieldRankingPage() {
     ? Math.max(...ptRows.map((p) => histRate(p) ?? 0))
     : 0;
 
-  // Early-answer snippet inputs: the top 30-day rate in each exposure bucket
-  // plus the top fixed-rate PT. Lists arrive sorted by rate, so [0] is the
-  // leader; PT is picked by max rate. All derived, so the block never drifts
-  // from the tables.
-  const topSingle = singles[0];
-  const topDual = duals[0];
+  // Early-answer snippet inputs: the top rate among non-PT single-exposure
+  // products, the top dual-exposure pool, and the top fixed-rate PT (kept
+  // distinct so the three clauses don't repeat the same row). Lists arrive
+  // sorted by rate; all derived, so the block never drifts from the tables.
   const topPt = ptRows.reduce<XrpPool | null>(
     (best, p) => (best && (histRate(best) ?? 0) >= (histRate(p) ?? 0) ? best : p),
     null,
   );
+  const topSingle =
+    singles.find((p) => !p.rateNa && productTypeOf(p) !== "Fixed-rate") ?? singles[0];
+  const topDual = duals.find((p) => !p.rateNa) ?? duals[0];
+  const ratedCount = stats.rated ?? pools.filter((p) => !p.rateNa).length;
 
   // Structured-data inputs (rendered as JSON-LD at the top of the page).
   const itemListItems = pools.map((p) => ({
-    name: `${nice(p.displayName ?? p.symbol)} on ${p.platform}`,
+    name: `${assetHead(p)} on ${p.platform}`,
     url: p.platformUrl ?? p.llamaUrl,
   }));
   const crumbs = [
@@ -274,7 +289,7 @@ export default function XrpYieldRankingPage() {
           __html: JSON.stringify(
             reportDatasetSchema({
               name: "XRP DeFi yield ranking dataset",
-              description: `Real 30-day rates, spot APY, TVL and 90-day range for ${stats.venues} XRP-denominated DeFi venues (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Sourced from DeFiLlama and the Spectra API; informational research, not financial advice.`,
+              description: `Rate, TVL and 90-day range for ${stats.venues} curated XRP-denominated DeFi products (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Sourced from the DeFiLlama, Spectra and Portals APIs; informational research, not financial advice.`,
               url: PAGE_URL,
               dateModified: data.generatedAt,
               numberOfItems: stats.venues,
@@ -308,13 +323,14 @@ export default function XrpYieldRankingPage() {
         <div className="uni-home-hero-inner">
           <h1 className="uni-home-h1">XRP Yield Ranking: Where XRP Actually Earns</h1>
           <p className="uni-home-sub">
-            The clearest way to earn yield on XRP, ranked by real rates. We track{" "}
-            {pools.length}+ XRP DeFi sources, from lending and vaults to
-            fixed-rate Principal Tokens and liquidity pools, and rank every one by
-            the rate it has actually paid over the last 30 days.
+            The clearest way to earn yield on XRP, ranked by real rates. This
+            report follows {pools.length} curated XRP products, from lending and
+            vaults to fixed-rate Principal Tokens and liquidity pools, ranked by
+            rate and split by exposure.
           </p>
           <p className="rp-updated">
-            Last updated {updated} · refreshed hourly from DeFiLlama and Spectra
+            Last updated {updated} · refreshed hourly from DeFiLlama, Spectra and
+            Portals
           </p>
           <a href="#rankings" className="uni-home-cta-primary">
             Explore the ranking
@@ -336,23 +352,23 @@ export default function XrpYieldRankingPage() {
               smart-contract chains. There, XRP is held as a wrapped token
               (FXRP, cbXRP, or a staked form such as stXRP) and supplied to a
               lending market, a vault, a fixed-rate Principal Token, or a
-              liquidity pool. This page gathers those venues and ranks them by
-              the rate each has actually paid over the last 30 days.
+              liquidity pool. This page follows a curated set of these products
+              and ranks them by rate.
             </p>
             <p>
-              As of {updated} we track <strong>{stats.venues} venues</strong>{" "}
-              holding at least $25k each, across{" "}
+              As of {updated} this report tracks{" "}
+              <strong>{stats.venues} XRP products</strong> across{" "}
               <strong>
                 {stats.chains.length} networks ({stats.chains.map(chainLabel).join(", ")})
               </strong>
               . Rates span <strong>{pct(lo)}</strong> to{" "}
               <strong>{pct(hi)}</strong>, with a median of{" "}
-              <strong>{pct(stats.medianApy)}</strong>. One caveat:{" "}
-              <strong>{stats.incentivized} of the {stats.venues}</strong>{" "}
-              lean on reward-token incentives for most of their headline rate, so
-              those tend to ease off once the rewards program winds down.
-              Everything here is an external protocol we track for research, not
-              a {SITE_NAME} product.
+              <strong>{pct(stats.medianApy)}</strong> across the {ratedCount} with
+              a live rate. <strong>{stats.incentivized} of the {stats.venues}</strong>{" "}
+              lean on reward-token incentives for the bulk of their rate, so those
+              tend to ease off once a rewards program winds down. Every product
+              here is an external protocol tracked for research, not a{" "}
+              {SITE_NAME} product.
             </p>
           </div>
           <nav className="rp-toc" aria-label="On this page">
@@ -370,50 +386,14 @@ export default function XrpYieldRankingPage() {
           </nav>
         </section>
 
-        <section className="uni-home-content" aria-labelledby="snapshot-title">
-          <h2 id="snapshot-title" className="rp-snapshot-h">
-            XRP yield right now
-          </h2>
-          <div className="rp-snapshot">
-            <p>
-              As of {updated}, the highest 30-day single-exposure rate is{" "}
-              <strong>{pct(histRate(topSingle))}</strong> on{" "}
-              {nice(topSingle.displayName ?? topSingle.symbol)} via{" "}
-              {topSingle.platform}
-              {topDual ? (
-                <>
-                  , while dual-exposure liquidity pools reach{" "}
-                  <strong>{pct(histRate(topDual))}</strong> on{" "}
-                  {nice(topDual.displayName ?? topDual.symbol)} ({topDual.platform})
-                </>
-              ) : null}
-              {topPt ? (
-                <>
-                  . Fixed-rate Principal Tokens sit near{" "}
-                  <strong>{pct(histRate(topPt))}</strong>, locked to maturity
-                </>
-              ) : null}
-              . The median across {stats.venues} tracked sources is{" "}
-              <strong>{pct(stats.medianApy)}</strong>.
-            </p>
-            <p className="rp-snapshot-note">
-              Headline dual-exposure and pool rates often include reward-token
-              incentives and carry impermanent loss, so they tend to ease once a
-              rewards program tapers. {stats.incentivized} of the {stats.venues}{" "}
-              venues here rely on incentives for the bulk of their rate. The
-              30-day average, used throughout the ranking below, is the steadier
-              guide.
-            </p>
-          </div>
-        </section>
-
         <section className="uni-home-content" id="rankings" aria-labelledby="rankings-title">
           <h2 id="rankings-title">The ranking</h2>
           <p className="rp-lead">
-            Every XRP venue we track, ranked by its 30-day average rate and split
-            by exposure. Single-exposure positions sit on one side of the market;
+            The curated XRP products, ranked by rate and split by exposure.
+            Single-exposure positions sit on one side of the market;
             dual-exposure positions pair an XRP token with a second asset. The
-            Type column names each product.
+            Type column names each product; a few rows show a current APY where a
+            30-day history is not published.
           </p>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
@@ -422,9 +402,9 @@ export default function XrpYieldRankingPage() {
                 <span className="rp-rank-count">{singles.length} venues</span>
               </h3>
               <p>
-                One-sided positions with no second asset and no impermanent loss:
-                lending markets, curated vaults, liquid staking, and fixed-rate
-                Principal Tokens. Sorted by 30-day rate.
+                One-sided positions with no second asset: lending markets,
+                curated vaults, liquid staking, fixed-rate Principal Tokens and
+                stXRP pools. Sorted by rate.
               </p>
             </div>
             <RankTable rows={singles} />
@@ -438,15 +418,53 @@ export default function XrpYieldRankingPage() {
               <p>
                 Two-asset liquidity pools that pair an XRP token with something
                 else and earn swap fees plus rewards. Higher headline rates, with
-                impermanent loss to manage. Sorted by 30-day rate.
+                impermanent loss to manage. Sorted by rate.
               </p>
             </div>
             <RankTable rows={duals} />
           </div>
           <p className="rp-source-note">
-            Rates and TVL from DeFiLlama and Spectra, as of {updated}, refreshed
-            hourly. &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
+            Rates and TVL from DeFiLlama, Spectra and Portals, as of {updated},
+            refreshed hourly. A few rows show a current APY where a 30-day
+            history is not published; one row has no public rate feed yet.
+            &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
           </p>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="snapshot-title">
+          <h2 id="snapshot-title" className="rp-snapshot-h">
+            XRP yield right now
+          </h2>
+          <div className="rp-snapshot">
+            <p>
+              As of {updated}, the highest single-exposure rate is{" "}
+              <strong>{pct(histRate(topSingle))}</strong> on {assetHead(topSingle)}{" "}
+              ({topSingle.platform})
+              {topDual ? (
+                <>
+                  , while dual-exposure liquidity pools reach{" "}
+                  <strong>{pct(histRate(topDual))}</strong> on {assetHead(topDual)}{" "}
+                  ({topDual.platform})
+                </>
+              ) : null}
+              {topPt ? (
+                <>
+                  . Fixed-rate Principal Tokens sit near{" "}
+                  <strong>{pct(histRate(topPt))}</strong>, locked to maturity
+                </>
+              ) : null}
+              . The median across the {ratedCount} rated products is{" "}
+              <strong>{pct(stats.medianApy)}</strong>.
+            </p>
+            <p className="rp-snapshot-note">
+              Headline dual-exposure and pool rates often include reward-token
+              incentives and carry impermanent loss, so they tend to ease once a
+              rewards program tapers. {stats.incentivized} of the {stats.venues}{" "}
+              products here rely on incentives for the bulk of their rate. The
+              30-day average, used where a history is available, is the steadier
+              guide.
+            </p>
+          </div>
         </section>
 
         {venueCharts.length > 0 && (
@@ -463,7 +481,7 @@ export default function XrpYieldRankingPage() {
                 <RateChart
                   key={p.id}
                   history={(p.history ?? []).slice(-30)}
-                  title={nice(p.symbol)}
+                  title={assetHead(p)}
                   subtitle={p.platform}
                   tvlUsd={p.tvlUsd}
                   nowValue={histRate(p)}
@@ -522,8 +540,8 @@ export default function XrpYieldRankingPage() {
 
             <h3>Lending</h3>
             <p>
-              Wrapped XRP supplied to a money market such as Kinetic, Venus or
-              Moonwell earns the interest borrowers pay on their loans. It is
+              Wrapped XRP supplied to a money market such as Kinetic on Flare or
+              Moonwell on Base earns the interest borrowers pay on their loans. It is
               single-sided, so there is no second asset to track, and on Flare the
               base rate is often topped up with rFLR reward tokens. This is the
               closest thing XRP has to a plain savings rate.
@@ -746,22 +764,25 @@ export default function XrpYieldRankingPage() {
           <dl className="rp-method">
             <dt>Inclusion</dt>
             <dd>
-              Every pool DeFiLlama tracks whose symbol contains an
-              XRP-denominated token (XRP, or a wrapped variant such as FXRP,
-              stXRP, cbXRP or wXRP), holding at least $25k TVL. RLUSD, Ripple&rsquo;s
-              dollar stablecoin, is excluded because it is not XRP-denominated,
-              and pools paying nothing are dropped. Fixed-rate Principal Tokens
-              come from Spectra&rsquo;s own API, which supplies each PT&rsquo;s
-              current max fixed rate and its history.
+              A hand-curated set of {stats.venues} XRP-denominated products
+              (XRP, or a wrapped variant such as FXRP, stXRP or cbXRP) across
+              lending, vaults, liquid staking, fixed-rate Principal Tokens and
+              liquidity pools. RLUSD, Ripple&rsquo;s dollar stablecoin, is out of
+              scope because it is not XRP-denominated. Each product&rsquo;s rate
+              and TVL are pulled live from its own source: DeFiLlama where a pool
+              is tracked, the Spectra API for Principal Tokens, pools and
+              MetaVaults, and the Portals API for products the others do not
+              cover.
             </dd>
             <dt>Ranking</dt>
             <dd>
-              By 30-day average rate, so short-lived emission spikes don&rsquo;t
-              decide the order. Today&rsquo;s spot rate and the 90-day range are
-              shown alongside.
+              By 30-day average rate where a history is available, so short-lived
+              emission spikes don&rsquo;t decide the order; the 90-day range is
+              shown for those. A few products show a current APY where no 30-day
+              history is published, and one has no public rate feed yet.
             </dd>
             <dt>Freshness</dt>
-            <dd>Refreshed hourly from the free DeFiLlama API and the Spectra API; this page reflects the {updated} snapshot.</dd>
+            <dd>Refreshed hourly from the DeFiLlama, Spectra and Portals APIs; this page reflects the {updated} snapshot.</dd>
             <dt>What this is not</dt>
             <dd>
               The figures are informational only and are not an endorsement or
@@ -894,27 +915,44 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
               <span className="hub-cell hub-vault">
                 <TokenIcons symbol={p.symbol} />
                 <span className="rp-rank-nameblock">
-                  <span className="hub-vault-name">{nice(p.displayName ?? p.symbol)}</span>
-                  {/* Mobile-only sub-line: the Platform + Network columns are
-                      hidden on phones, so surface them under the ticker. */}
+                  {/* Clean asset headline, product detail underneath. */}
+                  <span className="hub-vault-name">{assetHead(p)}</span>
+                  {p.detail ? (
+                    <span className="rp-rank-detail">{p.detail}</span>
+                  ) : null}
+                  {/* Mobile-only: the Platform + Network columns are hidden on
+                      phones, so surface them under the detail line. */}
                   <span className="rp-rank-sub">
                     {chainLabel(p.chain)} · {p.platform}
                   </span>
                 </span>
               </span>
-              <span className="hub-cell hub-num hub-apy">{pct(histRate(p))}</span>
+              <span
+                className="hub-cell hub-num hub-apy"
+                title={
+                  p.rateNa
+                    ? "No public rate feed yet"
+                    : p.rateBasis === "current"
+                      ? "Current APY (30-day history not published)"
+                      : undefined
+                }
+              >
+                {p.rateNa ? "—" : pct(histRate(p))}
+              </span>
               <span className="hub-cell rp-cell-text">
                 <span className="rp-type">{typeLabel(p)}</span>
               </span>
               <span className="hub-cell rp-cell-text">{p.platform}</span>
               <span className="hub-cell rp-cell-text">{chainLabel(p.chain)}</span>
-              <span className="hub-cell hub-num">{usd(p.tvlUsd)}</span>
+              <span className="hub-cell hub-num">
+                {p.tvlUsd > 0 ? usd(p.tvlUsd) : "—"}
+              </span>
               <span className="hub-cell rp-cell-action">
                 <DiscoverButton
                   href={p.platformUrl ?? p.llamaUrl}
                   platform={p.platform}
                   source={`ranking:${p.venueSlug ?? p.project}`}
-                  product={nice(p.displayName ?? p.symbol)}
+                  product={assetHead(p)}
                   chain={p.chain}
                 />
               </span>
