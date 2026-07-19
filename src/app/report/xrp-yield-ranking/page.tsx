@@ -169,6 +169,18 @@ export default function XrpYieldRankingPage() {
   const ptRows = pools.filter(
     (p) => productTypeOf(p) === "Fixed-rate" && (p.history?.length ?? 0) >= 2,
   );
+  // Selected venues with a daily DeFiLlama history feed the 30-day rate charts
+  // (curated headline products, excluding the fixed-rate PTs which have their
+  // own chart). Sorted by 30-day rate, capped so the grid stays scannable.
+  const venueCharts = pools
+    .filter(
+      (p) =>
+        p.curated &&
+        productTypeOf(p) !== "Fixed-rate" &&
+        (p.history?.length ?? 0) >= 2,
+    )
+    .sort((a, b) => (histRate(b) ?? 0) - (histRate(a) ?? 0))
+    .slice(0, 6);
   // Trajectory + TVL blend for the PT commentary (derived, so it stays accurate
   // between snapshots).
   const ptTvl = ptRows.reduce((s, p) => s + p.tvlUsd, 0);
@@ -346,6 +358,7 @@ export default function XrpYieldRankingPage() {
           <nav className="rp-toc" aria-label="On this page">
             <span className="rp-toc-label">On this page</span>
             <a href="#rankings">The ranking</a>
+            <a href="#ratehist-title">30-day rate history</a>
             <a href="#where-title">Where yield comes from</a>
             <a href="#tokens-title">Wrapped forms of XRP</a>
             <a href="#staking">Can you stake XRP?</a>
@@ -436,6 +449,35 @@ export default function XrpYieldRankingPage() {
           </p>
         </section>
 
+        {venueCharts.length > 0 && (
+          <section className="uni-home-content" aria-labelledby="ratehist-title">
+            <h2 id="ratehist-title">30-day rate history</h2>
+            <p className="rp-lead">
+              How the rate has moved over the last 30 days for a selection of
+              the larger venues, from DeFiLlama&rsquo;s daily record. Useful for
+              telling a steady rate apart from one riding a short-lived incentive
+              spike.
+            </p>
+            <div className="rp-charts">
+              {venueCharts.map((p) => (
+                <RateChart
+                  key={p.id}
+                  history={(p.history ?? []).slice(-30)}
+                  title={nice(p.symbol)}
+                  subtitle={p.platform}
+                  tvlUsd={p.tvlUsd}
+                  nowValue={histRate(p)}
+                  nowLabel="30d APY"
+                  ariaKind="30-day APY"
+                />
+              ))}
+            </div>
+            <p className="rp-source-note">
+              Daily APY from DeFiLlama, last 30 days, as of {updated}.
+            </p>
+          </section>
+        )}
+
         {ptRows.length > 0 && (
           <section className="uni-home-content" aria-labelledby="ptchart-title">
             <h2 id="ptchart-title">PT max fixed rate, daily</h2>
@@ -447,7 +489,15 @@ export default function XrpYieldRankingPage() {
             </p>
             <div className="rp-charts">
               {ptRows.map((p) => (
-                <PtRateChart key={p.id} p={p} />
+                <RateChart
+                  key={p.id}
+                  history={p.history ?? []}
+                  title={nice(p.displayName ?? p.symbol)}
+                  tvlUsd={p.tvlUsd}
+                  nowValue={p.history?.[p.history.length - 1]?.apy ?? histRate(p)}
+                  nowLabel="max fixed"
+                  ariaKind="daily max fixed rate"
+                />
               ))}
             </div>
             <p className="rp-source-note">
@@ -922,11 +972,28 @@ function VenueCard({ v }: { v: VenueNote }) {
   );
 }
 
-// Static SVG line chart of a Principal Token's daily max fixed APY. Server
-// rendered (no client JS): area fill + line + end dot, auto-scaled to the
-// series with a little headroom, first/last dates below the plot.
-function PtRateChart({ p }: { p: XrpPool }) {
-  const h = p.history ?? [];
+// Static SVG line chart of a daily rate series. Server rendered (no client JS):
+// area fill + line + end dot, auto-scaled to the series with a little headroom,
+// first/last dates below the plot. Shared by the PT fixed-rate charts and the
+// selected-venue 30-day APY charts (only the header labels differ).
+function RateChart({
+  history,
+  title,
+  subtitle,
+  tvlUsd,
+  nowValue,
+  nowLabel,
+  ariaKind,
+}: {
+  history: { d: string; apy: number }[];
+  title: string;
+  subtitle?: string;
+  tvlUsd: number;
+  nowValue: number | null;
+  nowLabel: string;
+  ariaKind: string;
+}) {
+  const h = history ?? [];
   if (h.length < 2) return null;
 
   const W = 680;
@@ -950,7 +1017,6 @@ function PtRateChart({ p }: { p: XrpPool }) {
     .join(" ");
   const area = `${line} L${xAt(h.length - 1).toFixed(1)},${(H - padB).toFixed(1)} L${xAt(0).toFixed(1)},${(H - padB).toFixed(1)} Z`;
   const last = h[h.length - 1];
-  const label = nice(p.displayName ?? p.symbol);
   const fmt = (d: string) =>
     new Date(`${d}T00:00:00Z`).toLocaleString("en-US", {
       month: "short",
@@ -962,19 +1028,20 @@ function PtRateChart({ p }: { p: XrpPool }) {
     <div className="rp-chart-card">
       <div className="rp-chart-head">
         <span className="rp-chart-title">
-          {label}
-          <span className="rp-chart-tvl">{usd(p.tvlUsd)} TVL</span>
+          {title}
+          {subtitle ? <span className="rp-chart-sub">{subtitle}</span> : null}
+          <span className="rp-chart-tvl">{usd(tvlUsd)} TVL</span>
         </span>
         <span className="rp-chart-now">
-          {pct(last.apy)}
-          <small>max fixed</small>
+          {pct(nowValue)}
+          <small>{nowLabel}</small>
         </span>
       </div>
       <div className="rp-chart">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"
-          aria-label={`${label} daily max fixed rate, ${pct(h[0].apy)} to ${pct(last.apy)}`}
+          aria-label={`${title} ${ariaKind}, ${pct(h[0].apy)} to ${pct(last.apy)}`}
         >
           <path d={area} className="rp-chart-area" />
           <path d={line} className="rp-chart-line" fill="none" vectorEffect="non-scaling-stroke" />

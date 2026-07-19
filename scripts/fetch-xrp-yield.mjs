@@ -85,6 +85,21 @@ async function getJson(url, tries = 3) {
   return null;
 }
 
+// Downsample a DeFiLlama chart (roughly daily {timestamp, apy} rows) to one
+// point per calendar day, {d:"YYYY-MM-DD", apy}. Feeds the report's per-venue
+// 30-day rate charts (the component slices the last 30). Capped to capDays.
+function dailySeries(rows, capDays = 90) {
+  const byDay = new Map();
+  for (const r of rows || []) {
+    if (!r || !Number.isFinite(r.apy)) continue;
+    byDay.set(String(r.timestamp).slice(0, 10), Math.round(r.apy * 100) / 100);
+  }
+  return [...byDay.entries()]
+    .map(([d, apy]) => ({ d, apy }))
+    .sort((a, b) => (a.d < b.d ? -1 : 1))
+    .slice(-capDays);
+}
+
 // A symbol token counts as XRP-denominated when it IS XRP or a short wrapped
 // variant (WXRP, FXRP, CBXRP, STXRP, SXRP...). RLUSD - Ripple's dollar
 // stablecoin - is intentionally NOT XRP-denominated, so pools whose only
@@ -187,9 +202,27 @@ const main = async () => {
   );
   pools = pools.slice(0, MAX_POOLS);
 
-  // Per-pool history for the top of the ranking: first-tracked date + 90d
-  // rate range. Sequential + throttled; failures leave the fields null.
-  for (const p of pools.slice(0, DETAIL_POOLS)) {
+  if (pools.length === 0) {
+    console.error("[xrp-yield] zero pools matched the XRP/RLUSD filter; keeping existing snapshot.");
+    process.exit(0);
+  }
+
+  // Curated overrides: swap generic platform links for real product deep-links
+  // on matching rows, and embed the curated venue list for the report's info
+  // section. Kept here (not the report page) so the hourly cron preserves them.
+  // Applied BEFORE the history loop so curated rows are always detailed.
+  const venues = loadVenues(ROOT);
+  const overridden = applyOverrides(pools, venues);
+  if (overridden > 0) console.log(`[xrp-yield] applied ${overridden} curated link override(s).`);
+
+  // Per-pool history: first-tracked date, 90d rate range, and a daily rate
+  // series for the report's charts. Detailed for the top of the ranking plus
+  // every curated venue (so each featured product can be charted regardless of
+  // its rank). One chart call per pool, sequential + throttled; failures leave
+  // the fields null. The Discover deep-link / curated flags are already set.
+  const detail = new Set(pools.slice(0, DETAIL_POOLS));
+  for (const p of pools) if (p.curated) detail.add(p);
+  for (const p of detail) {
     const chart = await getJson(`https://yields.llama.fi/chart/${p.id}`, 2);
     const rows = chart?.data;
     if (Array.isArray(rows) && rows.length > 0) {
@@ -205,21 +238,11 @@ const main = async () => {
           max: Math.round(Math.max(...tail) * 100) / 100,
         };
       }
+      const hist = dailySeries(rows);
+      if (hist.length >= 2) p.history = hist;
     }
     await new Promise((res) => setTimeout(res, 300));
   }
-
-  if (pools.length === 0) {
-    console.error("[xrp-yield] zero pools matched the XRP/RLUSD filter; keeping existing snapshot.");
-    process.exit(0);
-  }
-
-  // Curated overrides: swap generic platform links for real product deep-links
-  // on matching rows, and embed the curated venue list for the report's info
-  // section. Kept here (not the report page) so the hourly cron preserves them.
-  const venues = loadVenues(ROOT);
-  const overridden = applyOverrides(pools, venues);
-  if (overridden > 0) console.log(`[xrp-yield] applied ${overridden} curated link override(s).`);
 
   // Spectra Principal Token fixed rates (single-exposure "Fixed-Rate" rows).
   // Gated OFF until the api.spectra.finance response shape is confirmed; enable
