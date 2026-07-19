@@ -45,12 +45,12 @@
 /* Discover button (opens the leaving-site modal) */
 .rp-discover {
   display: inline-block;
-  padding: 6px 14px;
+  padding: 7px 15px;
   border-radius: 999px;
   border: 1px solid var(--hub-line, #e2e3e5);
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--hub-ink, #191717);
   cursor: pointer;
@@ -242,7 +242,7 @@
 }
 .rp-chart-tvl {
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0;
   color: var(--uni-ink-3);
@@ -256,7 +256,7 @@
   white-space: nowrap;
 }
 .rp-chart-now small {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--uni-ink-3);
   margin-left: 5px;
@@ -285,7 +285,7 @@
   justify-content: space-between;
   margin-top: 7px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--uni-ink-3);
 }
 
@@ -320,9 +320,9 @@
 .rp-rank .hub-thead,
 .rp-rank .hub-row {
   grid-template-columns:
-    34px minmax(140px, 1.7fr) 92px 104px minmax(96px, 1fr)
-    minmax(80px, 0.8fr) 78px 100px;
-  gap: 16px;
+    34px minmax(150px, 1.6fr) 100px 112px minmax(110px, 1.1fr)
+    minmax(82px, 0.72fr) 88px 90px;
+  gap: 14px;
 }
 /* The Discover button shows its text label on desktop; the arrow is mobile. */
 .rp-discover-arrow { display: none; }
@@ -389,7 +389,7 @@
   .rp-rank .rp-rank-sub {
     display: block;
     margin-top: 2px;
-    font-size: 10.5px;
+    font-size: 12.5px;
     line-height: 1.2;
     color: var(--uni-ink-3, #8a887f);
     white-space: nowrap;
@@ -429,13 +429,13 @@
 .rp-gloss-head img { border-radius: 50%; flex-shrink: 0; }
 .rp-gloss-tok {
   font-family: var(--display, var(--sans));
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 600;
   color: var(--uni-ink);
 }
 .rp-gloss-chain {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--uni-ink-3);
   text-transform: uppercase;
@@ -443,26 +443,33 @@
 }
 .rp-page .rp-gloss-card .rp-gloss-desc {
   margin: 0 0 14px;
-  font-size: 14.5px;
+  font-size: 18.5px;
   line-height: 1.62;
   color: var(--rp-body);
   max-width: none;
 }
+/* The address + copy button read as ONE gentle rounded pill: the container
+   carries the border/background, the code sits flush inside, and the copy
+   button blends in at the right edge (no frame of its own). */
 .rp-gloss-addr {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   max-width: 620px;
+  border: 1px solid var(--rp-card-border);
+  background: var(--rp-hover);
+  border-radius: 10px;
+  padding: 3px 4px 3px 12px;
 }
 .rp-gloss-addr-val {
   flex: 1 1 auto;
   min-width: 0;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--uni-ink-2);
-  background: var(--rp-hover);
-  padding: 5px 9px;
-  border-radius: 7px;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -481,15 +488,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--rp-card-border);
+  width: 26px;
+  height: 26px;
+  border: 0;
   border-radius: 7px;
-  background: var(--rp-card-bg);
-  color: var(--uni-ink-2);
+  background: transparent;
+  color: var(--uni-ink-3);
   cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
 }
-.rp-gloss-addr .cd-copy-btn:hover { color: var(--uni-ink); border-color: var(--uni-ink-3); }
+.rp-gloss-addr .cd-copy-btn:hover { color: var(--uni-ink); background: rgba(10, 10, 17, 0.06); }
+:root[data-theme="dark"] .rp-gloss-addr .cd-copy-btn:hover { background: rgba(255, 255, 255, 0.08); }
 
 /* === Venue directory ("in depth") =================================
    One card per curated venue, grouped by chain. Header row (icons +
@@ -506,7 +515,7 @@
 }
 .rp-chain-head h3 {
   font-family: var(--display, var(--sans));
-  font-size: 19px;
+  font-size: 23px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--uni-ink);
@@ -541,13 +550,13 @@
 }
 .rp-venue-name {
   font-family: var(--display, var(--sans));
-  font-size: 16.5px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.008em;
   color: var(--uni-ink);
 }
 .rp-venue-plat {
-  font-size: 12.5px;
+  font-size: 15px;
   color: var(--uni-ink-3);
 }
 .rp-badges { display: inline-flex; gap: 6px; flex-wrap: wrap; }
@@ -590,14 +599,14 @@
 }
 .rp-fact { display: flex; flex-direction: column; gap: 2px; }
 .rp-fact-k {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--uni-ink-3);
 }
 .rp-fact-v {
-  font-size: 13.5px;
+  font-size: 16px;
   line-height: 1.55;
   color: var(--uni-ink);
 }
@@ -655,9 +664,9 @@
 .rp-page .uni-home-content .rp-eyebrow {
   display: block;
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 24px;
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--rp-eyebrow);
@@ -671,17 +680,17 @@
 /* Section headings (Overview, The ranking, ...) are the top level and
    all read at one size; sub-headings inside sit a clear step below. */
 .rp-page .uni-home-content > h2 {
-  font-size: 29px;
+  font-size: 35px;
   font-weight: 650;
   letter-spacing: -0.018em;
   line-height: 1.2;
   color: var(--rp-heading);
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 
 /* Ranking, grouped by product type (Lending markets, Vaults, ...) */
 .rp-lead {
-  font-size: 16px;
+  font-size: 19px;
   line-height: 1.66;
   color: var(--uni-ink-2);
   margin: 0 0 8px;
@@ -695,7 +704,7 @@
   align-items: baseline;
   gap: 9px;
   font-family: var(--display, var(--sans));
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--rp-heading);
@@ -709,14 +718,14 @@
 }
 .rp-rank-head p {
   margin: 5px 0 0;
-  font-size: 14px;
+  font-size: 17px;
   line-height: 1.55;
   color: var(--uni-ink-2);
   max-width: 74ch;
 }
 .rp-source-note {
   margin: 18px 0 0;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.5;
   color: var(--uni-ink-3);
 }
@@ -771,14 +780,14 @@
   border-top: 1px solid var(--uni-line);
 }
 .rp-toc-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--uni-ink-3);
 }
 .rp-toc a {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--uni-ink-2);
   text-decoration: none;
   border-bottom: 1px solid transparent;
@@ -802,7 +811,7 @@
   cursor: pointer;
   list-style: none;
   font-family: var(--display, var(--sans));
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 600;
   letter-spacing: -0.008em;
   color: var(--uni-ink);
@@ -833,7 +842,7 @@
 .rp-faq-a {
   margin: 0;
   padding: 0 0 20px;
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.7;
   color: var(--uni-ink-2);
   max-width: 100%;
@@ -904,11 +913,11 @@
 
 /* Sub-headings inside the article prose: a clear step below the H2. */
 .rp-page .rp-article h3 {
-  font-size: 19px;
+  font-size: 23px;
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--rp-heading);
-  margin-top: 32px;
+  margin-top: 34px;
   margin-bottom: 8px;
 }
 .rp-page .rp-article h3:first-of-type { margin-top: 10px; }
@@ -922,31 +931,31 @@
 .rp-page .uni-home-content .rp-chain-intro,
 .rp-page .uni-home-content .rp-venue-prose p {
   font-family: var(--sans);
-  font-size: 17px;
+  font-size: 20.5px;
   font-weight: 450;
-  line-height: 30px;
+  line-height: 36px;
   letter-spacing: -0.002em;
   color: var(--rp-body);
   max-width: none;
 }
-.rp-page .uni-home-content .rp-article p { margin: 0 0 20px; }
+.rp-page .uni-home-content .rp-article p { margin: 0 0 22px; }
 .rp-page .uni-home-content p.rp-lead {
   margin: 0 0 24px;
-  font-size: 17.5px;
+  font-size: 21px;
   color: var(--rp-body);
 }
 .rp-page .rp-article { max-width: none; }
 /* Method definition list follows the same body style. */
 .rp-page .uni-home-content .rp-method dd {
   font-family: var(--sans);
-  font-size: 16.5px;
+  font-size: 20px;
   font-weight: 450;
-  line-height: 28px;
+  line-height: 34px;
   color: var(--rp-body);
 }
 .rp-page .uni-home-content .rp-method dt {
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 650;
   color: var(--rp-heading);
 }
@@ -978,9 +987,9 @@
   box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
 }
 .rp-chart-head { margin-bottom: 16px; }
-.rp-chart-title { font-size: 15px; font-weight: 600; }
-.rp-chart-sub { font-size: 12.5px; color: var(--uni-ink-2); }
-.rp-chart-now { font-size: 20px; }
+.rp-chart-title { font-size: 18px; font-weight: 600; }
+.rp-chart-sub { font-size: 15px; color: var(--uni-ink-2); }
+.rp-chart-now { font-size: 24px; }
 
 /* --- Ranking table: lean & clean (Uniswap-style) -------------------
    No outer frame, no row hairlines; a subtle header bar and generous
@@ -1001,7 +1010,7 @@
   padding-bottom: 11px;
 }
 .rp-page .rp-rank .hub-th {
-  font-size: 12px;
+  font-size: 14.5px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -1018,33 +1027,33 @@
    emphasised (it is the row identifier) and the detail line is muted. */
 .rp-page .rp-rank .hub-cell {
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 400;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
 .rp-page .rp-rank .hub-rank { color: var(--uni-ink-3); }
 .rp-page .rp-rank .hub-vault-name {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.003em;
 }
-.rp-page .rp-rank .rp-rank-detail { font-size: 12px; font-weight: 400; color: var(--uni-ink-3); }
+.rp-page .rp-rank .rp-rank-detail { font-size: 14.5px; font-weight: 400; color: var(--uni-ink-3); }
 /* Only the 30d APY column is bold; every other cell stays regular. */
 .rp-page .rp-rank .hub-apy {
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--rp-heading);
 }
-.rp-page .rp-rank .rp-cell-text { font-size: 14px; font-weight: 400; color: var(--uni-ink-2); }
-.rp-page .rp-rank .hub-num { font-family: var(--sans); font-size: 14px; font-weight: 400; }
+.rp-page .rp-rank .rp-cell-text { font-size: 17px; font-weight: 400; color: var(--uni-ink-2); }
+.rp-page .rp-rank .hub-num { font-family: var(--sans); font-size: 17px; font-weight: 400; }
 /* Type reads as plain text (no pill) so every column is visually even. */
 .rp-page .rp-rank .rp-type {
   background: none;
   padding: 0;
   border-radius: 0;
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 400;
   color: var(--uni-ink-2);
 }
@@ -1066,8 +1075,8 @@
 .rp-page .rp-snapshot p { max-width: 78ch; }
 .rp-page .rp-snapshot .rp-snapshot-note {
   margin-top: 16px;
-  font-size: 14px;
-  line-height: 26px;
+  font-size: 17px;
+  line-height: 31px;
   color: var(--uni-ink-3);
 }
 
@@ -1081,7 +1090,7 @@
   border-radius: 16px;
   background: var(--rp-card-bg);
   padding: 22px 24px;
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.7;
   color: var(--uni-ink-2);
   box-shadow: 0 1px 2px rgba(25, 23, 23, 0.04);
@@ -1099,11 +1108,14 @@
 }
 .rp-page .rp-source-note {
   margin-top: 24px;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.65;
   color: var(--uni-ink-3);
   max-width: none;
 }
+/* The ranking source-note ("Rates and TVL from DeFiLlama, Spectra and
+   Portals...") sits well clear of the two tables above it. */
+.rp-page .rp-rank-group + .rp-source-note { margin-top: 72px; }
 /* More air around the two ranking tables. */
 .rp-page .rp-rank-group { margin-top: 56px; }
 .rp-page .rp-rank-group:first-of-type { margin-top: 28px; }
@@ -1140,7 +1152,7 @@
 .rp-toc-tree-head {
   margin: 0 0 10px;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 24px;
   color: var(--rp-body);
@@ -1151,7 +1163,7 @@
   border-left: 1px solid var(--rp-toc-rail);
   padding: 4px 0 4px 17px;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 24px;
   text-decoration: none;
   transition: color 0.12s ease, border-color 0.12s ease;
@@ -1232,16 +1244,23 @@
 /* #6 — more air above the commentary paragraph under a chart grid. */
 .rp-page .rp-charts + .rp-source-note { margin-top: 46px; }
 
-/* #7 — address in a gentle rounded box, copy button in front, no explorer link. */
-.rp-page .rp-gloss-addr-val {
+/* #7 — address + copy button share one gentle rounded pill (the container is
+   the box); the copy control blends in at the right, no explorer link. */
+.rp-page .rp-gloss-addr {
   border: 1px solid var(--rp-card-border);
   background: var(--rp-hover);
-  border-radius: 9px;
-  padding: 6px 11px;
+  border-radius: 10px;
+  padding: 3px 4px 3px 12px;
+}
+.rp-page .rp-gloss-addr-val {
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
 }
 .rp-page .rp-gloss-card .rp-gloss-desc {
-  font-size: 15.5px;
+  font-size: 18.5px;
   font-weight: 450;
-  line-height: 26px;
+  line-height: 31px;
   color: var(--rp-body);
 }

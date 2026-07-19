@@ -228,12 +228,11 @@ export const VENUE_GROUPS: VenueGroup[] = [
         url: "https://aerodrome.finance/connect?to=%2Fdeposit%3Ftoken0%3D0xcb585250f852C6c6bf90434AB21A00f02833a4af%26token1%3D0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf%26type%3D100%26chain0%3D8453%26chain1%3D8453%26factory%3D0xf8f2eB4940CFE7d13603DDDD87f123820Fc061Ef",
         blurb: [
           "Aerodrome is the main ve(3,3) DEX on Base, built by the Velodrome team. Its Slipstream pools are Uniswap v3 style concentrated liquidity, and XRP comes in as Coinbase Wrapped XRP.",
-          "The cbXRP / cbBTC and cbXRP / WETH pools pay swap fees plus AERO emissions that veAERO voters steer to each pool every week. Gauntlet has also run a USDC reward campaign to bootstrap the cbAsset pools. Rates move with vote weight and campaigns, and concentrated liquidity carries impermanent loss if the two sides drift apart.",
+          "The cbXRP / cbBTC and cbXRP / WETH pools pay swap fees plus AERO emissions that veAERO voters steer to each pool every week. Rates move with vote weight and campaigns, and concentrated liquidity carries impermanent loss if the two sides drift apart.",
         ],
         facts: [
-          { label: "Yield source", value: "Swap fees plus AERO emissions, and a USDC bootstrap campaign" },
+          { label: "Yield source", value: "Swap fees plus AERO emissions" },
           { label: "Wrapped asset", value: "cbXRP (Coinbase, 1:1 custody)" },
-          { label: "Incentive curator", value: "Gauntlet (USDC campaign)" },
           { label: "Built by", value: "The Velodrome team" },
           { label: "Audits", value: "Forked from audited Velodrome v2; cbXRP contract by OpenZeppelin" },
         ],

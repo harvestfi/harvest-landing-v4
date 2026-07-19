@@ -170,9 +170,12 @@ export default function XrpYieldRankingPage() {
 
   const { pools, stats } = data;
 
-  // Hero hook: the best-paying single-sided venue (no impermanent loss to
-  // explain in the card).
-  const featured = pools.find((p) => !isDual(p)) ?? pools[0];
+  // Hero hook: the stXRP PT · Aug 2026 opportunity (the rank-1 single-sided
+  // fixed rate), pinned so the hero card mirrors that specific product's data.
+  const featured =
+    pools.find((p) => p.venueSlug === "spectra-pt-aug-2026") ??
+    pools.find((p) => !isDual(p)) ??
+    pools[0];
 
   // Split the ranking by exposure. Single-exposure = one-sided positions (no
   // impermanent loss); dual-exposure = two-asset liquidity pools. Pools arrive
@@ -219,6 +222,17 @@ export default function XrpYieldRankingPage() {
     singles.find((p) => !p.rateNa && productTypeOf(p) !== "Fixed-rate") ?? singles[0];
   const topDual = duals.find((p) => !p.rateNa) ?? duals[0];
   const ratedCount = stats.rated ?? pools.filter((p) => !p.rateNa).length;
+
+  // Popularity proxy for the "XRP yield right now" intro. Public holder counts
+  // aren't exposed by most of these venues, so value locked stands in for where
+  // deposits concentrate: the deepest single venue, and the chain holding most.
+  const tvlLeaders = [...pools].sort((a, b) => (b.tvlUsd || 0) - (a.tvlUsd || 0));
+  const tvlByChain = pools.reduce<Record<string, number>>((m, p) => {
+    m[p.chain] = (m[p.chain] || 0) + (p.tvlUsd || 0);
+    return m;
+  }, {});
+  const chainRanked = Object.entries(tvlByChain).sort((a, b) => b[1] - a[1]);
+  const topChain = chainRanked.length ? chainRanked[0][0] : tvlLeaders[0].chain;
 
   // Structured-data inputs (rendered as JSON-LD at the top of the page).
   const itemListItems = pools.map((p) => ({
@@ -273,11 +287,11 @@ export default function XrpYieldRankingPage() {
 
   const heroVault = featured
     ? {
-        productName: nice(featured.symbol),
+        productName: assetHead(featured),
         asset: featured.symbol,
         chain: featured.chain,
         protocol: featured.platform,
-        vaultType: "Single-exposure",
+        vaultType: featured.detail ?? "Single-exposure",
         apy24h: featured.apy ?? 0,
         apy30d: featured.apyMean30d ?? 0,
         tvl: featured.tvlUsd,
@@ -337,6 +351,16 @@ export default function XrpYieldRankingPage() {
                 "Principal Token",
               ],
               sources: ["https://defillama.com", "https://spectra.finance"],
+              distribution: [
+                {
+                  format: "application/json",
+                  url: `${SITE_URL}/data/xrp-yield/index.json`,
+                },
+                {
+                  format: "text/csv",
+                  url: `${SITE_URL}/data/xrp-yield/history.csv`,
+                },
+              ],
             }),
           ),
         }}
@@ -360,10 +384,7 @@ export default function XrpYieldRankingPage() {
             vaults to fixed-rate Principal Tokens and liquidity pools, ranked by
             rate and split by exposure.
           </p>
-          <p className="rp-updated">
-            Last updated {updated} · refreshed hourly from DeFiLlama, Spectra and
-            Portals
-          </p>
+          <p className="rp-updated">Last updated {updated}</p>
           <a href="#rankings" className="uni-home-cta-primary">
             Explore the ranking
             <span aria-hidden="true">↓</span>
@@ -379,7 +400,7 @@ export default function XrpYieldRankingPage() {
           <h2 id="overview-title">Overview</h2>
           <div className="rp-article">
             <p>
-              Earning yield on XRP has quietly grown into one of the more active
+              Earning yield on XRP is quietly growing into one of the more active
               corners of DeFi. XRP is not a proof-of-stake asset, so there is no
               native staking rate to claim.
             </p>
@@ -487,23 +508,17 @@ export default function XrpYieldRankingPage() {
               . The median across the {ratedCount} rated products is{" "}
               <strong>{pct(stats.medianApy)}</strong>.
             </p>
-            <aside className="rp-tip">
-              <span className="rp-tip-label" aria-hidden="true">
-                Tip
-              </span>
-              <div className="rp-tip-body">
-                <p>
-                  Headline dual-exposure and pool rates often include
-                  reward-token incentives and carry impermanent loss, so they
-                  tend to ease once a rewards program tapers.
-                </p>
-                <p>
-                  {stats.incentivized} of the {stats.venues} products here rely on
-                  incentives for the bulk of their rate. The 30-day average, used
-                  where a history is available, is the steadier guide.
-                </p>
-              </div>
-            </aside>
+            {tvlLeaders.length >= 1 ? (
+              <p>
+                Public holder counts aren&rsquo;t exposed by most of these
+                venues, so value locked is the better read on where deposits
+                concentrate. It sits overwhelmingly on{" "}
+                <strong>{chainLabel(topChain)}</strong>, led by{" "}
+                {assetHead(tvlLeaders[0])} at {tvlLeaders[0].platform} with{" "}
+                <strong>{usd(tvlLeaders[0].tvlUsd)}</strong> locked, the deepest
+                single venue on the page.
+              </p>
+            ) : null}
           </div>
         </section>
 
@@ -675,10 +690,10 @@ export default function XrpYieldRankingPage() {
                   <p className="rp-gloss-desc">{t.desc}</p>
                   {t.address ? (
                     <div className="rp-gloss-addr">
-                      <CopyAddressButton address={t.address} compact />
                       <code className="rp-gloss-addr-val" title={t.address}>
                         {t.address}
                       </code>
+                      <CopyAddressButton address={t.address} compact />
                     </div>
                   ) : null}
                 </article>

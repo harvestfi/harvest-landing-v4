@@ -185,6 +185,10 @@ export function reportDatasetSchema(o: {
   numberOfItems?: number;
   keywords?: string[];
   sources?: string[];
+  // Downloadable machine-readable distributions (JSON index + CSV), emitted at
+  // build time by scripts/build-xrp-history.mjs, so Google's Dataset crawler
+  // and agents get a real, parseable file rather than only the HTML table.
+  distribution?: { format: string; url: string }[];
 }): object {
   return {
     "@context": "https://schema.org",
@@ -208,6 +212,15 @@ export function reportDatasetSchema(o: {
     keywords: o.keywords ?? ["XRP", "DeFi", "yield", "APY", "TVL"],
     isAccessibleForFree: true,
     license: "https://creativecommons.org/licenses/by/4.0/",
+    ...(o.distribution && o.distribution.length
+      ? {
+          distribution: o.distribution.map((d) => ({
+            "@type": "DataDownload",
+            encodingFormat: d.format,
+            contentUrl: d.url,
+          })),
+        }
+      : {}),
   };
 }
 
