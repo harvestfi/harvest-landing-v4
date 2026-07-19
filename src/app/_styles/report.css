@@ -671,10 +671,11 @@
 /* Section headings (Overview, The ranking, ...) are the top level and
    all read at one size; sub-headings inside sit a clear step below. */
 .rp-page .uni-home-content > h2 {
-  font-size: 27px;
-  font-weight: 600;
-  letter-spacing: -0.017em;
-  line-height: 1.18;
+  font-size: 29px;
+  font-weight: 650;
+  letter-spacing: -0.018em;
+  line-height: 1.2;
+  color: var(--rp-heading);
   margin: 0 0 14px;
 }
 
@@ -694,10 +695,10 @@
   align-items: baseline;
   gap: 9px;
   font-family: var(--display, var(--sans));
-  font-size: 19px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 650;
   letter-spacing: -0.01em;
-  color: var(--uni-ink);
+  color: var(--rp-heading);
   margin: 0;
 }
 .rp-rank-count {
@@ -846,8 +847,9 @@
    ==================================================================== */
 .rp-page {
   --rp-accent: #b26a00;
-  --rp-eyebrow: #e0850c;        /* yellow-orange pre-heading + active TOC */
-  --rp-body: #3e3e46;           /* Figma: Tuna, body copy */
+  --rp-eyebrow: #ffb936;        /* gold pre-heading + active TOC */
+  --rp-heading: #1a2440;        /* deep navy, dark-but-not-black */
+  --rp-body: #3d465f;           /* lighter navy-slate body */
   --rp-link: #101828;           /* Figma: Ebony, links */
   --rp-link-underline: rgba(16, 24, 40, 0.28);
   --rp-toc-rail: rgba(10, 10, 17, 0.08);
@@ -861,8 +863,9 @@
 @media (prefers-color-scheme: dark) {
   .rp-page {
     --rp-accent: #ffce7a;
-    --rp-eyebrow: #ffb445;
-    --rp-body: #cbc9c3;
+    --rp-eyebrow: #ffb936;
+    --rp-heading: #f1f2f7;
+    --rp-body: #c8cdd9;
     --rp-link: #eef0f6;
     --rp-link-underline: rgba(238, 240, 246, 0.32);
     --rp-toc-rail: rgba(255, 255, 255, 0.1);
@@ -874,8 +877,9 @@
 }
 :root[data-theme="dark"] .rp-page {
   --rp-accent: #ffce7a;
-  --rp-eyebrow: #ffb445;
-  --rp-body: #cbc9c3;
+  --rp-eyebrow: #ffb936;
+  --rp-heading: #f1f2f7;
+  --rp-body: #c8cdd9;
   --rp-link: #eef0f6;
   --rp-link-underline: rgba(238, 240, 246, 0.32);
   --rp-toc-rail: rgba(255, 255, 255, 0.1);
@@ -886,8 +890,9 @@
 }
 :root[data-theme="light"] .rp-page {
   --rp-accent: #b26a00;
-  --rp-eyebrow: #e0850c;
-  --rp-body: #3e3e46;
+  --rp-eyebrow: #ffb936;
+  --rp-heading: #1a2440;
+  --rp-body: #3d465f;
   --rp-link: #101828;
   --rp-link-underline: rgba(16, 24, 40, 0.28);
   --rp-toc-rail: rgba(10, 10, 17, 0.08);
@@ -899,46 +904,51 @@
 
 /* Sub-headings inside the article prose: a clear step below the H2. */
 .rp-page .rp-article h3 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 650;
   letter-spacing: -0.01em;
-  color: var(--uni-ink);
+  color: var(--rp-heading);
   margin-top: 32px;
   margin-bottom: 8px;
 }
 .rp-page .rp-article h3:first-of-type { margin-top: 10px; }
 
-/* Body copy — exact Figma spec: Inter 16px / 400 / 28px line-height, Tuna.
-   Scoped under .uni-home-content (3 classes) so it beats the homepage's
-   ".uni-home-content p" rule, which was silently overriding it. */
+/* Body copy: warm navy-slate, a touch larger and heavier than the flat spec,
+   with roomier line-height so the report reads soft, not "black Arial". Scoped
+   under .uni-home-content (3 classes) so it beats the homepage's rule. */
 .rp-page .uni-home-content .rp-article p,
 .rp-page .uni-home-content p.rp-lead,
 .rp-page .uni-home-content .rp-snapshot p,
 .rp-page .uni-home-content .rp-chain-intro,
 .rp-page .uni-home-content .rp-venue-prose p {
   font-family: var(--sans);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 28px;
-  letter-spacing: 0;
+  font-size: 17px;
+  font-weight: 450;
+  line-height: 30px;
+  letter-spacing: -0.002em;
   color: var(--rp-body);
   max-width: none;
 }
 .rp-page .uni-home-content .rp-article p { margin: 0 0 20px; }
-.rp-page .uni-home-content p.rp-lead { margin: 0 0 24px; }
+.rp-page .uni-home-content p.rp-lead {
+  margin: 0 0 24px;
+  font-size: 17.5px;
+  color: var(--rp-body);
+}
 .rp-page .rp-article { max-width: none; }
 /* Method definition list follows the same body style. */
 .rp-page .uni-home-content .rp-method dd {
   font-family: var(--sans);
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 16.5px;
+  font-weight: 450;
   line-height: 28px;
   color: var(--rp-body);
 }
 .rp-page .uni-home-content .rp-method dt {
   font-family: var(--sans);
   font-size: 16px;
-  color: var(--uni-ink);
+  font-weight: 650;
+  color: var(--rp-heading);
 }
 
 /* Links — Figma: Ebony, 600 weight, subtle-but-decisive underline. */
@@ -1020,7 +1030,13 @@
   letter-spacing: -0.003em;
 }
 .rp-page .rp-rank .rp-rank-detail { font-size: 12px; font-weight: 400; color: var(--uni-ink-3); }
-.rp-page .rp-rank .hub-apy { font-family: var(--sans); font-size: 14px; font-weight: 500; }
+/* Only the 30d APY column is bold; every other cell stays regular. */
+.rp-page .rp-rank .hub-apy {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--rp-heading);
+}
 .rp-page .rp-rank .rp-cell-text { font-size: 14px; font-weight: 400; color: var(--uni-ink-2); }
 .rp-page .rp-rank .hub-num { font-family: var(--sans); font-size: 14px; font-weight: 400; }
 /* Type reads as plain text (no pill) so every column is visually even. */
@@ -1174,3 +1190,58 @@
 /* === Interactive report charts (bars + dotted grid + hover) ========= */
 .rp-chart-live svg { display: block; width: 100%; height: auto; }
 .rp-chart-live { position: relative; }
+
+/* === Tip box in the snapshot (#3) — a real callout, not fine print === */
+.rp-tip {
+  display: flex;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 185, 54, 0.4);
+  border-radius: 14px;
+  background: rgba(255, 185, 54, 0.09);
+}
+.rp-tip-label {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a5a00;
+  background: rgba(255, 185, 54, 0.5);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.rp-page .rp-tip-body p {
+  margin: 0 0 10px;
+  font-size: 15.5px;
+  font-weight: 450;
+  line-height: 26px;
+  color: var(--rp-body);
+  max-width: none;
+}
+.rp-page .rp-tip-body p:last-child { margin-bottom: 0; }
+@media (prefers-color-scheme: dark) {
+  .rp-tip-label { color: #ffd98a; background: rgba(255, 185, 54, 0.18); }
+}
+:root[data-theme="dark"] .rp-tip-label { color: #ffd98a; background: rgba(255, 185, 54, 0.18); }
+
+/* #6 — more air above the commentary paragraph under a chart grid. */
+.rp-page .rp-charts + .rp-source-note { margin-top: 46px; }
+
+/* #7 — address in a gentle rounded box, copy button in front, no explorer link. */
+.rp-page .rp-gloss-addr-val {
+  border: 1px solid var(--rp-card-border);
+  background: var(--rp-hover);
+  border-radius: 9px;
+  padding: 6px 11px;
+}
+.rp-page .rp-gloss-card .rp-gloss-desc {
+  font-size: 15.5px;
+  font-weight: 450;
+  line-height: 26px;
+  color: var(--rp-body);
+}

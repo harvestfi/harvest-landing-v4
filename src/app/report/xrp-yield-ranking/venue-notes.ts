@@ -190,26 +190,6 @@ export const VENUE_GROUPS: VenueGroup[] = [
         ],
       },
       {
-        slug: "enosys",
-        platform: "Enosys",
-        product: "FXRP / USDT0 Pool",
-        type: "Pool",
-        chain: "Flare",
-        assets: ["FXRP", "USDT"],
-        url: "https://dex.enosys.global/liquidity/0x686f53F0950Ef193C887527eC027E6A574A4DbE1",
-        blurb: [
-          "Enosys, formerly FLR Finance, is a Flare-native DeFi suite: a v3 concentrated-liquidity DEX, Enosys Loans (a Liquity v2 fork that mints an XRP-backed stablecoin), and farming. The FXRP / USDT0 pool pairs wrapped XRP with omnichain USDT.",
-          "LP yield is swap fees plus rFLR emissions, and some pools add the APS governance token. The team describes itself as independent and unfunded, with no venture backers.",
-        ],
-        facts: [
-          { label: "Yield source", value: "Swap fees plus rFLR emissions (some pools add APS)" },
-          { label: "Wrapped asset", value: "FXRP (Flare FAssets), paired with USDT0" },
-          { label: "Tokens", value: "APS (Apsis) and HLN (Helion)" },
-          { label: "Backing", value: "Independent, states it has no venture backing" },
-          { label: "Audits", value: "Enosys Loans audited by Coinspect and Dedaub (2025)" },
-        ],
-      },
-      {
         slug: "superform",
         platform: "Superform",
         product: "bizFXRP Vault",

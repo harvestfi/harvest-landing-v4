@@ -408,8 +408,7 @@ export default function XrpYieldRankingPage() {
             <p>
               <strong>{stats.incentivized} of the {stats.venues}</strong> lean on
               reward-token incentives for the bulk of their rate, so those tend to
-              ease off once a rewards program winds down. Every product here is an
-              external protocol tracked for research, not a {SITE_NAME} product.
+              ease off once a rewards program winds down.
             </p>
           </div>
           <nav className="rp-toc" aria-label="On this page">
@@ -433,11 +432,8 @@ export default function XrpYieldRankingPage() {
           <p className="rp-lead">
             The curated XRP products, ranked by rate and split by exposure.
             Single-exposure positions sit on one side of the market; dual-exposure
-            positions pair an XRP token with a second asset.
-          </p>
-          <p className="rp-lead">
-            The Type column names each product; a few rows show a current APY
-            where a 30-day history is not published.
+            positions pair an XRP token with a second asset. The Type column names
+            each product.
           </p>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
@@ -463,9 +459,7 @@ export default function XrpYieldRankingPage() {
           </div>
           <p className="rp-source-note">
             Rates and TVL from DeFiLlama, Spectra and Portals, as of {updated},
-            refreshed hourly. A few rows show a current APY where a 30-day
-            history is not published; one row has no public rate feed yet.
-            &ldquo;Discover&rdquo; opens the platform&rsquo;s own site.
+            refreshed hourly. Each row links to the platform&rsquo;s own site.
           </p>
         </section>
 
@@ -493,16 +487,23 @@ export default function XrpYieldRankingPage() {
               . The median across the {ratedCount} rated products is{" "}
               <strong>{pct(stats.medianApy)}</strong>.
             </p>
-            <p className="rp-snapshot-note">
-              Headline dual-exposure and pool rates often include reward-token
-              incentives and carry impermanent loss, so they tend to ease once a
-              rewards program tapers.
-            </p>
-            <p className="rp-snapshot-note">
-              {stats.incentivized} of the {stats.venues} products here rely on
-              incentives for the bulk of their rate. The 30-day average, used
-              where a history is available, is the steadier guide.
-            </p>
+            <aside className="rp-tip">
+              <span className="rp-tip-label" aria-hidden="true">
+                Tip
+              </span>
+              <div className="rp-tip-body">
+                <p>
+                  Headline dual-exposure and pool rates often include
+                  reward-token incentives and carry impermanent loss, so they
+                  tend to ease once a rewards program tapers.
+                </p>
+                <p>
+                  {stats.incentivized} of the {stats.venues} products here rely on
+                  incentives for the bulk of their rate. The 30-day average, used
+                  where a history is available, is the steadier guide.
+                </p>
+              </div>
+            </aside>
           </div>
         </section>
 
@@ -604,9 +605,9 @@ export default function XrpYieldRankingPage() {
 
             <h3 id="src-liquidity">Liquidity provision</h3>
             <p>
-              Pairing an XRP token with another asset in a pool on SparkDEX,
-              Aerodrome or Enosys earns a share of the swap fees, usually with
-              extra reward tokens layered on.
+              Pairing an XRP token with another asset in a pool on SparkDEX or
+              Aerodrome earns a share of the swap fees, usually with extra reward
+              tokens layered on.
             </p>
             <p>
               The headline rates are the highest on the page, with one trade-off:
@@ -674,20 +675,10 @@ export default function XrpYieldRankingPage() {
                   <p className="rp-gloss-desc">{t.desc}</p>
                   {t.address ? (
                     <div className="rp-gloss-addr">
+                      <CopyAddressButton address={t.address} compact />
                       <code className="rp-gloss-addr-val" title={t.address}>
                         {t.address}
                       </code>
-                      <CopyAddressButton address={t.address} compact />
-                      {t.explorer ? (
-                        <a
-                          className="rp-gloss-addr-link"
-                          href={t.explorer}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {t.explorerName ?? "Explorer"} ↗
-                        </a>
-                      ) : null}
                     </div>
                   ) : null}
                 </article>
@@ -868,16 +859,14 @@ export default function XrpYieldRankingPage() {
             <dd>
               By 30-day average rate where a history is available, so short-lived
               emission spikes don&rsquo;t decide the order; the 90-day range is
-              shown for those. A few products show a current APY where no 30-day
-              history is published, and one has no public rate feed yet.
+              shown alongside.
             </dd>
             <dt>Freshness</dt>
             <dd>Refreshed hourly from the DeFiLlama, Spectra and Portals APIs; this page reflects the {updated} snapshot.</dd>
             <dt>What this is not</dt>
             <dd>
               The figures are informational only and are not an endorsement or
-              financial advice. {SITE_NAME} indexes DeFi yield data; the venues
-              above are external. Our own coverage is{" "}
+              financial advice. Our own coverage is{" "}
               <Link href="/usdc">USDC</Link>, <Link href="/eth">ETH</Link> and{" "}
               <Link href="/btc">BTC</Link> strategies, indexed with the same
               methodology used on every product page (see{" "}
@@ -1046,6 +1035,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                 <DiscoverButton
                   href={p.platformUrl ?? p.llamaUrl}
                   platform={p.platform}
+                  label="Open"
                   source={`ranking:${p.venueSlug ?? p.project}`}
                   product={assetHead(p)}
                   chain={p.chain}
