@@ -366,7 +366,8 @@
   .rp-rank .hub-row > :nth-child(7) {
     display: none;
   }
-  .rp-rank .hub-rank { font-size: 12.5px; }
+  /* Position number sized down so it doesn't overpower the token icon. */
+  .rp-page .rp-rank .hub-rank { font-size: 10.5px; }
   /* Compact square-ish arrow CTA (far right) instead of the "Discover" text. */
   .rp-rank .rp-discover {
     padding: 0;
@@ -572,7 +573,9 @@
   background: var(--uni-card);
   color: var(--uni-ink-2);
 }
-.rp-venue-head .rp-visit-wrap { margin-left: auto; }
+.rp-venue-head .rp-visit-wrap { margin-left: auto; align-self: flex-start; }
+/* The venue "Open" button shows its arrow inline ("Open ->"). */
+.rp-venue-head .rp-discover-arrow { display: inline; margin-left: 5px; font-size: 0.95em; }
 
 /* Stacked layout: full-width description, then a full-width technical-details
    grid underneath it, both within the same card. */
@@ -615,12 +618,32 @@
     padding-left: 0;
     padding-top: 14px;
   }
-  .rp-venue-head .rp-visit-wrap { margin-left: 0; width: 100%; }
 }
 
 /* Hero card is the homepage preview 1:1, but on the report we drop its
    decorative "View" pill (no call-to-action in the hero). */
 .rp-hero .prevcard-cta { display: none; }
+
+/* Overlapping asset-icon cluster above the hero headline (every token the
+   article touches), centered. White rings mask the overlaps like a stacked
+   avatar group so each mark reads apart on the gold hero. */
+.rp-hero-tokens {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 20px;
+}
+.rp-hero-tok {
+  display: inline-flex;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px #fff;
+}
+.rp-hero-tok img,
+.rp-hero-tok svg { border-radius: 50%; display: block; }
+@media (max-width: 640px) {
+  .rp-hero-tokens { margin-bottom: 16px; }
+  .rp-hero-tok { transform: scale(0.82); }
+}
 
 /* === Vertical rhythm ==============================================
    Give every top-level section room to breathe. The homepage shell
@@ -783,17 +806,28 @@
   letter-spacing: 0.06em;
   color: var(--uni-ink-3);
 }
-.rp-toc a {
+/* Jump links read as "go to" rows: a gold arrow in front, no underline/pill
+   (the global .uni-home-content gold-highlight is overridden below). */
+.rp-page .uni-home-content .rp-toc a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
   font-size: 15px;
-  color: var(--uni-ink-2);
+  font-weight: 500;
+  color: var(--rp-toc-top, var(--uni-ink-2));
   text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.12s ease, color 0.12s ease;
+  background: none;
+  background-image: none;
+  border-bottom: 0;
+  padding: 0;
+  transition: color 0.12s ease;
 }
-.rp-toc a:hover {
-  color: var(--uni-ink);
-  border-bottom-color: var(--uni-gold, #ffb936);
+.rp-page .uni-home-content .rp-toc a::before {
+  content: "\2192"; /* → */
+  color: var(--rp-eyebrow, #ffb936);
+  font-weight: 600;
 }
+.rp-page .uni-home-content .rp-toc a:hover { color: var(--rp-link, var(--uni-ink)); }
 
 /* FAQ accordion (native <details>; visible copy mirrors the FAQPage schema).
    Full-width answers, first item open by default. */
@@ -1207,7 +1241,7 @@
     padding-top: 16px;
   }
   .rp-toc-label { grid-column: 1 / -1; margin-bottom: 2px; }
-  .rp-toc a { font-size: 13px; }
+  .rp-page .uni-home-content .rp-toc a { font-size: 13px; }
 }
 
 /* === "In this report" rail as a hero-tinted card (#2) ================ */
@@ -1338,4 +1372,6 @@
   .rp-page .rp-rank .hub-vault-name { font-size: 13.5px; line-height: 1.25; }
   .rp-page .rp-rank .rp-rank-detail { font-size: 11.5px; line-height: 1.3; }
   .rp-page .rp-rank .hub-cell.hub-apy { font-size: 13.5px; }
+  /* ~15% tighter vertical spacing between sections on mobile. */
+  .rp-page .rp-doc-main > section { padding: 22px 0; }
 }

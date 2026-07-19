@@ -5,7 +5,7 @@
 // updating to the hovered day) — the same interaction language as the
 // product-page VaultChart, kept compact for the small-multiples grid.
 
-import { useId, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export interface RatePoint {
   d: string; // YYYY-MM-DD
@@ -34,7 +34,7 @@ export function ReportChart({
   tvlLabel,
   nowValue,
   nowLabel,
-  color = "#f5a623",
+  color = "#ffb936",
 }: {
   history: RatePoint[];
   title: string;
@@ -44,7 +44,7 @@ export function ReportChart({
   nowLabel: string;
   color?: string;
 }) {
-  const gridId = useId();
+  // Solid flagship yellow by default, matching the product-card bars.
   const [hover, setHover] = useState<number | null>(null);
 
   const calc = useMemo(() => {
@@ -121,11 +121,7 @@ export function ReportChart({
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          <linearGradient id={gridId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.95" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.5" />
-          </linearGradient>
-          {/* bars */}
+          {/* bars — solid flagship yellow, no gradient */}
           {h.map((r, i) => {
             const y = yOf(r.apy);
             const on = hover === i;
@@ -137,7 +133,7 @@ export function ReportChart({
                 width={bw}
                 height={Math.max(1, Math.abs(zeroY - y))}
                 rx={Math.min(bw / 2, 2)}
-                fill={`url(#${gridId})`}
+                fill={color}
                 opacity={hover == null || on ? 1 : 0.4}
               />
             );

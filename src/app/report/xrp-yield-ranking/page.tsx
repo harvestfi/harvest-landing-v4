@@ -274,9 +274,11 @@ export default function XrpYieldRankingPage() {
     }
     return total > 0 ? weighted / total : stats.medianApy;
   })();
+  const spectraStats = platformRanked.find((p) => p.name === "Spectra");
+  const earnXrp = pools.find((p) => p.venueSlug === "upshift-earnxrp");
   const bestYieldAnswer =
-    topSingle && topDual
-      ? `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. The steadiest single-sided rates, like ${assetHead(topSingle)} at ${topSingle.platform} near ${pct(histRate(topSingle))}, sit below the top two-asset pools such as ${assetHead(topDual)} at ${topDual.platform} around ${pct(histRate(topDual))}, which add impermanent loss and usually lean on incentives. The ranking above sorts every venue by its real 30-day average, so like compares with like.`
+    spectraStats && earnXrp
+      ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP Principal Tokens and MetaVault, averaging about ${pct(spectraStats.avgApy)}, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates but add impermanent loss and usually lean on incentives, so the ranking sorts every venue by its real 30-day average.`
       : `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Single-sided lending and vaults are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually lean on incentives.`;
   const faqs = FAQ.map((f) =>
     f.q === "What is the best XRP yield right now?"
@@ -323,6 +325,16 @@ export default function XrpYieldRankingPage() {
     { id: "faq-title", label: "FAQ" },
     { id: "method-title", label: "Method & scope" },
   ];
+
+  // Every asset the article touches, for the overlapping icon cluster above the
+  // hero headline: XRP itself, its wrapped forms, and the pool pair-assets.
+  const heroTokens = Array.from(
+    new Set([
+      "XRP",
+      ...WRAPPED_TOKENS.map((t) => t.token),
+      ...pools.flatMap((p) => tokensOf(p.symbol)),
+    ]),
+  ).filter((t) => t.toLowerCase() !== "csxrp");
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -432,6 +444,17 @@ export default function XrpYieldRankingPage() {
           />
         )}
         <div className="uni-home-hero-inner">
+          <div className="rp-hero-tokens" aria-hidden="true">
+            {heroTokens.map((t, i) => (
+              <span
+                key={t}
+                className="rp-hero-tok"
+                style={{ marginLeft: i ? -12 : 0, zIndex: heroTokens.length - i }}
+              >
+                <AssetIcon asset={t} size={40} />
+              </span>
+            ))}
+          </div>
           <h1 className="uni-home-h1">XRP Yield Ranking: Where XRP Actually Earns</h1>
           <p className="uni-home-sub">
             The clearest way to earn yield on XRP, ranked by real rates. This
@@ -1142,7 +1165,7 @@ function VenueCard({ v }: { v: VenueNote }) {
           <DiscoverButton
             href={v.url}
             platform={v.platform}
-            label="Visit"
+            label="Open"
             source={`venue:${v.slug}`}
             product={nice(v.product)}
             chain={v.chain}
