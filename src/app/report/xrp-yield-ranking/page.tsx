@@ -120,6 +120,15 @@ const nice = (s: string) =>
     .replace(/CSXRP/gi, "csXRP")
     .replace(/SXRP/gi, "sXRP");
 
+// Join a list into readable prose ("Base and Flare", "a, b and c") so names
+// weave into sentences instead of sitting in parentheses.
+const joinAnd = (arr: string[]): string =>
+  arr.length <= 1
+    ? arr[0] ?? ""
+    : arr.length === 2
+      ? `${arr[0]} and ${arr[1]}`
+      : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+
 const tokensOf = (symbol: string) =>
   symbol.split(/[-/]/).map((t) => t.trim()).filter(Boolean);
 const isDual = (p: XrpPool) => p.exposure === "multi" || tokensOf(p.symbol).length > 1;
@@ -251,6 +260,30 @@ export default function XrpYieldRankingPage() {
   const pop1 = platformRanked[0];
   const pop2 = platformRanked[1];
 
+  // TVL-weighted average rate: what the tracked capital actually earns on
+  // average (bigger positions count more). Backs the "best XRP yield" FAQ
+  // answer with a real, derived figure instead of an evergreen platitude.
+  const tvlWeightedApy = (() => {
+    let weighted = 0;
+    let total = 0;
+    for (const p of pools) {
+      const r = histRate(p);
+      if (r == null || !(p.tvlUsd > 0)) continue;
+      weighted += r * p.tvlUsd;
+      total += p.tvlUsd;
+    }
+    return total > 0 ? weighted / total : stats.medianApy;
+  })();
+  const bestYieldAnswer =
+    topSingle && topDual
+      ? `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. The steadiest single-sided rates, like ${assetHead(topSingle)} at ${topSingle.platform} near ${pct(histRate(topSingle))}, sit below the top two-asset pools such as ${assetHead(topDual)} at ${topDual.platform} around ${pct(histRate(topDual))}, which add impermanent loss and usually lean on incentives. The ranking above sorts every venue by its real 30-day average, so like compares with like.`
+      : `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Single-sided lending and vaults are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually lean on incentives.`;
+  const faqs = FAQ.map((f) =>
+    f.q === "What is the best XRP yield right now?"
+      ? { ...f, a: bestYieldAnswer }
+      : f,
+  );
+
   // Structured-data inputs (rendered as JSON-LD at the top of the page).
   const itemListItems = pools.map((p) => ({
     name: `${assetHead(p)} on ${p.platform}`,
@@ -349,7 +382,7 @@ export default function XrpYieldRankingPage() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema(FAQ)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema(faqs)) }}
       />
       <script
         type="application/ld+json"
@@ -432,18 +465,17 @@ export default function XrpYieldRankingPage() {
               and more varied rates live on smart-contract chains.
             </p>
             <p>
-              There, XRP is held as a wrapped token (FXRP, cbXRP, or a staked
-              form such as stXRP) and supplied to a lending market, a vault, a
+              There, XRP is held as a wrapped token such as FXRP or cbXRP, or a
+              staked form like stXRP, and supplied to a lending market, a vault, a
               fixed-rate Principal Token, or a liquidity pool. This page follows a
               curated set of these products and ranks them by rate.
             </p>
             <p>
               As of {updated} this report tracks{" "}
               <strong>{stats.venues} XRP products</strong> across{" "}
-              <strong>
-                {stats.chains.length} networks ({stats.chains.map(chainLabel).join(", ")})
-              </strong>
-              . Rates span <strong>{pct(lo)}</strong> to{" "}
+              <strong>{stats.chains.length} networks</strong>,{" "}
+              {joinAnd(stats.chains.map(chainLabel))}. Rates span{" "}
+              <strong>{pct(lo)}</strong> to{" "}
               <strong>{pct(hi)}</strong>, with a median of{" "}
               <strong>{pct(stats.medianApy)}</strong> across the {ratedCount} with
               a live rate.
@@ -513,12 +545,12 @@ export default function XrpYieldRankingPage() {
             <p>
               As of {updated}, the top vault or lending rate is{" "}
               <strong>{pct(histRate(topSingle))}</strong> on {assetHead(topSingle)}{" "}
-              ({topSingle.platform})
+              at {topSingle.platform}
               {topDual ? (
                 <>
                   , while dual-exposure liquidity pools reach{" "}
                   <strong>{pct(histRate(topDual))}</strong> on {assetHead(topDual)}{" "}
-                  ({topDual.platform})
+                  at {topDual.platform}
                 </>
               ) : null}
               {topPt ? (
@@ -810,7 +842,7 @@ export default function XrpYieldRankingPage() {
               <dt>Incentive dependency</dt>
               <dd>
                 {stats.incentivized} of the {stats.venues} venues here lean on
-                reward-token emissions (mostly rFLR on Flare) for the bulk of
+                reward-token emissions, mostly rFLR on Flare, for the bulk of
                 their rate. Emissions are temporary by design, so those headline
                 numbers tend to fall once a program tapers.
               </dd>
@@ -866,7 +898,7 @@ export default function XrpYieldRankingPage() {
           <p className="rp-eyebrow">FAQ</p>
           <h2 id="faq-title">XRP yield, answered</h2>
           <div className="rp-faq">
-            {FAQ.map((f, i) => (
+            {faqs.map((f, i) => (
               <details className="rp-faq-item" key={i} open={i === 0}>
                 <summary className="rp-faq-q">
                   <span>{f.q}</span>
@@ -884,8 +916,8 @@ export default function XrpYieldRankingPage() {
           <dl className="rp-method">
             <dt>Inclusion</dt>
             <dd>
-              A hand-curated set of {stats.venues} XRP-denominated products
-              (XRP, or a wrapped variant such as FXRP, stXRP or cbXRP) across
+              A defined set of {stats.venues} XRP-denominated products, whether
+              XRP itself or a wrapped variant such as FXRP, stXRP or cbXRP, across
               lending, vaults, liquid staking, fixed-rate Principal Tokens and
               liquidity pools. RLUSD, Ripple&rsquo;s dollar stablecoin, is out of
               scope because it is not XRP-denominated. Each product&rsquo;s rate
@@ -932,8 +964,10 @@ const FAQ: { q: string; a: string }[] = [
     a: "No. XRP is not a proof-of-stake asset and has no native staking or validator rewards. The rates people call XRP staking actually come from lending XRP, providing liquidity, or holding a liquid staking token such as stXRP that stakes wrapped XRP on the holder's behalf.",
   },
   {
+    // The rendered answer is replaced at request time with live, data-backed
+    // figures (see `faqs` in the component); this static copy is the fallback.
     q: "What is the best XRP yield right now?",
-    a: "It depends on the level of risk. Single-sided options (lending and vaults) are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually rely on incentives. The ranking above sorts every venue by its real 30-day average, so like compares with like.",
+    a: "It depends on the level of risk. Single-sided options such as lending and vaults are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually rely on incentives. The ranking above sorts every venue by its real 30-day average, so like compares with like.",
   },
   {
     q: "What are FXRP, stXRP and cbXRP?",

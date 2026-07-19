@@ -351,14 +351,11 @@
 @media (max-width: 640px) {
   .rp-rank .hub-thead,
   .rp-rank .hub-row {
-    grid-template-columns: minmax(0, 1fr) 72px 44px;
-    gap: 10px;
+    grid-template-columns: 18px minmax(0, 1fr) 58px 38px;
+    gap: 8px;
   }
-  /* Show only Product (2), 30d APY (3), action (8). Hide #, Type, Platform,
-     Network, TVL explicitly (do not rely on the global phone rules, which only
-     cover 4-5 above 540px). */
-  .rp-rank .hub-thead > :nth-child(1),
-  .rp-rank .hub-row > :nth-child(1),
+  /* Show # (1), Product (2), 30d APY (3), action (8). The position number sits
+     just before the token icon. Hide Type, Platform, Network, TVL. */
   .rp-rank .hub-thead > :nth-child(4),
   .rp-rank .hub-row > :nth-child(4),
   .rp-rank .hub-thead > :nth-child(5),
@@ -369,6 +366,7 @@
   .rp-rank .hub-row > :nth-child(7) {
     display: none;
   }
+  .rp-rank .hub-rank { font-size: 12.5px; }
   /* Compact square-ish arrow CTA (far right) instead of the "Discover" text. */
   .rp-rank .rp-discover {
     padding: 0;
@@ -1199,7 +1197,17 @@
 @media (max-width: 1080px) {
   .rp-doc { display: block; }
   .rp-doc-aside { display: none; }
-  .rp-toc { display: flex; }
+  /* Compact 50/50 two-column contents list on smaller screens. */
+  .rp-toc {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px 18px;
+    align-items: start;
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+  .rp-toc-label { grid-column: 1 / -1; margin-bottom: 2px; }
+  .rp-toc a { font-size: 13px; }
 }
 
 /* === "In this report" rail as a hero-tinted card (#2) ================ */
@@ -1279,51 +1287,55 @@
   color: var(--rp-body);
 }
 
-/* === Mobile typography: the enlarged desktop type is oversized on a phone,
-   so the report body runs ~40% smaller here. Selectors mirror the winning
-   desktop rules (same specificity, later source order) so they take over
-   cleanly on small screens. === */
+/* === Mobile typography: the enlarged desktop type is oversized on a phone.
+   Body runs ~40% smaller, headlines a further ~30% down, and every text rule
+   carries an explicit, proportional line-height so nothing reads out of scale
+   (the ranking-section descriptions and the lead in particular were inheriting
+   a 36px desktop line-height on 13px text). Selectors mirror the winning
+   desktop rules so they take over cleanly on small screens. === */
 @media (max-width: 640px) {
-  .rp-page .uni-home-content > h2 { font-size: 22px; margin-bottom: 10px; }
-  .rp-page .uni-home-content .rp-eyebrow { font-size: 12px; margin-bottom: 8px; }
+  .rp-page .uni-home-content > h2 { font-size: 16px; line-height: 1.25; margin-bottom: 9px; }
+  .rp-page .uni-home-content .rp-eyebrow { font-size: 12px; line-height: 18px; margin-bottom: 7px; }
+  .rp-page .rp-rank-head h3 { font-size: 15px; line-height: 1.3; }
   .rp-page .rp-article h3,
-  .rp-page .rp-chain-head h3 { font-size: 15px; margin-top: 22px; }
+  .rp-page .rp-chain-head h3 { font-size: 14px; line-height: 1.3; margin-top: 22px; }
+
   .rp-page .uni-home-content .rp-article p,
   .rp-page .uni-home-content .rp-snapshot p,
   .rp-page .uni-home-content .rp-chain-intro,
   .rp-page .uni-home-content .rp-venue-prose p {
     font-size: 13px;
-    line-height: 22px;
+    line-height: 20px;
   }
-  .rp-page .uni-home-content .rp-article p { margin-bottom: 14px; }
-  .rp-page .uni-home-content p.rp-lead { font-size: 13.5px; margin-bottom: 16px; }
+  .rp-page .uni-home-content .rp-article p { margin-bottom: 13px; }
+  .rp-page .uni-home-content p.rp-lead { font-size: 13.5px; line-height: 20px; margin-bottom: 14px; }
   .rp-page .uni-home-content .rp-rank-head p {
     margin-top: 8px;
-    font-size: 13.5px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 19px;
   }
-  .rp-page .uni-home-content .rp-method dd { font-size: 13px; line-height: 22px; }
-  .rp-page .uni-home-content .rp-method dt { font-size: 13px; }
-  .rp-page .uni-home-content .rp-source-note { font-size: 12px; }
-  .rp-page .rp-snapshot .rp-snapshot-note { font-size: 12.5px; line-height: 20px; }
-  .rp-page .rp-callout { font-size: 13px; padding: 16px 18px; }
-  .rp-page .rp-faq-q { font-size: 14px; }
-  .rp-page .rp-faq-a { font-size: 13px; }
+  .rp-page .uni-home-content .rp-method dd { font-size: 13px; line-height: 20px; }
+  .rp-page .uni-home-content .rp-method dt { font-size: 13px; line-height: 1.4; }
+  .rp-page .uni-home-content .rp-source-note { font-size: 12px; line-height: 18px; }
+  .rp-page .rp-snapshot .rp-snapshot-note { font-size: 12.5px; line-height: 19px; }
+  .rp-page .rp-callout { font-size: 13px; line-height: 1.55; padding: 16px 18px; }
+  .rp-page .rp-faq-q { font-size: 14px; line-height: 1.3; }
+  .rp-page .rp-faq-a { font-size: 13px; line-height: 1.6; }
   .rp-page .rp-venue-name { font-size: 14px; }
   .rp-page .rp-venue-plat { font-size: 12px; }
   .rp-page .rp-gloss-tok { font-size: 14px; }
   .rp-page .rp-gloss-chain { font-size: 11px; }
-  .rp-page .rp-gloss-card .rp-gloss-desc { font-size: 13px; line-height: 22px; }
+  .rp-page .rp-gloss-card .rp-gloss-desc { font-size: 13px; line-height: 20px; }
   .rp-page .rp-gloss-addr-val { font-size: 11.5px; }
   .rp-page .rp-fact-k { font-size: 11px; }
-  .rp-page .rp-fact-v { font-size: 12.5px; }
-  .rp-page .rp-chart-title { font-size: 14px; }
+  .rp-page .rp-fact-v { font-size: 12.5px; line-height: 1.5; }
+  .rp-page .rp-chart-title { font-size: 13.5px; }
   .rp-page .rp-chart-sub { font-size: 12px; }
   .rp-page .rp-chart-now { font-size: 17px; }
   .rp-page .rp-chart-tvl { font-size: 11.5px; }
   .rp-page .rp-chart-axis { font-size: 10.5px; }
-  /* Ranking cells shown on the collapsed mobile row (name / detail / APY). */
-  .rp-page .rp-rank .hub-vault-name { font-size: 13.5px; }
-  .rp-page .rp-rank .rp-rank-detail { font-size: 11.5px; }
+  /* Ranking cells on the collapsed mobile row (# / name / detail / APY). */
+  .rp-page .rp-rank .hub-vault-name { font-size: 13.5px; line-height: 1.25; }
+  .rp-page .rp-rank .rp-rank-detail { font-size: 11.5px; line-height: 1.3; }
   .rp-page .rp-rank .hub-cell.hub-apy { font-size: 13.5px; }
 }
