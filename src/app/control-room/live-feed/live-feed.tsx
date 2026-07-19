@@ -221,8 +221,13 @@ const FEED_COLS =
 // names into the buckets an operator reasons about. "Referral" isolates real
 // external sites we don't have a named channel for (aggregators like
 // CoinMarketCap, blogs, etc.) - their row badge shows the domain itself.
-const SOURCE_GROUPS: ReadonlyArray<{ value: SourceGroup; label: string }> = [
+// "not-direct" is a synthetic filter value (not a real SourceGroup): it keeps
+// every row EXCEPT the ones attributed to Direct, so the operator can isolate
+// all identifiable-acquisition activity in one click.
+type SourceFilterValue = SourceGroup | "not-direct";
+const SOURCE_GROUPS: ReadonlyArray<{ value: SourceFilterValue; label: string }> = [
   { value: "all", label: "All" },
+  { value: "not-direct", label: "All but Direct" },
   { value: "SEO", label: "SEO" },
   { value: "AI", label: "AI" },
   { value: "Social", label: "Social" },
@@ -894,7 +899,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
   }
 
   const [activity, setActivity] = useState<ActivityFilter>("all");
-  const [sourceFilter, setSourceFilter] = useState<SourceGroup>("all");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>("all");
   // Product drill-down: "" = all products, otherwise a vault slug. Filters
   // the stream to activity tied to that product (its product-page visits,
   // its into-app clicks, its on-chain deposits/withdrawals).
@@ -1177,8 +1182,14 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
             if (engagement === "deep" && s.entryPage === "/") return false;
           }
         }
-        if (sourceFilter !== "all" && channelGroup(it.channel) !== sourceFilter)
+        if (sourceFilter === "not-direct") {
+          if (channelGroup(it.channel) === "Direct") return false;
+        } else if (
+          sourceFilter !== "all" &&
+          channelGroup(it.channel) !== sourceFilter
+        ) {
           return false;
+        }
         if (productFilter) {
           // Keep only rows tied to the chosen product: its product-page
           // visit, or a click/on-chain event carrying its slug.
@@ -1449,7 +1460,7 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
               className="lf-select lf-select-iconed"
               value={sourceFilter}
               onChange={(e) => {
-                setSourceFilter(e.target.value as SourceGroup);
+                setSourceFilter(e.target.value as SourceFilterValue);
                 setPage(0);
               }}
             >
