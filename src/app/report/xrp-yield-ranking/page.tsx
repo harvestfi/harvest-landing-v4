@@ -323,18 +323,13 @@ export default function XrpYieldRankingPage() {
     { id: "risks-title", label: "Key risks" },
     { id: "venues-title", label: "Venues in depth" },
     { id: "faq-title", label: "FAQ" },
+    { id: "data-title", label: "Data & downloads" },
     { id: "method-title", label: "Method & scope" },
   ];
 
-  // Every asset the article touches, for the overlapping icon cluster above the
-  // hero headline: XRP itself, its wrapped forms, and the pool pair-assets.
-  const heroTokens = Array.from(
-    new Set([
-      "XRP",
-      ...WRAPPED_TOKENS.map((t) => t.token),
-      ...pools.flatMap((p) => tokensOf(p.symbol)),
-    ]),
-  ).filter((t) => t.toLowerCase() !== "csxrp");
+  // Three representative marks for the hero: XRP and its two headline wrapped
+  // forms. Kept to three so the cluster reads as a small left-aligned accent.
+  const heroTokens = ["XRP", "FXRP", "stXRP"];
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -449,9 +444,9 @@ export default function XrpYieldRankingPage() {
               <span
                 key={t}
                 className="rp-hero-tok"
-                style={{ marginLeft: i ? -12 : 0, zIndex: heroTokens.length - i }}
+                style={{ marginLeft: i ? -4 : 0, zIndex: heroTokens.length - i }}
               >
-                <AssetIcon asset={t} size={40} />
+                <AssetIcon asset={t} size={13} />
               </span>
             ))}
           </div>
@@ -930,6 +925,54 @@ export default function XrpYieldRankingPage() {
                 <p className="rp-faq-a">{f.a}</p>
               </details>
             ))}
+          </div>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="data-title">
+          <p className="rp-eyebrow">Data</p>
+          <h2 id="data-title">Machine-readable data</h2>
+          <div className="rp-article">
+            <p className="rp-lead">
+              Every product on this page is published as clean, downloadable
+              data for research and AI agents, licensed CC-BY-4.0. Each JSON
+              carries the current rate and TVL plus its full daily rate history;
+              each CSV is that daily rate series.
+            </p>
+            <div className="rp-data-primary">
+              <a className="rp-data-btn" href="/data/xrp-yield/index.json">
+                Full dataset · JSON
+              </a>
+              <a className="rp-data-btn" href="/data/xrp-yield/history.csv">
+                All products, daily rates · CSV
+              </a>
+            </div>
+            <div className="rp-data-list">
+              {pools.map((p) => (
+                <div className="rp-data-row" key={p.id}>
+                  <span className="rp-data-name">
+                    <span className="rp-data-asset">{assetHead(p)}</span>
+                    <span className="rp-data-plat">
+                      {p.detail ? `${p.detail} · ` : ""}
+                      {p.platform}
+                    </span>
+                  </span>
+                  <span className="rp-data-links">
+                    <a href={`/data/xrp-yield/${p.venueSlug}.json`}>JSON</a>
+                    {(p.history?.length ?? 0) >= 2 ? (
+                      <a href={`/data/xrp-yield/${p.venueSlug}.csv`}>CSV</a>
+                    ) : null}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="rp-source-note">
+              The full catalogue lives in{" "}
+              <a href="/data/xrp-yield/index.json">index.json</a>, and{" "}
+              <a href="/data/xrp-yield/history.csv">history.csv</a> holds every
+              product&rsquo;s daily rate in one file. The same files are declared
+              in this page&rsquo;s Dataset metadata and in{" "}
+              <a href="/llms.txt">llms.txt</a>.
+            </p>
           </div>
         </section>
 

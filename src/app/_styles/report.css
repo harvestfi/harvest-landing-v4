@@ -629,20 +629,20 @@
    avatar group so each mark reads apart on the gold hero. */
 .rp-hero-tokens {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  margin: 0 0 20px;
+  margin: 0 0 18px;
 }
 .rp-hero-tok {
   display: inline-flex;
   border-radius: 50%;
-  box-shadow: 0 0 0 2.5px #fff;
+  box-shadow: 0 0 0 1.5px #fff;
 }
 .rp-hero-tok img,
 .rp-hero-tok svg { border-radius: 50%; display: block; }
+/* Centered on mobile to match the centered hero text there. */
 @media (max-width: 640px) {
-  .rp-hero-tokens { margin-bottom: 16px; }
-  .rp-hero-tok { transform: scale(0.82); }
+  .rp-hero-tokens { justify-content: center; margin-bottom: 14px; }
 }
 
 /* === Vertical rhythm ==============================================
@@ -676,7 +676,8 @@
 .rp-page .rp-doc-main > section[aria-labelledby="risks-title"] { order: 10; }
 .rp-page .rp-doc-main > section[aria-labelledby="venues-title"] { order: 11; }
 .rp-page .rp-doc-main > section[aria-labelledby="faq-title"] { order: 12; }
-.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 13; padding-bottom: 8px; }
+.rp-page .rp-doc-main > section[aria-labelledby="data-title"] { order: 13; }
+.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 14; padding-bottom: 8px; }
 
 /* Colored eyebrow above each section heading. Per Figma: contrasting blue,
    Inter 14px / 600 / 20px line-height, sentence case (NOT uppercase). Scoped
@@ -1319,6 +1320,82 @@
   font-weight: 450;
   line-height: 31px;
   color: var(--rp-body);
+}
+
+/* === Data & downloads section ====================================== */
+.rp-data-primary { display: flex; flex-wrap: wrap; gap: 12px; margin: 4px 0 8px; }
+.rp-page .uni-home-content .rp-data-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--rp-card-border);
+  background: var(--rp-card-bg);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rp-heading);
+  text-decoration: none;
+  background-image: none;
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.rp-page .uni-home-content .rp-data-btn:hover {
+  border-color: var(--uni-ink-3);
+  background: var(--rp-hover);
+}
+.rp-data-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 0 32px;
+  margin: 20px 0 8px;
+}
+.rp-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rp-divider);
+}
+.rp-data-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rp-data-asset {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rp-heading);
+}
+.rp-data-plat {
+  font-size: 12.5px;
+  color: var(--uni-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-data-links { display: inline-flex; gap: 8px; flex-shrink: 0; }
+.rp-page .uni-home-content .rp-data-links a {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--rp-link);
+  text-decoration: none;
+  background: var(--rp-hover);
+  background-image: none;
+  border: 1px solid var(--rp-card-border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.rp-page .uni-home-content .rp-data-links a:hover {
+  border-color: var(--uni-ink-3);
+  color: var(--uni-ink);
+}
+@media (max-width: 640px) {
+  .rp-page .uni-home-content .rp-data-btn { font-size: 13px; padding: 9px 14px; }
+  .rp-data-asset { font-size: 13.5px; }
+  .rp-data-plat { font-size: 11.5px; }
 }
 
 /* === Mobile typography: the enlarged desktop type is oversized on a phone.
