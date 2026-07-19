@@ -74,7 +74,10 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     token: "wXRP",
     icon: "wXRP",
     chain: "Solana",
-    desc: "Wrapped XRP on Solana, issued and custodied by Hex Trust and bridged through LayerZero, backed 1:1 by native XRP in segregated custody. It is the XRP form behind Solana pools on Raydium and elsewhere.",
+    desc: "Wrapped XRP on Solana, issued and custodied by Hex Trust and bridged through LayerZero, backed 1:1 by native XRP in segregated custody. It is the XRP form behind Solana pools on Raydium, Jupiter and elsewhere.",
+    address: "6UpQcMAb5xMzxc7ZfPaVMgx3KqsvKZdT5U718BzD5We2",
+    explorer: "https://solscan.io/token/6UpQcMAb5xMzxc7ZfPaVMgx3KqsvKZdT5U718BzD5We2",
+    explorerName: "Solscan",
   },
 ];
 

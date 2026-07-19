@@ -433,28 +433,22 @@ export default function XrpYieldRankingPage() {
           </p>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
-              <h3 id="rank-single">
-                Single-exposure XRP yield
-                <span className="rp-rank-count">{singles.length} venues</span>
-              </h3>
+              <h3 id="rank-single">Single-exposure XRP yield</h3>
               <p>
-                One-sided positions with no second asset: lending markets,
-                curated vaults, liquid staking, fixed-rate Principal Tokens and
-                stXRP pools. Sorted by rate.
+                {singles.length} one-sided positions with no second asset:
+                lending markets, curated vaults, liquid staking, fixed-rate
+                Principal Tokens and stXRP pools. Sorted by rate.
               </p>
             </div>
             <RankTable rows={singles} />
           </div>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
-              <h3 id="rank-dual">
-                Dual-exposure XRP pools
-                <span className="rp-rank-count">{duals.length} venues</span>
-              </h3>
+              <h3 id="rank-dual">Dual-exposure XRP pools</h3>
               <p>
-                Two-asset liquidity pools that pair an XRP token with something
-                else and earn swap fees plus rewards. Higher headline rates, with
-                impermanent loss to manage. Sorted by rate.
+                {duals.length} two-asset liquidity pools that pair an XRP token
+                with something else and earn swap fees plus rewards. Higher
+                headline rates, with impermanent loss to manage. Sorted by rate.
               </p>
             </div>
             <RankTable rows={duals} />

@@ -630,7 +630,7 @@
 }
 .rp-page .rp-doc-main > section {
   margin-bottom: 0;
-  padding: 40px 0;
+  padding: 30px 0;
   border-top: 0;
 }
 .rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
@@ -651,20 +651,18 @@
    Inter 14px / 600 / 20px line-height, sentence case (NOT uppercase). Scoped
    under .uni-home-content to beat the global paragraph colour. */
 .rp-page .uni-home-content .rp-eyebrow {
-  display: inline-block;
+  display: block;
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 18px;
+  line-height: 20px;
   letter-spacing: 0.01em;
   text-transform: none;
-  color: #191717;
-  background-color: var(--uni-gold, #ffb936);
-  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.09) 1px, transparent 1.3px);
-  background-size: 8px 8px;
-  padding: 3px 11px;
-  border-radius: 999px;
-  margin: 0 0 15px;
+  color: var(--rp-eyebrow);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  margin: 0 0 12px;
   max-width: none;
 }
 
@@ -846,7 +844,7 @@
    ==================================================================== */
 .rp-page {
   --rp-accent: #b26a00;
-  --rp-eyebrow: #0000ff;        /* Figma: contrasting Base blue */
+  --rp-eyebrow: #e0850c;        /* yellow-orange pre-heading + active TOC */
   --rp-body: #3e3e46;           /* Figma: Tuna, body copy */
   --rp-link: #101828;           /* Figma: Ebony, links */
   --rp-link-underline: rgba(16, 24, 40, 0.28);
@@ -861,7 +859,7 @@
 @media (prefers-color-scheme: dark) {
   .rp-page {
     --rp-accent: #ffce7a;
-    --rp-eyebrow: #93a6ff;
+    --rp-eyebrow: #ffb445;
     --rp-body: #cbc9c3;
     --rp-link: #eef0f6;
     --rp-link-underline: rgba(238, 240, 246, 0.32);
@@ -874,7 +872,7 @@
 }
 :root[data-theme="dark"] .rp-page {
   --rp-accent: #ffce7a;
-  --rp-eyebrow: #93a6ff;
+  --rp-eyebrow: #ffb445;
   --rp-body: #cbc9c3;
   --rp-link: #eef0f6;
   --rp-link-underline: rgba(238, 240, 246, 0.32);
@@ -886,7 +884,7 @@
 }
 :root[data-theme="light"] .rp-page {
   --rp-accent: #b26a00;
-  --rp-eyebrow: #0000ff;
+  --rp-eyebrow: #e0850c;
   --rp-body: #3e3e46;
   --rp-link: #101828;
   --rp-link-underline: rgba(16, 24, 40, 0.28);
@@ -913,17 +911,33 @@
    ".uni-home-content p" rule, which was silently overriding it. */
 .rp-page .uni-home-content .rp-article p,
 .rp-page .uni-home-content p.rp-lead,
-.rp-page .uni-home-content .rp-snapshot p {
+.rp-page .uni-home-content .rp-snapshot p,
+.rp-page .uni-home-content .rp-chain-intro,
+.rp-page .uni-home-content .rp-venue-prose p {
   font-family: var(--sans);
   font-size: 16px;
   font-weight: 400;
   line-height: 28px;
+  letter-spacing: 0;
   color: var(--rp-body);
   max-width: none;
 }
 .rp-page .uni-home-content .rp-article p { margin: 0 0 18px; }
 .rp-page .uni-home-content p.rp-lead { margin: 0 0 26px; }
 .rp-page .rp-article { max-width: none; }
+/* Method definition list follows the same body style. */
+.rp-page .uni-home-content .rp-method dd {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 28px;
+  color: var(--rp-body);
+}
+.rp-page .uni-home-content .rp-method dt {
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--uni-ink);
+}
 
 /* Links — Figma: Ebony, 600 weight, subtle-but-decisive underline. */
 .rp-page .uni-home-content .rp-article a,
@@ -1006,20 +1020,34 @@
   color: var(--uni-ink-3);
 }
 
-/* --- Callouts / notes ---------------------------------------------- */
-.rp-callout {
+/* --- Callouts / notes: reuse the methodology-page .meth-callout look
+   (hairline card + gold dot marker, no left accent bar). --- */
+.rp-page .rp-callout {
+  position: relative;
+  margin: 12px 0 4px;
   border: 1px solid var(--rp-card-border);
-  border-left: 3px solid var(--rp-accent);
-  border-radius: 4px 12px 12px 4px;
-  background: transparent;
-  padding: 16px 18px;
-  font-size: 14px;
-  line-height: 1.62;
+  border-left: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  background: var(--rp-card-bg);
+  padding: 22px 24px;
+  font-size: 15px;
+  line-height: 1.7;
   color: var(--uni-ink-2);
+  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.04);
+}
+.rp-page .rp-callout::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 24px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffb936;
+  box-shadow: 0 0 0 4px var(--rp-card-bg, #fff);
 }
 .rp-page .rp-source-note {
-  margin-top: 40px;
-  padding-top: 4px;
+  margin-top: 60px;
   font-size: 13px;
   line-height: 1.65;
   color: var(--uni-ink-3);
@@ -1107,28 +1135,6 @@
 }
 :root[data-theme="dark"] .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; }
 :root[data-theme="light"] .rp-page { --rp-chart-grid: #e7e8ea; --rp-chart-cross: #b9bbbe; }
-
-.rp-doc-aside {
-  background-color: var(--uni-gold-bg, #fff5d9);
-  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.05) 1px, transparent 1.3px);
-  background-size: 10px 10px;
-  border: 1px solid rgba(255, 185, 54, 0.4);
-  border-radius: 16px;
-  padding: 18px 16px 20px;
-  max-height: calc(100vh - 108px);
-}
-:root[data-theme="dark"] .rp-doc-aside,
-.rp-page .rp-doc-aside { }
-@media (prefers-color-scheme: dark) {
-  .rp-doc-aside {
-    background-color: rgba(255, 185, 54, 0.06);
-    border-color: rgba(255, 185, 54, 0.22);
-  }
-}
-:root[data-theme="dark"] .rp-doc-aside {
-  background-color: rgba(255, 185, 54, 0.06);
-  border-color: rgba(255, 185, 54, 0.22);
-}
 
 /* === Interactive report charts (bars + dotted grid + hover) ========= */
 .rp-chart-live svg { display: block; width: 100%; height: auto; }
