@@ -402,21 +402,24 @@
    Compact reference for the token forms (FXRP, cbXRP, stXRP, csXRP, wXRP).
    Even full-width rows (token id on the left, description on the right) so
    the layout never leaves a lonely last card. */
-/* Wrapped-form cards: icon + token + chain, a description, and the deployment
-   address with a copy button + explorer link. Even grid, no lonely rows. */
+/* Wrapped-form rows: stacked one per line (no boxes/borders), each with
+   icon + token + chain, a description, and the deployment address with a copy
+   button + explorer link. Hairline divider between rows only. */
 .rp-gloss-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 16px;
-  margin: 22px 0 4px;
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0 4px;
 }
 .rp-page .rp-gloss-card {
-  border: 1px solid var(--rp-card-border);
-  border-radius: 16px;
-  background: var(--rp-card-bg);
-  padding: 18px 20px;
-  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--rp-divider);
 }
+.rp-page .rp-gloss-card:first-child { padding-top: 4px; }
+.rp-page .rp-gloss-card:last-child { border-bottom: 0; }
 .rp-gloss-head {
   display: flex;
   align-items: center;
@@ -449,8 +452,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-top: 13px;
-  border-top: 1px solid var(--rp-divider);
+  max-width: 620px;
 }
 .rp-gloss-addr-val {
   flex: 1 1 auto;
@@ -630,7 +632,7 @@
 }
 .rp-page .rp-doc-main > section {
   margin-bottom: 0;
-  padding: 30px 0;
+  padding: 26px 0;
   border-top: 0;
 }
 .rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
@@ -922,8 +924,8 @@
   color: var(--rp-body);
   max-width: none;
 }
-.rp-page .uni-home-content .rp-article p { margin: 0 0 18px; }
-.rp-page .uni-home-content p.rp-lead { margin: 0 0 26px; }
+.rp-page .uni-home-content .rp-article p { margin: 0 0 20px; }
+.rp-page .uni-home-content p.rp-lead { margin: 0 0 24px; }
 .rp-page .rp-article { max-width: none; }
 /* Method definition list follows the same body style. */
 .rp-page .uni-home-content .rp-method dd {
@@ -970,40 +972,73 @@
 .rp-chart-sub { font-size: 12.5px; color: var(--uni-ink-2); }
 .rp-chart-now { font-size: 20px; }
 
-/* --- Ranking table: docs table look -------------------------------- */
+/* --- Ranking table: lean & clean (Uniswap-style) -------------------
+   No outer frame, no row hairlines; a subtle header bar and generous
+   whitespace do the separating. All data cells share one font size/weight
+   so the columns read as an even, standardized row. */
 .rp-page .rp-rank.hub-table-wrap {
-  border: 1px solid var(--rp-card-border);
-  border-radius: 16px;
-  background: var(--rp-card-bg);
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  overflow: visible;
+  box-shadow: none;
 }
 .rp-page .rp-rank .hub-thead {
-  background: transparent;
-  border-bottom: 1px solid var(--rp-divider);
-  padding-top: 15px;
-  padding-bottom: 15px;
+  background: rgba(10, 10, 17, 0.04);
+  border: 0;
+  border-radius: 10px;
+  padding-top: 11px;
+  padding-bottom: 11px;
 }
 .rp-page .rp-rank .hub-th {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--uni-ink-3);
 }
 .rp-page .rp-rank .hub-row {
-  border-bottom: 1px solid var(--rp-divider);
-  padding-top: 15px;
-  padding-bottom: 15px;
+  border: 0;
+  border-radius: 10px;
+  padding-top: 13px;
+  padding-bottom: 13px;
 }
-.rp-page .rp-rank .hub-row:last-child { border-bottom: 0; }
-.rp-page .rp-rank .hub-row:hover { background: var(--rp-hover); }
+.rp-page .rp-rank .hub-row:hover { background: rgba(10, 10, 17, 0.03); }
+/* Standardized cell fonts: one family, one size; only the product name is
+   emphasised (it is the row identifier) and the detail line is muted. */
+.rp-page .rp-rank .hub-cell {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.rp-page .rp-rank .hub-rank { color: var(--uni-ink-3); }
 .rp-page .rp-rank .hub-vault-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: -0.004em;
+  letter-spacing: -0.003em;
 }
-.rp-page .rp-rank .hub-apy { font-weight: 600; }
+.rp-page .rp-rank .rp-rank-detail { font-size: 12px; font-weight: 400; color: var(--uni-ink-3); }
+.rp-page .rp-rank .hub-apy { font-family: var(--sans); font-size: 14px; font-weight: 500; }
+.rp-page .rp-rank .rp-cell-text { font-size: 14px; font-weight: 400; color: var(--uni-ink-2); }
+.rp-page .rp-rank .hub-num { font-family: var(--sans); font-size: 14px; font-weight: 400; }
+/* Type reads as plain text (no pill) so every column is visually even. */
+.rp-page .rp-rank .rp-type {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--uni-ink-2);
+}
+@media (prefers-color-scheme: dark) {
+  .rp-page .rp-rank .hub-thead { background: rgba(255, 255, 255, 0.06); }
+  .rp-page .rp-rank .hub-row:hover { background: rgba(255, 255, 255, 0.04); }
+}
+:root[data-theme="dark"] .rp-page .rp-rank .hub-thead { background: rgba(255, 255, 255, 0.06); }
+:root[data-theme="dark"] .rp-page .rp-rank .hub-row:hover { background: rgba(255, 255, 255, 0.04); }
+:root[data-theme="light"] .rp-page .rp-rank .hub-thead { background: rgba(10, 10, 17, 0.04); }
 
 /* --- Snapshot ("XRP yield right now"): plain content, no quote frame --- */
 .rp-page .rp-snapshot {
@@ -1047,7 +1082,7 @@
   box-shadow: 0 0 0 4px var(--rp-card-bg, #fff);
 }
 .rp-page .rp-source-note {
-  margin-top: 60px;
+  margin-top: 24px;
   font-size: 13px;
   line-height: 1.65;
   color: var(--uni-ink-3);
