@@ -11,6 +11,10 @@ export interface WrappedToken {
   icon: string; // token-icons key (falls back to a monogram if unknown)
   chain: string;
   desc: string;
+  // Deployment: contract address + block-explorer link (EVM tokens only).
+  address?: string;
+  explorer?: string; // full URL to the token on its explorer
+  explorerName?: string;
 }
 
 export interface VenueFact {
@@ -44,18 +48,27 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     icon: "FXRP",
     chain: "Flare",
     desc: "XRP bridged onto Flare through the FAssets system. It is a 1:1, over-collateralized ERC-20 minted by independent agents who post collateral (roughly 1.3x) while the real XRP stays on the XRP Ledger, verified on-chain rather than held by one custodian. FXRP went live on Flare mainnet on 24 September 2025 and is the base asset behind nearly all Flare XRP yield.",
+    address: "0xad552a648c74d49e10027ab8a618a3ad4901c5be",
+    explorer: "https://flarescan.com/token/0xad552a648c74d49e10027ab8a618a3ad4901c5be",
+    explorerName: "Flarescan",
   },
   {
     token: "stXRP",
     icon: "stXRP",
     chain: "Flare",
     desc: "Firelight's liquid staking token, minted 1:1 from FXRP. Its yield is designed to come from DeFi insurance, where other protocols pay cover fees that flow back to stXRP holders, rather than from token inflation. Firelight was incubated by Sentora, and stXRP is used across SparkDEX and Spectra.",
+    address: "0x4c18ff3c89632c3dd62e796c0afa5c07c4c1b2b3",
+    explorer: "https://flarescan.com/token/0x4c18ff3c89632c3dd62e796c0afa5c07c4c1b2b3",
+    explorerName: "Flarescan",
   },
   {
     token: "cbXRP",
     icon: "cbXRP",
     chain: "Base",
     desc: "Coinbase Wrapped XRP, an ERC-20 on Base backed 1:1 by XRP held in Coinbase custody, with published proof of reserves. It launched in June 2025 and is the XRP form used across Base venues like Aerodrome and Moonwell. Backing is custodial, so it rests on Coinbase rather than an on-chain collateral system.",
+    address: "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
+    explorer: "https://basescan.org/token/0xcb585250f852c6c6bf90434ab21a00f02833a4af",
+    explorerName: "Basescan",
   },
   {
     token: "wXRP",

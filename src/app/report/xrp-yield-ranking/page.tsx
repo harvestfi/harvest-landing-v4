@@ -7,6 +7,8 @@ import { AssetIcon } from "@/components/token-icons";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { DiscoverButton } from "@/components/report/discover-button";
 import { ReportToc, type TocItem } from "@/components/report/report-toc";
+import { ReportChart } from "@/components/report/report-chart";
+import { CopyAddressButton } from "@/components/copy-address-button";
 import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import {
   breadcrumbSchema,
@@ -232,15 +234,13 @@ export default function XrpYieldRankingPage() {
   // Right-rail "In this report" tree. Conditional sections are included only
   // when they render, so scroll-spy never points at a missing anchor.
   const tocItems: TocItem[] = [
-    { id: "overview-title", label: "Overview" },
+    { id: "snapshot-title", label: "XRP yield right now" },
     { id: "rankings-title", label: "The ranking" },
     { id: "rank-single", label: "Single-exposure", level: 1 },
     { id: "rank-dual", label: "Dual-exposure", level: 1 },
+    { id: "overview-title", label: "Overview" },
     ...(venueCharts.length > 0
       ? [{ id: "ratehist-title", label: "30-day rate history" }]
-      : []),
-    ...(ptRows.length > 0
-      ? [{ id: "ptchart-title", label: "PT max fixed rate" }]
       : []),
     { id: "where-title", label: "Where yield comes from" },
     { id: "src-lending", label: "Lending", level: 1 },
@@ -248,6 +248,9 @@ export default function XrpYieldRankingPage() {
     { id: "src-liquidity", label: "Liquidity provision", level: 1 },
     { id: "src-pt", label: "Fixed-rate PTs", level: 1 },
     { id: "src-sorted", label: "How the ranking is sorted", level: 1 },
+    ...(ptRows.length > 0
+      ? [{ id: "ptchart-title", label: "PT max fixed rate" }]
+      : []),
     { id: "tokens-title", label: "Wrapped forms of XRP" },
     { id: "staking-title", label: "Can you stake XRP?" },
     { id: "cefi-title", label: "CeFi vs DeFi" },
@@ -511,15 +514,14 @@ export default function XrpYieldRankingPage() {
             </p>
             <div className="rp-charts">
               {venueCharts.map((p) => (
-                <RateChart
+                <ReportChart
                   key={p.id}
                   history={(p.history ?? []).slice(-30)}
                   title={assetHead(p)}
                   subtitle={p.platform}
-                  tvlUsd={p.tvlUsd}
+                  tvlLabel={`${usd(p.tvlUsd)} TVL`}
                   nowValue={histRate(p)}
                   nowLabel="30d APY"
-                  ariaKind="30-day APY"
                 />
               ))}
             </div>
@@ -541,14 +543,13 @@ export default function XrpYieldRankingPage() {
             </p>
             <div className="rp-charts">
               {ptRows.map((p) => (
-                <RateChart
+                <ReportChart
                   key={p.id}
                   history={p.history ?? []}
                   title={nice(p.displayName ?? p.symbol)}
-                  tvlUsd={p.tvlUsd}
+                  tvlLabel={`${usd(p.tvlUsd)} TVL`}
                   nowValue={p.history?.[p.history.length - 1]?.apy ?? histRate(p)}
                   nowLabel="max fixed"
-                  ariaKind="daily max fixed rate"
                 />
               ))}
             </div>
@@ -645,14 +646,32 @@ export default function XrpYieldRankingPage() {
             </p>
             <div className="rp-gloss-list">
               {WRAPPED_TOKENS.map((t) => (
-                <div className="rp-gloss-row" key={t.token}>
-                  <div className="rp-gloss-id">
-                    <AssetIcon asset={t.icon} size={24} />
+                <article className="rp-gloss-card" key={t.token}>
+                  <div className="rp-gloss-head">
+                    <AssetIcon asset={t.icon} size={26} />
                     <span className="rp-gloss-tok">{nice(t.token)}</span>
                     <span className="rp-gloss-chain">{t.chain}</span>
                   </div>
                   <p className="rp-gloss-desc">{t.desc}</p>
-                </div>
+                  {t.address ? (
+                    <div className="rp-gloss-addr">
+                      <code className="rp-gloss-addr-val" title={t.address}>
+                        {t.address}
+                      </code>
+                      <CopyAddressButton address={t.address} compact />
+                      {t.explorer ? (
+                        <a
+                          className="rp-gloss-addr-link"
+                          href={t.explorer}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {t.explorerName ?? "Explorer"} ↗
+                        </a>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </article>
               ))}
             </div>
           </div>
@@ -1054,90 +1073,6 @@ function VenueCard({ v }: { v: VenueNote }) {
         </div>
       </div>
     </article>
-  );
-}
-
-// Static SVG line chart of a daily rate series. Server rendered (no client JS):
-// area fill + line + end dot, auto-scaled to the series with a little headroom,
-// first/last dates below the plot. Shared by the PT fixed-rate charts and the
-// selected-venue 30-day APY charts (only the header labels differ).
-function RateChart({
-  history,
-  title,
-  subtitle,
-  tvlUsd,
-  nowValue,
-  nowLabel,
-  ariaKind,
-}: {
-  history: { d: string; apy: number }[];
-  title: string;
-  subtitle?: string;
-  tvlUsd: number;
-  nowValue: number | null;
-  nowLabel: string;
-  ariaKind: string;
-}) {
-  const h = history ?? [];
-  if (h.length < 2) return null;
-
-  const W = 680;
-  const H = 190;
-  const padX = 6;
-  const padT = 12;
-  const padB = 6;
-  const apys = h.map((r) => r.apy);
-  let lo = Math.min(...apys);
-  let hi = Math.max(...apys);
-  const room = Math.max((hi - lo) * 0.15, 0.2);
-  lo -= room;
-  hi += room;
-  const innerW = W - padX * 2;
-  const innerH = H - padT - padB;
-  const xAt = (i: number) => padX + (i / (h.length - 1)) * innerW;
-  const yAt = (v: number) => padT + (1 - (v - lo) / (hi - lo || 1)) * innerH;
-
-  const line = h
-    .map((r, i) => `${i ? "L" : "M"}${xAt(i).toFixed(1)},${yAt(r.apy).toFixed(1)}`)
-    .join(" ");
-  const area = `${line} L${xAt(h.length - 1).toFixed(1)},${(H - padB).toFixed(1)} L${xAt(0).toFixed(1)},${(H - padB).toFixed(1)} Z`;
-  const last = h[h.length - 1];
-  const fmt = (d: string) =>
-    new Date(`${d}T00:00:00Z`).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
-
-  return (
-    <div className="rp-chart-card">
-      <div className="rp-chart-head">
-        <span className="rp-chart-title">
-          {title}
-          {subtitle ? <span className="rp-chart-sub">{subtitle}</span> : null}
-          <span className="rp-chart-tvl">{usd(tvlUsd)} TVL</span>
-        </span>
-        <span className="rp-chart-now">
-          {pct(nowValue)}
-          <small>{nowLabel}</small>
-        </span>
-      </div>
-      <div className="rp-chart">
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          role="img"
-          aria-label={`${title} ${ariaKind}, ${pct(h[0].apy)} to ${pct(last.apy)}`}
-        >
-          <path d={area} className="rp-chart-area" />
-          <path d={line} className="rp-chart-line" fill="none" vectorEffect="non-scaling-stroke" />
-          <circle cx={xAt(h.length - 1)} cy={yAt(last.apy)} r="3.5" className="rp-chart-dot" />
-        </svg>
-      </div>
-      <div className="rp-chart-axis">
-        <span>{fmt(h[0].d)}</span>
-        <span>{fmt(last.d)}</span>
-      </div>
-    </div>
   );
 }
 

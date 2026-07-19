@@ -402,46 +402,92 @@
    Compact reference for the token forms (FXRP, cbXRP, stXRP, csXRP, wXRP).
    Even full-width rows (token id on the left, description on the right) so
    the layout never leaves a lonely last card. */
+/* Wrapped-form cards: icon + token + chain, a description, and the deployment
+   address with a copy button + explorer link. Even grid, no lonely rows. */
 .rp-gloss-list {
-  border-top: 1px solid var(--uni-line);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
   margin: 22px 0 4px;
 }
-.rp-gloss-row {
-  display: grid;
-  grid-template-columns: minmax(150px, 210px) 1fr;
-  gap: 8px 28px;
-  align-items: baseline;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--uni-line);
+.rp-page .rp-gloss-card {
+  border: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  background: var(--rp-card-bg);
+  padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
 }
-.rp-gloss-id {
+.rp-gloss-head {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 11px;
 }
-.rp-gloss-id img { border-radius: 50%; flex-shrink: 0; }
+.rp-gloss-head img { border-radius: 50%; flex-shrink: 0; }
 .rp-gloss-tok {
-  font-family: var(--mono);
-  font-size: 14.5px;
-  font-weight: 700;
+  font-family: var(--display, var(--sans));
+  font-size: 16px;
+  font-weight: 600;
   color: var(--uni-ink);
 }
 .rp-gloss-chain {
+  margin-left: auto;
   font-size: 11px;
   font-weight: 600;
   color: var(--uni-ink-3);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
-.rp-gloss-desc {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.66;
+.rp-page .rp-gloss-card .rp-gloss-desc {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--rp-body);
+  max-width: none;
+}
+.rp-gloss-addr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 13px;
+  border-top: 1px solid var(--rp-divider);
+}
+.rp-gloss-addr-val {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 12px;
   color: var(--uni-ink-2);
+  background: var(--rp-hover);
+  padding: 5px 9px;
+  border-radius: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-@media (max-width: 620px) {
-  .rp-gloss-row { grid-template-columns: 1fr; gap: 6px; }
+.rp-gloss-addr-link {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rp-link);
+  text-decoration: none;
+  white-space: nowrap;
 }
+.rp-gloss-addr-link:hover { text-decoration: underline; }
+.rp-gloss-addr .cd-copy-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--rp-card-border);
+  border-radius: 7px;
+  background: var(--rp-card-bg);
+  color: var(--uni-ink-2);
+  cursor: pointer;
+}
+.rp-gloss-addr .cd-copy-btn:hover { color: var(--uni-ink); border-color: var(--uni-ink-3); }
 
 /* === Venue directory ("in depth") =================================
    One card per curated venue, grouped by chain. Header row (icons +
@@ -576,29 +622,49 @@
 /* Docs-style rhythm: each top-level section is separated by a hairline rule
    with generous padding, so the long-form page reads in calm, dosed blocks
    (inspired by the Base docs layout). */
+/* Reordered via flex `order` (no JSX move): the eyebrow on each section is the
+   visual break, so no hairline separators are needed between them. */
+.rp-page .rp-doc-main {
+  display: flex;
+  flex-direction: column;
+}
 .rp-page .rp-doc-main > section {
   margin-bottom: 0;
-  padding: 52px 0;
-  border-top: 1px solid var(--rp-divider);
-}
-.rp-page .rp-doc-main > section:first-child {
+  padding: 40px 0;
   border-top: 0;
-  padding-top: 4px;
 }
-.rp-page .rp-doc-main > section:last-child { padding-bottom: 8px; }
+.rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
+.rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 2; }
+.rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 3; }
+.rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 4; }
+.rp-page .rp-doc-main > section[aria-labelledby="where-title"] { order: 5; }
+.rp-page .rp-doc-main > section[aria-labelledby="ptchart-title"] { order: 6; }
+.rp-page .rp-doc-main > section[aria-labelledby="tokens-title"] { order: 7; }
+.rp-page .rp-doc-main > section[aria-labelledby="staking-title"] { order: 8; }
+.rp-page .rp-doc-main > section[aria-labelledby="cefi-title"] { order: 9; }
+.rp-page .rp-doc-main > section[aria-labelledby="risks-title"] { order: 10; }
+.rp-page .rp-doc-main > section[aria-labelledby="venues-title"] { order: 11; }
+.rp-page .rp-doc-main > section[aria-labelledby="faq-title"] { order: 12; }
+.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 13; padding-bottom: 8px; }
 
 /* Colored eyebrow above each section heading. Per Figma: contrasting blue,
    Inter 14px / 600 / 20px line-height, sentence case (NOT uppercase). Scoped
    under .uni-home-content to beat the global paragraph colour. */
 .rp-page .uni-home-content .rp-eyebrow {
+  display: inline-block;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 600;
-  line-height: 20px;
-  letter-spacing: 0;
+  line-height: 18px;
+  letter-spacing: 0.01em;
   text-transform: none;
-  color: var(--rp-eyebrow);
-  margin: 0 0 12px;
+  color: #191717;
+  background-color: var(--uni-gold, #ffb936);
+  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.09) 1px, transparent 1.3px);
+  background-size: 8px 8px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  margin: 0 0 15px;
   max-width: none;
 }
 
@@ -853,10 +919,11 @@
   font-weight: 400;
   line-height: 28px;
   color: var(--rp-body);
-  max-width: 74ch;
+  max-width: none;
 }
 .rp-page .uni-home-content .rp-article p { margin: 0 0 18px; }
 .rp-page .uni-home-content p.rp-lead { margin: 0 0 26px; }
+.rp-page .rp-article { max-width: none; }
 
 /* Links — Figma: Ebony, 600 weight, subtle-but-decisive underline. */
 .rp-page .uni-home-content .rp-article a,
@@ -924,13 +991,19 @@
 }
 .rp-page .rp-rank .hub-apy { font-weight: 600; }
 
-/* --- Snapshot ("XRP yield right now") card ------------------------- */
-.rp-snapshot {
-  border: 1px solid var(--rp-card-border);
-  border-left: 3px solid var(--rp-accent);
-  border-radius: 4px 16px 16px 4px;
-  padding: 20px 22px;
-  background: var(--rp-card-bg);
+/* --- Snapshot ("XRP yield right now"): plain content, no quote frame --- */
+.rp-page .rp-snapshot {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+.rp-page .rp-snapshot p { max-width: 78ch; }
+.rp-page .rp-snapshot .rp-snapshot-note {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 26px;
+  color: var(--uni-ink-3);
 }
 
 /* --- Callouts / notes ---------------------------------------------- */
@@ -944,26 +1017,26 @@
   line-height: 1.62;
   color: var(--uni-ink-2);
 }
-.rp-source-note {
-  margin-top: 28px;
+.rp-page .rp-source-note {
+  margin-top: 40px;
   padding-top: 4px;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--uni-ink-3);
+  max-width: none;
 }
 /* More air around the two ranking tables. */
-.rp-page .rp-rank-group { margin-top: 52px; }
+.rp-page .rp-rank-group { margin-top: 56px; }
 .rp-page .rp-rank-group:first-of-type { margin-top: 28px; }
-.rp-page .rp-rank-head { margin-bottom: 14px; }
+.rp-page .rp-rank-head { margin-bottom: 16px; }
 
-/* --- Venue "in depth" + wrapped-form cards: match the hairline look - */
-.rp-page .rp-venue,
-.rp-page .rp-gloss-row {
+/* --- Venue "in depth" cards: match the hairline look --------------- */
+.rp-page .rp-venue {
   border: 1px solid var(--rp-card-border);
   border-radius: 16px;
   background: var(--rp-card-bg);
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
 }
-.rp-page .rp-venue { box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02); }
 
 /* === Docs two-column layout: content + sticky "In this report" rail ===
    Matches the Base-docs layout (content column beside a right TOC rail).
@@ -1023,3 +1096,40 @@
   .rp-doc-aside { display: none; }
   .rp-toc { display: flex; }
 }
+
+/* === "In this report" rail as a hero-tinted card (#2) ================ */
+.rp-page {
+  --rp-chart-grid: #e7e8ea;
+  --rp-chart-cross: #b9bbbe;
+}
+@media (prefers-color-scheme: dark) {
+  .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; }
+}
+:root[data-theme="dark"] .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; }
+:root[data-theme="light"] .rp-page { --rp-chart-grid: #e7e8ea; --rp-chart-cross: #b9bbbe; }
+
+.rp-doc-aside {
+  background-color: var(--uni-gold-bg, #fff5d9);
+  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.05) 1px, transparent 1.3px);
+  background-size: 10px 10px;
+  border: 1px solid rgba(255, 185, 54, 0.4);
+  border-radius: 16px;
+  padding: 18px 16px 20px;
+  max-height: calc(100vh - 108px);
+}
+:root[data-theme="dark"] .rp-doc-aside,
+.rp-page .rp-doc-aside { }
+@media (prefers-color-scheme: dark) {
+  .rp-doc-aside {
+    background-color: rgba(255, 185, 54, 0.06);
+    border-color: rgba(255, 185, 54, 0.22);
+  }
+}
+:root[data-theme="dark"] .rp-doc-aside {
+  background-color: rgba(255, 185, 54, 0.06);
+  border-color: rgba(255, 185, 54, 0.22);
+}
+
+/* === Interactive report charts (bars + dotted grid + hover) ========= */
+.rp-chart-live svg { display: block; width: 100%; height: auto; }
+.rp-chart-live { position: relative; }
