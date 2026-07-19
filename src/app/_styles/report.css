@@ -573,13 +573,39 @@
    packs sections tight; the report reads long-form, so it wants more
    air between blocks and a clear step down from section headings to
    sub-headings. Scoped to .rp-page so the homepage is untouched. */
-.rp-page .uni-home-shell > section { margin-bottom: 80px; }
-.rp-page .uni-home-shell > section:last-child { margin-bottom: 0; }
+/* Docs-style rhythm: each top-level section is separated by a hairline rule
+   with generous padding, so the long-form page reads in calm, dosed blocks
+   (inspired by the Base docs layout). */
+.rp-page .uni-home-shell > section {
+  margin-bottom: 0;
+  padding: 52px 0;
+  border-top: 1px solid var(--rp-divider);
+}
+.rp-page .uni-home-shell > section:first-child {
+  border-top: 0;
+  padding-top: 8px;
+}
+.rp-page .uni-home-shell > section:last-child { padding-bottom: 8px; }
+
+/* Colored eyebrow above each section heading. Small, uppercase, tracked. */
+.rp-eyebrow {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--rp-accent);
+  margin: 0 0 10px;
+}
+
 /* Section headings (Overview, The ranking, ...) are the top level and
    all read at one size; sub-headings inside sit a clear step below. */
 .rp-page .uni-home-content > h2 {
-  font-size: 26px;
-  margin-bottom: 18px;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.017em;
+  line-height: 1.18;
+  margin: 0 0 14px;
 }
 
 /* Ranking, grouped by product type (Lending markets, Vaults, ...) */
@@ -741,3 +767,140 @@
   color: var(--uni-ink-2);
   max-width: 100%;
 }
+
+/* ====================================================================
+   DOCS DESIGN SYSTEM  (everything under the hero)
+   Adapts the Base-docs aesthetic to Harvest tokens: colored eyebrows,
+   airy hairline-bordered cards, calm tables, dosed vertical rhythm.
+   Figma: 7ISFKPViPKctdekztUqvPX node 13984:1276.
+   ==================================================================== */
+.rp-page {
+  --rp-accent: #b26a00;
+  --rp-divider: var(--uni-line);
+  --rp-card-border: rgba(10, 10, 17, 0.09);
+  --rp-card-bg: var(--uni-card-2);
+  --rp-hover: rgba(10, 10, 17, 0.028);
+}
+@media (prefers-color-scheme: dark) {
+  .rp-page {
+    --rp-accent: #ffce7a;
+    --rp-card-border: rgba(255, 255, 255, 0.11);
+    --rp-hover: rgba(255, 255, 255, 0.045);
+  }
+}
+:root[data-theme="dark"] .rp-page {
+  --rp-accent: #ffce7a;
+  --rp-card-border: rgba(255, 255, 255, 0.11);
+  --rp-hover: rgba(255, 255, 255, 0.045);
+}
+:root[data-theme="light"] .rp-page {
+  --rp-accent: #b26a00;
+  --rp-card-border: rgba(10, 10, 17, 0.09);
+  --rp-hover: rgba(10, 10, 17, 0.028);
+}
+
+/* Sub-headings inside the article prose: a clear step below the H2. */
+.rp-page .rp-article h3 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--uni-ink);
+  margin-top: 32px;
+  margin-bottom: 8px;
+}
+.rp-page .rp-article h3:first-of-type { margin-top: 10px; }
+.rp-page .rp-article p {
+  font-size: 16px;
+  line-height: 1.72;
+  color: var(--uni-ink-2);
+  max-width: 74ch;
+}
+
+/* Lead paragraph directly under a section heading. */
+.rp-lead {
+  font-size: 16.5px;
+  line-height: 1.66;
+  color: var(--uni-ink-2);
+  margin: 0 0 22px;
+  max-width: 72ch;
+}
+
+/* --- Chart cards --------------------------------------------------- */
+.rp-charts { gap: 16px; margin: 24px 0 6px; }
+.rp-chart-card {
+  border: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  padding: 20px 22px 16px;
+  background: var(--rp-card-bg);
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+}
+.rp-chart-head { margin-bottom: 16px; }
+.rp-chart-title { font-size: 15px; font-weight: 600; }
+.rp-chart-sub { font-size: 12.5px; color: var(--uni-ink-2); }
+.rp-chart-now { font-size: 20px; }
+
+/* --- Ranking table: docs table look -------------------------------- */
+.rp-page .rp-rank.hub-table-wrap {
+  border: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  background: var(--rp-card-bg);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+}
+.rp-page .rp-rank .hub-thead {
+  background: transparent;
+  border-bottom: 1px solid var(--rp-divider);
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.rp-page .rp-rank .hub-th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--uni-ink-3);
+}
+.rp-page .rp-rank .hub-row {
+  border-bottom: 1px solid var(--rp-divider);
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.rp-page .rp-rank .hub-row:last-child { border-bottom: 0; }
+.rp-page .rp-rank .hub-row:hover { background: var(--rp-hover); }
+.rp-page .rp-rank .hub-vault-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.004em;
+}
+.rp-page .rp-rank .hub-apy { font-weight: 600; }
+
+/* --- Snapshot ("XRP yield right now") card ------------------------- */
+.rp-snapshot {
+  border: 1px solid var(--rp-card-border);
+  border-left: 3px solid var(--rp-accent);
+  border-radius: 4px 16px 16px 4px;
+  padding: 20px 22px;
+  background: var(--rp-card-bg);
+}
+
+/* --- Callouts / notes ---------------------------------------------- */
+.rp-callout {
+  border: 1px solid var(--rp-card-border);
+  border-left: 3px solid var(--rp-accent);
+  border-radius: 4px 12px 12px 4px;
+  background: transparent;
+  padding: 16px 18px;
+  font-size: 14px;
+  line-height: 1.62;
+  color: var(--uni-ink-2);
+}
+.rp-source-note { margin-top: 20px; color: var(--uni-ink-3); }
+
+/* --- Venue "in depth" + wrapped-form cards: match the hairline look - */
+.rp-page .rp-venue,
+.rp-page .rp-gloss-row {
+  border: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  background: var(--rp-card-bg);
+}
+.rp-page .rp-venue { box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02); }

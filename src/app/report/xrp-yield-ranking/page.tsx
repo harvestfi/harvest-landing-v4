@@ -341,6 +341,7 @@ export default function XrpYieldRankingPage() {
 
       <main className="uni-home-shell">
         <section className="uni-home-content" aria-labelledby="overview-title">
+          <p className="rp-eyebrow">Report</p>
           <h2 id="overview-title">Overview</h2>
           <div className="rp-article">
             <p>
@@ -387,6 +388,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" id="rankings" aria-labelledby="rankings-title">
+          <p className="rp-eyebrow">Live rates</p>
           <h2 id="rankings-title">The ranking</h2>
           <p className="rp-lead">
             The curated XRP products, ranked by rate and split by exposure.
@@ -432,9 +434,8 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" aria-labelledby="snapshot-title">
-          <h2 id="snapshot-title" className="rp-snapshot-h">
-            XRP yield right now
-          </h2>
+          <p className="rp-eyebrow">Summary</p>
+          <h2 id="snapshot-title">XRP yield right now</h2>
           <div className="rp-snapshot">
             <p>
               As of {updated}, the top vault or lending rate is{" "}
@@ -469,6 +470,7 @@ export default function XrpYieldRankingPage() {
 
         {venueCharts.length > 0 && (
           <section className="uni-home-content" aria-labelledby="ratehist-title">
+            <p className="rp-eyebrow">Charts</p>
             <h2 id="ratehist-title">30-day rate history</h2>
             <p className="rp-lead">
               How the rate has moved over the last 30 days for a selection of
@@ -498,6 +500,7 @@ export default function XrpYieldRankingPage() {
 
         {ptRows.length > 0 && (
           <section className="uni-home-content" aria-labelledby="ptchart-title">
+            <p className="rp-eyebrow">Fixed rate</p>
             <h2 id="ptchart-title">PT max fixed rate, daily</h2>
             <p className="rp-lead">
               The locked-in fixed rate on each staked-XRP Principal Token, tracked
@@ -529,6 +532,7 @@ export default function XrpYieldRankingPage() {
         )}
 
         <section className="uni-home-content" aria-labelledby="where-title">
+          <p className="rp-eyebrow">Guide</p>
           <h2 id="where-title">Where XRP yield comes from</h2>
           <div className="rp-article">
             <p>
@@ -598,6 +602,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" aria-labelledby="tokens-title">
+          <p className="rp-eyebrow">Tokens</p>
           <h2 id="tokens-title">The wrapped forms of XRP</h2>
           <div className="rp-article">
             <p>
@@ -623,6 +628,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" id="staking" aria-labelledby="staking-title">
+          <p className="rp-eyebrow">Explainer</p>
           <h2 id="staking-title">Can you stake XRP?</h2>
           <div className="rp-article">
             <p>
@@ -646,6 +652,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" id="cefi" aria-labelledby="cefi-title">
+          <p className="rp-eyebrow">Compare</p>
           <h2 id="cefi-title">CeFi vs DeFi XRP yield</h2>
           <div className="rp-article">
             <p>
@@ -669,6 +676,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" id="risks" aria-labelledby="risks-title">
+          <p className="rp-eyebrow">Risk</p>
           <h2 id="risks-title">Key risks</h2>
           <div className="rp-article">
             <p>
@@ -719,6 +727,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" aria-labelledby="venues-title">
+          <p className="rp-eyebrow">Reference</p>
           <h2 id="venues-title">XRP yield venues, explained</h2>
           <div className="rp-article">
             <p>
@@ -745,6 +754,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" id="faq" aria-labelledby="faq-title">
+          <p className="rp-eyebrow">FAQ</p>
           <h2 id="faq-title">XRP yield, answered</h2>
           <div className="rp-faq">
             {FAQ.map((f, i) => (
@@ -760,6 +770,7 @@ export default function XrpYieldRankingPage() {
         </section>
 
         <section className="uni-home-content" aria-labelledby="method-title">
+          <p className="rp-eyebrow">Method</p>
           <h2 id="method-title">Method &amp; scope</h2>
           <dl className="rp-method">
             <dt>Inclusion</dt>
