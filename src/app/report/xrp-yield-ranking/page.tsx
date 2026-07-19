@@ -437,7 +437,7 @@ export default function XrpYieldRankingPage() {
           </h2>
           <div className="rp-snapshot">
             <p>
-              As of {updated}, the highest single-exposure rate is{" "}
+              As of {updated}, the top vault or lending rate is{" "}
               <strong>{pct(histRate(topSingle))}</strong> on {assetHead(topSingle)}{" "}
               ({topSingle.platform})
               {topDual ? (
