@@ -576,11 +576,9 @@
 }
 .rp-venue-head .rp-visit-wrap { margin-left: auto; }
 
-.rp-venue-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: 22px;
-}
+/* Stacked layout: full-width description, then a full-width technical-details
+   grid underneath it, both within the same card. */
+.rp-venue-body { display: block; }
 .rp-venue-prose p {
   margin: 0 0 10px;
   font-size: 14.5px;
@@ -591,11 +589,12 @@
 .rp-venue-prose strong { color: var(--uni-ink); font-weight: 600; }
 
 .rp-facts {
-  border-left: 1px solid var(--uni-line);
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
+  margin-top: 20px;
+  border-top: 1px solid var(--rp-card-border);
+  padding-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px 30px;
 }
 .rp-fact { display: flex; flex-direction: column; gap: 2px; }
 .rp-fact-k {
@@ -1010,7 +1009,7 @@
   padding-bottom: 11px;
 }
 .rp-page .rp-rank .hub-th {
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -1025,35 +1024,38 @@
 .rp-page .rp-rank .hub-row:hover { background: rgba(10, 10, 17, 0.03); }
 /* Standardized cell fonts: one family, one size; only the product name is
    emphasised (it is the row identifier) and the detail line is muted. */
+/* Table cells stay compact (near the detail-line size) so long labels like
+   "Fixed-Rate PT" and "Mystic Finance" fit their columns without truncating,
+   while the surrounding prose keeps the larger report body size. */
 .rp-page .rp-rank .hub-cell {
   font-family: var(--sans);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--uni-ink);
   font-feature-settings: "tnum";
 }
 .rp-page .rp-rank .hub-rank { color: var(--uni-ink-3); }
 .rp-page .rp-rank .hub-vault-name {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.003em;
 }
-.rp-page .rp-rank .rp-rank-detail { font-size: 14.5px; font-weight: 400; color: var(--uni-ink-3); }
+.rp-page .rp-rank .rp-rank-detail { font-size: 13px; font-weight: 400; color: var(--uni-ink-3); }
 /* Only the 30d APY column is bold; every other cell stays regular. */
 .rp-page .rp-rank .hub-apy {
   font-family: var(--sans);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--rp-heading);
 }
-.rp-page .rp-rank .rp-cell-text { font-size: 17px; font-weight: 400; color: var(--uni-ink-2); }
-.rp-page .rp-rank .hub-num { font-family: var(--sans); font-size: 17px; font-weight: 400; }
+.rp-page .rp-rank .rp-cell-text { font-size: 15px; font-weight: 400; color: var(--uni-ink-2); }
+.rp-page .rp-rank .hub-num { font-family: var(--sans); font-size: 15px; font-weight: 400; }
 /* Type reads as plain text (no pill) so every column is visually even. */
 .rp-page .rp-rank .rp-type {
   background: none;
   padding: 0;
   border-radius: 0;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--uni-ink-2);
 }
@@ -1106,16 +1108,25 @@
   background: #ffb936;
   box-shadow: 0 0 0 4px var(--rp-card-bg, #fff);
 }
-.rp-page .rp-source-note {
+/* Source-note + rank-group descriptions are scoped under .uni-home-content
+   (>=3 classes) so they beat the homepage's global `.uni-home-content p`
+   (0,2,1), which otherwise pins them to 16px and leaves the section looking
+   un-enlarged next to the report body. */
+.rp-page .rp-source-note,
+.rp-page .uni-home-content .rp-source-note {
   margin-top: 24px;
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: 16.5px;
+  line-height: 1.6;
   color: var(--uni-ink-3);
   max-width: none;
 }
-/* The ranking source-note ("Rates and TVL from DeFiLlama, Spectra and
-   Portals...") sits well clear of the two tables above it. */
-.rp-page .rp-rank-group + .rp-source-note { margin-top: 72px; }
+.rp-page .uni-home-content .rp-rank-head p {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--uni-ink-2);
+}
+/* The ranking source-note clears the tables above it, but not absurdly so. */
+.rp-page .uni-home-content .rp-rank-group + .rp-source-note { margin-top: 40px; }
 /* More air around the two ranking tables. */
 .rp-page .rp-rank-group { margin-top: 56px; }
 .rp-page .rp-rank-group:first-of-type { margin-top: 28px; }

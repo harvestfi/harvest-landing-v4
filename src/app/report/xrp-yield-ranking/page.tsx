@@ -223,16 +223,33 @@ export default function XrpYieldRankingPage() {
   const topDual = duals.find((p) => !p.rateNa) ?? duals[0];
   const ratedCount = stats.rated ?? pools.filter((p) => !p.rateNa).length;
 
-  // Popularity proxy for the "XRP yield right now" intro. Public holder counts
-  // aren't exposed by most of these venues, so value locked stands in for where
-  // deposits concentrate: the deepest single venue, and the chain holding most.
-  const tvlLeaders = [...pools].sort((a, b) => (b.tvlUsd || 0) - (a.tvlUsd || 0));
-  const tvlByChain = pools.reduce<Record<string, number>>((m, p) => {
-    m[p.chain] = (m[p.chain] || 0) + (p.tvlUsd || 0);
-    return m;
-  }, {});
-  const chainRanked = Object.entries(tvlByChain).sort((a, b) => b[1] - a[1]);
-  const topChain = chainRanked.length ? chainRanked[0][0] : tvlLeaders[0].chain;
+  // Popularity read for the "XRP yield right now" intro. Holder counts aren't
+  // published across these venues, so we weigh how much capital each platform
+  // holds (TVL) against what it pays (average rate): score = TVL x mean rate.
+  // That surfaces the platforms that are both deep and productive, rather than
+  // the biggest pile of low-yield deposits or a tiny high-APY pool.
+  const platformAgg = new Map<
+    string,
+    { tvl: number; rateSum: number; n: number }
+  >();
+  for (const p of pools) {
+    const cur = platformAgg.get(p.platform) ?? { tvl: 0, rateSum: 0, n: 0 };
+    cur.tvl += p.tvlUsd || 0;
+    const r = histRate(p);
+    if (r != null) {
+      cur.rateSum += r;
+      cur.n += 1;
+    }
+    platformAgg.set(p.platform, cur);
+  }
+  const platformRanked = [...platformAgg.entries()]
+    .map(([name, s]) => {
+      const avgApy = s.n ? s.rateSum / s.n : 0;
+      return { name, tvl: s.tvl, products: s.n, avgApy, score: s.tvl * avgApy };
+    })
+    .sort((a, b) => b.score - a.score);
+  const pop1 = platformRanked[0];
+  const pop2 = platformRanked[1];
 
   // Structured-data inputs (rendered as JSON-LD at the top of the page).
   const itemListItems = pools.map((p) => ({
@@ -508,15 +525,18 @@ export default function XrpYieldRankingPage() {
               . The median across the {ratedCount} rated products is{" "}
               <strong>{pct(stats.medianApy)}</strong>.
             </p>
-            {tvlLeaders.length >= 1 ? (
+            {pop1 && pop2 ? (
               <p>
-                Public holder counts aren&rsquo;t exposed by most of these
-                venues, so value locked is the better read on where deposits
-                concentrate. It sits overwhelmingly on{" "}
-                <strong>{chainLabel(topChain)}</strong>, led by{" "}
-                {assetHead(tvlLeaders[0])} at {tvlLeaders[0].platform} with{" "}
-                <strong>{usd(tvlLeaders[0].tvlUsd)}</strong> locked, the deepest
-                single venue on the page.
+                A better gauge of popularity than raw deposits is capital set
+                against what it pays, value locked weighed by rate. On that
+                blend <strong>{pop1.name}</strong> and{" "}
+                <strong>{pop2.name}</strong> lead the page: {pop1.name} carries{" "}
+                <strong>{usd(pop1.tvl)}</strong> across {pop1.products}{" "}
+                {pop1.products === 1 ? "product" : "products"} at an average{" "}
+                <strong>{pct(pop1.avgApy)}</strong>, {pop2.name}{" "}
+                <strong>{usd(pop2.tvl)}</strong> at{" "}
+                <strong>{pct(pop2.avgApy)}</strong>, the deepest and most
+                productive share of XRP-yield capital.
               </p>
             ) : null}
           </div>
