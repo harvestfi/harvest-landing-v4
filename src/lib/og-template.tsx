@@ -42,7 +42,7 @@ interface OgProps {
   footer?: string;
 }
 
-export function ogImageResponse(props: OgProps) {
+export function ogImageResponse(props: OgProps, fonts: OgFont[] = []) {
   const { brand = "Harvest", eyebrow, headline, sub, stats, footer = "harvest.finance" } = props;
   const headlineSize = headline.length > 48 ? 56 : headline.length > 28 ? 68 : 80;
 
@@ -233,7 +233,7 @@ export function ogImageResponse(props: OgProps) {
         />
       </div>
     ),
-    { ...OG_SIZE },
+    { ...OG_SIZE, ...(fonts.length > 0 ? { fonts } : {}) },
   );
 }
 

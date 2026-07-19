@@ -1,0 +1,1455 @@
+/* Styles for /report/* pages. The page reuses the homepage shell (.uni-home-*
+   for the gold hero + content sections, and HomeHeroPreview for the hero card)
+   and the global hub-table ranking classes (.hub-*). This file adds only the
+   report-specific pieces: breadcrumbs, ranking cells the vault table lacks, the
+   token-pair icons, the leaving-site modal, and the article prose. */
+
+/* Breadcrumbs above the hero */
+.rp-crumbs {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--uni-ink-3);
+  margin: 4px 0 16px;
+}
+.rp-crumbs a { color: var(--uni-ink-3); text-decoration: none; }
+.rp-crumbs a:hover { color: var(--uni-ink); }
+.rp-crumbs .sep { opacity: 0.5; margin: 0 6px; }
+
+/* Token icons in the Product cell. Single token = one icon; a pair overlaps
+   the two, each ringed in the row background so they read apart. */
+.rp-toks { display: inline-flex; align-items: center; flex-shrink: 0; }
+.rp-tok {
+  display: inline-flex;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--hub-bg, #fff);
+}
+.rp-vault-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--hub-ink-3, #6e6c66);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-rate-sub {
+  display: block;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 10.5px;
+  color: var(--hub-ink-3, #6e6c66);
+  margin-top: 1px;
+}
+
+/* Discover button (opens the leaving-site modal) */
+.rp-discover {
+  display: inline-block;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--hub-line, #e2e3e5);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hub-ink, #191717);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.rp-discover:hover { background: #ffb936; border-color: #ffb936; color: #191717; }
+
+/* Leaving-site modal */
+.rp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(20, 18, 16, 0.55);
+  backdrop-filter: blur(2px);
+}
+.rp-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--uni-card-2, #fff);
+  color: var(--uni-ink, #191717);
+  border-radius: 16px;
+  padding: 24px 24px 20px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5);
+  font-family: var(--sans);
+}
+.rp-modal-title {
+  margin: 0 0 8px;
+  font-family: var(--display, var(--sans));
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.rp-modal-body {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--uni-ink-2, #32312b);
+}
+/* Two equal-width actions filling the row. Corners match the top-bar
+   search field (7px) rather than the old pill, so they read as form
+   controls. Cancel keeps its outline look; confirm is black on the
+   flagship yellow. Both share padding + line-height so heights match
+   (the confirm is an <a>, which previously sat taller than the button). */
+.rp-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.rp-modal-cancel,
+.rp-modal-confirm {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.rp-modal-cancel {
+  border: 1px solid var(--uni-line, #dddee0);
+  background: transparent;
+  color: var(--uni-ink-2, #32312b);
+}
+.rp-modal-cancel:hover { background: rgba(0, 0, 0, 0.04); }
+.rp-modal-confirm {
+  border: 1px solid #ffb936;
+  background: #ffb936;
+  color: #191717;
+  font-weight: 700;
+}
+.rp-modal-confirm:hover { background: #ffc857; border-color: #ffc857; }
+/* The confirm is an <a> that lives inside a .uni-home-content section, so the
+   homepage's ".uni-home-content a" gold-underline rule (which sets a transparent
+   gradient background, tight padding, and a theme-driven text colour that would
+   go light in dark mode) outranks the styling above. Re-assert it at higher
+   specificity so the button stays solid gold with black text in both themes. */
+.rp-page .rp-modal a.rp-modal-confirm {
+  background-color: #ffb936;
+  background-image: none;
+  color: #191717;
+  padding: 12px 16px;
+}
+.rp-page .rp-modal a.rp-modal-confirm:hover {
+  background-color: #ffc857;
+  background-image: none;
+}
+
+/* Article prose - "Where XRP yield comes from". Full-width: the prose spans
+   the whole content shell (like the ranking tables) rather than sitting in a
+   narrow reading column. */
+.rp-article { max-width: 100%; }
+.rp-article h3 {
+  font-family: var(--display, var(--sans));
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 30px 0 10px;
+  color: var(--uni-ink);
+}
+.rp-article h3:first-of-type { margin-top: 8px; }
+.rp-article p {
+  font-size: 15.5px;
+  line-height: 1.72;
+  color: var(--uni-ink-2);
+  margin: 0 0 14px;
+}
+.rp-article strong { color: var(--uni-ink); font-weight: 600; }
+.rp-callout {
+  margin: 8px 0 4px;
+  padding: 14px 18px;
+  border-left: 3px solid #ffb936;
+  background: rgba(255, 185, 54, 0.08);
+  border-radius: 0 10px 10px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+}
+.rp-method dt {
+  font-weight: 600;
+  color: var(--uni-ink);
+  margin-top: 14px;
+  font-size: 14.5px;
+}
+.rp-method dt:first-child { margin-top: 0; }
+.rp-method dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+}
+.rp-method a, .rp-article a {
+  color: #b26a00;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(178, 106, 0, 0.3);
+}
+.rp-method a:hover, .rp-article a:hover { border-bottom-color: #b26a00; }
+
+/* Report rankings don't need the sticky header the homepage tables use. */
+.rp-rank .hub-thead { position: static; top: auto; backdrop-filter: none; }
+
+/* === PT max fixed rate charts =====================================
+   One card per Principal Token, each a static SVG line of the daily max
+   fixed APY (source: Spectra). Auto-fitting grid, full width. */
+.rp-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin: 18px 0 4px;
+}
+.rp-chart-card {
+  border: 1px solid var(--uni-line);
+  border-radius: 16px;
+  padding: 18px 20px 14px;
+  background: var(--uni-card-2);
+}
+.rp-chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.rp-chart-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--display, var(--sans));
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+}
+.rp-chart-sub {
+  font-family: var(--display, var(--sans));
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--uni-ink-2);
+}
+.rp-chart-tvl {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--uni-ink-3);
+}
+.rp-chart-now {
+  font-family: var(--display, var(--sans));
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+  white-space: nowrap;
+}
+.rp-chart-now small {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  margin-left: 5px;
+}
+.rp-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.rp-chart-line {
+  stroke: #d99400;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.rp-chart-area { fill: rgba(255, 185, 54, 0.14); stroke: none; }
+.rp-chart-dot { fill: #d99400; }
+:root[data-theme="dark"] .uni-home-test .rp-chart-line { stroke: #ffc857; }
+:root[data-theme="dark"] .uni-home-test .rp-chart-dot { fill: #ffc857; }
+:root[data-theme="dark"] .uni-home-test .rp-chart-area {
+  fill: rgba(255, 185, 54, 0.12);
+}
+.rp-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--uni-ink-3);
+}
+
+/* Ranking cells: platform + network read as plain left-aligned text, the
+   Discover action sits hard right, everything on one line so rows match the
+   asset-ranking height (no stacked sub-lines). */
+.rp-rank .rp-cell-text {
+  font-size: 14px;
+  color: var(--hub-ink-2, #47463f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.rp-rank .rp-cell-action { display: flex; justify-content: flex-end; }
+
+/* Type pill (small, muted) in the Type column. */
+.rp-type {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--hub-card, #f1f5f4);
+  color: var(--hub-ink-2, #47463f);
+  white-space: nowrap;
+}
+
+/* Ranking grid track. Kept in CSS (not inline) so the mobile media query can
+   collapse it to icon + name + APY + arrow, like the asset-page tables.
+   # | Product | 30d APY | Type | Platform | Network | TVL | action */
+.rp-rank .hub-thead,
+.rp-rank .hub-row {
+  grid-template-columns:
+    34px minmax(150px, 1.6fr) 100px 112px minmax(110px, 1.1fr)
+    minmax(82px, 0.72fr) 88px 90px;
+  gap: 14px;
+}
+/* The Discover button shows its text label on desktop; the arrow is mobile. */
+.rp-discover-arrow { display: none; }
+
+/* Product name + (mobile) network·platform sub-line. The sub-line is hidden on
+   desktop, where Platform and Network have their own columns. */
+.rp-rank-nameblock {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* Product detail under the clean asset headline (e.g. "PT · Aug 2026"),
+   always visible. */
+.rp-rank-detail {
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: var(--uni-ink-3, #8a887f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+/* Network · platform line, mobile only (those columns are hidden on phones). */
+.rp-rank-sub { display: none; }
+
+@media (max-width: 640px) {
+  .rp-rank .hub-thead,
+  .rp-rank .hub-row {
+    grid-template-columns: 18px minmax(0, 1fr) 58px 38px;
+    gap: 8px;
+  }
+  /* Show # (1), Product (2), 30d APY (3), action (8). The position number sits
+     just before the token icon. Hide Type, Platform, Network, TVL. */
+  .rp-rank .hub-thead > :nth-child(4),
+  .rp-rank .hub-row > :nth-child(4),
+  .rp-rank .hub-thead > :nth-child(5),
+  .rp-rank .hub-row > :nth-child(5),
+  .rp-rank .hub-thead > :nth-child(6),
+  .rp-rank .hub-row > :nth-child(6),
+  .rp-rank .hub-thead > :nth-child(7),
+  .rp-rank .hub-row > :nth-child(7) {
+    display: none;
+  }
+  /* Position number sized down so it doesn't overpower the token icon. */
+  .rp-page .rp-rank .hub-rank { font-size: 10.5px; }
+  /* Compact square-ish arrow CTA (far right) instead of the "Discover" text. */
+  .rp-rank .rp-discover {
+    padding: 0;
+    width: 36px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rp-rank .rp-discover-label { display: none; }
+  .rp-rank .rp-discover-arrow { display: inline; font-size: 16px; line-height: 1; }
+  /* Tighten the row + product name so the three items fit one clean line. */
+  .rp-rank .hub-row { padding: 14px 14px; }
+  .rp-rank .hub-vault { gap: 9px; align-items: center; }
+  .rp-rank .hub-vault-name { font-size: 14.5px; line-height: 1.25; }
+  /* Network · Platform under the ticker, small and muted. */
+  .rp-rank .rp-rank-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 12.5px;
+    line-height: 1.2;
+    color: var(--uni-ink-3, #8a887f);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* === Wrapped-XRP glossary ==========================================
+   Compact reference for the token forms (FXRP, cbXRP, stXRP, csXRP, wXRP).
+   Even full-width rows (token id on the left, description on the right) so
+   the layout never leaves a lonely last card. */
+/* Wrapped-form rows: stacked one per line (no boxes/borders), each with
+   icon + token + chain, a description, and the deployment address with a copy
+   button + explorer link. Hairline divider between rows only. */
+.rp-gloss-list {
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0 4px;
+}
+.rp-page .rp-gloss-card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--rp-divider);
+}
+.rp-page .rp-gloss-card:first-child { padding-top: 4px; }
+.rp-page .rp-gloss-card:last-child { border-bottom: 0; }
+.rp-gloss-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+.rp-gloss-head img { border-radius: 50%; flex-shrink: 0; }
+.rp-gloss-tok {
+  font-family: var(--display, var(--sans));
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--uni-ink);
+}
+.rp-gloss-chain {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.rp-page .rp-gloss-card .rp-gloss-desc {
+  margin: 0 0 14px;
+  font-size: 18.5px;
+  line-height: 1.62;
+  color: var(--rp-body);
+  max-width: none;
+}
+/* The address + copy button read as ONE gentle rounded pill: the container
+   carries the border/background, the code sits flush inside, and the copy
+   button blends in at the right edge (no frame of its own). */
+.rp-gloss-addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 620px;
+  border: 1px solid var(--rp-card-border);
+  background: var(--rp-hover);
+  border-radius: 10px;
+  padding: 3px 4px 3px 12px;
+}
+.rp-gloss-addr-val {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  color: var(--uni-ink-2);
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rp-gloss-addr-link {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rp-link);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.rp-gloss-addr-link:hover { text-decoration: underline; }
+.rp-gloss-addr .cd-copy-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--uni-ink-3);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.rp-gloss-addr .cd-copy-btn:hover { color: var(--uni-ink); background: rgba(10, 10, 17, 0.06); }
+:root[data-theme="dark"] .rp-gloss-addr .cd-copy-btn:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* === Venue directory ("in depth") =================================
+   One card per curated venue, grouped by chain. Header row (icons +
+   title + type/chain badges + Visit), then a two-column body: prose on
+   the left, a facts grid (curator / points / incentives / backers /
+   audits) on the right. Stacks on narrow screens. Full width. */
+.rp-chain-group { margin-top: 52px; }
+.rp-chain-group:first-of-type { margin-top: 28px; }
+.rp-chain-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+.rp-chain-head h3 {
+  font-family: var(--display, var(--sans));
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--uni-ink);
+  margin: 0;
+}
+.rp-chain-intro {
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--uni-ink-2);
+  margin: 8px 0 22px;
+}
+
+.rp-venues { display: grid; gap: 22px; }
+.rp-venue {
+  border: 1px solid var(--uni-line);
+  border-radius: 16px;
+  padding: 22px 24px 24px;
+  background: var(--uni-card-2);
+}
+.rp-venue-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.rp-venue-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.rp-venue-name {
+  font-family: var(--display, var(--sans));
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+}
+.rp-venue-plat {
+  font-size: 15px;
+  color: var(--uni-ink-3);
+}
+.rp-badges { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.rp-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 185, 54, 0.14);
+  color: #9a6a00;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] .uni-home-test .rp-badge { color: #ffce6b; }
+.rp-badge.rp-badge-chain {
+  background: var(--uni-card);
+  color: var(--uni-ink-2);
+}
+.rp-venue-head .rp-visit-wrap { margin-left: auto; align-self: flex-start; }
+/* The venue "Open" button shows its arrow inline ("Open ->"). */
+.rp-venue-head .rp-discover-arrow { display: inline; margin-left: 5px; font-size: 0.95em; }
+
+/* Stacked layout: full-width description, then a full-width technical-details
+   grid underneath it, both within the same card. */
+.rp-venue-body { display: block; }
+.rp-venue-prose p {
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  line-height: 1.66;
+  color: var(--uni-ink-2);
+}
+.rp-venue-prose p:last-child { margin-bottom: 0; }
+.rp-venue-prose strong { color: var(--uni-ink); font-weight: 600; }
+
+.rp-facts {
+  margin-top: 20px;
+  border-top: 1px solid var(--rp-card-border);
+  padding-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px 30px;
+}
+.rp-fact { display: flex; flex-direction: column; gap: 2px; }
+.rp-fact-k {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--uni-ink-3);
+}
+.rp-fact-v {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--uni-ink);
+}
+@media (max-width: 760px) {
+  .rp-venue-body { grid-template-columns: 1fr; gap: 16px; }
+  .rp-facts {
+    border-left: none;
+    border-top: 1px solid var(--uni-line);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+}
+
+/* Hero card is the homepage preview 1:1, but on the report we drop its
+   decorative "View" pill (no call-to-action in the hero). */
+.rp-hero .prevcard-cta { display: none; }
+
+/* Overlapping asset-icon cluster above the hero headline (every token the
+   article touches), centered. White rings mask the overlaps like a stacked
+   avatar group so each mark reads apart on the gold hero. */
+.rp-hero-tokens {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin: 0 0 18px;
+}
+.rp-hero-tok {
+  display: inline-flex;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px #fff;
+}
+.rp-hero-tok img,
+.rp-hero-tok svg { border-radius: 50%; display: block; }
+/* Centered on mobile to match the centered hero text there. */
+@media (max-width: 640px) {
+  .rp-hero-tokens { justify-content: center; margin-bottom: 14px; }
+}
+
+/* === Vertical rhythm ==============================================
+   Give every top-level section room to breathe. The homepage shell
+   packs sections tight; the report reads long-form, so it wants more
+   air between blocks and a clear step down from section headings to
+   sub-headings. Scoped to .rp-page so the homepage is untouched. */
+/* Docs-style rhythm: each top-level section is separated by a hairline rule
+   with generous padding, so the long-form page reads in calm, dosed blocks
+   (inspired by the Base docs layout). */
+/* Reordered via flex `order` (no JSX move): the eyebrow on each section is the
+   visual break, so no hairline separators are needed between them. */
+.rp-page .rp-doc-main {
+  display: flex;
+  flex-direction: column;
+}
+.rp-page .rp-doc-main > section {
+  margin-bottom: 0;
+  padding: 26px 0;
+  border-top: 0;
+}
+.rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
+.rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 2; }
+.rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 3; }
+.rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 4; }
+.rp-page .rp-doc-main > section[aria-labelledby="where-title"] { order: 5; }
+.rp-page .rp-doc-main > section[aria-labelledby="ptchart-title"] { order: 6; }
+.rp-page .rp-doc-main > section[aria-labelledby="tokens-title"] { order: 7; }
+.rp-page .rp-doc-main > section[aria-labelledby="staking-title"] { order: 8; }
+.rp-page .rp-doc-main > section[aria-labelledby="cefi-title"] { order: 9; }
+.rp-page .rp-doc-main > section[aria-labelledby="risks-title"] { order: 10; }
+.rp-page .rp-doc-main > section[aria-labelledby="venues-title"] { order: 11; }
+.rp-page .rp-doc-main > section[aria-labelledby="faq-title"] { order: 12; }
+.rp-page .rp-doc-main > section[aria-labelledby="data-title"] { order: 13; }
+.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 14; padding-bottom: 8px; }
+
+/* Colored eyebrow above each section heading. Per Figma: contrasting blue,
+   Inter 14px / 600 / 20px line-height, sentence case (NOT uppercase). Scoped
+   under .uni-home-content to beat the global paragraph colour. */
+.rp-page .uni-home-content .rp-eyebrow {
+  display: block;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--rp-eyebrow);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  margin: 0 0 12px;
+  max-width: none;
+}
+
+/* Section headings (Overview, The ranking, ...) are the top level and
+   all read at one size; sub-headings inside sit a clear step below. */
+.rp-page .uni-home-content > h2 {
+  font-size: 35px;
+  font-weight: 650;
+  letter-spacing: -0.018em;
+  line-height: 1.2;
+  color: var(--rp-heading);
+  margin: 0 0 16px;
+}
+
+/* Ranking, grouped by product type (Lending markets, Vaults, ...) */
+.rp-lead {
+  font-size: 19px;
+  line-height: 1.66;
+  color: var(--uni-ink-2);
+  margin: 0 0 8px;
+  max-width: 74ch;
+}
+.rp-rank-group { margin-top: 44px; }
+.rp-rank-group:first-of-type { margin-top: 26px; }
+.rp-rank-head { margin: 0 0 10px; }
+.rp-rank-head h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-family: var(--display, var(--sans));
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--rp-heading);
+  margin: 0;
+}
+.rp-rank-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--uni-ink-3);
+}
+.rp-rank-head p {
+  margin: 5px 0 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--uni-ink-2);
+  max-width: 74ch;
+}
+.rp-source-note {
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--uni-ink-3);
+}
+
+/* Early-answer snapshot block (after the Overview): a scannable current-rates
+   summary for search / AI answer engines. */
+.rp-snapshot-h {
+  font-size: 15px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--uni-ink-3) !important;
+  margin-bottom: 12px !important;
+}
+.rp-snapshot {
+  padding: 18px 20px;
+  border: 1px solid var(--uni-line);
+  border-left: 3px solid #ffb936;
+  border-radius: 0 12px 12px 0;
+  background: rgba(255, 185, 54, 0.05);
+}
+.rp-snapshot p {
+  margin: 0;
+  font-size: 16.5px;
+  line-height: 1.66;
+  color: var(--uni-ink);
+}
+.rp-snapshot strong { color: var(--uni-ink); font-weight: 650; }
+.rp-snapshot-note {
+  margin-top: 12px !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-2) !important;
+}
+
+/* Hero freshness line (under the subtitle, on the gold hero). */
+.rp-updated {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--uni-ink);
+  opacity: 0.82;
+  margin: -18px 0 26px;
+}
+
+/* On-this-page jump links, below the Overview. */
+.rp-toc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px 15px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--uni-line);
+}
+.rp-toc-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--uni-ink-3);
+}
+/* Jump links read as "go to" rows: a gold arrow in front, no underline/pill
+   (the global .uni-home-content gold-highlight is overridden below). */
+.rp-page .uni-home-content .rp-toc a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--rp-toc-top, var(--uni-ink-2));
+  text-decoration: none;
+  background: none;
+  background-image: none;
+  border-bottom: 0;
+  padding: 0;
+  transition: color 0.12s ease;
+}
+.rp-page .uni-home-content .rp-toc a::before {
+  content: "\2192"; /* → */
+  color: var(--rp-eyebrow, #ffb936);
+  font-weight: 600;
+}
+.rp-page .uni-home-content .rp-toc a:hover { color: var(--rp-link, var(--uni-ink)); }
+
+/* FAQ accordion (native <details>; visible copy mirrors the FAQPage schema).
+   Full-width answers, first item open by default. */
+.rp-faq { max-width: 100%; border-top: 1px solid var(--uni-line); }
+.rp-faq-item { border-bottom: 1px solid var(--uni-line); }
+.rp-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--display, var(--sans));
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--uni-ink);
+}
+.rp-faq-q::-webkit-details-marker { display: none; }
+.rp-faq-q:hover { color: var(--uni-ink-2); }
+/* Chevron built from two spans of the pseudo-element border. */
+.rp-faq-mark {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.rp-faq-mark::before,
+.rp-faq-mark::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--uni-ink-3);
+}
+.rp-faq-mark::before { left: 0; transform: rotate(45deg); }
+.rp-faq-mark::after { right: 0; transform: rotate(-45deg); }
+.rp-faq-item[open] .rp-faq-mark { transform: rotate(180deg); }
+.rp-faq-a {
+  margin: 0;
+  padding: 0 0 20px;
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--uni-ink-2);
+  max-width: 100%;
+}
+
+/* ====================================================================
+   DOCS DESIGN SYSTEM  (everything under the hero)
+   Adapts the Base-docs aesthetic to Harvest tokens: colored eyebrows,
+   airy hairline-bordered cards, calm tables, dosed vertical rhythm.
+   Figma: 7ISFKPViPKctdekztUqvPX node 13984:1276.
+   ==================================================================== */
+.rp-page {
+  --rp-accent: #b26a00;
+  --rp-eyebrow: #ffb936;        /* gold pre-heading + active TOC */
+  --rp-heading: #1a2440;        /* deep navy, dark-but-not-black */
+  --rp-body: #3d465f;           /* lighter navy-slate body */
+  --rp-link: #101828;           /* Figma: Ebony, links */
+  --rp-link-underline: rgba(16, 24, 40, 0.28);
+  --rp-toc-rail: rgba(10, 10, 17, 0.08);
+  --rp-toc-top: #4f4f57;        /* Abbey, top-level TOC */
+  --rp-toc-sub: #6f6f77;        /* Jumbo, nested TOC */
+  --rp-divider: var(--uni-line);
+  --rp-card-border: rgba(10, 10, 17, 0.09);
+  --rp-card-bg: var(--uni-card-2);
+  --rp-hover: rgba(10, 10, 17, 0.028);
+}
+@media (prefers-color-scheme: dark) {
+  .rp-page {
+    --rp-accent: #ffce7a;
+    --rp-eyebrow: #ffb936;
+    --rp-heading: #f1f2f7;
+    --rp-body: #c8cdd9;
+    --rp-link: #eef0f6;
+    --rp-link-underline: rgba(238, 240, 246, 0.32);
+    --rp-toc-rail: rgba(255, 255, 255, 0.1);
+    --rp-toc-top: #c3c1bb;
+    --rp-toc-sub: #9a988f;
+    --rp-card-border: rgba(255, 255, 255, 0.11);
+    --rp-hover: rgba(255, 255, 255, 0.045);
+  }
+}
+:root[data-theme="dark"] .rp-page {
+  --rp-accent: #ffce7a;
+  --rp-eyebrow: #ffb936;
+  --rp-heading: #f1f2f7;
+  --rp-body: #c8cdd9;
+  --rp-link: #eef0f6;
+  --rp-link-underline: rgba(238, 240, 246, 0.32);
+  --rp-toc-rail: rgba(255, 255, 255, 0.1);
+  --rp-toc-top: #c3c1bb;
+  --rp-toc-sub: #9a988f;
+  --rp-card-border: rgba(255, 255, 255, 0.11);
+  --rp-hover: rgba(255, 255, 255, 0.045);
+}
+:root[data-theme="light"] .rp-page {
+  --rp-accent: #b26a00;
+  --rp-eyebrow: #ffb936;
+  --rp-heading: #1a2440;
+  --rp-body: #3d465f;
+  --rp-link: #101828;
+  --rp-link-underline: rgba(16, 24, 40, 0.28);
+  --rp-toc-rail: rgba(10, 10, 17, 0.08);
+  --rp-toc-top: #4f4f57;
+  --rp-toc-sub: #6f6f77;
+  --rp-card-border: rgba(10, 10, 17, 0.09);
+  --rp-hover: rgba(10, 10, 17, 0.028);
+}
+
+/* Sub-headings inside the article prose: a clear step below the H2. */
+.rp-page .rp-article h3 {
+  font-size: 23px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--rp-heading);
+  margin-top: 34px;
+  margin-bottom: 8px;
+}
+.rp-page .rp-article h3:first-of-type { margin-top: 10px; }
+
+/* Body copy: warm navy-slate, a touch larger and heavier than the flat spec,
+   with roomier line-height so the report reads soft, not "black Arial". Scoped
+   under .uni-home-content (3 classes) so it beats the homepage's rule. */
+.rp-page .uni-home-content .rp-article p,
+.rp-page .uni-home-content p.rp-lead,
+.rp-page .uni-home-content .rp-snapshot p,
+.rp-page .uni-home-content .rp-chain-intro,
+.rp-page .uni-home-content .rp-venue-prose p {
+  font-family: var(--sans);
+  font-size: 20.5px;
+  font-weight: 450;
+  line-height: 36px;
+  letter-spacing: -0.002em;
+  color: var(--rp-body);
+  max-width: none;
+}
+.rp-page .uni-home-content .rp-article p { margin: 0 0 22px; }
+.rp-page .uni-home-content p.rp-lead {
+  margin: 0 0 24px;
+  font-size: 21px;
+  color: var(--rp-body);
+}
+.rp-page .rp-article { max-width: none; }
+/* Method definition list follows the same body style. */
+.rp-page .uni-home-content .rp-method dd {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 450;
+  line-height: 34px;
+  color: var(--rp-body);
+}
+.rp-page .uni-home-content .rp-method dt {
+  font-family: var(--sans);
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--rp-heading);
+}
+
+/* Links — Figma: Ebony, 600 weight, subtle-but-decisive underline. */
+.rp-page .uni-home-content .rp-article a,
+.rp-page .uni-home-content .rp-method a,
+.rp-page .uni-home-content p.rp-lead a,
+.rp-page .uni-home-content .rp-source-note a {
+  color: var(--rp-link);
+  font-weight: 600;
+  text-decoration: none;
+  background-image: none;
+  border-bottom: 1px solid var(--rp-link-underline);
+  transition: border-color 0.12s ease;
+}
+.rp-page .uni-home-content .rp-article a:hover,
+.rp-page .uni-home-content .rp-method a:hover,
+.rp-page .uni-home-content p.rp-lead a:hover,
+.rp-page .uni-home-content .rp-source-note a:hover { border-bottom-color: var(--rp-link); }
+
+/* --- Chart cards --------------------------------------------------- */
+.rp-charts { gap: 16px; margin: 24px 0 6px; }
+.rp-chart-card {
+  border: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  padding: 20px 22px 16px;
+  background: var(--rp-card-bg);
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+}
+.rp-chart-head { margin-bottom: 16px; }
+.rp-chart-title { font-size: 18px; font-weight: 600; }
+.rp-chart-sub { font-size: 15px; color: var(--uni-ink-2); }
+.rp-chart-now { font-size: 24px; }
+
+/* --- Ranking table: lean & clean (Uniswap-style) -------------------
+   No outer frame, no row hairlines; a subtle header bar and generous
+   whitespace do the separating. All data cells share one font size/weight
+   so the columns read as an even, standardized row. */
+.rp-page .rp-rank.hub-table-wrap {
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  overflow: visible;
+  box-shadow: none;
+}
+.rp-page .rp-rank .hub-thead {
+  background: rgba(10, 10, 17, 0.04);
+  border: 0;
+  border-radius: 10px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+.rp-page .rp-rank .hub-th {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--uni-ink-3);
+}
+.rp-page .rp-rank .hub-row {
+  border: 0;
+  border-radius: 10px;
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+.rp-page .rp-rank .hub-row:hover { background: rgba(10, 10, 17, 0.03); }
+/* Standardized cell fonts: one family, one size; only the product name is
+   emphasised (it is the row identifier) and the detail line is muted. */
+/* Table cells stay compact (near the detail-line size) so long labels like
+   "Fixed-Rate PT" and "Mystic Finance" fit their columns without truncating,
+   while the surrounding prose keeps the larger report body size. */
+.rp-page .rp-rank .hub-cell {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.rp-page .rp-rank .hub-rank { color: var(--uni-ink-3); }
+.rp-page .rp-rank .hub-vault-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.003em;
+}
+.rp-page .rp-rank .rp-rank-detail { font-size: 13px; font-weight: 400; color: var(--uni-ink-3); }
+/* Only the 30d APY column is bold; every other cell stays regular. The
+   .hub-cell.hub-apy specificity (0,4,0) beats the later `.hub-num` rule so the
+   700 weight isn't clobbered by source order (the APY cell has both classes). */
+.rp-page .rp-rank .hub-cell.hub-apy {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--rp-heading);
+}
+.rp-page .rp-rank .rp-cell-text { font-size: 15px; font-weight: 400; color: var(--uni-ink-2); }
+.rp-page .rp-rank .hub-num { font-family: var(--sans); font-size: 15px; font-weight: 400; }
+/* Type reads as plain text (no pill) so every column is visually even. */
+.rp-page .rp-rank .rp-type {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--uni-ink-2);
+}
+@media (prefers-color-scheme: dark) {
+  .rp-page .rp-rank .hub-thead { background: rgba(255, 255, 255, 0.06); }
+  .rp-page .rp-rank .hub-row:hover { background: rgba(255, 255, 255, 0.04); }
+}
+:root[data-theme="dark"] .rp-page .rp-rank .hub-thead { background: rgba(255, 255, 255, 0.06); }
+:root[data-theme="dark"] .rp-page .rp-rank .hub-row:hover { background: rgba(255, 255, 255, 0.04); }
+:root[data-theme="light"] .rp-page .rp-rank .hub-thead { background: rgba(10, 10, 17, 0.04); }
+
+/* --- Snapshot ("XRP yield right now"): plain content, no quote frame --- */
+.rp-page .rp-snapshot {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+.rp-page .rp-snapshot p { max-width: 78ch; }
+.rp-page .rp-snapshot .rp-snapshot-note {
+  margin-top: 16px;
+  font-size: 17px;
+  line-height: 31px;
+  color: var(--uni-ink-3);
+}
+
+/* --- Callouts / notes: reuse the methodology-page .meth-callout look
+   (hairline card + gold dot marker, no left accent bar). --- */
+.rp-page .rp-callout {
+  position: relative;
+  margin: 12px 0 4px;
+  border: 1px solid var(--rp-card-border);
+  border-left: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  background: var(--rp-card-bg);
+  padding: 22px 24px;
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--uni-ink-2);
+  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.04);
+}
+.rp-page .rp-callout::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 24px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffb936;
+  box-shadow: 0 0 0 4px var(--rp-card-bg, #fff);
+}
+/* Source-note + rank-group descriptions are scoped under .uni-home-content
+   (>=3 classes) so they beat the homepage's global `.uni-home-content p`
+   (0,2,1), which otherwise pins them to 16px and leaves the section looking
+   un-enlarged next to the report body. */
+.rp-page .rp-source-note,
+.rp-page .uni-home-content .rp-source-note {
+  margin-top: 24px;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--uni-ink-3);
+  max-width: none;
+}
+.rp-page .uni-home-content .rp-rank-head p {
+  margin: 12px 0 0;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--uni-ink-2);
+}
+/* The ranking source-note clears the tables above it, but not absurdly so. */
+.rp-page .uni-home-content .rp-rank-group + .rp-source-note { margin-top: 40px; }
+/* More air around the two ranking tables. */
+.rp-page .rp-rank-group { margin-top: 56px; }
+.rp-page .rp-rank-group:first-of-type { margin-top: 28px; }
+.rp-page .rp-rank-head { margin-bottom: 26px; }
+
+/* --- Venue "in depth" cards: match the hairline look --------------- */
+.rp-page .rp-venue {
+  border: 1px solid var(--rp-card-border);
+  border-radius: 16px;
+  background: var(--rp-card-bg);
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+}
+
+/* === Docs two-column layout: content + sticky "In this report" rail ===
+   Matches the Base-docs layout (content column beside a right TOC rail).
+   The hero stays full-width above; only the article area is two-column. */
+.rp-doc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 248px;
+  gap: 64px;
+  align-items: start;
+}
+.rp-doc-main { min-width: 0; }
+.rp-doc-aside {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+/* "In this report" heading — Figma: Inter Medium 14/24, Tuna. */
+.rp-toc-tree-head {
+  margin: 0 0 10px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--rp-body);
+}
+.rp-toc-tree ul { list-style: none; margin: 0; padding: 0; }
+.rp-toc-node a {
+  display: block;
+  border-left: 1px solid var(--rp-toc-rail);
+  padding: 4px 0 4px 17px;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 24px;
+  text-decoration: none;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.rp-toc-node.lvl-0 a { font-weight: 500; color: var(--rp-toc-top); }
+.rp-toc-node.lvl-1 a { padding-left: 33px; font-weight: 400; color: var(--rp-toc-sub); }
+.rp-toc-node a:hover { color: var(--rp-link); }
+/* Active section: the rail turns the accent blue, text follows. */
+.rp-toc-node.is-active a {
+  border-left-color: var(--rp-eyebrow);
+  color: var(--rp-eyebrow);
+  font-weight: 500;
+}
+
+/* The inline horizontal TOC under the Overview is the mobile fallback; the
+   sticky rail replaces it on wide screens. */
+.rp-toc { display: none; }
+
+@media (max-width: 1080px) {
+  .rp-doc { display: block; }
+  .rp-doc-aside { display: none; }
+  /* Compact 50/50 two-column contents list on smaller screens. */
+  .rp-toc {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px 18px;
+    align-items: start;
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+  .rp-toc-label { grid-column: 1 / -1; margin-bottom: 2px; }
+  .rp-page .uni-home-content .rp-toc a { font-size: 13px; }
+}
+
+/* === "In this report" rail as a hero-tinted card (#2) ================ */
+.rp-page {
+  --rp-chart-grid: #e7e8ea;
+  --rp-chart-cross: #b9bbbe;
+}
+@media (prefers-color-scheme: dark) {
+  .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; }
+}
+:root[data-theme="dark"] .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; }
+:root[data-theme="light"] .rp-page { --rp-chart-grid: #e7e8ea; --rp-chart-cross: #b9bbbe; }
+
+/* === Interactive report charts (bars + dotted grid + hover) ========= */
+.rp-chart-live svg { display: block; width: 100%; height: auto; }
+.rp-chart-live { position: relative; }
+
+/* === Tip box in the snapshot (#3) — a real callout, not fine print === */
+.rp-tip {
+  display: flex;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 185, 54, 0.4);
+  border-radius: 14px;
+  background: rgba(255, 185, 54, 0.09);
+}
+.rp-tip-label {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a5a00;
+  background: rgba(255, 185, 54, 0.5);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.rp-page .rp-tip-body p {
+  margin: 0 0 10px;
+  font-size: 15.5px;
+  font-weight: 450;
+  line-height: 26px;
+  color: var(--rp-body);
+  max-width: none;
+}
+.rp-page .rp-tip-body p:last-child { margin-bottom: 0; }
+@media (prefers-color-scheme: dark) {
+  .rp-tip-label { color: #ffd98a; background: rgba(255, 185, 54, 0.18); }
+}
+:root[data-theme="dark"] .rp-tip-label { color: #ffd98a; background: rgba(255, 185, 54, 0.18); }
+
+/* #6 — more air above the commentary paragraph under a chart grid. */
+.rp-page .rp-charts + .rp-source-note { margin-top: 46px; }
+
+/* #7 — address + copy button share one gentle rounded pill (the container is
+   the box); the copy control blends in at the right, no explorer link. */
+.rp-page .rp-gloss-addr {
+  border: 1px solid var(--rp-card-border);
+  background: var(--rp-hover);
+  border-radius: 10px;
+  padding: 3px 4px 3px 12px;
+}
+.rp-page .rp-gloss-addr-val {
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+}
+.rp-page .rp-gloss-card .rp-gloss-desc {
+  font-size: 18.5px;
+  font-weight: 450;
+  line-height: 31px;
+  color: var(--rp-body);
+}
+
+/* === Data & downloads section ====================================== */
+.rp-data-primary { display: flex; flex-wrap: wrap; gap: 12px; margin: 4px 0 8px; }
+.rp-page .uni-home-content .rp-data-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--rp-card-border);
+  background: var(--rp-card-bg);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rp-heading);
+  text-decoration: none;
+  background-image: none;
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.rp-page .uni-home-content .rp-data-btn:hover {
+  border-color: var(--uni-ink-3);
+  background: var(--rp-hover);
+}
+.rp-data-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 0 32px;
+  margin: 20px 0 8px;
+}
+.rp-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rp-divider);
+}
+.rp-data-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rp-data-asset {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rp-heading);
+}
+.rp-data-plat {
+  font-size: 12.5px;
+  color: var(--uni-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-data-links { display: inline-flex; gap: 8px; flex-shrink: 0; }
+.rp-page .uni-home-content .rp-data-links a {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--rp-link);
+  text-decoration: none;
+  background: var(--rp-hover);
+  background-image: none;
+  border: 1px solid var(--rp-card-border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.rp-page .uni-home-content .rp-data-links a:hover {
+  border-color: var(--uni-ink-3);
+  color: var(--uni-ink);
+}
+@media (max-width: 640px) {
+  .rp-page .uni-home-content .rp-data-btn { font-size: 13px; padding: 9px 14px; }
+  .rp-data-asset { font-size: 13.5px; }
+  .rp-data-plat { font-size: 11.5px; }
+}
+
+/* === Mobile typography: the enlarged desktop type is oversized on a phone.
+   Body runs ~40% smaller, headlines a further ~30% down, and every text rule
+   carries an explicit, proportional line-height so nothing reads out of scale
+   (the ranking-section descriptions and the lead in particular were inheriting
+   a 36px desktop line-height on 13px text). Selectors mirror the winning
+   desktop rules so they take over cleanly on small screens. === */
+@media (max-width: 640px) {
+  .rp-page .uni-home-content > h2 { font-size: 16px; line-height: 1.25; margin-bottom: 9px; }
+  .rp-page .uni-home-content .rp-eyebrow { font-size: 12px; line-height: 18px; margin-bottom: 7px; }
+  .rp-page .rp-rank-head h3 { font-size: 15px; line-height: 1.3; }
+  .rp-page .rp-article h3,
+  .rp-page .rp-chain-head h3 { font-size: 14px; line-height: 1.3; margin-top: 22px; }
+
+  .rp-page .uni-home-content .rp-article p,
+  .rp-page .uni-home-content .rp-snapshot p,
+  .rp-page .uni-home-content .rp-chain-intro,
+  .rp-page .uni-home-content .rp-venue-prose p {
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .rp-page .uni-home-content .rp-article p { margin-bottom: 13px; }
+  .rp-page .uni-home-content p.rp-lead { font-size: 13.5px; line-height: 20px; margin-bottom: 14px; }
+  .rp-page .uni-home-content .rp-rank-head p {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 19px;
+  }
+  .rp-page .uni-home-content .rp-method dd { font-size: 13px; line-height: 20px; }
+  .rp-page .uni-home-content .rp-method dt { font-size: 13px; line-height: 1.4; }
+  .rp-page .uni-home-content .rp-source-note { font-size: 12px; line-height: 18px; }
+  .rp-page .rp-snapshot .rp-snapshot-note { font-size: 12.5px; line-height: 19px; }
+  .rp-page .rp-callout { font-size: 13px; line-height: 1.55; padding: 16px 18px; }
+  .rp-page .rp-faq-q { font-size: 14px; line-height: 1.3; }
+  .rp-page .rp-faq-a { font-size: 13px; line-height: 1.6; }
+  .rp-page .rp-venue-name { font-size: 14px; }
+  .rp-page .rp-venue-plat { font-size: 12px; }
+  .rp-page .rp-gloss-tok { font-size: 14px; }
+  .rp-page .rp-gloss-chain { font-size: 11px; }
+  .rp-page .rp-gloss-card .rp-gloss-desc { font-size: 13px; line-height: 20px; }
+  .rp-page .rp-gloss-addr-val { font-size: 11.5px; }
+  .rp-page .rp-fact-k { font-size: 11px; }
+  .rp-page .rp-fact-v { font-size: 12.5px; line-height: 1.5; }
+  .rp-page .rp-chart-title { font-size: 13.5px; }
+  .rp-page .rp-chart-sub { font-size: 12px; }
+  .rp-page .rp-chart-now { font-size: 17px; }
+  .rp-page .rp-chart-tvl { font-size: 11.5px; }
+  .rp-page .rp-chart-axis { font-size: 10.5px; }
+  /* Ranking cells on the collapsed mobile row (# / name / detail / APY). */
+  .rp-page .rp-rank .hub-vault-name { font-size: 13.5px; line-height: 1.25; }
+  .rp-page .rp-rank .rp-rank-detail { font-size: 11.5px; line-height: 1.3; }
+  .rp-page .rp-rank .hub-cell.hub-apy { font-size: 13.5px; }
+  /* ~15% tighter vertical spacing between sections on mobile. */
+  .rp-page .rp-doc-main > section { padding: 22px 0; }
+}
