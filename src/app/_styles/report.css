@@ -576,26 +576,30 @@
 /* Docs-style rhythm: each top-level section is separated by a hairline rule
    with generous padding, so the long-form page reads in calm, dosed blocks
    (inspired by the Base docs layout). */
-.rp-page .uni-home-shell > section {
+.rp-page .rp-doc-main > section {
   margin-bottom: 0;
   padding: 52px 0;
   border-top: 1px solid var(--rp-divider);
 }
-.rp-page .uni-home-shell > section:first-child {
+.rp-page .rp-doc-main > section:first-child {
   border-top: 0;
-  padding-top: 8px;
+  padding-top: 4px;
 }
-.rp-page .uni-home-shell > section:last-child { padding-bottom: 8px; }
+.rp-page .rp-doc-main > section:last-child { padding-bottom: 8px; }
 
-/* Colored eyebrow above each section heading. Small, uppercase, tracked. */
-.rp-eyebrow {
+/* Colored eyebrow above each section heading. Per Figma: contrasting blue,
+   Inter 14px / 600 / 20px line-height, sentence case (NOT uppercase). Scoped
+   under .uni-home-content to beat the global paragraph colour. */
+.rp-page .uni-home-content .rp-eyebrow {
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--rp-accent);
-  margin: 0 0 10px;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--rp-eyebrow);
+  margin: 0 0 12px;
+  max-width: none;
 }
 
 /* Section headings (Overview, The ranking, ...) are the top level and
@@ -776,6 +780,13 @@
    ==================================================================== */
 .rp-page {
   --rp-accent: #b26a00;
+  --rp-eyebrow: #0000ff;        /* Figma: contrasting Base blue */
+  --rp-body: #3e3e46;           /* Figma: Tuna, body copy */
+  --rp-link: #101828;           /* Figma: Ebony, links */
+  --rp-link-underline: rgba(16, 24, 40, 0.28);
+  --rp-toc-rail: rgba(10, 10, 17, 0.08);
+  --rp-toc-top: #4f4f57;        /* Abbey, top-level TOC */
+  --rp-toc-sub: #6f6f77;        /* Jumbo, nested TOC */
   --rp-divider: var(--uni-line);
   --rp-card-border: rgba(10, 10, 17, 0.09);
   --rp-card-bg: var(--uni-card-2);
@@ -784,17 +795,38 @@
 @media (prefers-color-scheme: dark) {
   .rp-page {
     --rp-accent: #ffce7a;
+    --rp-eyebrow: #93a6ff;
+    --rp-body: #cbc9c3;
+    --rp-link: #eef0f6;
+    --rp-link-underline: rgba(238, 240, 246, 0.32);
+    --rp-toc-rail: rgba(255, 255, 255, 0.1);
+    --rp-toc-top: #c3c1bb;
+    --rp-toc-sub: #9a988f;
     --rp-card-border: rgba(255, 255, 255, 0.11);
     --rp-hover: rgba(255, 255, 255, 0.045);
   }
 }
 :root[data-theme="dark"] .rp-page {
   --rp-accent: #ffce7a;
+  --rp-eyebrow: #93a6ff;
+  --rp-body: #cbc9c3;
+  --rp-link: #eef0f6;
+  --rp-link-underline: rgba(238, 240, 246, 0.32);
+  --rp-toc-rail: rgba(255, 255, 255, 0.1);
+  --rp-toc-top: #c3c1bb;
+  --rp-toc-sub: #9a988f;
   --rp-card-border: rgba(255, 255, 255, 0.11);
   --rp-hover: rgba(255, 255, 255, 0.045);
 }
 :root[data-theme="light"] .rp-page {
   --rp-accent: #b26a00;
+  --rp-eyebrow: #0000ff;
+  --rp-body: #3e3e46;
+  --rp-link: #101828;
+  --rp-link-underline: rgba(16, 24, 40, 0.28);
+  --rp-toc-rail: rgba(10, 10, 17, 0.08);
+  --rp-toc-top: #4f4f57;
+  --rp-toc-sub: #6f6f77;
   --rp-card-border: rgba(10, 10, 17, 0.09);
   --rp-hover: rgba(10, 10, 17, 0.028);
 }
@@ -809,21 +841,39 @@
   margin-bottom: 8px;
 }
 .rp-page .rp-article h3:first-of-type { margin-top: 10px; }
-.rp-page .rp-article p {
+
+/* Body copy — exact Figma spec: Inter 16px / 400 / 28px line-height, Tuna.
+   Scoped under .uni-home-content (3 classes) so it beats the homepage's
+   ".uni-home-content p" rule, which was silently overriding it. */
+.rp-page .uni-home-content .rp-article p,
+.rp-page .uni-home-content p.rp-lead,
+.rp-page .uni-home-content .rp-snapshot p {
+  font-family: var(--sans);
   font-size: 16px;
-  line-height: 1.72;
-  color: var(--uni-ink-2);
+  font-weight: 400;
+  line-height: 28px;
+  color: var(--rp-body);
   max-width: 74ch;
 }
+.rp-page .uni-home-content .rp-article p { margin: 0 0 18px; }
+.rp-page .uni-home-content p.rp-lead { margin: 0 0 26px; }
 
-/* Lead paragraph directly under a section heading. */
-.rp-lead {
-  font-size: 16.5px;
-  line-height: 1.66;
-  color: var(--uni-ink-2);
-  margin: 0 0 22px;
-  max-width: 72ch;
+/* Links — Figma: Ebony, 600 weight, subtle-but-decisive underline. */
+.rp-page .uni-home-content .rp-article a,
+.rp-page .uni-home-content .rp-method a,
+.rp-page .uni-home-content p.rp-lead a,
+.rp-page .uni-home-content .rp-source-note a {
+  color: var(--rp-link);
+  font-weight: 600;
+  text-decoration: none;
+  background-image: none;
+  border-bottom: 1px solid var(--rp-link-underline);
+  transition: border-color 0.12s ease;
 }
+.rp-page .uni-home-content .rp-article a:hover,
+.rp-page .uni-home-content .rp-method a:hover,
+.rp-page .uni-home-content p.rp-lead a:hover,
+.rp-page .uni-home-content .rp-source-note a:hover { border-bottom-color: var(--rp-link); }
 
 /* --- Chart cards --------------------------------------------------- */
 .rp-charts { gap: 16px; margin: 24px 0 6px; }
@@ -894,7 +944,17 @@
   line-height: 1.62;
   color: var(--uni-ink-2);
 }
-.rp-source-note { margin-top: 20px; color: var(--uni-ink-3); }
+.rp-source-note {
+  margin-top: 28px;
+  padding-top: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--uni-ink-3);
+}
+/* More air around the two ranking tables. */
+.rp-page .rp-rank-group { margin-top: 52px; }
+.rp-page .rp-rank-group:first-of-type { margin-top: 28px; }
+.rp-page .rp-rank-head { margin-bottom: 14px; }
 
 /* --- Venue "in depth" + wrapped-form cards: match the hairline look - */
 .rp-page .rp-venue,
@@ -904,3 +964,62 @@
   background: var(--rp-card-bg);
 }
 .rp-page .rp-venue { box-shadow: 0 1px 2px rgba(10, 10, 17, 0.02); }
+
+/* === Docs two-column layout: content + sticky "In this report" rail ===
+   Matches the Base-docs layout (content column beside a right TOC rail).
+   The hero stays full-width above; only the article area is two-column. */
+.rp-doc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 248px;
+  gap: 64px;
+  align-items: start;
+}
+.rp-doc-main { min-width: 0; }
+.rp-doc-aside {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+/* "In this report" heading — Figma: Inter Medium 14/24, Tuna. */
+.rp-toc-tree-head {
+  margin: 0 0 10px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--rp-body);
+}
+.rp-toc-tree ul { list-style: none; margin: 0; padding: 0; }
+.rp-toc-node a {
+  display: block;
+  border-left: 1px solid var(--rp-toc-rail);
+  padding: 4px 0 4px 17px;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 24px;
+  text-decoration: none;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.rp-toc-node.lvl-0 a { font-weight: 500; color: var(--rp-toc-top); }
+.rp-toc-node.lvl-1 a { padding-left: 33px; font-weight: 400; color: var(--rp-toc-sub); }
+.rp-toc-node a:hover { color: var(--rp-link); }
+/* Active section: the rail turns the accent blue, text follows. */
+.rp-toc-node.is-active a {
+  border-left-color: var(--rp-eyebrow);
+  color: var(--rp-eyebrow);
+  font-weight: 500;
+}
+
+/* The inline horizontal TOC under the Overview is the mobile fallback; the
+   sticky rail replaces it on wide screens. */
+.rp-toc { display: none; }
+
+@media (max-width: 1080px) {
+  .rp-doc { display: block; }
+  .rp-doc-aside { display: none; }
+  .rp-toc { display: flex; }
+}

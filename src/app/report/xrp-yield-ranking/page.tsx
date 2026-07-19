@@ -6,6 +6,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { AssetIcon } from "@/components/token-icons";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { DiscoverButton } from "@/components/report/discover-button";
+import { ReportToc, type TocItem } from "@/components/report/report-toc";
 import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import {
   breadcrumbSchema,
@@ -228,6 +229,34 @@ export default function XrpYieldRankingPage() {
     { name: "XRP Yield Ranking", url: PAGE_URL },
   ];
 
+  // Right-rail "In this report" tree. Conditional sections are included only
+  // when they render, so scroll-spy never points at a missing anchor.
+  const tocItems: TocItem[] = [
+    { id: "overview-title", label: "Overview" },
+    { id: "rankings-title", label: "The ranking" },
+    { id: "rank-single", label: "Single-exposure", level: 1 },
+    { id: "rank-dual", label: "Dual-exposure", level: 1 },
+    ...(venueCharts.length > 0
+      ? [{ id: "ratehist-title", label: "30-day rate history" }]
+      : []),
+    ...(ptRows.length > 0
+      ? [{ id: "ptchart-title", label: "PT max fixed rate" }]
+      : []),
+    { id: "where-title", label: "Where yield comes from" },
+    { id: "src-lending", label: "Lending", level: 1 },
+    { id: "src-vaults", label: "Vaults & liquid staking", level: 1 },
+    { id: "src-liquidity", label: "Liquidity provision", level: 1 },
+    { id: "src-pt", label: "Fixed-rate PTs", level: 1 },
+    { id: "src-sorted", label: "How the ranking is sorted", level: 1 },
+    { id: "tokens-title", label: "Wrapped forms of XRP" },
+    { id: "staking-title", label: "Can you stake XRP?" },
+    { id: "cefi-title", label: "CeFi vs DeFi" },
+    { id: "risks-title", label: "Key risks" },
+    { id: "venues-title", label: "Venues in depth" },
+    { id: "faq-title", label: "FAQ" },
+    { id: "method-title", label: "Method & scope" },
+  ];
+
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
@@ -340,6 +369,8 @@ export default function XrpYieldRankingPage() {
       </section>
 
       <main className="uni-home-shell">
+       <div className="rp-doc">
+        <div className="rp-doc-main">
         <section className="uni-home-content" aria-labelledby="overview-title">
           <p className="rp-eyebrow">Report</p>
           <h2 id="overview-title">Overview</h2>
@@ -399,7 +430,7 @@ export default function XrpYieldRankingPage() {
           </p>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
-              <h3>
+              <h3 id="rank-single">
                 Single-exposure XRP yield
                 <span className="rp-rank-count">{singles.length} venues</span>
               </h3>
@@ -413,7 +444,7 @@ export default function XrpYieldRankingPage() {
           </div>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
-              <h3>
+              <h3 id="rank-dual">
                 Dual-exposure XRP pools
                 <span className="rp-rank-count">{duals.length} venues</span>
               </h3>
@@ -542,7 +573,7 @@ export default function XrpYieldRankingPage() {
               short-term rewards.
             </p>
 
-            <h3>Lending</h3>
+            <h3 id="src-lending">Lending</h3>
             <p>
               Wrapped XRP supplied to a money market such as Kinetic on Flare or
               Moonwell on Base earns the interest borrowers pay on their loans. It is
@@ -551,7 +582,7 @@ export default function XrpYieldRankingPage() {
               closest thing XRP has to a plain savings rate.
             </p>
 
-            <h3>Vaults and liquid staking</h3>
+            <h3 id="src-vaults">Vaults and liquid staking</h3>
             <p>
               Vaults and liquid-staking tokens do the work automatically. A
               curated vault such as Spectra, Upshift, Mystic or Superform, or a
@@ -561,7 +592,7 @@ export default function XrpYieldRankingPage() {
               earns with any reward incentives on top.
             </p>
 
-            <h3>Liquidity provision</h3>
+            <h3 id="src-liquidity">Liquidity provision</h3>
             <p>
               Pairing an XRP token with another asset in a pool on SparkDEX,
               Aerodrome or Enosys earns a share of the swap fees, usually with
@@ -571,7 +602,7 @@ export default function XrpYieldRankingPage() {
               reward active management.
             </p>
 
-            <h3>Fixed-rate Principal Tokens</h3>
+            <h3 id="src-pt">Fixed-rate Principal Tokens</h3>
             <p>
               Spectra adds one more mechanism that is unique on this list: the
               Principal Token, or PT. A PT for staked XRP trades at a discount
@@ -585,7 +616,7 @@ export default function XrpYieldRankingPage() {
               the figure this report tracks.
             </p>
 
-            <h3>How the ranking is sorted</h3>
+            <h3 id="src-sorted">How the ranking is sorted</h3>
             <p>
               Venues are sorted by the 30-day average rate rather than
               today&rsquo;s spot number, so a single big day of rewards cannot
@@ -806,6 +837,11 @@ export default function XrpYieldRankingPage() {
             </dd>
           </dl>
         </section>
+        </div>
+        <aside className="rp-doc-aside" aria-label="In this report">
+          <ReportToc items={tocItems} />
+        </aside>
+       </div>
       </main>
     </div>
   );
