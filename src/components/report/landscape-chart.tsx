@@ -27,7 +27,7 @@ function fmtDate(d: string): string {
 }
 const usd = (n: number | null | undefined) =>
   n == null
-    ? "—"
+    ? "n/a"
     : n >= 1_000_000_000
       ? `$${(n / 1_000_000_000).toFixed(2)}B`
       : n >= 1_000_000

@@ -52,7 +52,7 @@ const fmtShort = (ms: number) =>
     year: "numeric",
     timeZone: "UTC",
   });
-const pct = (v: number | null | undefined) => (v == null ? "—" : `${v.toFixed(2)}%`);
+const pct = (v: number | null | undefined) => (v == null ? "n/a" : `${v.toFixed(2)}%`);
 
 export function OverlayChart({
   series,
@@ -121,7 +121,7 @@ export function OverlayChart({
           {subtitle ? <span className="rp-chart-sub">{subtitle}</span> : null}
         </span>
         <span className="rp-chart-now">
-          {hoverMs != null ? fmtDate(hoverMs) : `${fmtShort(minMs)} – now`}
+          {hoverMs != null ? fmtDate(hoverMs) : `${fmtShort(minMs)} to now`}
         </span>
       </div>
       <div className="rp-chart rp-chart-live">

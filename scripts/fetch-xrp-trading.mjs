@@ -249,7 +249,7 @@ data.yieldTrading = {
   generatedAt: new Date().toISOString(),
   asset: "stXRP",
   venue: "Spectra",
-  basis: "PT-market trades (buy/sell Principal Token) — the tradeable leg of the fixed-yield market",
+  basis: "PT-market trades (buy/sell Principal Token), the tradeable leg of the fixed-yield market",
   note: "Trading activity across every Spectra stXRP fixed-yield market on Flare. Buying the Principal Token locks a fixed yield; selling it exits. Volumes and per-trade classification are Spectra's own, USD-priced. The YT (variable-yield) leg is the mirror side and is not swapped in the pool. Source: Spectra API.",
   totals,
   monthly: [...monthly.entries()].map(([mo, v]) => ({ mo, buyUsd: v.buyUsd, sellUsd: v.sellUsd })),

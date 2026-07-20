@@ -788,7 +788,8 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin: 4px 0 22px;
+  /* Roomier space around the 1x4 stat row in "The big picture". */
+  margin: 30px 0 40px;
 }
 .rp-land-stat {
   display: flex;
@@ -816,7 +817,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 30px;
-  margin: 26px 0 8px;
+  /* More breathing room above and below the network / product-type tables. */
+  margin: 44px 0 24px;
 }
 .rp-land-split-h {
   font-size: 14px !important;
@@ -1009,7 +1011,8 @@
 .rp-tip {
   display: flex;
   gap: 14px;
-  align-items: flex-start;
+  /* Badge sits vertically centred against the note (was top-aligned). */
+  align-items: center;
   padding: 16px 18px;
   border-radius: 14px;
   border: 1px solid var(--rp-card-border, #dedee6);
@@ -1022,7 +1025,6 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  margin-top: 1px;
   border-radius: 9px;
   color: #fff;
   background: #667085; /* neutral (info) badge */
@@ -1079,7 +1081,7 @@
 /* Breathing room so the first commentary paragraph doesn't kiss the bottom edge
    of the bars (landscape/trading) or the holder table above it. */
 .rp-land-splits + .rp-article,
-.rp-rank-holders + .rp-article { margin-top: 26px; }
+.rp-rank-holders + .rp-article { margin-top: 34px; }
 .rp-vol-split { font-variant-numeric: tabular-nums; color: var(--uni-ink-2, #45474c); }
 
 /* ---- Most popular by holders: reuses the ranking table (.rp-rank / hub-*),
@@ -1296,14 +1298,19 @@
 
 /* Sub-headings inside the article prose: a clear step below the H2. */
 .rp-page .rp-article h3 {
-  font-size: 23px;
-  font-weight: 650;
+  font-size: 25px;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--rp-heading);
-  margin-top: 34px;
-  margin-bottom: 8px;
+  margin-top: 40px;
+  margin-bottom: 14px;
+  /* Simple, prominent sub-heading: a bold flagship yellow-orange underline that
+     hugs the text width (2x a hairline rule). */
+  display: inline-block;
+  padding-bottom: 6px;
+  border-bottom: 3px solid #f5920b;
 }
-.rp-page .rp-article h3:first-of-type { margin-top: 10px; }
+.rp-page .rp-article h3:first-of-type { margin-top: 14px; }
 
 /* Body copy: warm navy-slate, a touch larger and heavier than the flat spec,
    with roomier line-height so the report reads soft, not "black Arial". Scoped
@@ -1514,10 +1521,11 @@
   color: var(--uni-ink-2);
 }
 /* The ranking source-note clears the tables above it, but not absurdly so. */
-.rp-page .uni-home-content .rp-rank-group + .rp-source-note { margin-top: 40px; }
-/* More air around the two ranking tables. */
-.rp-page .rp-rank-group { margin-top: 56px; }
-.rp-page .rp-rank-group:first-of-type { margin-top: 28px; }
+.rp-page .uni-home-content .rp-rank-group + .rp-source-note { margin-top: 50px; }
+/* More air around the two ranking tables (~25% roomier). */
+.rp-page .rp-rank-group { margin-top: 70px; }
+.rp-page .rp-rank-group:first-of-type { margin-top: 36px; }
+.rp-page .rp-rank { margin-bottom: 22px; }
 .rp-page .rp-rank-head { margin-bottom: 26px; }
 
 /* --- Venue "in depth" cards: match the hairline look --------------- */
@@ -1601,16 +1609,24 @@
 .rp-page {
   --rp-chart-grid: #e7e8ea;
   --rp-chart-cross: #b9bbbe;
+  --rp-dot: rgba(10, 10, 17, 0.08);
 }
 @media (prefers-color-scheme: dark) {
-  .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; }
+  .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; --rp-dot: rgba(255, 255, 255, 0.07); }
 }
-:root[data-theme="dark"] .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; }
-:root[data-theme="light"] .rp-page { --rp-chart-grid: #e7e8ea; --rp-chart-cross: #b9bbbe; }
+:root[data-theme="dark"] .rp-page { --rp-chart-grid: #333230; --rp-chart-cross: #56544f; --rp-dot: rgba(255, 255, 255, 0.07); }
+:root[data-theme="light"] .rp-page { --rp-chart-grid: #e7e8ea; --rp-chart-cross: #b9bbbe; --rp-dot: rgba(10, 10, 17, 0.08); }
 
 /* === Interactive report charts (bars + dotted grid + hover) ========= */
 .rp-chart-live svg { display: block; width: 100%; height: auto; }
-.rp-chart-live { position: relative; }
+/* Barely-visible dotted texture behind every report chart, matching the plot
+   canvas on the single-product pages, so empty space reads as deliberate. */
+.rp-chart-live {
+  position: relative;
+  background-image: radial-gradient(circle, var(--rp-dot) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+  background-position: 0 100%;
+}
 
 
 /* #6 — more air above the commentary paragraph under a chart grid. */
