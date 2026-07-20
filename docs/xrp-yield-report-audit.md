@@ -1,11 +1,11 @@
 # Harvest — XRP Yield Ranking report: full page audit
 
-> A complete front-to-back snapshot of the page at `/report/xrp-yield-ranking`, prepared so an external reviewer (human or AI) can audit content, SEO, structured data, internal linking, the machine-readable data layer, and the front/back-end architecture. Everything below is extracted from the built static HTML and the source pipeline.
+> Complete front-to-back snapshot of `/report/xrp-yield-ranking`, for external (human or AI) review of content, SEO, structured data, internal linking, the machine-readable data layer, and the front/back-end architecture. Extracted from the built static HTML + the source pipeline. **Regenerated to include the latest work (see the Changelog at the end).**
 
 - **URL:** https://harvest.finance/report/xrp-yield-ranking
-- **Data snapshot (dateModified):** 2026-07-19T18:02:03.882Z
-- **Tracked products:** 14 · **Networks:** Base, Flare · **Median 30d rate:** 2.42% · **Incentivized:** 8/14 · **Total TVL:** $101.0M
-- **Framework:** Next.js (App Router) static export (`output: "export"`), self-hosted on Vercel. Page is a React Server Component; interactive pieces are client components.
+- **Data snapshot (dateModified):** 2026-07-19T19:09:53.763Z
+- **Tracked products:** 14 · **Networks:** Base, Flare · **Median 30d rate:** 2.42% · **Incentivized:** 8/14 · **Total TVL:** $100.9M
+- **Framework:** Next.js (App Router) static export (`output: "export"`). Page is a React Server Component; interactive pieces are client components.
 
 ---
 
@@ -13,33 +13,33 @@
 
 | Field | Value |
 |---|---|
-| Title tag | Best XRP Yield: 14 DeFi Products Ranked by Real APY \| Harvest |
-| Meta description | Where to earn yield on XRP, ranked by real rates. 14 curated XRP-denominated DeFi products across 2 networks, median 2.42%: lending, vaults, fixed-rate Principal Tokens and liquidity pools for XRP, FXRP, stXRP and cbXRP. XRP has no native staking, so these are the real onchain rates. Refreshed hourly from DeFiLlama, Spectra and Portals. |
+| Title tag | Best XRP Yield 2026: List of 10+ DeFi Products ranked by APY \| Harvest |
+| Meta description | Where to earn yield on XRP, ranked by top rates. Over 10 XRP-denominated yield sources across 2 networks. Discover vaults, lending markets, Principal Tokens, and liquidity pools for XRP, FXRP, stXRP, and cbXRP. |
 | Canonical | https://harvest.finance/report/xrp-yield-ranking |
 | Robots | index, follow |
-| og:title | Best XRP Yield: 14 DeFi Products Ranked by Real APY |
-| og:description | Where to earn yield on XRP, ranked by real rates. 14 curated XRP-denominated DeFi products across 2 networks, median 2.42%: lending, vaults, fixed-rate Principal Tokens and liquidity pools for XRP, FXRP, stXRP and cbXRP. XRP has no native staking, so these are the real onchain rates. Refreshed hourly from DeFiLlama, Spectra and Portals. |
+| og:title | Best XRP Yield 2026: List of 10+ DeFi Products ranked by APY |
+| og:description | Where to earn yield on XRP, ranked by top rates. Over 10 XRP-denominated yield sources across 2 networks. Discover vaults, lending markets, Principal Tokens, and liquidity pools for XRP, FXRP, stXRP, and cbXRP. |
 | og:type | article |
 | og:url | https://harvest.finance/report/xrp-yield-ranking |
-| og:site_name | Harvest |
 | og:image | https://harvest.finance/report/xrp-yield-ranking/opengraph-image?d2315f86ee8d07d5 |
 | og:image:width | 1200 |
 | og:image:height | 630 |
 | twitter:card | summary_large_image |
-| twitter:title | Best XRP Yield: 14 DeFi Products Ranked by Real APY |
+| twitter:title | Best XRP Yield 2026: List of 10+ DeFi Products ranked by APY |
+| twitter:description | Where to earn yield on XRP, ranked by top rates. Over 10 XRP-denominated yield sources across 2 networks. Discover vaults, lending markets, Principal Tokens, and liquidity pools for XRP, FXRP, stXRP, and cbXRP. |
 | twitter:image | https://harvest.finance/report/xrp-yield-ranking/twitter-image?8173c42c2227b9ce |
 
-**Notes on meta strategy**
-- Title front-loads the high-intent query *best xrp yield* while keeping the product count + *APY*. ~58 chars incl. ` | Harvest`.
-- Description is keyword-dense but readable: *XRP, FXRP, stXRP, cbXRP*, product types, network count, median rate, freshness, and the differentiator (*XRP has no native staking*).
-- Canonical is self-referential. Robots = index,follow.
-- Custom 1200×630 OG/Twitter card generated at build via Next `opengraph-image.tsx` (`next/og` ImageResponse) with live Products / Networks / Median-rate stats. Twitter card = `summary_large_image`.
+**Notes**
+- Title is intent-first (*best xrp yield*), year-stamped (*2026*), list-shaped (*10+ … ranked by APY*).
+- The **same** title + description are emitted across page title, canonical, Open Graph **and** Twitter (explicit `twitter:title`/`twitter:description`), so the shared snippet is identical everywhere.
+- `10+` / `Over 10` are evergreen; the network count is live-derived. Canonical self-referential; robots = index,follow.
+- Custom **1200×630 OG/Twitter card** via `opengraph-image.tsx` (`next/og`) with live Products / Networks / Median-rate stats; footer label + image URL + canonical all resolve to `harvest.finance` (via `SITE_URL`).
 
 ---
 
 ## 2. Structured data (JSON-LD)
 
-The page emits **8 JSON-LD nodes**. `Organization` + `WebSite` are injected site-wide from the root layout; the rest are page-specific. Full serialized nodes below.
+**8 nodes.** `Organization` + `WebSite` are site-wide (root layout); the rest are page-specific.
 
 ### Organization
 
@@ -151,7 +151,7 @@ The page emits **8 JSON-LD nodes**. `Organization` + `WebSite` are injected site
   "name": "XRP Yield Ranking",
   "url": "https://harvest.finance/report/xrp-yield-ranking",
   "description": "Where to earn yield on XRP, ranked by real 30-day rates across 14 DeFi venues.",
-  "dateModified": "2026-07-19T18:02:03.882Z",
+  "dateModified": "2026-07-19T19:09:53.763Z",
   "isBasedOn": "https://harvest.finance/methodology",
   "publisher": {
     "@type": "Organization",
@@ -171,7 +171,7 @@ The page emits **8 JSON-LD nodes**. `Organization` + `WebSite` are injected site
   "description": "Where to earn yield on XRP across 14 DeFi products (XRP, FXRP, stXRP and cbXRP) on 2 networks, ranked by real 30-day rate. Lending, vaults, fixed-rate Principal Tokens and liquidity pools; XRP has no native staking, so these are the real onchain rates. Informational research, refreshed hourly.",
   "url": "https://harvest.finance/report/xrp-yield-ranking",
   "datePublished": "2026-07-01T00:00:00Z",
-  "dateModified": "2026-07-19T18:02:03.882Z",
+  "dateModified": "2026-07-19T19:09:53.763Z",
   "author": {
     "@type": "Organization",
     "name": "Harvest",
@@ -204,7 +204,7 @@ The page emits **8 JSON-LD nodes**. `Organization` + `WebSite` are injected site
     "name": "Harvest",
     "url": "https://harvest.finance"
   },
-  "dateModified": "2026-07-19T18:02:03.882Z",
+  "dateModified": "2026-07-19T19:09:53.763Z",
   "isBasedOn": [
     "https://defillama.com",
     "https://spectra.finance"
@@ -426,22 +426,19 @@ The page emits **8 JSON-LD nodes**. `Organization` + `WebSite` are injected site
 }
 ```
 
-**Structured-data notes**
-- `Dataset` carries `distribution` (DataDownload: application/json + text/csv), `license` CC-BY-4.0, `isAccessibleForFree`, `creator`/`publisher` = Harvest, `isBasedOn` = DeFiLlama + Spectra, `dateModified` = live snapshot. This is the key AI/answer-engine + Google-Dataset signal.
-- `Article` adds `datePublished` + `dateModified` + `author`/`publisher` for freshness + E-E-A-T; `WebPage` adds `isBasedOn` = methodology + publisher.
-- `FAQPage` mirrors the on-page accordion (10 Q&A). `ItemList` enumerates the ranked products as plain name+url ListItems (deliberately NOT FinancialProduct, since the venues are third-party, not Harvest products).
-- `BreadcrumbList` = Harvest › Report › XRP Yield Ranking.
+**Notes**
+- `Article` (headline = H1, `datePublished` 2026-07-01, `dateModified` = live snapshot, author/publisher = Harvest) sits alongside `WebPage` for freshness + E-E-A-T.
+- `Dataset` carries `distribution` (DataDownload JSON + CSV), CC-BY-4.0, `isAccessibleForFree`, sources (DeFiLlama + Spectra), `dateModified`.
+- `FAQPage` mirrors the 10-item accordion. `ItemList` = ranked products as plain name+url (not FinancialProduct — venues are third-party). `BreadcrumbList` = Harvest › Report › XRP Yield Ranking.
 
 ---
 
-## 3. Ranking data (the 14 tracked products)
-
-Live rate/TVL hydrated hourly per product from its own source. `30d APY` = 30-day mean where a history exists, else current spot / fixed rate.
+## 3. Ranking data (14 tracked products)
 
 | # | Asset | Detail | Platform | Network | Type | 30d APY | TVL | Incentivized | History pts |
 |--:|---|---|---|---|---|--:|--:|:--:|--:|
-| 1 | cbXRP / WETH | Permissionless pool | Aerodrome | Base | Liquidity pool | 13.78% | $338k | yes | 90 |
-| 2 | cbXRP / cbBTC | Permissionless pool | Aerodrome | Base | Liquidity pool | 4.23% | $338k | no | 90 |
+| 1 | cbXRP / WETH | Permissionless pool | Aerodrome | Base | Liquidity pool | 13.86% | $343k | yes | 90 |
+| 2 | cbXRP / cbBTC | Permissionless pool | Aerodrome | Base | Liquidity pool | 4.22% | $353k | no | 90 |
 | 3 | stXRP | PT · Aug 2026 | Spectra | Flare | Fixed-Rate | 3.73% | $4.2M | no | 48 |
 | 4 | stXRP | PT · Nov 2026 | Spectra | Flare | Fixed-Rate | 3.62% | $2.6M | no | 48 |
 | 5 | FXRP | bizFXRP · Bizantine Labs | Superform | Flare | Vault | 2.71% | $295k | no | 0 |
@@ -459,40 +456,33 @@ Live rate/TVL hydrated hourly per product from its own source. `30d APY` = 30-da
 
 ## 4. Machine-readable data layer (AI-crawl surface)
 
-Emitted at build by `scripts/build-xrp-history.mjs` into `public/data/xrp-yield/`, and surfaced three ways: a visible **Data** section on the page, the `Dataset` JSON-LD `distribution`, and `llms.txt`.
+Emitted at build by `scripts/build-xrp-history.mjs` into `public/data/xrp-yield/`, surfaced four ways: a **visible "Machine-readable data" section** on the page (two dataset buttons + a per-product JSON/CSV grid), the `Dataset` JSON-LD `distribution`, `llms.txt`, and the Article/WebPage schema.
 
 | File | Content |
 |---|---|
 | `/data/xrp-yield/index.json` | Catalogue: every product w/ current 30d APY, TVL, links to its JSON + CSV; license, disclaimer, `combinedHistoryCsv`. |
-| `/data/xrp-yield/<slug>.json` | Per product: asset/detail/platform/chain/type, `rate` (basis + current + 30d-mean), `tvlUsd`, `range90dPercent`, incentivized, `dailyHistory[]` (date+apyPercent), `dataAsOf`, license, disclaimer. |
-| `/data/xrp-yield/<slug>.csv` | Per product daily rate series `date,apy_percent` (only products with ≥2 history points → 8 of 14). |
+| `/data/xrp-yield/<slug>.json` | Per product: metadata, `rate` (basis + current + 30d-mean), `tvlUsd`, `range90dPercent`, incentivized, `dailyHistory[]`, `dataAsOf`, license. |
+| `/data/xrp-yield/<slug>.csv` | Per-product daily rate `date,apy_percent` (8 of 14 with history). |
 | `/data/xrp-yield/history.csv` | All products, long format `slug,asset,platform,chain,date,apy_percent`. |
-| `/llms.txt` | Lists the report + the dataset index + combined CSV under `## Reports` and `## Data`. |
+| `/llms.txt` | Lists the report + dataset index + combined CSV. |
 
-**Known limitation (flag for reviewer):** CSVs are **daily APY only**. DeFiLlama publishes daily APY history; TVL is a **live snapshot** carried in each product JSON (`tvlUsd`), not a daily series. Spectra/Portals products may have no daily history at all (JSON still carries current rate + TVL).
+**Limitation:** CSVs are **daily APY only** — DeFiLlama publishes daily APY; TVL is a **live snapshot** in each product JSON (`tvlUsd`), not a daily series.
 
 ---
 
 ## 5. Internal & external linking
 
-**Links INTO the page (inbound internal):**
-- **Footer → Resources → "XRP Yield Report"** — site-wide, so every page (homepage, asset hubs, all ~156 product pages) links here. Primary internal-PageRank path.
-- `sitemap.xml` (static export) and `llms.txt` both list the URL.
+**Inbound:** Footer → Resources → **"XRP Yield Ranking"** — site-wide (every page). Primary internal-PageRank path, keyword-aligned anchor. Also in `sitemap.xml` + `llms.txt`.
 
-**Links OUT of the page (internal, contextual):**
-- Method section → `/usdc`, `/eth`, `/btc`, `/methodology` (dofollow internal).
-- Right-rail "In this report" TOC + inline "On this page" nav → in-page `#anchor` jump links.
-- Data section → `/data/xrp-yield/index.json`, `/data/xrp-yield/history.csv`, `/llms.txt`.
+**Outbound-internal:** Method → `/usdc`, `/eth`, `/btc`, `/methodology`; TOC/"On this page" → in-page anchors; Data section → JSON/CSV files + `/llms.txt`.
 
-**External (outbound to venues):**
-- Every venue "Open →" / ranking "Open" routes through a leave-site confirmation modal (`DiscoverButton`), then opens the destination in a new tab with `rel="noopener noreferrer nofollow"` and `?ref=harvest.finance` attribution.
-- Consequence: **no dofollow link equity leaks** to third-party venues; outbound is nofollow by design.
+**External (venues):** every "Open →" routes through a leave-site modal (`DiscoverButton`) → new tab, `rel="noopener noreferrer nofollow"` + `?ref=harvest.finance`. Outbound is **nofollow** by design.
 
 ---
 
-## 6. Full rendered page content (visible text, in DOM order)
+## 6. Full rendered page content (visible text, DOM order)
 
-> Extracted from the built HTML. Visual order differs from DOM order (sections are re-ordered via CSS `order` — see §7). This is the raw indexable text.
+> Visual order differs (sections re-ordered via CSS `order` — see §7). Raw indexable text:
 
 ```text
 View ↗
@@ -510,7 +500,7 @@ Report
 Earning yield on XRP is quietly growing into one of the more active corners of DeFi. XRP is not a proof-of-stake asset, so there is no native staking rate to claim.
 The XRP Ledger’s native AMM already pays trading fees on-ledger, and on-ledger lending is starting to arrive. The deeper and more varied rates live on smart-contract chains.
 There, XRP is held as a wrapped token such as FXRP or cbXRP, or a staked form like stXRP, and supplied to a lending market, a vault, a fixed-rate Principal Token, or a liquidity pool. This page follows a curated set of these products and ranks them by rate.
-As of July 19, 2026 this report tracks 14 XRP products across 2 networks , Base and Flare . Rates span 0.18% to 13.78% , with a median of 2.42% across the 14 with a live rate.
+As of July 19, 2026 this report tracks 14 XRP products across 2 networks , Base and Flare . Rates span 0.18% to 13.86% , with a median of 2.42% across the 14 with a live rate.
 8 of the 14 lean on reward-token incentives for the bulk of their rate, so those tend to ease off once a rewards program winds down.
 On this page The ranking 30-day rate history Where yield comes from Wrapped forms of XRP Can you stake XRP? CeFi vs DeFi Risks Venues in depth FAQ Method Live rates
 ## The ranking
@@ -532,20 +522,20 @@ The curated XRP products, ranked by rate and split by exposure. Single-exposure 
 ### Dual-exposure XRP pools
 3 two-asset liquidity pools that pair an XRP token with something else and earn swap fees plus rewards. Higher headline rates, with impermanent loss to manage. Sorted by rate.
 # Product 30d APY Type Platform Network TVL
-1 cbXRP / WETH Permissionless pool Base · Aerodrome 13.78% Pool Aerodrome Base $338k Open →
-2 cbXRP / cbBTC Permissionless pool Base · Aerodrome 4.23% Pool Aerodrome Base $338k Open →
+1 cbXRP / WETH Permissionless pool Base · Aerodrome 13.86% Pool Aerodrome Base $343k Open →
+2 cbXRP / cbBTC Permissionless pool Base · Aerodrome 4.22% Pool Aerodrome Base $353k Open →
 3 stXRP / FXRP Permissionless pool Flare · SparkDEX 1.37% Pool SparkDEX Flare $5.8M Open →
 Rates and TVL from DeFiLlama, Spectra and Portals, as of July 19, 2026 , refreshed hourly. Each row links to the platform’s own site.
 Summary
 ## XRP yield right now
-As of July 19, 2026 , the top vault or lending rate is 2.71% on FXRP at Superform , while dual-exposure liquidity pools reach 13.78% on cbXRP / WETH at Aerodrome . Fixed-rate Principal Tokens sit near 3.73% , locked to maturity . The median across the 14 rated products is 2.42% .
-Weighing how much capital sits on each platform against the rate it pays, Spectra and Upshift hold the largest, most active positions on the page: Spectra with $20.1M across 5 products at an average 2.91% , and Upshift with $45.1M at 1.02% .
+As of July 19, 2026 , the top vault or lending rate is 2.71% on FXRP at Superform , while dual-exposure liquidity pools reach 13.86% on cbXRP / WETH at Aerodrome . Fixed-rate Principal Tokens sit near 3.73% , locked to maturity . The median across the 14 rated products is 2.42% .
+Weighing how much capital sits on each platform against the rate it pays, Spectra and Upshift hold the largest, most active positions on the page: Spectra with $20.0M across 5 products at an average 2.91% , and Upshift with $45.1M at 1.02% .
 Charts
 ## 30-day rate history
 How the rate has moved over the last 30 days for a selection of the larger venues, from DeFiLlama’s daily record. Useful for telling a steady rate apart from one riding a short-lived incentive spike.
-cbXRP / WETH Aerodrome $338k TVL 13.78% 30d APY
+cbXRP / WETH Aerodrome $343k TVL 13.86% 30d APY
 Jun 20 Jul 19
-cbXRP / cbBTC Aerodrome $338k TVL 4.23% 30d APY
+cbXRP / cbBTC Aerodrome $353k TVL 4.22% 30d APY
 Jun 20 Jul 19
 FXRP Mystic Finance $3.7M TVL 1.91% 30d APY
 Jun 20 Jul 19
@@ -765,52 +755,40 @@ FAQ
 Data & downloads
 Method & scope
 ```
-
 ---
 
 ## 7. Front-end architecture
 
-**Rendering**
-- **Page:** `src/app/report/xrp-yield-ranking/page.tsx` — React **Server Component**, statically prerendered (`output: "export"`). Reads only `data/xrp-yield.json` (isolated from the main vault pipeline: no Supabase, no `vaults.json`).
-- **Client components (islands):**
-  - `report-toc.tsx` — sticky right-rail "In this report" tree with `IntersectionObserver` scroll-spy (active section highlight).
-  - `report-chart.tsx` — interactive daily-rate **bar chart** (solid flagship-yellow `#ffb936` bars, dotted grid, hover scrubbing updates the header value/date). SVG, `viewBox` 0..680×200.
-  - `copy-address-button.tsx` — copy-to-clipboard for the wrapped-token contract addresses (blended inside the address pill).
-  - `discover-button.tsx` — outbound "Open →" with the leave-site confirmation modal + analytics + `?ref=` attribution.
-  - `home-hero-preview.tsx` — the tilted product-card preview in the hero (reused from the homepage), fed the featured product (stXRP PT · Aug 2026) with its **real** daily-rate history driving the bars.
+**Rendering** — `src/app/report/xrp-yield-ranking/page.tsx` is a React **Server Component**, statically prerendered. Reads only `data/xrp-yield.json` (isolated: no Supabase, no `vaults.json`). Client islands:
+- `report-toc.tsx` — sticky "In this report" rail, `IntersectionObserver` scroll-spy.
+- `report-chart.tsx` — interactive daily-rate bar chart, **solid flagship-yellow `#ffb936` bars** (no gradient), dotted grid, hover scrubbing.
+- `copy-address-button.tsx` — copy the wrapped-token contract addresses (blended inside the address pill).
+- `discover-button.tsx` — outbound "Open →" + leave-site modal + `report-tracking.ts` analytics + `?ref=`.
+- `home-hero-preview.tsx` — the hero product card, fed the featured stXRP PT · Aug 2026 with its **real** daily history driving the bars.
 
-**Layout & CSS**
-- Styles: `src/app/_styles/report.css` (~1,450 lines), all scoped under `.rp-page`. Reuses the homepage shell (`.uni-home-*`) and the global hub-table classes (`.hub-*`); adds report-specific pieces.
-- **Docs-style two-column layout** (Base-docs inspired): content column + sticky "In this report" rail (`.rp-doc` grid `minmax(0,1fr) 248px`, 64px gap). Rail hidden ≤1080px; replaced by an inline "On this page" 50/50 grid with gold `→` jump arrows.
-- **Section order is visual-only via flex `order`** on `.rp-doc-main > section` (DOM stays Overview-first for SEO). Visual order: `1` XRP yield right now (summary) → `2` The ranking → `3` Overview → `4` 30-day rate history → `5` Where yield comes from → `6` PT max fixed rate → `7` Wrapped forms of XRP → `8` Can you stake XRP? → `9` CeFi vs DeFi → `10` Key risks → `11` Venues in depth → `12` FAQ → `13` Data & downloads → `14` Method & scope.
-- **Type system:** Inter (variable, `--font-inter`) for body/headings enabling intermediate weights (450/650); Inter Tight for the logo; JetBrains Mono for addresses/eyebrow meta. Navy-toned palette (`--rp-heading #1a2440`, `--rp-body #3d465f`), gold eyebrows (`#ffb936`), dark-mode token overrides via `prefers-color-scheme` + `[data-theme]`.
-- **Colored "eyebrow" pre-headings** above each `<h2>` (Report, Live rates, Summary, Charts, Guide, Tokens, Explainer, Compare, Risk, Reference, FAQ, Data, Method).
-- **Lean Uniswap-style ranking tables**: no outer frame/row hairlines; a subtle header bar + whitespace; standardized cell fonts; only the 30d APY column is bold.
+**Layout & CSS** — `src/app/_styles/report.css` (~1,500 lines), scoped under `.rp-page`; reuses the homepage shell (`.uni-home-*`) + global hub-table classes (`.hub-*`).
+- Docs-style two-column layout (content + sticky rail; rail hidden ≤1080px → inline "On this page" **50/50 grid with gold `→` jump arrows**).
+- Section order is visual-only via flex `order` (DOM stays Overview-first for SEO). Visual order: `1` XRP yield right now → `2` The ranking → `3` Overview → `4` 30-day rate history → `5` Where yield comes from → `6` PT max fixed rate → `7` Wrapped forms of XRP → `8` Can you stake XRP? → `9` CeFi vs DeFi → `10` Key risks → `11` Venues in depth → `12` FAQ → `13` **Data & downloads** → `14` Method & scope.
+- Hero: a **3-mark overlapping token cluster** (XRP/FXRP/stXRP), left-aligned above the H1 (centered on mobile); a **bold** "Last updated" freshness line.
+- Type: Inter (variable) body/headings; navy palette (`--rp-heading #1a2440`, `--rp-body #3d465f`); gold eyebrows; dark-mode via `prefers-color-scheme` + `[data-theme]`.
+- Lean Uniswap-style ranking tables; only the 30d APY column is bold (`.hub-cell.hub-apy` specificity so it isn't clobbered by `.hub-num`).
 
-**Responsive / mobile (≤640px)**
-- Body type reduced ~40% vs the enlarged desktop sizes; headlines a further ~30%; every text rule carries an explicit proportional line-height (no oversized leading).
-- Ranking collapses to **# · Product (icon + name + detail + network·platform sub-line) · 30d APY · arrow**; position number sized down so it doesn't overpower the icon.
-- Hero: 3 overlapping token marks (XRP/FXRP/stXRP) centered above the headline; text centered.
-- Contents becomes a 50/50 grid; section spacing ~15% tighter; venue cards stack (full-width description, then full-width facts grid).
+**Responsive (≤640px)** — body ~40% smaller than desktop, headlines a further ~30%, every text rule has an explicit proportional line-height. Ranking collapses to **# · Product · 30d APY · arrow** (position number sized down); section spacing ~15% tighter; venue cards stack (full-width description, then full-width facts grid); "Open →" pinned top-right.
 
 ---
 
 ## 8. Back-end / data pipeline
 
-**Single source of truth (allowlist):** `data/xrp-venues.json` — the exact 14 products the report shows, each with `slug`, `asset` (clean headline), `detail`, `symbol`, `platform`, `entity`, `chain`, `productType`, `exposure`, `url`, and a `source` descriptor.
+**Allowlist (source of truth):** `data/xrp-venues.json` — the exact 14 products, each with `slug/asset/detail/symbol/platform/entity/chain/productType/exposure/url/source`.
 
-**Hydrator:** `scripts/fetch-xrp-yield.mjs` (+ `scripts/fetch-spectra.mjs`) pulls live rate/TVL/history per product by `source.kind`:
-- `defillama` → `yields.llama.fi/pools` (by poolId) + `/chart/<pool>` for daily history (`{d, apy}`, capped 90d) and the 90-day range.
-- `spectra-pt` / `spectra-pool` / `spectra-metavault` → `api.spectra.finance` (fixed-rate PT max rate + daily history; pool/metavault APY + TVL).
-- `portals` → `api.portals.fi` current APY (optional `PORTALS_API_KEY`; `staticApy`/`staticTvl` fallback).
-- `none` → no feed (rate shown as n/a).
-- Writes **`data/xrp-yield.json`** (committed; refreshed hourly by an external cron). This is the only file the page reads.
+**Hydrator:** `scripts/fetch-xrp-yield.mjs` (+ `fetch-spectra.mjs`, `apply-xrp-overrides.mjs`) pulls live rate/TVL/history per `source.kind`:
+- `defillama` → `yields.llama.fi/pools` + `/chart` (daily `{d,apy}`, 90d range).
+- `spectra-pt` / `spectra-pool` / `spectra-metavault` → `api.spectra.finance`.
+- `portals` → `api.portals.fi` (optional `PORTALS_API_KEY`; static fallback).
+- `none` → no feed.
+- Writes **`data/xrp-yield.json`** (committed; refreshed hourly by cron). The only file the page reads.
 
-**Data sources / attribution:** DeFiLlama, Spectra, Portals. All venues are third-party protocols; none are Harvest products (stated repeatedly on-page + in schema disclaimers).
-
-**Provenance notes for reviewer:**
-- Portals history (`/v2/tokens/history`) and holders (`/v2/tokens/holders`) endpoints are **Pioneer-tier (403 on the free key)** → the report does not use per-wallet holder counts; "popularity" is framed via TVL × rate instead.
-- The "capital-weighted average rate" in the FAQ and the "Spectra + Upshift lead" popularity line are **derived at render time** from `data/xrp-yield.json` (not hardcoded).
+**Provenance notes:** Portals history/holders endpoints are Pioneer-tier (403 on the free key) → no per-wallet holder counts; "popularity" is framed via **TVL-weighted rate** (also backs the "best XRP yield" FAQ) — all derived at render time.
 
 ---
 
@@ -819,65 +797,68 @@ Method & scope
 ```
 rm -rf public/_next
 && node scripts/build-network-tvl.mjs
-&& next build                       # static export → out/
+&& next build                          # static export → out/
 && rm -rf public && mv out public
 && node scripts/build-seo-static.mjs   # robots.txt + llms.txt (+ IndexNow key)
-&& node scripts/build-data-json.mjs    # per-vault JSON (site-wide)
-&& node scripts/build-sales-surfaces.mjs
+&& node scripts/build-data-json.mjs
 && node scripts/build-search-index.mjs
 && node scripts/build-design-system.mjs
 && node scripts/build-master-config.mjs
-&& node scripts/build-history-csv.mjs      # per-vault history CSV (site-wide)
-&& node scripts/build-xrp-history.mjs      # ← XRP report: per-product JSON/CSV + index + combined CSV
-&& npm run check-banned-words              # gate: banned marketing words
-&& npm run check-consistency               # gate: cross-page consistency
+&& node scripts/build-history-csv.mjs
+&& node scripts/build-xrp-history.mjs      # ← XRP report: per-product JSON/CSV + index + combined
+&& npm run check-banned-words              # gate
+&& npm run check-consistency               # gate
 ```
 
-Both gates must pass for the build to succeed.
+Both gates must pass. (Note: this is the harvestfi-based build chain; the maderaz fork additionally runs `build-sales-surfaces.mjs`, which is out of scope for this report.)
 
 ---
 
-## 10. File inventory (what to review)
+## 10. File inventory
 
 | File | Role |
 |---|---|
-| `src/app/report/xrp-yield-ranking/page.tsx` | The page (server component): content, JSON-LD, ranking, FAQ, hero, Data section, `generateMetadata` (title/desc/OG). |
-| `src/app/report/xrp-yield-ranking/venue-notes.ts` | Editorial "Venues in depth" reference + wrapped-token glossary (hand-authored, qualitative). |
-| `src/app/report/xrp-yield-ranking/opengraph-image.tsx` / `twitter-image.tsx` | Custom OG/Twitter card (next/og). |
-| `src/app/_styles/report.css` | All report styling (~1,450 lines). |
+| `src/app/report/xrp-yield-ranking/page.tsx` | Page: content, JSON-LD, ranking, FAQ, hero, Data section, `generateMetadata`. |
+| `…/venue-notes.ts` | Editorial "Venues in depth" + wrapped-token glossary. |
+| `…/opengraph-image.tsx` / `twitter-image.tsx` | Custom OG/Twitter card (next/og). |
+| `src/app/_styles/report.css` | All report styling (~1,500 lines). |
 | `src/components/report/{report-toc,report-chart,discover-button}.tsx` | Client islands. |
-| `src/components/{copy-address-button,home-hero-preview,token-icons,footer}.tsx` | Shared components (footer carries the site-wide inbound link). |
-| `src/lib/jsonld.ts` | Schema builders: `articleSchema`, `reportWebPageSchema`, `reportDatasetSchema`, `reportItemListSchema`, `faqPageSchema`, `breadcrumbSchema`. |
-| `src/lib/og-template.tsx` | Shared OG renderer (`ogImageResponse`). |
-| `data/xrp-venues.json` | Allowlist (source of truth). |
-| `data/xrp-yield.json` | Hydrated live snapshot the page reads. |
-| `scripts/fetch-xrp-yield.mjs`, `scripts/fetch-spectra.mjs` | Data hydrator. |
+| `src/components/{copy-address-button,home-hero-preview,token-icons,footer}.tsx` | Shared (footer = site-wide inbound link; token-icons = XRP-family fallback). |
+| `src/lib/jsonld.ts` | `articleSchema`, `reportWebPageSchema`, `reportDatasetSchema`, `reportItemListSchema`, `faqPageSchema`, `breadcrumbSchema`. |
+| `src/lib/og-template.tsx` | Shared OG renderer (`ogImageResponse`, extended with a `fonts` param). |
+| `src/lib/report-tracking.ts` | Outbound-click attribution (writes `report_outbound_clicks`). |
+| `data/xrp-venues.json` / `data/xrp-yield.json` | Allowlist / hydrated snapshot. |
+| `scripts/fetch-xrp-yield.mjs`, `fetch-spectra.mjs`, `apply-xrp-overrides.mjs` | Data hydrator. |
 | `scripts/build-xrp-history.mjs` | Machine-readable export emitter. |
-| `scripts/build-seo-static.mjs` | robots.txt + llms.txt. |
+| `scripts/build-seo-static.mjs` | robots.txt + llms.txt (XRP entries). |
+| `supabase/report_outbound_clicks.sql` | DB table for outbound-click tracking. |
 
 ---
 
 ## 11. SEO signal summary & open gaps
 
-**On-page signals present**
-- Static, fast, fully-crawlable HTML; self-referential canonical; index,follow.
-- Keyword-rich title (intent-first) + meta description; keyword-aligned H1 (`XRP Yield Ranking: Where XRP Actually Earns`) and section H2/H3s.
-- Rich structured data: WebPage, **Article** (datePublished + dateModified + author), **Dataset** (+DataDownload distribution, CC-BY-4.0), FAQPage (10 Q&A), ItemList, BreadcrumbList; site-wide Organization + WebSite.
-- Freshness: visible "Last updated", hourly refresh, `dateModified` in schema.
-- Unique, data-driven, non-templated long-form content (~3,000+ words) with an entity-rich glossary + venue directory.
-- Machine-readable data + `llms.txt` + Dataset distribution → AI/answer-engine discoverability.
-- Custom OG/Twitter card.
-- Site-wide inbound internal link (footer).
+**Present** — static/fast/crawlable HTML; self-referential canonical; keyword-rich intent-first title + description consistent across OG/Twitter; keyword-aligned H1 + section headings; rich structured data (WebPage, **Article**, **Dataset** +DataDownload, FAQPage×10, ItemList, BreadcrumbList) + site-wide Organization/WebSite; freshness (visible bold "Last updated", hourly refresh, `dateModified`); unique long-form content (~3,000+ words) + entity-rich glossary/venue directory; machine-readable data + `llms.txt` + Dataset distribution; custom OG card; **site-wide inbound footer link**.
 
-**Deliberate choices**
-- Outbound venue links are **nofollow** (leave-site modal) — no equity leak, appropriate for third-party YMYL destinations.
-- Section DOM order is Overview-first (SEO) while visual order leads with the summary/ranking (UX) — decoupled via CSS `order`.
+**Deliberate** — outbound venue links are **nofollow** (leave-site modal); DOM order Overview-first (SEO) while visual order leads with summary/ranking (UX), decoupled via CSS `order`.
 
-**Open gaps / candidate next work (for reviewer to weigh)**
-1. **Off-page/backlinks** — the decisive factor for a competitive head term; no external backlinks yet. Candidates: pitch the CC-BY dataset + an embeddable ranking widget to Flare ecosystem / DeFi media / aggregators.
-2. **Topical cluster** — no supporting spoke pages yet ("How to earn yield on XRP" guide, "Can you stake XRP?" standalone, "FXRP explained", "cbXRP vs FXRP") to build entity authority and feed internal links.
-3. **Programmatic long-tail** — `/xrp-yield/flare`, `/xrp-yield/base`, `/fxrp-yield` not built (would need unique per-page data to avoid thin content).
-4. **Daily TVL history** — CSVs are daily APY only; daily TVL not tracked upstream in the current pipeline.
-5. **Author/reviewer byline** — Article `author` is the Organization; a named author/"reviewed by" block would strengthen E-E-A-T.
-6. **Contextual inbound links** — only the footer links in so far; in-content links from the homepage hero/asset hubs would pass more weight than the footer.
+**Open gaps (next tier)** — 1) **off-page/backlinks** (the decisive factor; pitch the CC-BY dataset + an embeddable widget); 2) **topical cluster** of supporting guides all linking here; 3) **programmatic long-tail** (`/xrp-yield/flare`, `/fxrp-yield`) with unique per-page data; 4) **daily TVL** history not tracked upstream; 5) **named author/reviewer** byline for stronger E-E-A-T; 6) **contextual in-content inbound links** (homepage/hubs) beyond the footer.
 
+---
+
+## 12. Changelog — work reflected in this snapshot
+
+Newest first:
+
+- **SEO meta refresh** — title → *"Best XRP Yield 2026: List of 10+ DeFi Products ranked by APY"*; new description; same copy applied tight across page/OG/Twitter.
+- **Footer link** — site-wide inbound link (Resources → "XRP Yield Ranking").
+- **Article JSON-LD** added (datePublished + dateModified + author); **+3 FAQ** entries → 10 total ("Does XRP have staking rewards?", "How do you earn interest on XRP?", "FXRP vs cbXRP").
+- **Custom OG/Twitter card** (`opengraph-image.tsx`) with live stats.
+- **"Machine-readable data" section** (per-product JSON + CSV downloads) + `build-xrp-history.mjs` export + Dataset `distribution` + llms.txt.
+- **Hero** — 3-mark overlapping token cluster, left-aligned; bold "Last updated"; hero card mirrors the stXRP PT · Aug 2026 opportunity with its real rate history.
+- **Charts** — solid flagship-yellow bars (no gradient), mobile + desktop.
+- **"Best XRP yield" FAQ** — data-backed (TVL-weighted average) naming Spectra venues + the Clearstar Labs earnXRP vault on Upshift.
+- **"XRP yield right now"** — TVL×rate popularity read (Spectra & Upshift lead); tip box removed.
+- **Prose** — platform names woven into sentences (no parentheses); "hand-curated" → "defined set"; growing-sector wording.
+- **Typography** — navy palette, variable Inter, +20% desktop scale; mobile ~40% smaller + fixed line-heights; 30d APY column bolded; ranking truncation fixed.
+- **Layout** — Base-docs two-column + sticky rail; lean tables; blended copy-inside-address; venue cards stacked; balanced source-note padding; mobile 50/50 TOC with `→` arrows; **"All but Direct"** filter added to the admin Live Feed (separate surface, not this page).
+- **Scope trim** — canonical 14-product allowlist; Enosys/csXRP-as-wrapped removed; de-caveated for SEO.
