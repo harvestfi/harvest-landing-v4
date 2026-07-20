@@ -505,6 +505,7 @@ export default function XrpYieldRankingPage() {
     { id: "venues-in-depth", label: "Venues in depth" },
     { id: "faq", label: "FAQ" },
     { id: "machine-readable-data", label: "Data & downloads" },
+    { id: "onchain-references", label: "Onchain references" },
     { id: "method-and-scope", label: "Method & scope" },
   ];
 
@@ -588,6 +589,35 @@ export default function XrpYieldRankingPage() {
           timeZone: "UTC",
         })
       : "n/a";
+
+  // Onchain references: raw contract addresses for the wrapped-XRP assets and
+  // every Spectra stXRP market (PT/pool), matured ones included. The Spectra
+  // rows come straight from the trading feed, so expired markets that have
+  // rolled off the live pool list are still listed by their pool contract.
+  const onchainRefs: {
+    name: string;
+    chain: string;
+    address: string;
+    expired?: boolean;
+    explorer?: string;
+  }[] = [
+    ...WRAPPED_TOKENS.filter((t) => t.address).map((t) => ({
+      name: nice(t.token),
+      chain: t.chain,
+      address: t.address as string,
+      explorer: t.explorer,
+    })),
+    ...(data.yieldTrading?.markets ?? [])
+      .filter((m) => m.maturityDate && m.pool)
+      .slice()
+      .sort((a, b) => ((a.maturityDate ?? "") < (b.maturityDate ?? "") ? -1 : 1))
+      .map((m) => ({
+        name: `stXRP PT · ${matLabel(m.maturityDate)}`,
+        chain: "Flare",
+        address: m.pool,
+        expired: !!m.expired,
+      })),
+  ];
 
   // Freshness date shown as "Last updated" / "As of". Uses the most recent of
   // the snapshot and its enrichment passes (landscape, holders, trading) so the
@@ -1086,9 +1116,14 @@ export default function XrpYieldRankingPage() {
                     supply, a broad, retail-style base
                   </>
                 ) : null}
-                . Counts fall off steeply from there: the smallest liquidity
-                pools sit with only a handful of wallets, where one provider can
-                hold nearly the entire position. Across the ranking,{" "}
+                .
+              </p>
+            ) : null}
+            {holderTop ? (
+              <p className="rp-article rp-insight">
+                Counts fall off steeply from there: the smallest liquidity pools
+                sit with only a handful of wallets, where one provider can hold
+                nearly the entire position. Across the ranking,{" "}
                 <strong>{holderTotal.toLocaleString()}</strong> holder positions
                 are tracked.
               </p>
@@ -1134,18 +1169,22 @@ export default function XrpYieldRankingPage() {
                       title="Max fixed rate by maturity"
                       subtitle="daily, liquid stXRP markets · since Jun 2026"
                     />
-                    <p className="rp-source-note">
-                      Each line is one maturity&rsquo;s daily max fixed rate from
-                      Spectra, from June 2026, capped and trimmed near maturity
-                      where the annualized rate degenerates. The figure beside
-                      each maturity is its <strong>latest</strong> reading, so it
-                      can differ slightly from the ranking table above, which
-                      sorts on the 30-day average. Only markets that carried real
-                      volume are overlaid; the thinnest maturities are left out.
-                      The two live Spectra PTs together hold {usd(ptTvl)} in
-                      liquidity. The maturity table below covers every market over
-                      its full life.
-                    </p>
+                    <div className="rp-methodology">
+                      <span className="rp-methodology-label">Methodology</span>
+                      <p>
+                        Each line is one maturity&rsquo;s daily max fixed rate
+                        from Spectra, from June 2026, capped and trimmed near
+                        maturity where the annualized rate degenerates. The
+                        figure beside each maturity is its{" "}
+                        <strong>latest</strong> reading, so it can differ
+                        slightly from the ranking table above, which sorts on the
+                        30-day average. Only markets that carried real volume are
+                        overlaid; the thinnest maturities are left out. The two
+                        live Spectra PTs together hold {usd(ptTvl)} in liquidity.
+                        The maturity table below covers every market over its full
+                        life.
+                      </p>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -1266,7 +1305,10 @@ export default function XrpYieldRankingPage() {
               <strong>
                 {usd((tradeTop?.buyUsd ?? 0) + (tradeTop?.sellUsd ?? 0))}
               </strong>
-              . Among live markets, the nearest{" "}
+              .
+            </p>
+            <p className="rp-article rp-insight">
+              Among live markets, the nearest{" "}
               <strong>{matLabel(tradeLiveTop?.maturityDate ?? null)}</strong>{" "}
               maturity leads. Buys and sells run close to even overall,{" "}
               <strong>{usd(trading.totals.buyUsd)}</strong> to{" "}
@@ -1650,6 +1692,53 @@ export default function XrpYieldRankingPage() {
               <a href="/llms.txt">llms.txt</a>.
             </p>
           </div>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="onchain-references">
+          <p className="rp-eyebrow">Reference</p>
+          <h2 id="onchain-references">Onchain references</h2>
+          <p className="rp-lead">
+            Raw contract addresses for every wrapped-XRP asset and Spectra stXRP
+            market referenced in this report, matured markets included. All are
+            third-party contracts; verify each on its explorer before you use it.
+          </p>
+          <div className="rp-dtable-wrap">
+            <table className="rp-dtable rp-ref-table">
+              <thead>
+                <tr>
+                  <th>Asset / Product</th>
+                  <th>Network</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                {onchainRefs.map((r) => (
+                  <tr key={`${r.name}-${r.address}`}>
+                    <td className="strong">
+                      {r.name}
+                      {r.expired ? (
+                        <span className="rp-dtag rp-ref-tag">Matured</span>
+                      ) : null}
+                    </td>
+                    <td>{chainLabel(r.chain)}</td>
+                    <td>
+                      <span className="rp-ref-addr">
+                        <code>{r.address}</code>
+                        <CopyAddressButton address={r.address} compact />
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="rp-source-note">
+            Wrapped-token addresses are the canonical ERC-20 (or SPL) contracts;
+            Spectra rows are each stXRP market&rsquo;s pool contract on Flare,
+            including markets that have already matured. Lending, vault and DEX
+            venues are tracked via DeFiLlama and Portals and link out to their
+            own pages in the ranking above.
+          </p>
         </section>
 
         <section className="uni-home-content" aria-labelledby="method-and-scope">

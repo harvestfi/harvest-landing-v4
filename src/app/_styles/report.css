@@ -1030,6 +1030,27 @@
 :root[data-theme="dark"] .rp-dtag-live,
 .uni-home-test.dark .rp-dtag-live { color: #5fd398; border-color: rgba(26, 127, 75, 0.5); background: rgba(26, 127, 75, 0.16); }
 
+/* ---- Onchain references table: raw contract addresses (mono) + copy. ---- */
+.rp-ref-tag { margin-left: 9px; font-weight: 600; }
+.rp-ref-addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.rp-page .rp-ref-table code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--uni-ink-2, #3e3e46);
+  word-break: break-all;
+}
+.rp-page .rp-ref-table td:first-child { white-space: nowrap; }
+@media (max-width: 640px) {
+  .rp-page .rp-ref-table code { font-size: 11px; }
+  .rp-ref-tag { display: block; margin: 3px 0 0; }
+}
+
 /* ---- Pill buttons (Figma): thin outline, white bg, icon + label. Applied to
    the report's utility buttons (Discover/Open, data downloads). ---- */
 .rp-page .rp-discover,
@@ -1847,6 +1868,10 @@
   .rp-page .uni-home-content .rp-method dd { font-size: 13px; line-height: 20px; }
   .rp-page .uni-home-content .rp-method dt { font-size: 13px; line-height: 1.4; }
   .rp-page .uni-home-content .rp-source-note { font-size: 12px; line-height: 18px; }
+  /* Methodology-box text matches the source-note scale on phones (it was
+     rendering at the larger desktop 15px). */
+  .rp-page .rp-methodology p { font-size: 12px; line-height: 18px; }
+  .rp-page .rp-methodology { padding: 13px 14px; }
   .rp-page .rp-snapshot .rp-snapshot-note { font-size: 12.5px; line-height: 19px; }
   .rp-page .rp-callout { font-size: 13px; line-height: 1.55; padding: 16px 18px; }
   .rp-page .rp-faq-q { font-size: 14px; line-height: 1.3; }
