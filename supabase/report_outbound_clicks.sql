@@ -18,6 +18,7 @@ create table if not exists public.report_outbound_clicks (
   product      text,              -- e.g. WFLR-FXRP
   chain        text,              -- e.g. Flare
   venue_ref    text,              -- e.g. ranking:sparkdex-v4 | venue:kinetic
+  rank         integer,           -- 1-based ranking position of the clicked row (null for venue cards)
   target_url   text,
   source       text,              -- referrer-derived acquisition source
   country      text,
@@ -28,6 +29,11 @@ create table if not exists public.report_outbound_clicks (
   user_agent   text,
   is_bot       boolean
 );
+
+-- Backfill the rank column on projects where the table predates it (no-op on
+-- a fresh create above).
+alter table public.report_outbound_clicks
+  add column if not exists rank integer;
 
 create index if not exists report_outbound_clicks_created_at_idx
   on public.report_outbound_clicks (created_at desc);
