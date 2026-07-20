@@ -106,9 +106,18 @@ if (upshift.length >= 2)
 // XRP markets, Superform). Their current TVL is real and belongs in today's
 // total, but we do NOT fabricate a trajectory for it — it is reported as a
 // number, not blended into the daily line.
+// A Spectra PT and its pool share the same liquidity, so the PT's TVL mirrors
+// the pool's — count it once (via the pool) so totals aren't double-counted.
+const tvlCounts = (p) => !String(p.venueSlug || p.id || "").startsWith("spectra-pt-");
 const coveredVenues = new Set(venueSeries.map((s) => s.venue));
 const remainder = pools
-  .filter((p) => !coveredVenues.has(p.platform) && Number.isFinite(p.tvlUsd) && p.tvlUsd > 0)
+  .filter(
+    (p) =>
+      tvlCounts(p) &&
+      !coveredVenues.has(p.platform) &&
+      Number.isFinite(p.tvlUsd) &&
+      p.tvlUsd > 0,
+  )
   .reduce((sum, p) => sum + p.tvlUsd, 0);
 
 if (!venueSeries.length) {
@@ -138,7 +147,7 @@ const series = allDates.map((d) => {
 // Trim the leading near-zero tail so the chart starts where the landscape
 // meaningfully exists (>= 1% of current), keeping the ramp visible without a
 // long flat run at the axis.
-const currentTotal = pools.reduce((s, p) => s + (p.tvlUsd || 0), 0);
+const currentTotal = pools.filter(tvlCounts).reduce((s, p) => s + (p.tvlUsd || 0), 0);
 const floor = currentTotal * 0.01;
 const startIdx = series.findIndex((p) => p.tvl >= floor);
 const trimmed = series.slice(startIdx === -1 ? 0 : startIdx);

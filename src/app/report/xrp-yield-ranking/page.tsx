@@ -78,6 +78,18 @@ interface XrpPool {
   // (added by the TVL backfill) feed the landscape aggregate and are optional so
   // older snapshots still type-check.
   history?: { d: string; apy: number; tvl?: number | null; pps?: number | null }[];
+  // Holder count + concentration from the chain explorer (scripts/
+  // fetch-xrp-holders.mjs). top1Pct/top10Pct are the share of supply held by
+  // the largest wallet / top 10, omitted when the token's supply figure is
+  // inconsistent. Absent for products with no public holder-bearing token.
+  holders?: {
+    count: number;
+    token?: string;
+    symbol?: string | null;
+    top1Pct?: number;
+    top10Pct?: number;
+    asOf?: string;
+  };
 }
 // Landscape TVL aggregate written by scripts/build-xrp-landscape.mjs: the daily
 // total across venues with a real XRP-clean history, plus the metadata the
@@ -209,6 +221,13 @@ export default function XrpYieldRankingPage() {
 
   const { pools, stats } = data;
 
+  // A Spectra Principal Token and its liquidity pool share the same underlying
+  // liquidity, so their TVL is one and the same — the PT's TVL just mirrors the
+  // pool's. Count it once (via the pool) in every TVL aggregate so totals aren't
+  // inflated. The PT still appears in the rate and holder rankings; only its
+  // TVL contribution is suppressed to avoid the double-count.
+  const tvlCounts = (p: XrpPool) => !(p.venueSlug ?? "").startsWith("spectra-pt-");
+
   // Hero hook: the stXRP PT · Aug 2026 opportunity (the rank-1 single-sided
   // fixed rate), pinned so the hero card mirrors that specific product's data.
   const featured =
@@ -273,7 +292,7 @@ export default function XrpYieldRankingPage() {
   >();
   for (const p of pools) {
     const cur = platformAgg.get(p.platform) ?? { tvl: 0, rateSum: 0, n: 0 };
-    cur.tvl += p.tvlUsd || 0;
+    if (tvlCounts(p)) cur.tvl += p.tvlUsd || 0;
     const r = histRate(p);
     if (r != null) {
       cur.rateSum += r;
@@ -298,7 +317,7 @@ export default function XrpYieldRankingPage() {
     let total = 0;
     for (const p of pools) {
       const r = histRate(p);
-      if (r == null || !(p.tvlUsd > 0)) continue;
+      if (r == null || !(p.tvlUsd > 0) || !tvlCounts(p)) continue;
       weighted += r * p.tvlUsd;
       total += p.tvlUsd;
     }
@@ -332,6 +351,9 @@ export default function XrpYieldRankingPage() {
   const tocItems: TocItem[] = [
     { id: "snapshot-title", label: "XRP yield right now" },
     { id: "landscape-title", label: "XRP yield landscape" },
+    ...(pools.some((p) => p.holders)
+      ? [{ id: "popular-title", label: "Most popular by holders" }]
+      : []),
     { id: "rankings-title", label: "The ranking" },
     { id: "rank-single", label: "Single-exposure", level: 1 },
     { id: "rank-dual", label: "Dual-exposure", level: 1 },
@@ -366,10 +388,15 @@ export default function XrpYieldRankingPage() {
   // by product type is derived from `pools` at render time so it never drifts
   // from the tables; the growth series comes from the build-time aggregate.
   const land = data.landscape;
-  const totalTvl = stats.totalTvlUsd || pools.reduce((s, p) => s + (p.tvlUsd || 0), 0);
+  const totalTvl = pools
+    .filter(tvlCounts)
+    .reduce((s, p) => s + (p.tvlUsd || 0), 0);
   const tvlBy = (key: (p: XrpPool) => string) => {
     const m = new Map<string, number>();
-    for (const p of pools) m.set(key(p), (m.get(key(p)) ?? 0) + (p.tvlUsd || 0));
+    for (const p of pools) {
+      if (!tvlCounts(p)) continue;
+      m.set(key(p), (m.get(key(p)) ?? 0) + (p.tvlUsd || 0));
+    }
     return [...m.entries()]
       .map(([label, tvl]) => ({ label, tvl, pctOfTotal: totalTvl ? (tvl / totalTvl) * 100 : 0 }))
       .sort((a, b) => b.tvl - a.tvl);
@@ -384,6 +411,28 @@ export default function XrpYieldRankingPage() {
     .filter((p) => p.tvl > 0)
     .sort((a, b) => b.tvl - a.tvl)
     .slice(0, 4);
+
+  // Popularity by holder count (from the chain explorer). Ranks the products
+  // that expose a public holder-bearing token, most wallets first, and derives
+  // a retail-vs-concentrated read from the count and the top-wallet share.
+  const holderRanked = pools
+    .filter((p) => p.holders && Number.isFinite(p.holders.count))
+    .sort((a, b) => (b.holders!.count ?? 0) - (a.holders!.count ?? 0));
+  const holderProfile = (h: NonNullable<XrpPool["holders"]>): string => {
+    if (h.count >= 500 && h.top1Pct != null && h.top1Pct < 15) return "Retail-broad";
+    if (h.count <= 20 || (h.top1Pct != null && h.top1Pct >= 60)) return "Concentrated";
+    return "Mixed";
+  };
+  const holderTotal = holderRanked.reduce((s, p) => s + (p.holders!.count ?? 0), 0);
+  const holderTop = holderRanked[0];
+  const holderAsOf = new Date(
+    holderTop?.holders?.asOf ?? data.generatedAt,
+  ).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -788,6 +837,93 @@ export default function XrpYieldRankingPage() {
             tracked products as of {updated}.
           </p>
         </section>
+
+        {holderRanked.length > 0 && (
+          <section className="uni-home-content" aria-labelledby="popular-title">
+            <p className="rp-eyebrow">Adoption</p>
+            <h2 id="popular-title">Most popular XRP yield sources</h2>
+            <p className="rp-lead">
+              Rate and TVL show how much is deposited; holder counts show how
+              many wallets actually hold each product — a read on real adoption,
+              and on whether a product is spread across many depositors or
+              concentrated in a few. Ranked by on-chain holders as of{" "}
+              {holderAsOf}, with the largest wallet&rsquo;s share where the
+              token&rsquo;s supply exposes it.
+            </p>
+            <div className="rp-holders">
+              <div className="rp-holders-head" aria-hidden="true">
+                <span>#</span>
+                <span>Product</span>
+                <span className="rp-hcol-num">Holders</span>
+                <span className="rp-hcol-num">Top wallet</span>
+                <span className="rp-hcol-tag">Profile</span>
+              </div>
+              {holderRanked.map((p, i) => {
+                const h = p.holders!;
+                const profile = holderProfile(h);
+                return (
+                  <div className="rp-holders-row" key={p.id}>
+                    <span className="rp-hrank">{i + 1}</span>
+                    <span className="rp-hname">
+                      <span className="rp-hicon">
+                        <TokenIcons symbol={p.symbol} />
+                      </span>
+                      <span className="rp-hlabel">
+                        <span className="rp-hasset">{assetHead(p)}</span>
+                        <span className="rp-hplat">
+                          {p.detail ? `${p.detail} · ` : ""}
+                          {p.platform}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="rp-hcol-num rp-hcount">
+                      {h.count.toLocaleString()}
+                    </span>
+                    <span className="rp-hcol-num rp-htop">
+                      {h.top1Pct != null ? `${h.top1Pct.toFixed(0)}%` : "—"}
+                    </span>
+                    <span className="rp-hcol-tag">
+                      <span
+                        className={`rp-hprofile rp-hprofile-${profile
+                          .toLowerCase()
+                          .replace(/[^a-z]/g, "")}`}
+                      >
+                        {profile}
+                      </span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {holderTop ? (
+              <p className="rp-article">
+                {assetHead(holderTop)} on {holderTop.platform} is the most widely
+                held by a wide margin, with{" "}
+                <strong>{holderTop.holders!.count.toLocaleString()} wallets</strong>
+                {holderTop.holders!.top1Pct != null ? (
+                  <>
+                    {" "}
+                    and no single wallet above{" "}
+                    <strong>{holderTop.holders!.top1Pct.toFixed(0)}%</strong> of
+                    supply — a broad, retail-style base
+                  </>
+                ) : null}
+                . Counts fall off steeply from there: the smallest liquidity
+                pools sit with only a handful of wallets, where one provider can
+                hold nearly the entire position. Across the ranking,{" "}
+                <strong>{holderTotal.toLocaleString()}</strong> holder positions
+                are tracked.
+              </p>
+            ) : null}
+            <p className="rp-source-note">
+              Holder counts and top-wallet shares from each token&rsquo;s
+              chain explorer (Flare and Base Blockscout), as of {holderAsOf}.
+              One wallet can hold several products, and a product can be held
+              through an aggregator or staking contract, which reads as a single
+              large holder.
+            </p>
+          </section>
+        )}
 
         {venueCharts.length > 0 && (
           <section className="uni-home-content" aria-labelledby="ratehist-title">

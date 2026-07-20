@@ -666,6 +666,7 @@
 }
 .rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
 .rp-page .rp-doc-main > section[aria-labelledby="landscape-title"] { order: 2; }
+.rp-page .rp-doc-main > section[aria-labelledby="popular-title"] { order: 2; }
 .rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 3; }
 .rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 4; }
 .rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 5; }
@@ -856,10 +857,70 @@
 }
 .rp-landscape-card { margin: 4px 0 4px; }
 
+/* ---- Most popular by holders ---- */
+.rp-holders {
+  border: 1px solid var(--rp-card-border, rgba(10, 10, 17, 0.09));
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 6px 0 4px;
+}
+.rp-holders-head,
+.rp-holders-row {
+  display: grid;
+  grid-template-columns: 30px 1fr 84px 78px 118px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+}
+.rp-holders-head {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--uni-ink-3, #6b6d72);
+  background: var(--rp-card-border, rgba(10, 10, 17, 0.04));
+}
+.rp-holders-row { border-top: 1px solid var(--rp-card-border, rgba(10, 10, 17, 0.07)); }
+.rp-hcol-num { text-align: right; font-variant-numeric: tabular-nums; }
+.rp-hcol-tag { text-align: right; }
+.rp-hrank { color: var(--uni-ink-3, #6b6d72); font-variant-numeric: tabular-nums; font-size: 14px; }
+.rp-hname { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rp-hicon { flex: none; }
+.rp-hlabel { display: flex; flex-direction: column; min-width: 0; }
+.rp-hasset { font-size: 15px; color: var(--uni-ink); font-weight: 600; }
+.rp-hplat { font-size: 12.5px; color: var(--uni-ink-3, #6b6d72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-hcount { font-size: 16px; font-weight: 700; color: var(--uni-ink); }
+.rp-htop { font-size: 14px; color: var(--uni-ink-2, #45474c); }
+.rp-hprofile {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.rp-hprofile-retailbroad { color: #1a7f4b; border-color: rgba(26, 127, 75, 0.4); background: rgba(26, 127, 75, 0.08); }
+.rp-hprofile-mixed { color: #8a6d1f; border-color: rgba(200, 150, 20, 0.4); background: rgba(255, 185, 54, 0.08); }
+.rp-hprofile-concentrated { color: #a23b2e; border-color: rgba(162, 59, 46, 0.38); background: rgba(162, 59, 46, 0.07); }
+
+:root[data-theme="dark"] .rp-hprofile-retailbroad,
+.uni-home-test.dark .rp-hprofile-retailbroad { color: #5fd398; }
+:root[data-theme="dark"] .rp-hprofile-mixed,
+.uni-home-test.dark .rp-hprofile-mixed { color: #e6c76a; }
+:root[data-theme="dark"] .rp-hprofile-concentrated,
+.uni-home-test.dark .rp-hprofile-concentrated { color: #f0917f; }
+
 @media (max-width: 720px) {
   .rp-land-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
   .rp-land-num { font-size: 22px; }
   .rp-land-splits { grid-template-columns: 1fr; gap: 22px; }
+  /* Holders: drop the Top-wallet column on narrow screens, keep count + tag. */
+  .rp-holders-head,
+  .rp-holders-row { grid-template-columns: 22px 1fr 60px 96px; gap: 8px; padding: 10px 12px; }
+  .rp-htop, .rp-holders-head span.rp-hcol-num:nth-child(4) { display: none; }
+  .rp-hasset { font-size: 14px; }
+  .rp-hcount { font-size: 15px; }
+  .rp-hprofile { font-size: 10.5px; padding: 2px 7px; }
 }
 
 /* Hero freshness line (under the subtitle, on the gold hero). */

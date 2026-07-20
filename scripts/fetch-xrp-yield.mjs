@@ -365,7 +365,13 @@ const main = async () => {
       venues: pools.length,
       rated: rated.length,
       chains: [...new Set(pools.map((p) => p.chain))],
-      totalTvlUsd: Math.round(pools.reduce((s, p) => s + (p.tvlUsd || 0), 0)),
+      // Exclude Spectra PTs from the TVL total: a PT and its liquidity pool
+      // share the same underlying liquidity, so summing both double-counts it.
+      totalTvlUsd: Math.round(
+        pools
+          .filter((p) => !String(p.venueSlug || p.id || "").startsWith("spectra-pt-"))
+          .reduce((s, p) => s + (p.tvlUsd || 0), 0),
+      ),
       medianApy: round2(median),
       incentivized: pools.filter((p) => p.incentivized).length,
     },
