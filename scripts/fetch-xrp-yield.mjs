@@ -207,6 +207,26 @@ const main = async () => {
     process.exit(0);
   }
 
+  // Carry forward the enrichment that separate (daily) scripts add to the same
+  // file — landscape aggregate, yield-trading activity, and per-pool holder
+  // counts. This script rebuilds pools/stats every hour; without preserving
+  // these the hourly run would strip the report's Landscape, Most-popular and
+  // Trading sections until the next daily pipeline re-added them.
+  let prev = null;
+  try {
+    if (existsSync(OUT_FILE)) prev = JSON.parse(readFileSync(OUT_FILE, "utf-8"));
+  } catch {
+    prev = null;
+  }
+  const prevHolders = new Map();
+  const prevHistory = new Map();
+  for (const p of prev?.pools ?? []) {
+    const key = p.venueSlug ?? p.id;
+    if (!key) continue;
+    if (p.holders) prevHolders.set(key, p.holders);
+    if (Array.isArray(p.history) && p.history.length) prevHistory.set(key, p.history);
+  }
+
   // DeFiLlama pools once, indexed by poolId for the defillama-sourced rows.
   const needLlama = venues.some((v) => v.source?.kind === "defillama");
   let byId = new Map();
@@ -350,6 +370,16 @@ const main = async () => {
     pools.push(row);
   }
 
+  // Re-attach enrichment that this script doesn't produce itself: holder counts
+  // (from fetch-xrp-holders) always, and a daily-backfilled history where this
+  // run didn't already capture one. Keeps the report whole between daily runs.
+  for (const p of pools) {
+    const key = p.venueSlug ?? p.id;
+    if (!key) continue;
+    if (!p.holders && prevHolders.has(key)) p.holders = prevHolders.get(key);
+    if ((p.history?.length ?? 0) < 2 && prevHistory.has(key)) p.history = prevHistory.get(key);
+  }
+
   // Rank by best available rate (30-day mean or current), n/a rows last.
   const rateOf = (p) => (p.rateNa ? -Infinity : p.apyMean30d ?? p.apy ?? -Infinity);
   pools.sort((a, b) => rateOf(b) - rateOf(a));
@@ -378,6 +408,11 @@ const main = async () => {
     venues,
     pools,
   };
+
+  // Preserve the sections owned by the daily enrichment scripts so an hourly
+  // rate refresh never drops the Landscape / Trading parts of the report.
+  if (prev?.landscape) out.landscape = prev.landscape;
+  if (prev?.yieldTrading) out.yieldTrading = prev.yieldTrading;
 
   mkdirSync(join(ROOT, "data"), { recursive: true });
   writeFileSync(OUT_FILE, JSON.stringify(out, null, 2), "utf-8");
