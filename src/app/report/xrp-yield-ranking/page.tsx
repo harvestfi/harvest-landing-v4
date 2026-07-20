@@ -1242,7 +1242,9 @@ export default function XrpYieldRankingPage() {
                       <td className="num">{usd(m.buyUsd + m.sellUsd)}</td>
                       <td className="num">{m.traders.toLocaleString()}</td>
                       <td className="num">
-                        <span className="rp-dtag">
+                        <span
+                          className={`rp-dtag${m.expired ? "" : " rp-dtag-live"}`}
+                        >
                           {m.expired ? "Matured" : "Live"}
                         </span>
                       </td>
@@ -1273,14 +1275,18 @@ export default function XrpYieldRankingPage() {
               side.
             </p>
 
-                <p className="rp-source-note">
-                  {trading.note} Every stXRP market is included, so quiet
-                  stretches on the daily chart are real lulls between maturities
-                  (demand thinning as one maturity winds down before the next
-                  ramps), not missing pools. As of {holderAsOf}. Trade and trader
-                  counts are a floor on the busiest matured markets, where the
-                  venue caps the returned history.
-                </p>
+                <div className="rp-methodology">
+                  <span className="rp-methodology-label">Methodology</span>
+                  <p>
+                    {trading.note} Every stXRP market is included, so quiet
+                    stretches on the daily chart are real lulls between
+                    maturities (demand thinning as one maturity winds down
+                    before the next ramps), not missing pools. As of{" "}
+                    {holderAsOf}. Trade and trader counts are a floor on the
+                    busiest matured markets, where the venue caps the returned
+                    history.
+                  </p>
+                </div>
               </>
             ) : null}
           </section>
@@ -1899,6 +1905,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                   product={assetHead(p)}
                   chain={p.chain}
                   rank={i + 1}
+                  icon={<TokenIcons symbol={p.symbol} />}
                 />
               </span>
             </div>
@@ -1933,6 +1940,7 @@ function VenueCard({ v }: { v: VenueNote }) {
             source={`venue:${v.slug}`}
             product={nice(v.product)}
             chain={v.chain}
+            icon={<TokenIcons symbol={v.assets.join("-")} />}
           />
         </span>
       </div>
