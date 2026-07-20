@@ -912,13 +912,9 @@
 .rp-page .rp-trade-subhead ~ .rp-trade-subhead { margin-top: 44px; }
 .rp-page .rp-trade-sublead { margin-top: 0; }
 /* Section-closing "insight" paragraphs (the data read-outs under the landscape,
-   holders and trading blocks). They summarise the numbers above, so they carry
-   more type weight than ordinary body prose, which sat too small next to the
-   leads. */
-.rp-page .rp-insight {
-  font-size: 18px;
-  line-height: 1.72;
-}
+   holders and trading blocks) render at the report's regular body-prose size —
+   they're folded into the main .rp-article-p type rule (search "p.rp-insight")
+   so they can't fall through to the smaller generic .uni-home-content p size. */
 .rp-page .rp-trade-insights { margin-top: 26px; }
 /* Keep the maturity table (and the stat row) from kissing the volume chart:
    the chart card carries almost no bottom margin, so add breathing room where a
@@ -1314,6 +1310,7 @@
    under .uni-home-content (3 classes) so it beats the homepage's rule. */
 .rp-page .uni-home-content .rp-article p,
 .rp-page .uni-home-content p.rp-lead,
+.rp-page .uni-home-content p.rp-insight,
 .rp-page .uni-home-content .rp-snapshot p,
 .rp-page .uni-home-content .rp-chain-intro,
 .rp-page .uni-home-content .rp-venue-prose p {
@@ -1742,6 +1739,7 @@
   .rp-page .rp-info-body, .rp-page .rp-tip-body { font-size: 13px; line-height: 1.55; }
 
   .rp-page .uni-home-content .rp-article p,
+  .rp-page .uni-home-content p.rp-insight,
   .rp-page .uni-home-content .rp-snapshot p,
   .rp-page .uni-home-content .rp-chain-intro,
   .rp-page .uni-home-content .rp-venue-prose p {

@@ -176,6 +176,12 @@ const CHAIN_LABEL: Record<string, string> = { "XRPL EVM": "XRPL EVM", BSC: "BNB 
 const chainLabel = (c: string) => CHAIN_LABEL[c] ?? c;
 
 const pct = (v: number | null) => (v == null ? "-" : `${v.toFixed(2)}%`);
+// Top-wallet share for the holder table. A two-holder pool where one wallet
+// holds 99.99% must not read as a flat "100%" (which implies the other holder
+// doesn't exist), so a value that rounds to 100 without being exactly 100 is
+// shown as ">99%".
+const walletPct = (v: number | null | undefined) =>
+  v == null ? "—" : v < 100 && v >= 99.5 ? ">99%" : `${v.toFixed(0)}%`;
 const usd = (n: number) =>
   n >= 1_000_000_000
     ? `$${(n / 1_000_000_000).toFixed(2)}B`
@@ -372,27 +378,34 @@ export default function XrpYieldRankingPage() {
 
   // Popularity read for the "XRP yield right now" intro. Holder counts aren't
   // published across these venues, so we weigh how much capital each platform
-  // holds (TVL) against what it pays (average rate): score = TVL x mean rate.
-  // That surfaces the platforms that are both deep and productive, rather than
-  // the biggest pile of low-yield deposits or a tiny high-APY pool.
+  // holds (TVL) against what it pays: score = TVL x average rate. The average is
+  // TVL-WEIGHTED over the same counted (non-PT) positions that make up the TVL
+  // figure — a Spectra PT's TVL mirrors its pool and is suppressed everywhere
+  // else, so it carries no weight here either. This keeps the "$X at Y%" prose
+  // exactly consistent with the ranking table and the dedup methodology (a plain
+  // mean of the per-product rates would not be).
   const platformAgg = new Map<
     string,
-    { tvl: number; rateSum: number; n: number }
+    { tvl: number; wRate: number; wTvl: number; products: number }
   >();
   for (const p of pools) {
-    const cur = platformAgg.get(p.platform) ?? { tvl: 0, rateSum: 0, n: 0 };
-    if (tvlCounts(p)) cur.tvl += p.tvlUsd || 0;
-    const r = histRate(p);
-    if (r != null) {
-      cur.rateSum += r;
-      cur.n += 1;
+    const cur =
+      platformAgg.get(p.platform) ?? { tvl: 0, wRate: 0, wTvl: 0, products: 0 };
+    if (tvlCounts(p)) {
+      cur.tvl += p.tvlUsd || 0;
+      cur.products += 1;
+      const r = histRate(p);
+      if (r != null && p.tvlUsd > 0) {
+        cur.wRate += r * p.tvlUsd;
+        cur.wTvl += p.tvlUsd;
+      }
     }
     platformAgg.set(p.platform, cur);
   }
   const platformRanked = [...platformAgg.entries()]
     .map(([name, s]) => {
-      const avgApy = s.n ? s.rateSum / s.n : 0;
-      return { name, tvl: s.tvl, products: s.n, avgApy, score: s.tvl * avgApy };
+      const avgApy = s.wTvl > 0 ? s.wRate / s.wTvl : 0;
+      return { name, tvl: s.tvl, products: s.products, avgApy, score: s.tvl * avgApy };
     })
     .sort((a, b) => b.score - a.score);
   const pop1 = platformRanked[0];
@@ -416,7 +429,7 @@ export default function XrpYieldRankingPage() {
   const earnXrp = pools.find((p) => p.venueSlug === "upshift-earnxrp");
   const bestYieldAnswer =
     spectraStats && earnXrp
-      ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP Principal Tokens and MetaVault, averaging about ${pct(spectraStats.avgApy)}, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates but add impermanent loss and usually lean on incentives, so the ranking sorts every venue by its real 30-day average.`
+      ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP markets and MetaVault, averaging about ${pct(spectraStats.avgApy)} across the capital tracked there, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates but add impermanent loss and usually lean on incentives, so the ranking sorts every venue by its real 30-day average.`
       : `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Single-sided lending and vaults are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually lean on incentives.`;
   // Highest-rate product for the "highest APY" answer (pools arrive rate-sorted).
   const topRate = pools
@@ -1043,7 +1056,7 @@ export default function XrpYieldRankingPage() {
                           {h.count.toLocaleString()}
                         </span>
                         <span className="hub-cell hub-num">
-                          {h.top1Pct != null ? `${h.top1Pct.toFixed(0)}%` : "—"}
+                          {walletPct(h.top1Pct)}
                         </span>
                         <span className="hub-cell rp-cell-tag">
                           <span
@@ -1124,11 +1137,14 @@ export default function XrpYieldRankingPage() {
                     <p className="rp-source-note">
                       Each line is one maturity&rsquo;s daily max fixed rate from
                       Spectra, from June 2026, capped and trimmed near maturity
-                      where the annualized rate degenerates. Only markets that
-                      carried real volume are overlaid; the thinnest maturities
-                      are left out. The two live Spectra PTs together hold{" "}
-                      {usd(ptTvl)} in liquidity. The maturity table below covers
-                      every market over its full life.
+                      where the annualized rate degenerates. The figure beside
+                      each maturity is its <strong>latest</strong> reading, so it
+                      can differ slightly from the ranking table above, which
+                      sorts on the 30-day average. Only markets that carried real
+                      volume are overlaid; the thinnest maturities are left out.
+                      The two live Spectra PTs together hold {usd(ptTvl)} in
+                      liquidity. The maturity table below covers every market over
+                      its full life.
                     </p>
                   </>
                 ) : (
@@ -1398,8 +1414,10 @@ export default function XrpYieldRankingPage() {
             </p>
             <p>
               The wrapper matters as much as the venue: some are trustless and
-              collateral-backed, others rest on a single custodian. These are the
-              four forms that appear most across the venues here.
+              collateral-backed, others rest on a single custodian. The first
+              three below &mdash; FXRP, stXRP and cbXRP &mdash; back every venue in
+              this report; wXRP is included as the main form on Solana, a market
+              that sits outside this report&rsquo;s Flare-and-Base scope for now.
             </p>
             <div className="rp-gloss-list">
               {WRAPPED_TOKENS.map((t) => (
