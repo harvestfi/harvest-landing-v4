@@ -1196,6 +1196,12 @@
   .rp-page .rp-rank-holders .hub-th-num,
   .rp-page .rp-rank-holders .hub-num { justify-content: flex-end; text-align: right; }
   .rp-hprofile { font-size: 10.5px; padding: 2px 7px; }
+  /* Nothing in a mobile ranking/holder row should out-size the asset name
+     (13.5px). The rank number and the holder count were rendering at 15px, so
+     cap them below the name. High specificity (.hub-row descendant) so these
+     win over the leaked desktop .hub-num size. */
+  .rp-page .rp-rank .hub-row .hub-rank { font-size: 12px; }
+  .rp-page .rp-rank-holders .hub-row .rp-hcount { font-size: 13px; font-weight: 700; }
 }
 
 /* Hero freshness line (under the subtitle, on the gold hero). */
