@@ -665,22 +665,21 @@
   border-top: 0;
 }
 .rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
-.rp-page .rp-doc-main > section[aria-labelledby="landscape-title"] { order: 2; }
-.rp-page .rp-doc-main > section[aria-labelledby="popular-title"] { order: 2; }
-.rp-page .rp-doc-main > section[aria-labelledby="trading-title"] { order: 2; }
-.rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 3; }
-.rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 4; }
-.rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 5; }
-.rp-page .rp-doc-main > section[aria-labelledby="where-title"] { order: 6; }
-.rp-page .rp-doc-main > section[aria-labelledby="ptchart-title"] { order: 7; }
-.rp-page .rp-doc-main > section[aria-labelledby="tokens-title"] { order: 8; }
-.rp-page .rp-doc-main > section[aria-labelledby="staking-title"] { order: 9; }
-.rp-page .rp-doc-main > section[aria-labelledby="cefi-title"] { order: 10; }
-.rp-page .rp-doc-main > section[aria-labelledby="risks-title"] { order: 11; }
-.rp-page .rp-doc-main > section[aria-labelledby="venues-title"] { order: 12; }
-.rp-page .rp-doc-main > section[aria-labelledby="faq-title"] { order: 13; }
-.rp-page .rp-doc-main > section[aria-labelledby="data-title"] { order: 14; }
-.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 15; padding-bottom: 8px; }
+.rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 2; }
+.rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 3; }
+.rp-page .rp-doc-main > section[aria-labelledby="landscape-title"] { order: 4; }
+.rp-page .rp-doc-main > section[aria-labelledby="popular-title"] { order: 5; }
+.rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 6; }
+.rp-page .rp-doc-main > section[aria-labelledby="trading-title"] { order: 7; }
+.rp-page .rp-doc-main > section[aria-labelledby="where-title"] { order: 8; }
+.rp-page .rp-doc-main > section[aria-labelledby="tokens-title"] { order: 9; }
+.rp-page .rp-doc-main > section[aria-labelledby="staking-title"] { order: 10; }
+.rp-page .rp-doc-main > section[aria-labelledby="cefi-title"] { order: 11; }
+.rp-page .rp-doc-main > section[aria-labelledby="risks-title"] { order: 12; }
+.rp-page .rp-doc-main > section[aria-labelledby="venues-title"] { order: 13; }
+.rp-page .rp-doc-main > section[aria-labelledby="faq-title"] { order: 14; }
+.rp-page .rp-doc-main > section[aria-labelledby="data-title"] { order: 15; }
+.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 16; padding-bottom: 8px; }
 
 /* Colored eyebrow above each section heading. Per Figma: contrasting blue,
    Inter 14px / 600 / 20px line-height, sentence case (NOT uppercase). Scoped
@@ -859,46 +858,43 @@
 .rp-landscape-card { margin: 4px 0 4px; }
 /* Trading section: the maturity breakdown is a single list, full width. */
 .rp-trade-splits { grid-template-columns: 1fr; }
+/* Sub-headings inside the combined "XRP yield trading activity" section
+   (Fixed-rate PT / Variable-rate YT). Prominent, with clear separation between
+   the two sub-parts. */
+.rp-page .rp-trade-subhead {
+  font-family: var(--display, var(--sans));
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--uni-ink);
+  margin: 18px 0 6px;
+}
+.rp-page .rp-trade-subhead ~ .rp-trade-subhead { margin-top: 44px; }
+.rp-page .rp-trade-sublead { margin-top: 0; }
+/* Breathing room so the first commentary paragraph doesn't kiss the bottom edge
+   of the bars (landscape/trading) or the holder table above it. */
+.rp-land-splits + .rp-article,
+.rp-rank-holders + .rp-article { margin-top: 26px; }
 .rp-vol-split { font-variant-numeric: tabular-nums; color: var(--uni-ink-2, #45474c); }
 
-/* ---- Most popular by holders ---- */
-.rp-holders {
-  border: 1px solid var(--rp-card-border, rgba(10, 10, 17, 0.09));
-  border-radius: 12px;
-  overflow: hidden;
-  margin: 6px 0 4px;
+/* ---- Most popular by holders: reuses the ranking table (.rp-rank / hub-*),
+   with its own 5-column grid: # | Product | Holders | Top wallet | Profile.
+   Higher specificity (.rp-page ...) so it overrides the 8-column .rp-rank grid. */
+.rp-page .rp-rank-holders .hub-thead,
+.rp-page .rp-rank-holders .hub-row {
+  grid-template-columns: 34px minmax(140px, 1fr) 96px 112px 138px;
+  gap: 20px;
 }
-.rp-holders-head,
-.rp-holders-row {
-  display: grid;
-  grid-template-columns: 30px 1fr 84px 78px 118px;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
-}
-.rp-holders-head {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--uni-ink-3, #6b6d72);
-  background: var(--rp-card-border, rgba(10, 10, 17, 0.04));
-}
-.rp-holders-row { border-top: 1px solid var(--rp-card-border, rgba(10, 10, 17, 0.07)); }
-.rp-hcol-num { text-align: right; font-variant-numeric: tabular-nums; }
-.rp-hcol-tag { text-align: right; }
-.rp-hrank { color: var(--uni-ink-3, #6b6d72); font-variant-numeric: tabular-nums; font-size: 14px; }
-.rp-hname { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.rp-hicon { flex: none; }
-.rp-hlabel { display: flex; flex-direction: column; min-width: 0; }
-.rp-hasset { font-size: 15px; color: var(--uni-ink); font-weight: 600; }
-.rp-hplat { font-size: 12.5px; color: var(--uni-ink-3, #6b6d72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rp-hcount { font-size: 16px; font-weight: 700; color: var(--uni-ink); }
-.rp-htop { font-size: 14px; color: var(--uni-ink-2, #45474c); }
+.rp-rank-holders .hub-th { white-space: nowrap; }
+.rp-rank-holders .rp-hcount { font-weight: 700; }
+.rp-rank-holders .hub-th-right,
+.rp-rank-holders .rp-cell-tag { text-align: right; justify-content: flex-end; }
 .rp-hprofile {
   display: inline-block;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
   border: 1px solid transparent;
   white-space: nowrap;
@@ -918,12 +914,16 @@
   .rp-land-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
   .rp-land-num { font-size: 22px; }
   .rp-land-splits { grid-template-columns: 1fr; gap: 22px; }
-  /* Holders: drop the Top-wallet column on narrow screens, keep count + tag. */
-  .rp-holders-head,
-  .rp-holders-row { grid-template-columns: 22px 1fr 60px 96px; gap: 8px; padding: 10px 12px; }
-  .rp-htop, .rp-holders-head span.rp-hcol-num:nth-child(4) { display: none; }
-  .rp-hasset { font-size: 14px; }
-  .rp-hcount { font-size: 15px; }
+}
+/* Holders on phones: # | Product | Holders | Profile (drop Top wallet, col 4). */
+@media (max-width: 640px) {
+  .rp-page .rp-rank-holders .hub-thead,
+  .rp-page .rp-rank-holders .hub-row {
+    grid-template-columns: 18px minmax(0, 1fr) 60px minmax(96px, auto);
+    gap: 10px;
+  }
+  .rp-rank-holders .hub-thead > :nth-child(4),
+  .rp-rank-holders .hub-row > :nth-child(4) { display: none; }
   .rp-hprofile { font-size: 10.5px; padding: 2px 7px; }
 }
 

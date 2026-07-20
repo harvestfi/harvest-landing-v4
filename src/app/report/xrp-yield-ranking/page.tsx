@@ -280,15 +280,18 @@ export default function XrpYieldRankingPage() {
   const ptRows = pools.filter(
     (p) => productTypeOf(p) === "Fixed-rate" && (p.history?.length ?? 0) >= 2,
   );
-  // Selected venues with a daily DeFiLlama history feed the 30-day rate charts
-  // (curated headline products, excluding the fixed-rate PTs which have their
-  // own chart). Sorted by 30-day rate, capped so the grid stays scannable.
+  // Selected venues with a real daily DeFiLlama history feed the 30-day rate
+  // charts (curated headline products, excluding the fixed-rate PTs which have
+  // their own chart). A meaningful window is required — products that only
+  // expose a couple of points (e.g. Portals-sourced vaults with 2 days of
+  // history) would otherwise grab a slot and render as two lonely bars.
+  const CHART_MIN_POINTS = 14;
   const venueCharts = pools
     .filter(
       (p) =>
         p.curated &&
         productTypeOf(p) !== "Fixed-rate" &&
-        (p.history?.length ?? 0) >= 2,
+        (p.history?.length ?? 0) >= CHART_MIN_POINTS,
     )
     .sort((a, b) => (histRate(b) ?? 0) - (histRate(a) ?? 0))
     .slice(0, 6);
@@ -384,19 +387,27 @@ export default function XrpYieldRankingPage() {
   // when they render, so scroll-spy never points at a missing anchor.
   const tocItems: TocItem[] = [
     { id: "snapshot-title", label: "XRP yield right now" },
-    { id: "landscape-title", label: "XRP yield landscape" },
-    ...(pools.some((p) => p.holders)
-      ? [{ id: "popular-title", label: "Most popular by holders" }]
-      : []),
-    ...(data.yieldTrading
-      ? [{ id: "trading-title", label: "Yield-market trading" }]
-      : []),
     { id: "rankings-title", label: "The ranking" },
     { id: "rank-single", label: "Single-exposure", level: 1 },
     { id: "rank-dual", label: "Dual-exposure", level: 1 },
     { id: "overview-title", label: "Overview" },
+    { id: "landscape-title", label: "XRP yield landscape" },
+    ...(pools.some((p) => p.holders)
+      ? [{ id: "popular-title", label: "Most popular by holders" }]
+      : []),
     ...(venueCharts.length > 0
       ? [{ id: "ratehist-title", label: "30-day rate history" }]
+      : []),
+    ...(ptRows.length > 0 || data.yieldTrading
+      ? [
+          { id: "trading-title", label: "XRP yield trading activity" },
+          ...(ptRows.length > 0
+            ? [{ id: "trade-pt", label: "Fixed-rate (Principal Tokens)", level: 1 }]
+            : []),
+          ...(data.yieldTrading
+            ? [{ id: "trade-yt", label: "Variable-rate (Yield Tokens)", level: 1 }]
+            : []),
+        ]
       : []),
     { id: "where-title", label: "Where yield comes from" },
     { id: "src-lending", label: "Lending", level: 1 },
@@ -404,9 +415,6 @@ export default function XrpYieldRankingPage() {
     { id: "src-liquidity", label: "Liquidity provision", level: 1 },
     { id: "src-pt", label: "Fixed-rate PTs", level: 1 },
     { id: "src-sorted", label: "How the ranking is sorted", level: 1 },
-    ...(ptRows.length > 0
-      ? [{ id: "ptchart-title", label: "PT max fixed rate" }]
-      : []),
     { id: "tokens-title", label: "Wrapped forms of XRP" },
     { id: "staking-title", label: "Can you stake XRP?" },
     { id: "cefi-title", label: "CeFi vs DeFi" },
@@ -501,12 +509,29 @@ export default function XrpYieldRankingPage() {
         })
       : "—";
 
-  const updated = new Date(data.generatedAt).toLocaleString("en-US", {
+  // Freshness date shown as "Last updated" / "As of". Uses the most recent of
+  // the snapshot and its enrichment passes (landscape, holders, trading) so the
+  // date reflects when the report's data was actually last refreshed — and a
+  // scheduled job (.github/workflows/update-xrp-data.yml) re-runs the pipeline
+  // daily so it keeps moving.
+  const freshestTs = Math.max(
+    ...[
+      data.generatedAt,
+      data.landscape?.generatedAt,
+      data.yieldTrading?.generatedAt,
+      data.pools.find((p) => p.holders?.asOf)?.holders?.asOf,
+    ]
+      .filter((s): s is string => typeof s === "string")
+      .map((s) => new Date(s).getTime())
+      .filter((t) => Number.isFinite(t)),
+  );
+  const updated = new Date(freshestTs).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: "UTC",
   });
+  const dataModifiedIso = new Date(freshestTs).toISOString();
 
   const rates = pools.map(histRate).filter((v): v is number => v != null);
   const lo = Math.min(...rates);
@@ -546,7 +571,7 @@ export default function XrpYieldRankingPage() {
               name: "XRP Yield Ranking",
               url: PAGE_URL,
               description: `Where to earn yield on XRP, ranked by real 30-day rates across ${stats.venues} DeFi venues.`,
-              dateModified: data.generatedAt,
+              dateModified: dataModifiedIso,
             }),
           ),
         }}
@@ -570,7 +595,7 @@ export default function XrpYieldRankingPage() {
               description: `Where to earn yield on XRP across ${stats.venues} DeFi products (XRP, FXRP, stXRP and cbXRP) on ${stats.chains.length} networks, ranked by real 30-day rate. Lending, vaults, fixed-rate Principal Tokens and liquidity pools; XRP has no native staking, so these are the real onchain rates. Informational research, refreshed hourly.`,
               url: PAGE_URL,
               datePublished: DATE_PUBLISHED,
-              dateModified: data.generatedAt,
+              dateModified: dataModifiedIso,
             }),
           ),
         }}
@@ -583,7 +608,7 @@ export default function XrpYieldRankingPage() {
               name: "XRP DeFi yield ranking dataset",
               description: `Rate, TVL and 90-day range for ${stats.venues} curated XRP-denominated DeFi products (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Sourced from the DeFiLlama, Spectra and Portals APIs; informational research, not financial advice.`,
               url: PAGE_URL,
-              dateModified: data.generatedAt,
+              dateModified: dataModifiedIso,
               numberOfItems: stats.venues,
               keywords: [
                 "XRP",
@@ -911,56 +936,58 @@ export default function XrpYieldRankingPage() {
             <h2 id="popular-title">Most popular XRP yield sources</h2>
             <p className="rp-lead">
               Rate and TVL show how much is deposited; holder counts show how
-              many wallets actually hold each product — a read on real adoption,
+              many wallets actually hold each product, a read on real adoption
               and on whether a product is spread across many depositors or
               concentrated in a few. Ranked by on-chain holders as of{" "}
               {holderAsOf}, with the largest wallet&rsquo;s share where the
               token&rsquo;s supply exposes it.
             </p>
-            <div className="rp-holders">
-              <div className="rp-holders-head" aria-hidden="true">
-                <span>#</span>
-                <span>Product</span>
-                <span className="rp-hcol-num">Holders</span>
-                <span className="rp-hcol-num">Top wallet</span>
-                <span className="rp-hcol-tag">Profile</span>
-              </div>
-              {holderRanked.map((p, i) => {
-                const h = p.holders!;
-                const profile = holderProfile(h);
-                return (
-                  <div className="rp-holders-row" key={p.id}>
-                    <span className="rp-hrank">{i + 1}</span>
-                    <span className="rp-hname">
-                      <span className="rp-hicon">
-                        <TokenIcons symbol={p.symbol} />
-                      </span>
-                      <span className="rp-hlabel">
-                        <span className="rp-hasset">{assetHead(p)}</span>
-                        <span className="rp-hplat">
-                          {p.detail ? `${p.detail} · ` : ""}
-                          {p.platform}
+            <div className="hub-table-wrap rp-rank rp-rank-holders" data-nosnippet="">
+              <div className="hub-table" role="table" aria-label="XRP products by holders">
+                <div className="hub-thead" role="row">
+                  <span className="hub-th hub-th-rank">#</span>
+                  <span className="hub-th">Product</span>
+                  <span className="hub-th hub-th-num">Holders</span>
+                  <span className="hub-th hub-th-num">Top wallet</span>
+                  <span className="hub-th hub-th-right">Profile</span>
+                </div>
+                <div className="hub-tbody" role="rowgroup">
+                  {holderRanked.map((p, i) => {
+                    const h = p.holders!;
+                    const profile = holderProfile(h);
+                    return (
+                      <div className="hub-row" role="row" key={p.id}>
+                        <span className="hub-cell hub-rank">{i + 1}</span>
+                        <span className="hub-cell hub-vault">
+                          <TokenIcons symbol={p.symbol} />
+                          <span className="rp-rank-nameblock">
+                            <span className="hub-vault-name">{assetHead(p)}</span>
+                            <span className="rp-rank-detail">
+                              {p.detail ? `${p.detail} · ` : ""}
+                              {p.platform}
+                            </span>
+                          </span>
                         </span>
-                      </span>
-                    </span>
-                    <span className="rp-hcol-num rp-hcount">
-                      {h.count.toLocaleString()}
-                    </span>
-                    <span className="rp-hcol-num rp-htop">
-                      {h.top1Pct != null ? `${h.top1Pct.toFixed(0)}%` : "—"}
-                    </span>
-                    <span className="rp-hcol-tag">
-                      <span
-                        className={`rp-hprofile rp-hprofile-${profile
-                          .toLowerCase()
-                          .replace(/[^a-z]/g, "")}`}
-                      >
-                        {profile}
-                      </span>
-                    </span>
-                  </div>
-                );
-              })}
+                        <span className="hub-cell hub-num rp-hcount">
+                          {h.count.toLocaleString()}
+                        </span>
+                        <span className="hub-cell hub-num">
+                          {h.top1Pct != null ? `${h.top1Pct.toFixed(0)}%` : "—"}
+                        </span>
+                        <span className="hub-cell rp-cell-tag">
+                          <span
+                            className={`rp-hprofile rp-hprofile-${profile
+                              .toLowerCase()
+                              .replace(/[^a-z]/g, "")}`}
+                          >
+                            {profile}
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             {holderTop ? (
               <p className="rp-article">
@@ -972,7 +999,7 @@ export default function XrpYieldRankingPage() {
                     {" "}
                     and no single wallet above{" "}
                     <strong>{holderTop.holders!.top1Pct.toFixed(0)}%</strong> of
-                    supply — a broad, retail-style base
+                    supply, a broad, retail-style base
                   </>
                 ) : null}
                 . Counts fall off steeply from there: the smallest liquidity
@@ -992,17 +1019,65 @@ export default function XrpYieldRankingPage() {
           </section>
         )}
 
-        {trading && tradeActive.length > 0 && (
+        {(ptRows.length > 0 || (trading && tradeActive.length > 0)) && (
           <section className="uni-home-content" aria-labelledby="trading-title">
-            <p className="rp-eyebrow">Activity</p>
-            <h2 id="trading-title">stXRP yield-market trading</h2>
+            <p className="rp-eyebrow">Yield trading</p>
+            <h2 id="trading-title">XRP yield trading activity</h2>
             <p className="rp-lead">
-              Beyond size and holders, how much is the XRP fixed-yield actually
-              traded? Spectra runs dated markets on staked-XRP where buying the
-              Principal Token locks a fixed rate and selling it exits — so this
-              flow is a direct read on sentiment toward the stXRP yield. The
-              figures below cover every stXRP market on Spectra this year.
+              There are two ways to trade the XRP yield itself, both on
+              Spectra&rsquo;s dated staked-XRP markets: lock a fixed rate by
+              holding a Principal Token, or take the variable-yield side. Below is
+              the fixed rate each market has offered, then how actively the
+              markets have traded this year.
             </p>
+
+            {ptRows.length > 0 ? (
+              <>
+                <h3 id="trade-pt" className="rp-trade-subhead">
+                  XRP: Fixed-Rate Yield Trading Activity (Principal Tokens)
+                </h3>
+                <p className="rp-lead rp-trade-sublead">
+                  The locked-in fixed rate on each staked-XRP Principal Token,
+                  tracked day by day since the market opened, straight from
+                  Spectra. A PT secures this rate to maturity, so the line is the
+                  full record of what each maturity has offered.
+                </p>
+                <div className="rp-charts">
+                  {ptRows.map((p) => (
+                    <ReportChart
+                      key={p.id}
+                      history={p.history ?? []}
+                      title={nice(p.displayName ?? p.symbol)}
+                      tvlLabel={`${usd(p.tvlUsd)} TVL`}
+                      nowValue={
+                        p.history?.[p.history.length - 1]?.apy ?? histRate(p)
+                      }
+                      nowLabel="max fixed"
+                    />
+                  ))}
+                </div>
+                <p className="rp-source-note">
+                  Both maturities opened near {pct(ptOpenHi)} and have eased into
+                  the low single digits since, a gentle downtrend as early demand
+                  settled. The top fixed rate now sits around {pct(ptNowHi)},
+                  still competitive with the single-sided field, and the two
+                  Spectra pools together hold {usd(ptTvl)} in liquidity.
+                </p>
+              </>
+            ) : null}
+
+            {trading && tradeActive.length > 0 ? (
+              <>
+                <h3 id="trade-yt" className="rp-trade-subhead">
+                  XRP: Variable-Rate Yield Trading Activity (Yield Tokens)
+                </h3>
+                <p className="rp-lead rp-trade-sublead">
+                  The flip side is how actively these markets trade. Every
+                  fixed-rate (PT) trade has a variable-yield (YT) counterpart, so
+                  the buy and sell flow is a direct read on demand for the stXRP
+                  yield. The figures below cover every stXRP market on Spectra
+                  this year.
+                </p>
             <div className="rp-land-stats">
               <div className="rp-land-stat">
                 <span className="rp-land-num">{usd(tradeVol)}</span>
@@ -1088,9 +1163,11 @@ export default function XrpYieldRankingPage() {
               the front of the curve.
             </p>
 
-            <p className="rp-source-note">
-              {trading.note} As of {holderAsOf}.
-            </p>
+                <p className="rp-source-note">
+                  {trading.note} As of {holderAsOf}.
+                </p>
+              </>
+            ) : null}
           </section>
         )}
 
@@ -1119,38 +1196,6 @@ export default function XrpYieldRankingPage() {
             </div>
             <p className="rp-source-note">
               Daily APY from DeFiLlama, last 30 days, as of {updated}.
-            </p>
-          </section>
-        )}
-
-        {ptRows.length > 0 && (
-          <section className="uni-home-content" aria-labelledby="ptchart-title">
-            <p className="rp-eyebrow">Fixed rate</p>
-            <h2 id="ptchart-title">PT max fixed rate, daily</h2>
-            <p className="rp-lead">
-              The locked-in fixed rate on each staked-XRP Principal Token, tracked
-              day by day since the market opened, straight from Spectra. A PT
-              secures this rate to maturity, so the line is the full record of
-              what each maturity has offered.
-            </p>
-            <div className="rp-charts">
-              {ptRows.map((p) => (
-                <ReportChart
-                  key={p.id}
-                  history={p.history ?? []}
-                  title={nice(p.displayName ?? p.symbol)}
-                  tvlLabel={`${usd(p.tvlUsd)} TVL`}
-                  nowValue={p.history?.[p.history.length - 1]?.apy ?? histRate(p)}
-                  nowLabel="max fixed"
-                />
-              ))}
-            </div>
-            <p className="rp-source-note">
-              Both maturities opened near {pct(ptOpenHi)} and have eased into the
-              low single digits since, a gentle downtrend as early demand settled.
-              The top fixed rate now sits around {pct(ptNowHi)}, still competitive
-              with the single-sided field, and the two Spectra pools together hold{" "}
-              {usd(ptTvl)} in liquidity.
             </p>
           </section>
         )}
