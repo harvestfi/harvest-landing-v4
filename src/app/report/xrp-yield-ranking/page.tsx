@@ -312,12 +312,15 @@ export default function XrpYieldRankingPage() {
     ? Math.max(...ptRows.map((p) => histRate(p) ?? 0))
     : 0;
 
+  // Both charts in the trading section are clamped to a recent window (Jun 1 →
+  // today) so they read cleanly on the active period; the maturity table below
+  // keeps every market's all-time figures.
+  const TRADING_WINDOW_START = "2026-06-01";
   // Combined "max fixed rate" overlay: one line per stXRP maturity that carried
-  // real volume, on a shared axis. Each line is trimmed at its maturity (the
-  // Spectra chart pads post-maturity points with a rate that decays to zero) and
-  // dust markets are dropped, so the picture stays honest. Because matured
-  // markets still return their full chart, the overlay reaches back to when the
-  // first liquid market opened — far deeper than the two live PTs on their own.
+  // real volume, on a shared axis, over the trading window. Each line is trimmed
+  // at its maturity (the Spectra chart pads post-maturity points with a rate
+  // that decays to zero) and dust markets are dropped, so the picture stays
+  // honest.
   const PT_OVERLAY_MIN_VOL = 1_000_000;
   const matLabelShort = (d: string | null) =>
     d
@@ -344,6 +347,7 @@ export default function XrpYieldRankingPage() {
         expired: !!m.expired,
         points: (m.rateHistory ?? []).filter((p) => {
           if (!(p.apy > 0) || p.apy > PT_RATE_CEILING) return false;
+          if (p.d < TRADING_WINDOW_START) return false;
           if (matMs == null) return true;
           const dtm = (matMs - dayNum(p.d)) / 86_400_000;
           return dtm >= PT_TAIL_DAYS;
@@ -352,9 +356,6 @@ export default function XrpYieldRankingPage() {
     })
     .filter((s) => s.points.length >= 8)
     .sort((a, b) => ((a.maturityDate ?? "") < (b.maturityDate ?? "") ? -1 : 1));
-  const ptOverlayStart = ptOverlay
-    .flatMap((s) => s.points.map((p) => p.d))
-    .reduce<string | null>((min, d) => (min == null || d < min ? d : min), null);
 
   // Early-answer snippet inputs: the top rate among non-PT single-exposure
   // products, the top dual-exposure pool, and the top fixed-rate PT (kept
@@ -982,7 +983,7 @@ export default function XrpYieldRankingPage() {
           </div>
 
           {tvlLeaders.length > 0 ? (
-            <p className="rp-article">
+            <p className="rp-article rp-insight">
               By depth, {joinAnd(tvlLeaders.map((v) => `${v.name} at ${usd(v.tvl)}`))}{" "}
               hold the largest XRP positions on the page. Deposits concentrate on{" "}
               {tvlByNetwork[0].label}, which carries{" "}
@@ -1060,7 +1061,7 @@ export default function XrpYieldRankingPage() {
               </div>
             </div>
             {holderTop ? (
-              <p className="rp-article">
+              <p className="rp-article rp-insight">
                 {assetHead(holderTop)} on {holderTop.platform} is the most widely
                 held by a wide margin, with{" "}
                 <strong>{holderTop.holders!.count.toLocaleString()} wallets</strong>
@@ -1109,31 +1110,25 @@ export default function XrpYieldRankingPage() {
                 {ptOverlay.length > 0 ? (
                   <>
                     <p className="rp-lead rp-trade-sublead">
-                      The locked-in max fixed rate on each staked-XRP Principal
-                      Token, every liquid stXRP maturity overlaid on one axis,
-                      straight from Spectra. Because matured markets keep their
-                      record, the fixed-rate history reaches back to{" "}
-                      {ptOverlayStart
-                        ? new Date(`${ptOverlayStart}T00:00:00Z`).toLocaleDateString(
-                            "en-US",
-                            { month: "long", year: "numeric", timeZone: "UTC" },
-                          )
-                        : "the first market"}
-                      , far deeper than the live PTs alone.
+                      The locked-in max fixed rate on each liquid staked-XRP
+                      maturity, overlaid on one axis since June 2026, straight
+                      from Spectra. A PT secures its rate to maturity, so each
+                      line is that market&rsquo;s running record of the fixed
+                      rate on offer.
                     </p>
                     <OverlayChart
                       series={ptOverlay}
                       title="Max fixed rate by maturity"
-                      subtitle="daily, liquid stXRP markets overlaid"
+                      subtitle="daily, liquid stXRP markets · since Jun 2026"
                     />
                     <p className="rp-source-note">
                       Each line is one maturity&rsquo;s daily max fixed rate from
-                      Spectra, trimmed at maturity (the API pads a decaying rate
-                      past that date). Only markets that carried real volume are
-                      overlaid; the thinnest maturities are left out. A PT locks
-                      its rate to maturity, so matured lines are the full,
-                      finished record of what that market offered. The two live
-                      Spectra PTs together hold {usd(ptTvl)} in liquidity.
+                      Spectra, from June 2026, capped and trimmed near maturity
+                      where the annualized rate degenerates. Only markets that
+                      carried real volume are overlaid; the thinnest maturities
+                      are left out. The two live Spectra PTs together hold{" "}
+                      {usd(ptTvl)} in liquidity. The maturity table below covers
+                      every market over its full life.
                     </p>
                   </>
                 ) : (
@@ -1206,11 +1201,11 @@ export default function XrpYieldRankingPage() {
               </div>
             </div>
 
-            {trading.daily.length > 2 ? (
+            {trading.daily.filter((p) => p.d >= TRADING_WINDOW_START).length > 2 ? (
               <TradingChart
-                series={trading.daily}
+                series={trading.daily.filter((p) => p.d >= TRADING_WINDOW_START)}
                 title="Daily trading volume"
-                subtitle="buy + sell, all stXRP markets"
+                subtitle="buy + sell, all stXRP markets · since Jun 2026"
               />
             ) : null}
 
@@ -1241,7 +1236,7 @@ export default function XrpYieldRankingPage() {
               </table>
             </div>
 
-            <p className="rp-article rp-trade-insights">
+            <p className="rp-article rp-insight rp-trade-insights">
               XRP fixed-yield trading has run at real scale since late 2025:{" "}
               <strong>{usd(tradeVol)}</strong> across {tradeMkts.length} stXRP
               markets and {trading.totals.traders} unique traders. The bulk ran
@@ -1384,11 +1379,11 @@ export default function XrpYieldRankingPage() {
               spike can top the spot ranking yet fade within weeks, while a deep
               single-sided lending or vault rate tends to hold.
             </TipBox>
-            <InfoBox>
+            <p className="rp-fineprint">
               Every venue on this page is an external protocol tracked for
               research. None are {SITE_NAME} products. This page is informational
               only, and past rates are no promise of what a venue pays next.
-            </InfoBox>
+            </p>
           </div>
         </section>
 
@@ -1736,33 +1731,37 @@ function typeLabel(p: XrpPool): string {
   return "Pool";
 }
 
-// Neutral info box (Figma): rounded, thin border, (i) icon + body.
+// Neutral info box: tinted (i) icon chip + body.
 function InfoBox({ children }: { children: ReactNode }) {
   return (
     <div className="rp-info">
-      <svg className="rp-info-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <circle cx="10" cy="10" r="8.25" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M10 9v4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="10" cy="6.4" r="1.05" fill="currentColor" />
-      </svg>
+      <span className="rp-callout-ico" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8.25" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M10 9v4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="10" cy="6.4" r="1.05" fill="currentColor" />
+        </svg>
+      </span>
       <p className="rp-info-body">{children}</p>
     </div>
   );
 }
 
-// Green tip box (Figma): lightbulb + body.
+// Green tip box: tinted lightbulb chip + body.
 function TipBox({ children }: { children: ReactNode }) {
   return (
     <div className="rp-tip">
-      <svg className="rp-tip-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path
-          d="M8 15.5h4M8.4 13.2c0-1.1-.55-1.7-1.3-2.5a4 4 0 1 1 5.8 0c-.75.8-1.3 1.4-1.3 2.5"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <span className="rp-callout-ico" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none">
+          <path
+            d="M8 15.5h4M8.4 13.2c0-1.1-.55-1.7-1.3-2.5a4 4 0 1 1 5.8 0c-.75.8-1.3 1.4-1.3 2.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
       <p className="rp-tip-body">{children}</p>
     </div>
   );

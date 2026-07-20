@@ -911,14 +911,15 @@
 }
 .rp-page .rp-trade-subhead ~ .rp-trade-subhead { margin-top: 44px; }
 .rp-page .rp-trade-sublead { margin-top: 0; }
-/* The closing "insights" paragraph under the trading table reads as body prose
-   but sat noticeably smaller than the section's lead/sublead. Lift it closer to
-   the lead so the summary carries the weight its content deserves. */
-.rp-page .rp-trade-insights {
-  font-size: 17px;
-  line-height: 1.66;
-  margin-top: 26px;
+/* Section-closing "insight" paragraphs (the data read-outs under the landscape,
+   holders and trading blocks). They summarise the numbers above, so they carry
+   more type weight than ordinary body prose, which sat too small next to the
+   leads. */
+.rp-page .rp-insight {
+  font-size: 18px;
+  line-height: 1.72;
 }
+.rp-page .rp-trade-insights { margin-top: 26px; }
 /* Keep the maturity table (and the stat row) from kissing the volume chart:
    the chart card carries almost no bottom margin, so add breathing room where a
    chart is immediately followed by a data table or the stat cards. */
@@ -1004,58 +1005,77 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* ---- Info box (Figma): rounded, thin border, (i) icon, neutral. ---- */
+/* ---- Callouts (our own styling, not the Figma spec): a green "tip" panel and
+   a neutral "info" panel. Each leads with a solid rounded icon badge (white
+   glyph) on a soft tinted card — a clean admonition. Never stacked adjacent: a
+   second note is rendered as plain fine print (.rp-fineprint). ---- */
 .rp-info,
 .rp-tip {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: flex-start;
   padding: 16px 18px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--rp-card-border, #dedee6);
   background: var(--rp-card-bg, #fff);
-  margin: 22px 0;
+  margin: 24px 0;
 }
-/* Never let two callouts sit right on top of each other — give a clear break
-   so the tip and the disclaimer read as separate notes. */
-.rp-page .rp-tip + .rp-info,
-.rp-page .rp-info + .rp-tip,
-.rp-page .rp-tip + .rp-tip,
-.rp-page .rp-info + .rp-info { margin-top: 30px; }
-.rp-info-icon,
-.rp-tip-icon {
-  display: block;
+.rp-callout-ico {
   flex: none;
-  width: 19px;
-  height: 19px;
-  /* Optically centre the icon on the first line of body text (line-box is
-     ~1.6em tall, so nudge it down rather than pinning it to the very top). */
-  margin-top: 2px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 1px;
+  border-radius: 9px;
+  color: #fff;
+  background: #667085; /* neutral (info) badge */
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.12);
 }
-.rp-info-icon { color: var(--uni-ink-3, #6b6d72); }
+.rp-callout-ico svg { display: block; width: 18px; height: 18px; }
 .rp-page .rp-info-body,
 .rp-page .rp-tip-body {
   margin: 0;
-  font-size: 14.5px;
-  line-height: 1.6;
+  align-self: center;
+  font-size: 15.5px;
+  line-height: 1.62;
   color: var(--uni-ink-2, #3e3e46);
 }
-.rp-page .rp-info-body strong { color: var(--uni-ink); font-weight: 600; }
+.rp-page .rp-info-body strong { color: var(--uni-ink); font-weight: 650; }
 
-/* ---- Tip box (Figma): green tint + lightbulb. ---- */
+/* Plain fine-print note — used where a second callout would otherwise sit next
+   to a box. Reads as regular muted text, not a box. */
+.rp-page .rp-fineprint {
+  margin: 22px 0 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--uni-ink-3, #6b6d72);
+}
+.rp-page .rp-fineprint strong { color: var(--uni-ink-2); font-weight: 600; }
+
+/* ---- Tip variant: green panel + solid green badge. ---- */
 .rp-tip {
   border-color: #a6f4c5;
-  background: #f0fdf4;
+  background: #ecfdf3;
 }
-.rp-tip-icon { color: #12b76a; }
-.rp-page .rp-tip-body { color: #085d3a; }
-.rp-page .rp-tip-body strong { color: #054f31; font-weight: 700; }
-:root[data-theme="dark"] .rp-tip {
-  border-color: rgba(18, 183, 106, 0.35);
-  background: rgba(18, 183, 106, 0.09);
+.rp-tip .rp-callout-ico {
+  background: #12b76a;
+  box-shadow: 0 1px 2px rgba(18, 183, 106, 0.35);
 }
-:root[data-theme="dark"] .rp-page .rp-tip-body { color: #7be0ad; }
-:root[data-theme="dark"] .rp-page .rp-tip-body strong { color: #a6f4c5; }
+.rp-page .rp-tip-body { color: #08663c; }
+.rp-page .rp-tip-body strong { color: #05603a; font-weight: 650; }
+
+:root[data-theme="dark"] .rp-tip,
+.uni-home-test.dark .rp-tip {
+  border-color: rgba(18, 183, 106, 0.4);
+  background: rgba(18, 183, 106, 0.1);
+}
+:root[data-theme="dark"] .rp-page .rp-tip-body,
+.uni-home-test.dark .rp-page .rp-tip-body { color: #9ff0c4; }
+:root[data-theme="dark"] .rp-page .rp-tip-body strong,
+.uni-home-test.dark .rp-page .rp-tip-body strong { color: #c3f5da; }
+:root[data-theme="dark"] .rp-info .rp-callout-ico,
+.uni-home-test.dark .rp-info .rp-callout-ico { background: #7a8394; }
 
 /* A little breathing room under every ranking table by default, so whatever
    follows (a note or paragraph) never kisses the bottom row. */
@@ -1595,43 +1615,6 @@
 .rp-chart-live svg { display: block; width: 100%; height: auto; }
 .rp-chart-live { position: relative; }
 
-/* === Tip box in the snapshot (#3) — a real callout, not fine print === */
-.rp-tip {
-  display: flex;
-  gap: 14px;
-  margin-top: 22px;
-  padding: 16px 18px;
-  border: 1px solid rgba(255, 185, 54, 0.4);
-  border-radius: 14px;
-  background: rgba(255, 185, 54, 0.09);
-}
-.rp-tip-label {
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 2px;
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #8a5a00;
-  background: rgba(255, 185, 54, 0.5);
-  padding: 3px 10px;
-  border-radius: 999px;
-}
-.rp-page .rp-tip-body p {
-  margin: 0 0 10px;
-  font-size: 15.5px;
-  font-weight: 450;
-  line-height: 26px;
-  color: var(--rp-body);
-  max-width: none;
-}
-.rp-page .rp-tip-body p:last-child { margin-bottom: 0; }
-@media (prefers-color-scheme: dark) {
-  .rp-tip-label { color: #ffd98a; background: rgba(255, 185, 54, 0.18); }
-}
-:root[data-theme="dark"] .rp-tip-label { color: #ffd98a; background: rgba(255, 185, 54, 0.18); }
 
 /* #6 — more air above the commentary paragraph under a chart grid. */
 .rp-page .rp-charts + .rp-source-note { margin-top: 46px; }
