@@ -667,6 +667,7 @@
 .rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
 .rp-page .rp-doc-main > section[aria-labelledby="landscape-title"] { order: 2; }
 .rp-page .rp-doc-main > section[aria-labelledby="popular-title"] { order: 2; }
+.rp-page .rp-doc-main > section[aria-labelledby="trading-title"] { order: 2; }
 .rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 3; }
 .rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 4; }
 .rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 5; }
@@ -856,6 +857,9 @@
   background: #ffb936;
 }
 .rp-landscape-card { margin: 4px 0 4px; }
+/* Trading section: the maturity breakdown is a single list, full width. */
+.rp-trade-splits { grid-template-columns: 1fr; }
+.rp-vol-split { font-variant-numeric: tabular-nums; color: var(--uni-ink-2, #45474c); }
 
 /* ---- Most popular by holders ---- */
 .rp-holders {

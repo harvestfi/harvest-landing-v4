@@ -9,6 +9,7 @@ import { DiscoverButton } from "@/components/report/discover-button";
 import { ReportToc, type TocItem } from "@/components/report/report-toc";
 import { ReportChart } from "@/components/report/report-chart";
 import { LandscapeChart } from "@/components/report/landscape-chart";
+import { TradingChart } from "@/components/report/trading-chart";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import {
@@ -106,6 +107,38 @@ interface XrpLandscape {
   latest: { d: string; tvl: number };
   series: { d: string; tvl: number }[];
 }
+// Spectra stXRP yield-market trading activity written by
+// scripts/fetch-xrp-trading.mjs: how much the fixed-yield markets are traded.
+interface XrpTradingMarket {
+  maturityDate: string | null;
+  pool: string;
+  yt: string | null;
+  txns: number;
+  traders: number;
+  buyUsd: number;
+  sellUsd: number;
+  buyCount: number;
+  sellCount: number;
+}
+interface XrpYieldTrading {
+  generatedAt: string;
+  asset: string;
+  venue: string;
+  note: string;
+  totals: {
+    buyUsd: number;
+    sellUsd: number;
+    txns: number;
+    traders: number;
+    markets: number;
+    activeMarkets: number;
+    firstDate: string | null;
+    lastDate: string | null;
+  };
+  monthly: { mo: string; buyUsd: number; sellUsd: number }[];
+  daily: { d: string; buyUsd: number; sellUsd: number }[];
+  markets: XrpTradingMarket[];
+}
 interface XrpYieldData {
   generatedAt: string;
   stats: {
@@ -118,6 +151,7 @@ interface XrpYieldData {
   };
   pools: XrpPool[];
   landscape?: XrpLandscape;
+  yieldTrading?: XrpYieldTrading;
 }
 
 function loadData(): XrpYieldData | null {
@@ -354,6 +388,9 @@ export default function XrpYieldRankingPage() {
     ...(pools.some((p) => p.holders)
       ? [{ id: "popular-title", label: "Most popular by holders" }]
       : []),
+    ...(data.yieldTrading
+      ? [{ id: "trading-title", label: "Yield-market trading" }]
+      : []),
     { id: "rankings-title", label: "The ranking" },
     { id: "rank-single", label: "Single-exposure", level: 1 },
     { id: "rank-dual", label: "Dual-exposure", level: 1 },
@@ -433,6 +470,36 @@ export default function XrpYieldRankingPage() {
     year: "numeric",
     timeZone: "UTC",
   });
+
+  // Spectra stXRP yield-market trading activity: total flow, the active markets
+  // ranked by volume, and the buy/sell skew that reads as sentiment on the rate.
+  const trading = data.yieldTrading;
+  const tradeVol = trading ? trading.totals.buyUsd + trading.totals.sellUsd : 0;
+  const tradeTop = trading?.markets.find((m) => m.buyUsd + m.sellUsd > 0) ?? null;
+  // Markets with meaningful flow (drop dust markets with a trade or two).
+  const tradeActive = trading
+    ? trading.markets.filter((m) => m.buyUsd + m.sellUsd >= 1000)
+    : [];
+  const tradeMonthFmt = (mo: string) =>
+    new Date(`${mo}-01T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  // Busiest month by volume — the surge the prose calls out.
+  const tradePeakMonth = trading?.monthly.length
+    ? trading.monthly.reduce((m, x) =>
+        x.buyUsd + x.sellUsd > m.buyUsd + m.sellUsd ? x : m,
+      )
+    : null;
+  const matLabel = (d: string | null) =>
+    d
+      ? new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        })
+      : "—";
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -921,6 +988,108 @@ export default function XrpYieldRankingPage() {
               One wallet can hold several products, and a product can be held
               through an aggregator or staking contract, which reads as a single
               large holder.
+            </p>
+          </section>
+        )}
+
+        {trading && tradeActive.length > 0 && (
+          <section className="uni-home-content" aria-labelledby="trading-title">
+            <p className="rp-eyebrow">Activity</p>
+            <h2 id="trading-title">stXRP yield-market trading</h2>
+            <p className="rp-lead">
+              Beyond size and holders, how much is the XRP fixed-yield actually
+              traded? Spectra runs dated markets on staked-XRP where buying the
+              Principal Token locks a fixed rate and selling it exits — so this
+              flow is a direct read on sentiment toward the stXRP yield. The
+              figures below cover every stXRP market on Spectra this year.
+            </p>
+            <div className="rp-land-stats">
+              <div className="rp-land-stat">
+                <span className="rp-land-num">{usd(tradeVol)}</span>
+                <span className="rp-land-lab">Traded volume</span>
+              </div>
+              <div className="rp-land-stat">
+                <span className="rp-land-num">
+                  {trading.totals.txns.toLocaleString()}
+                </span>
+                <span className="rp-land-lab">Trades</span>
+              </div>
+              <div className="rp-land-stat">
+                <span className="rp-land-num">
+                  {trading.totals.traders.toLocaleString()}
+                </span>
+                <span className="rp-land-lab">Unique traders</span>
+              </div>
+              <div className="rp-land-stat">
+                <span className="rp-land-num">{tradeActive.length}</span>
+                <span className="rp-land-lab">Active markets</span>
+              </div>
+            </div>
+
+            {trading.daily.length > 2 ? (
+              <TradingChart
+                series={trading.daily}
+                title="Daily trading volume"
+                subtitle="buy + sell, all stXRP markets"
+              />
+            ) : null}
+
+            <div className="rp-land-splits rp-trade-splits">
+              <div className="rp-land-split">
+                <h3 className="rp-land-split-h">By maturity</h3>
+                <ul className="rp-land-bars">
+                  {tradeActive.map((m) => {
+                    const v = m.buyUsd + m.sellUsd;
+                    const share = tradeVol ? (v / tradeVol) * 100 : 0;
+                    return (
+                      <li key={m.pool}>
+                        <span className="rp-land-bar-top">
+                          <span>{matLabel(m.maturityDate)} maturity</span>
+                          <span className="rp-land-bar-val">
+                            {usd(v)} · {m.traders} traders
+                          </span>
+                        </span>
+                        <span className="rp-land-bar-track">
+                          <span
+                            className="rp-land-bar-fill"
+                            style={{ width: `${Math.max(2, share)}%` }}
+                          />
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+
+            <p className="rp-article">
+              Activity was negligible until it took off in{" "}
+              {tradePeakMonth ? tradeMonthFmt(tradePeakMonth.mo) : "mid-2026"}:
+              trading concentrates almost entirely in the nearest liquid
+              maturity, the{" "}
+              <strong>{matLabel(tradeTop?.maturityDate ?? null)}</strong> market,
+              which alone accounts for{" "}
+              <strong>
+                {tradeTop && tradeVol
+                  ? Math.round(
+                      ((tradeTop.buyUsd + tradeTop.sellUsd) / tradeVol) * 100,
+                    )
+                  : 0}
+                %
+              </strong>{" "}
+              of volume across {trading.totals.traders} unique traders. Buys
+              outweigh sells{" "}
+              <strong>
+                {usd(trading.totals.buyUsd)}
+              </strong>{" "}
+              to <strong>{usd(trading.totals.sellUsd)}</strong> overall — a lean
+              toward locking the fixed rate rather than exiting it — while the
+              longer-dated markets stay near-dormant, a sign that demand sits at
+              the front of the curve.
+            </p>
+
+            <p className="rp-source-note">
+              {trading.note} As of {holderAsOf}.
             </p>
           </section>
         )}
