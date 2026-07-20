@@ -473,6 +473,24 @@ Emitted at build by `scripts/build-xrp-history.mjs` into `public/data/xrp-yield/
 
 ---
 
+## 4a. Data freshness & regeneration (how the report stays current)
+
+**The whole surface — rendered HTML, every chart, every stat, the JSON/CSV downloads, and the JSON-LD `dateModified` — is regenerated from one source file, `data/xrp-yield.json`, on every deploy.** There is nothing to update by hand and no cache that outlives a push. This is the mechanic that keeps the page fresh for readers, search engines and AI crawlers.
+
+**The pipeline, end to end:**
+
+1. **Scheduled fetch (GitHub Actions) rewrites `data/xrp-yield.json` and pushes to `main`.** Two crons feed it:
+   - `.github/workflows/update-data.yml` — **hourly** (`0 * * * *`). Runs `scripts/fetch-xrp-yield.mjs`, refreshing live rate + TVL for every allowlisted venue (DeFiLlama, Spectra, Portals). Commits `data/xrp-yield.json`. **The hourly rewrite preserves the sections the daily scripts own** — `landscape`, `yieldTrading`, and per-pool `holders`/`history` are read back from the existing file and carried forward, so an hourly rate refresh never blanks the Landscape / Most-popular / Trading sections between daily runs. (This was a real bug: the script used to emit a fresh `{stats, pools}` object and drop them.)
+   - `.github/workflows/update-xrp-data.yml` — **daily** (`0 6 * * *`). Runs the full enrichment chain so the heavier data points also move each day: `fetch-xrp-yield` → `apply-xrp-overrides` → `backfill-xrp-tvl-history` (TVL/APY/pps history to inception) → `build-xrp-landscape` (total-TVL growth series) → `fetch-xrp-holders` (holder counts + concentration) → `fetch-xrp-trading` (Spectra stXRP trading activity **and each maturity's PT max-fixed-rate history** for the overlay chart). Each step is `continue-on-error` so one flaky API never blocks the date advancing.
+2. **The push to `main` triggers a Vercel build.** `vercel.json` builds **only** on `main` (`ignoreCommand`). Because the site is `output: "export"`, `npm run build` does `next build` → `mv out public`, **then** runs `scripts/build-xrp-history.mjs`, which regenerates all of `public/data/xrp-yield/*` (index.json, per-product JSON + CSV, `history.csv`, `landscape-tvl.{json,csv}`) from the fresh `data/xrp-yield.json`. So the committed `public/` in the repo is a throwaway artifact — Vercel rebuilds it from source every deploy; the served copy is never the stale committed one.
+3. **The page reads `data/xrp-yield.json` at build time** (server component, `loadData()`). All derived copy, tables, the landscape/trading/overlay charts, and the JSON-LD `dateModified` (`Article`, `WebPage`, `Dataset`) recompute from it — so text and structured data can never drift from the numbers.
+
+**"Last updated / As of" dates** come from `freshestTs` = the max of `data.generatedAt` and each enrichment pass's timestamp (landscape, holders, trading), so the visible date reflects the most recent refresh across *all* data points, and feeds `dateModified` in the schema for crawler freshness signals.
+
+**Net effect:** rates/TVL are at most ~1h old; holders, landscape, trading and the PT overlay at most ~24h old; and the machine-readable JSON/CSV downloads are rebuilt in lock-step with the page on the same deploy — no separate export job to fall behind. If a reviewer ever sees the downloads lag the page, the cause is a failed Vercel deploy, not a missing regeneration step.
+
+---
+
 ## 5. Internal & external linking
 
 **Links INTO the page (inbound internal):**

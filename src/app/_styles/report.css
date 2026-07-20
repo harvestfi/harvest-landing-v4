@@ -856,6 +856,45 @@
   background: #ffb936;
 }
 .rp-landscape-card { margin: 4px 0 4px; }
+/* Multi-maturity "max fixed rate" overlay: shared line chart + a legend that
+   doubles as a live readout (each maturity's value at the hovered day). */
+.rp-overlay-card { margin: 6px 0 4px; }
+.rp-overlay-legend {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--rp-card-border, #eeeef5);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px 22px;
+}
+.rp-overlay-key {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  color: var(--uni-ink-2);
+}
+.rp-overlay-swatch { width: 16px; height: 3px; border-radius: 2px; flex: none; }
+.rp-overlay-lab { font-weight: 600; color: var(--uni-ink); white-space: nowrap; }
+.rp-overlay-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #1a7f4b;
+  background: rgba(26, 127, 75, 0.1);
+  white-space: nowrap;
+}
+.rp-overlay-status.is-matured { color: var(--uni-ink-3, #8a887f); background: rgba(10, 10, 17, 0.05); }
+.rp-overlay-val {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--uni-ink);
+  font-weight: 600;
+}
+:root[data-theme="dark"] .rp-overlay-status.is-matured,
+.uni-home-test.dark .rp-overlay-status.is-matured { background: rgba(255, 255, 255, 0.08); }
 /* Trading section: the maturity breakdown is a single list, full width. */
 .rp-trade-splits { grid-template-columns: 1fr; }
 /* Sub-headings inside the combined "XRP yield trading activity" section
@@ -872,6 +911,19 @@
 }
 .rp-page .rp-trade-subhead ~ .rp-trade-subhead { margin-top: 44px; }
 .rp-page .rp-trade-sublead { margin-top: 0; }
+/* The closing "insights" paragraph under the trading table reads as body prose
+   but sat noticeably smaller than the section's lead/sublead. Lift it closer to
+   the lead so the summary carries the weight its content deserves. */
+.rp-page .rp-trade-insights {
+  font-size: 17px;
+  line-height: 1.66;
+  margin-top: 26px;
+}
+/* Keep the maturity table (and the stat row) from kissing the volume chart:
+   the chart card carries almost no bottom margin, so add breathing room where a
+   chart is immediately followed by a data table or the stat cards. */
+.rp-page .rp-landscape-card + .rp-dtable-wrap { margin-top: 28px; }
+.rp-page .rp-land-stats + .rp-landscape-card { margin-top: 20px; }
 
 /* ---- Data table (Figma) — replaces the progress-bar breakdowns. Clean rows:
    bold header with a divider, light row separators, no vertical lines, no
@@ -958,14 +1010,28 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-radius: 12px;
   border: 1px solid var(--rp-card-border, #dedee6);
   background: var(--rp-card-bg, #fff);
-  margin: 8px 0;
+  margin: 22px 0;
 }
+/* Never let two callouts sit right on top of each other — give a clear break
+   so the tip and the disclaimer read as separate notes. */
+.rp-page .rp-tip + .rp-info,
+.rp-page .rp-info + .rp-tip,
+.rp-page .rp-tip + .rp-tip,
+.rp-page .rp-info + .rp-info { margin-top: 30px; }
 .rp-info-icon,
-.rp-tip-icon { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+.rp-tip-icon {
+  display: block;
+  flex: none;
+  width: 19px;
+  height: 19px;
+  /* Optically centre the icon on the first line of body text (line-box is
+     ~1.6em tall, so nudge it down rather than pinning it to the very top). */
+  margin-top: 2px;
+}
 .rp-info-icon { color: var(--uni-ink-3, #6b6d72); }
 .rp-page .rp-info-body,
 .rp-page .rp-tip-body {
@@ -1023,14 +1089,14 @@
 }
 .rp-hprofile-retailbroad { color: #1a7f4b; border-color: rgba(26, 127, 75, 0.4); background: rgba(26, 127, 75, 0.08); }
 .rp-hprofile-mixed { color: #8a6d1f; border-color: rgba(200, 150, 20, 0.4); background: rgba(255, 185, 54, 0.08); }
-.rp-hprofile-concentrated { color: #a23b2e; border-color: rgba(162, 59, 46, 0.38); background: rgba(162, 59, 46, 0.07); }
+.rp-hprofile-concentrated { color: #7c3aed; border-color: rgba(124, 58, 237, 0.38); background: rgba(124, 58, 237, 0.08); }
 
 :root[data-theme="dark"] .rp-hprofile-retailbroad,
 .uni-home-test.dark .rp-hprofile-retailbroad { color: #5fd398; }
 :root[data-theme="dark"] .rp-hprofile-mixed,
 .uni-home-test.dark .rp-hprofile-mixed { color: #e6c76a; }
 :root[data-theme="dark"] .rp-hprofile-concentrated,
-.uni-home-test.dark .rp-hprofile-concentrated { color: #f0917f; }
+.uni-home-test.dark .rp-hprofile-concentrated { color: #b794f6; }
 
 @media (max-width: 720px) {
   .rp-land-stats { grid-template-columns: 1fr 1fr; gap: 10px; }

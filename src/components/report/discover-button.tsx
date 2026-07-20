@@ -37,6 +37,7 @@ export function DiscoverButton({
   source,
   product,
   chain,
+  rank,
 }: {
   href: string;
   platform: string;
@@ -44,6 +45,7 @@ export function DiscoverButton({
   source?: string;
   product?: string;
   chain?: string;
+  rank?: number | null;
 }) {
   const [open, setOpen] = useState(false);
   const outHref = withRef(href);
@@ -69,6 +71,7 @@ export function DiscoverButton({
       product,
       chain,
       venueRef: source,
+      rank,
       targetUrl: outHref,
     });
   }
