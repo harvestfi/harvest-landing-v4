@@ -11,7 +11,7 @@
 //      tracked into the separate report_outbound_clicks channel.
 //   3. The confirm opens the destination in a new tab.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { trackReportOutbound } from "@/lib/report-tracking";
 
 const OUTBOUND_REF = "harvest.finance";
@@ -38,6 +38,7 @@ export function DiscoverButton({
   product,
   chain,
   rank,
+  icon,
 }: {
   href: string;
   platform: string;
@@ -46,6 +47,7 @@ export function DiscoverButton({
   product?: string;
   chain?: string;
   rank?: number | null;
+  icon?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const outHref = withRef(href);
@@ -108,7 +110,13 @@ export function DiscoverButton({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="rp-modal-title" className="rp-modal-title">
-              Heading to {where}
+              You are about to open:
+              <span className="rp-modal-target">
+                {icon ? <span className="rp-modal-target-ico">{icon}</span> : null}
+                <span className="rp-modal-target-name">
+                  {product ? `${product} ` : ""}on {where}
+                </span>
+              </span>
             </h3>
             <p className="rp-modal-body">
               This takes you to {platform ? platform : "an external platform"},

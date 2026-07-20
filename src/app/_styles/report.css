@@ -87,6 +87,15 @@
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+/* Target line under the modal title: [icon] {ticker} on {platform}. */
+.rp-modal-target {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 8px;
+}
+.rp-modal-target-ico { display: inline-flex; align-items: center; flex: none; }
+.rp-modal-target-name { font-weight: 700; color: var(--uni-ink); }
 .rp-modal-body {
   margin: 0 0 20px;
   font-size: 14px;
@@ -368,18 +377,34 @@
   }
   /* Position number sized down so it doesn't overpower the token icon. */
   .rp-page .rp-rank .hub-rank { font-size: 10.5px; }
-  /* Compact square-ish arrow CTA (far right) instead of the "Discover" text. */
-  .rp-rank .rp-discover {
+  /* Round flagship-yellow arrow CTA (far right) instead of the "Open" text.
+     Scoped to .rp-page .rp-rank so it beats the base .rp-page .rp-discover. */
+  .rp-page .rp-rank .rp-discover {
     padding: 0;
     width: 36px;
-    height: 34px;
-    border-radius: 10px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ffb936;
+    border-color: #ffb936;
+    color: #191717;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
+  .rp-page .rp-rank .rp-discover:hover {
+    background: #f5a623;
+    border-color: #f5a623;
+  }
   .rp-rank .rp-discover-label { display: none; }
-  .rp-rank .rp-discover-arrow { display: inline; font-size: 16px; line-height: 1; }
+  .rp-page .rp-rank .rp-discover-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 16px;
+    line-height: 1;
+  }
   /* Tighten the row + product name so the three items fit one clean line. */
   .rp-rank .hub-row { padding: 14px 14px; }
   .rp-rank .hub-vault { gap: 9px; align-items: center; }
@@ -752,6 +777,34 @@
   line-height: 1.5;
   color: var(--uni-ink-3);
 }
+/* Methodology box: a source-note lifted into a bordered panel with a small
+   uppercase label, so the "how we count this" detail reads as a deliberate
+   note rather than fine print. */
+.rp-methodology {
+  margin: 26px 0 0;
+  padding: 16px 18px;
+  border: 1px solid var(--rp-card-border, #e6e6ee);
+  border-radius: 12px;
+  background: var(--rp-card-bg, rgba(10, 10, 17, 0.015));
+}
+.rp-methodology-label {
+  display: block;
+  margin-bottom: 7px;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--uni-ink-3, #6b6d72);
+}
+.rp-page .rp-methodology p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--uni-ink-3, #6b6d72);
+}
+/* #8 — clear air above the data-catalogue footnote under the download list. */
+.rp-page .rp-data-list + .rp-source-note { margin-top: 34px; }
 
 /* Early-answer snapshot block (after the Overview): a scannable current-rates
    summary for search / AI answer engines. */
@@ -936,7 +989,7 @@
 }
 .rp-page .rp-dtable th {
   text-align: left;
-  font-weight: 600;
+  font-weight: 750;
   color: var(--uni-ink);
   padding: 0 10px 9px;
   border-bottom: 1px solid var(--uni-line, #dedee6);
@@ -961,12 +1014,21 @@
 .rp-page .rp-dtable td.strong { color: var(--uni-ink); font-weight: 600; }
 .rp-dtag {
   font-size: 12px;
+  font-weight: 600;
   color: var(--uni-ink-3, #8a887f);
   border: 1px solid var(--rp-card-border, #e2e3e5);
   border-radius: 999px;
   padding: 1px 8px;
   white-space: nowrap;
 }
+/* Live markets get a green pill; matured keeps the neutral one. */
+.rp-dtag-live {
+  color: #1a7f4b;
+  border-color: rgba(26, 127, 75, 0.4);
+  background: rgba(26, 127, 75, 0.09);
+}
+:root[data-theme="dark"] .rp-dtag-live,
+.uni-home-test.dark .rp-dtag-live { color: #5fd398; border-color: rgba(26, 127, 75, 0.5); background: rgba(26, 127, 75, 0.16); }
 
 /* ---- Pill buttons (Figma): thin outline, white bg, icon + label. Applied to
    the report's utility buttons (Discover/Open, data downloads). ---- */
@@ -1121,16 +1183,25 @@
   .rp-land-num { font-size: 22px; }
   .rp-land-splits { grid-template-columns: 1fr; gap: 22px; }
 }
-/* Holders on phones: # | Product | Holders | Profile (drop Top wallet, col 4). */
+/* Holders on phones: a clean three-column layout, # | Product | Holders. The
+   Top-wallet (col 4) and Profile (col 5) columns are dropped so the Product
+   name gets the full width (no truncation) and the Holders count sits hard
+   right, clear of it. (The shared .rp-rank rule already hides cols 4 & 5.) */
 @media (max-width: 640px) {
   .rp-page .rp-rank-holders .hub-thead,
   .rp-page .rp-rank-holders .hub-row {
-    grid-template-columns: 18px minmax(0, 1fr) 60px minmax(96px, auto);
-    gap: 10px;
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    gap: 14px;
   }
-  .rp-rank-holders .hub-thead > :nth-child(4),
-  .rp-rank-holders .hub-row > :nth-child(4) { display: none; }
+  .rp-page .rp-rank-holders .hub-th-num,
+  .rp-page .rp-rank-holders .hub-num { justify-content: flex-end; text-align: right; }
   .rp-hprofile { font-size: 10.5px; padding: 2px 7px; }
+  /* Nothing in a mobile ranking/holder row should out-size the asset name
+     (13.5px). The rank number and the holder count were rendering at 15px, so
+     cap them below the name. High specificity (.hub-row descendant) so these
+     win over the leaked desktop .hub-num size. */
+  .rp-page .rp-rank .hub-row .hub-rank { font-size: 12px; }
+  .rp-page .rp-rank-holders .hub-row .rp-hcount { font-size: 13px; font-weight: 700; }
 }
 
 /* Hero freshness line (under the subtitle, on the gold hero). */
@@ -1754,16 +1825,20 @@
   .rp-page .rp-dtable td { padding: 8px; }
   .rp-page .rp-info-body, .rp-page .rp-tip-body { font-size: 13px; line-height: 1.55; }
 
+  /* Looser leading + larger gaps between paragraphs on phones, so long
+     data-derived paragraphs break into airy chunks instead of a text wall. */
   .rp-page .uni-home-content .rp-article p,
   .rp-page .uni-home-content p.rp-insight,
   .rp-page .uni-home-content .rp-snapshot p,
   .rp-page .uni-home-content .rp-chain-intro,
   .rp-page .uni-home-content .rp-venue-prose p {
     font-size: 13px;
-    line-height: 20px;
+    line-height: 22px;
   }
-  .rp-page .uni-home-content .rp-article p { margin-bottom: 13px; }
-  .rp-page .uni-home-content p.rp-lead { font-size: 13.5px; line-height: 20px; margin-bottom: 14px; }
+  .rp-page .uni-home-content .rp-article p,
+  .rp-page .uni-home-content p.rp-insight,
+  .rp-page .uni-home-content .rp-snapshot p { margin-bottom: 18px; }
+  .rp-page .uni-home-content p.rp-lead { font-size: 13.5px; line-height: 21px; margin-bottom: 18px; }
   .rp-page .uni-home-content .rp-rank-head p {
     margin-top: 8px;
     font-size: 13px;
