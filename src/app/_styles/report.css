@@ -1005,14 +1005,14 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* ---- Callouts: a neutral info box and a green tip box. Icon sits in a small
-   tinted chip so it reads as an intentional badge and aligns cleanly with the
-   first line of body text. As a rule these are never stacked adjacent — a
-   second note is rendered as plain fine print (.rp-fineprint) instead. ---- */
+/* ---- Callouts (our own styling, not the Figma spec): a green "tip" panel and
+   a neutral "info" panel. Each leads with a solid rounded icon badge (white
+   glyph) on a soft tinted card — a clean admonition. Never stacked adjacent: a
+   second note is rendered as plain fine print (.rp-fineprint). ---- */
 .rp-info,
 .rp-tip {
   display: flex;
-  gap: 13px;
+  gap: 14px;
   align-items: flex-start;
   padding: 16px 18px;
   border-radius: 14px;
@@ -1022,25 +1022,26 @@
 }
 .rp-callout-ico {
   flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 27px;
-  height: 27px;
-  border-radius: 8px;
-  background: rgba(10, 10, 17, 0.05);
-  color: var(--uni-ink-3, #6b6d72);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 1px;
+  border-radius: 9px;
+  color: #fff;
+  background: #667085; /* neutral (info) badge */
+  box-shadow: 0 1px 2px rgba(10, 10, 17, 0.12);
 }
-.rp-callout-ico svg { display: block; width: 17px; height: 17px; }
+.rp-callout-ico svg { display: block; width: 18px; height: 18px; }
 .rp-page .rp-info-body,
 .rp-page .rp-tip-body {
   margin: 0;
   align-self: center;
-  font-size: 15px;
+  font-size: 15.5px;
   line-height: 1.62;
   color: var(--uni-ink-2, #3e3e46);
 }
-.rp-page .rp-info-body strong { color: var(--uni-ink); font-weight: 600; }
+.rp-page .rp-info-body strong { color: var(--uni-ink); font-weight: 650; }
 
 /* Plain fine-print note — used where a second callout would otherwise sit next
    to a box. Reads as regular muted text, not a box. */
@@ -1052,24 +1053,29 @@
 }
 .rp-page .rp-fineprint strong { color: var(--uni-ink-2); font-weight: 600; }
 
-/* ---- Tip box: green tint + lightbulb chip. ---- */
+/* ---- Tip variant: green panel + solid green badge. ---- */
 .rp-tip {
   border-color: #a6f4c5;
-  background: #f0fdf4;
+  background: #ecfdf3;
 }
-.rp-tip .rp-callout-ico { background: rgba(18, 183, 106, 0.15); color: #0f9d58; }
-.rp-page .rp-tip-body { color: #085d3a; }
-.rp-page .rp-tip-body strong { color: #054f31; font-weight: 700; }
-:root[data-theme="dark"] .rp-tip {
-  border-color: rgba(18, 183, 106, 0.35);
-  background: rgba(18, 183, 106, 0.09);
+.rp-tip .rp-callout-ico {
+  background: #12b76a;
+  box-shadow: 0 1px 2px rgba(18, 183, 106, 0.35);
 }
-:root[data-theme="dark"] .rp-page .rp-tip-body { color: #7be0ad; }
-:root[data-theme="dark"] .rp-page .rp-tip-body strong { color: #a6f4c5; }
-:root[data-theme="dark"] .rp-callout-ico,
-.uni-home-test.dark .rp-callout-ico { background: rgba(255, 255, 255, 0.08); color: #b6b8bd; }
-:root[data-theme="dark"] .rp-tip .rp-callout-ico,
-.uni-home-test.dark .rp-tip .rp-callout-ico { background: rgba(18, 183, 106, 0.22); color: #5fd398; }
+.rp-page .rp-tip-body { color: #08663c; }
+.rp-page .rp-tip-body strong { color: #05603a; font-weight: 650; }
+
+:root[data-theme="dark"] .rp-tip,
+.uni-home-test.dark .rp-tip {
+  border-color: rgba(18, 183, 106, 0.4);
+  background: rgba(18, 183, 106, 0.1);
+}
+:root[data-theme="dark"] .rp-page .rp-tip-body,
+.uni-home-test.dark .rp-page .rp-tip-body { color: #9ff0c4; }
+:root[data-theme="dark"] .rp-page .rp-tip-body strong,
+.uni-home-test.dark .rp-page .rp-tip-body strong { color: #c3f5da; }
+:root[data-theme="dark"] .rp-info .rp-callout-ico,
+.uni-home-test.dark .rp-info .rp-callout-ico { background: #7a8394; }
 
 /* A little breathing room under every ranking table by default, so whatever
    follows (a note or paragraph) never kisses the bottom row. */
