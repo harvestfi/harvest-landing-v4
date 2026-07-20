@@ -82,7 +82,7 @@ rmSync(OUT_DIR, { recursive: true, force: true });
 mkdirSync(OUT_DIR, { recursive: true });
 
 const index = [];
-const comboRows = ["slug,asset,platform,chain,date,apy_percent"];
+const comboRows = ["slug,asset,platform,chain,date,apy_percent,tvl_usd"];
 let jsonWritten = 0;
 let csvWritten = 0;
 
@@ -93,7 +93,11 @@ for (const p of pools) {
   const history = Array.isArray(p.history)
     ? p.history
         .filter((h) => h && h.d && Number.isFinite(h.apy))
-        .map((h) => ({ date: h.d, apyPercent: round(h.apy) }))
+        .map((h) => ({
+          date: h.d,
+          apyPercent: round(h.apy),
+          tvlUsd: Number.isFinite(h.tvl) ? Math.round(h.tvl) : null,
+        }))
     : [];
   const dataAsOf = history.length ? history[history.length - 1].date : null;
 
@@ -145,10 +149,11 @@ for (const p of pools) {
   );
   jsonWritten++;
 
-  // --- per-product CSV: date,apy_percent (only if there is a history) ---
+  // --- per-product CSV: date,apy_percent,tvl_usd (only if there is a history) ---
   if (history.length) {
-    const lines = ["date,apy_percent"];
-    for (const h of history) lines.push(`${h.date},${cell(h.apyPercent)}`);
+    const lines = ["date,apy_percent,tvl_usd"];
+    for (const h of history)
+      lines.push(`${h.date},${cell(h.apyPercent)},${cell(h.tvlUsd)}`);
     writeFileSync(join(OUT_DIR, `${slug}.csv`), lines.join("\n") + "\n", "utf-8");
     csvWritten++;
     for (const h of history) {
@@ -160,6 +165,7 @@ for (const p of pools) {
           csvSafe(p.chain ?? ""),
           h.date,
           cell(h.apyPercent),
+          cell(h.tvlUsd),
         ].join(","),
       );
     }
@@ -212,6 +218,39 @@ writeFileSync(
   comboRows.join("\n") + "\n",
   "utf-8",
 );
+
+// Landscape aggregate: total tracked XRP DeFi TVL over time (JSON + CSV), so
+// crawlers/agents can fetch the growth series without parsing the HTML chart.
+if (data.landscape && Array.isArray(data.landscape.series)) {
+  const L = data.landscape;
+  writeFileSync(
+    join(OUT_DIR, "landscape-tvl.json"),
+    JSON.stringify(
+      {
+        name: "XRP DeFi yield landscape — total TVL over time",
+        description: L.note,
+        page: REPORT_URL,
+        generatedAt: GENERATED_AT,
+        currentTotalUsd: L.currentTotalUsd,
+        indexedShareOfTotalPct: L.indexedShareOfTotalPct,
+        coverage: L.coverage,
+        license: LICENSE,
+        disclaimer: DISCLAIMER,
+        series: L.series,
+      },
+      null,
+      2,
+    ),
+    "utf-8",
+  );
+  const landLines = ["date,tvl_usd"];
+  for (const pt of L.series) landLines.push(`${pt.d},${cell(pt.tvl)}`);
+  writeFileSync(
+    join(OUT_DIR, "landscape-tvl.csv"),
+    landLines.join("\n") + "\n",
+    "utf-8",
+  );
+}
 
 console.log(
   `[xrp-history] wrote ${jsonWritten} JSON + ${csvWritten} CSV + index.json + history.csv (${index.length} products) to public/data/xrp-yield/`,

@@ -665,19 +665,20 @@
   border-top: 0;
 }
 .rp-page .rp-doc-main > section[aria-labelledby="snapshot-title"] { order: 1; padding-top: 8px; }
-.rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 2; }
-.rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 3; }
-.rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 4; }
-.rp-page .rp-doc-main > section[aria-labelledby="where-title"] { order: 5; }
-.rp-page .rp-doc-main > section[aria-labelledby="ptchart-title"] { order: 6; }
-.rp-page .rp-doc-main > section[aria-labelledby="tokens-title"] { order: 7; }
-.rp-page .rp-doc-main > section[aria-labelledby="staking-title"] { order: 8; }
-.rp-page .rp-doc-main > section[aria-labelledby="cefi-title"] { order: 9; }
-.rp-page .rp-doc-main > section[aria-labelledby="risks-title"] { order: 10; }
-.rp-page .rp-doc-main > section[aria-labelledby="venues-title"] { order: 11; }
-.rp-page .rp-doc-main > section[aria-labelledby="faq-title"] { order: 12; }
-.rp-page .rp-doc-main > section[aria-labelledby="data-title"] { order: 13; }
-.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 14; padding-bottom: 8px; }
+.rp-page .rp-doc-main > section[aria-labelledby="landscape-title"] { order: 2; }
+.rp-page .rp-doc-main > section[aria-labelledby="rankings-title"] { order: 3; }
+.rp-page .rp-doc-main > section[aria-labelledby="overview-title"] { order: 4; }
+.rp-page .rp-doc-main > section[aria-labelledby="ratehist-title"] { order: 5; }
+.rp-page .rp-doc-main > section[aria-labelledby="where-title"] { order: 6; }
+.rp-page .rp-doc-main > section[aria-labelledby="ptchart-title"] { order: 7; }
+.rp-page .rp-doc-main > section[aria-labelledby="tokens-title"] { order: 8; }
+.rp-page .rp-doc-main > section[aria-labelledby="staking-title"] { order: 9; }
+.rp-page .rp-doc-main > section[aria-labelledby="cefi-title"] { order: 10; }
+.rp-page .rp-doc-main > section[aria-labelledby="risks-title"] { order: 11; }
+.rp-page .rp-doc-main > section[aria-labelledby="venues-title"] { order: 12; }
+.rp-page .rp-doc-main > section[aria-labelledby="faq-title"] { order: 13; }
+.rp-page .rp-doc-main > section[aria-labelledby="data-title"] { order: 14; }
+.rp-page .rp-doc-main > section[aria-labelledby="method-title"] { order: 15; padding-bottom: 8px; }
 
 /* Colored eyebrow above each section heading. Per Figma: contrasting blue,
    Inter 14px / 600 / 20px line-height, sentence case (NOT uppercase). Scoped
@@ -779,6 +780,86 @@
   font-size: 14px !important;
   line-height: 1.6 !important;
   color: var(--uni-ink-2) !important;
+}
+
+/* ---- XRP yield landscape section ---- */
+.rp-land-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 4px 0 22px;
+}
+.rp-land-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--rp-card-border, rgba(10, 10, 17, 0.09));
+  border-radius: 12px;
+  background: var(--rp-card-bg, #fff);
+}
+.rp-land-num {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--uni-ink);
+  line-height: 1.1;
+}
+.rp-land-lab {
+  font-size: 13px;
+  color: var(--uni-ink-3, #6b6d72);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.rp-land-splits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin: 26px 0 8px;
+}
+.rp-land-split-h {
+  font-size: 14px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--uni-ink-3, #6b6d72) !important;
+  margin: 0 0 14px !important;
+}
+.rp-land-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.rp-land-bars li { display: flex; flex-direction: column; gap: 6px; }
+.rp-land-bar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14.5px;
+  color: var(--uni-ink);
+}
+.rp-land-bar-val { color: var(--uni-ink-2, #45474c); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rp-land-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--rp-card-border, rgba(10, 10, 17, 0.08));
+  overflow: hidden;
+}
+.rp-land-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #ffb936;
+}
+.rp-landscape-card { margin: 4px 0 4px; }
+
+@media (max-width: 720px) {
+  .rp-land-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rp-land-num { font-size: 22px; }
+  .rp-land-splits { grid-template-columns: 1fr; gap: 22px; }
 }
 
 /* Hero freshness line (under the subtitle, on the gold hero). */

@@ -8,6 +8,7 @@ import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { DiscoverButton } from "@/components/report/discover-button";
 import { ReportToc, type TocItem } from "@/components/report/report-toc";
 import { ReportChart } from "@/components/report/report-chart";
+import { LandscapeChart } from "@/components/report/landscape-chart";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import {
@@ -73,8 +74,25 @@ interface XrpPool {
   // "30d" (30-day mean / fixed rate), "current" (live spot APY), "na" (no feed).
   rateBasis?: string;
   rateNa?: boolean;
-  // Daily rate series for the charts (Spectra PT history + DeFiLlama daily).
-  history?: { d: string; apy: number }[];
+  // Daily series for the charts. `apy` feeds the rate charts; `tvl` and `pps`
+  // (added by the TVL backfill) feed the landscape aggregate and are optional so
+  // older snapshots still type-check.
+  history?: { d: string; apy: number; tvl?: number | null; pps?: number | null }[];
+}
+// Landscape TVL aggregate written by scripts/build-xrp-landscape.mjs: the daily
+// total across venues with a real XRP-clean history, plus the metadata the
+// section needs to frame it honestly (what share of today's total it covers).
+interface XrpLandscape {
+  generatedAt: string;
+  note: string;
+  coverage: { venue: string; basis: string; points: number }[];
+  indexedShareOfTotalPct: number;
+  snapshotRemainderUsd: number;
+  currentTotalUsd: number;
+  start: { d: string; tvl: number };
+  peak: { d: string; tvl: number };
+  latest: { d: string; tvl: number };
+  series: { d: string; tvl: number }[];
 }
 interface XrpYieldData {
   generatedAt: string;
@@ -87,6 +105,7 @@ interface XrpYieldData {
     incentivized: number;
   };
   pools: XrpPool[];
+  landscape?: XrpLandscape;
 }
 
 function loadData(): XrpYieldData | null {
@@ -312,6 +331,7 @@ export default function XrpYieldRankingPage() {
   // when they render, so scroll-spy never points at a missing anchor.
   const tocItems: TocItem[] = [
     { id: "snapshot-title", label: "XRP yield right now" },
+    { id: "landscape-title", label: "XRP yield landscape" },
     { id: "rankings-title", label: "The ranking" },
     { id: "rank-single", label: "Single-exposure", level: 1 },
     { id: "rank-dual", label: "Dual-exposure", level: 1 },
@@ -341,6 +361,29 @@ export default function XrpYieldRankingPage() {
   // Three representative marks for the hero: XRP and its two headline wrapped
   // forms. Kept to three so the cluster reads as a small left-aligned accent.
   const heroTokens = ["XRP", "FXRP", "stXRP"];
+
+  // XRP Yield Landscape: total TVL now + how it grew. TVL split by network and
+  // by product type is derived from `pools` at render time so it never drifts
+  // from the tables; the growth series comes from the build-time aggregate.
+  const land = data.landscape;
+  const totalTvl = stats.totalTvlUsd || pools.reduce((s, p) => s + (p.tvlUsd || 0), 0);
+  const tvlBy = (key: (p: XrpPool) => string) => {
+    const m = new Map<string, number>();
+    for (const p of pools) m.set(key(p), (m.get(key(p)) ?? 0) + (p.tvlUsd || 0));
+    return [...m.entries()]
+      .map(([label, tvl]) => ({ label, tvl, pctOfTotal: totalTvl ? (tvl / totalTvl) * 100 : 0 }))
+      .sort((a, b) => b.tvl - a.tvl);
+  };
+  const tvlByNetwork = tvlBy((p) => chainLabel(p.chain));
+  const typeGroup = (p: XrpPool) => {
+    const k = productTypeOf(p);
+    return k === "Fixed-rate" ? "Fixed-rate PTs" : k === "Vault" ? "Vaults" : k;
+  };
+  const tvlByType = tvlBy(typeGroup);
+  const tvlLeaders = platformRanked
+    .filter((p) => p.tvl > 0)
+    .sort((a, b) => b.tvl - a.tvl)
+    .slice(0, 4);
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -447,6 +490,10 @@ export default function XrpYieldRankingPage() {
                   format: "text/csv",
                   url: `${SITE_URL}/data/xrp-yield/history.csv`,
                 },
+                {
+                  format: "text/csv",
+                  url: `${SITE_URL}/data/xrp-yield/landscape-tvl.csv`,
+                },
               ],
             }),
           ),
@@ -531,6 +578,7 @@ export default function XrpYieldRankingPage() {
           </div>
           <nav className="rp-toc" aria-label="On this page">
             <span className="rp-toc-label">On this page</span>
+            <a href="#landscape-title">Landscape</a>
             <a href="#rankings">The ranking</a>
             <a href="#ratehist-title">30-day rate history</a>
             <a href="#where-title">Where yield comes from</a>
@@ -619,6 +667,126 @@ export default function XrpYieldRankingPage() {
               </p>
             ) : null}
           </div>
+        </section>
+
+        <section className="uni-home-content" aria-labelledby="landscape-title">
+          <p className="rp-eyebrow">The big picture</p>
+          <h2 id="landscape-title">XRP yield landscape</h2>
+          <div className="rp-land-stats">
+            <div className="rp-land-stat">
+              <span className="rp-land-num">{usd(totalTvl)}</span>
+              <span className="rp-land-lab">Total TVL tracked</span>
+            </div>
+            <div className="rp-land-stat">
+              <span className="rp-land-num">{stats.venues}</span>
+              <span className="rp-land-lab">Products</span>
+            </div>
+            <div className="rp-land-stat">
+              <span className="rp-land-num">{stats.chains.length}</span>
+              <span className="rp-land-lab">Networks</span>
+            </div>
+            <div className="rp-land-stat">
+              <span className="rp-land-num">{pct(tvlWeightedApy)}</span>
+              <span className="rp-land-lab">Capital-weighted rate</span>
+            </div>
+          </div>
+
+          {land && land.series.length > 2 ? (
+            <>
+              <p className="rp-lead">
+                XRP-denominated DeFi deposits grew from{" "}
+                <strong>{usd(land.start.tvl)}</strong> in{" "}
+                {new Date(`${land.start.d}T00:00:00Z`).toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                  timeZone: "UTC",
+                })}{" "}
+                to a peak of <strong>{usd(land.peak.tvl)}</strong> in{" "}
+                {new Date(`${land.peak.d}T00:00:00Z`).toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                  timeZone: "UTC",
+                })}
+                , and stand near <strong>{usd(land.latest.tvl)}</strong> today
+                across the venues with a continuous on-chain record. That covers{" "}
+                <strong>{land.indexedShareOfTotalPct}%</strong> of the{" "}
+                {usd(totalTvl)} total; the remainder sits in venues tracked at
+                their current value.
+              </p>
+              <LandscapeChart
+                series={land.series}
+                title="Tracked XRP DeFi TVL"
+                subtitle="daily total"
+                nowLabel={new Date(`${land.latest.d}T00:00:00Z`).toLocaleDateString(
+                  "en-US",
+                  { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" },
+                )}
+              />
+            </>
+          ) : null}
+
+          <div className="rp-land-splits">
+            <div className="rp-land-split">
+              <h3 className="rp-land-split-h">By network</h3>
+              <ul className="rp-land-bars">
+                {tvlByNetwork.map((r) => (
+                  <li key={r.label}>
+                    <span className="rp-land-bar-top">
+                      <span>{r.label}</span>
+                      <span className="rp-land-bar-val">
+                        {usd(r.tvl)} · {r.pctOfTotal.toFixed(0)}%
+                      </span>
+                    </span>
+                    <span className="rp-land-bar-track">
+                      <span
+                        className="rp-land-bar-fill"
+                        style={{ width: `${Math.max(2, r.pctOfTotal)}%` }}
+                      />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rp-land-split">
+              <h3 className="rp-land-split-h">By product type</h3>
+              <ul className="rp-land-bars">
+                {tvlByType.map((r) => (
+                  <li key={r.label}>
+                    <span className="rp-land-bar-top">
+                      <span>{r.label}</span>
+                      <span className="rp-land-bar-val">
+                        {usd(r.tvl)} · {r.pctOfTotal.toFixed(0)}%
+                      </span>
+                    </span>
+                    <span className="rp-land-bar-track">
+                      <span
+                        className="rp-land-bar-fill"
+                        style={{ width: `${Math.max(2, r.pctOfTotal)}%` }}
+                      />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {tvlLeaders.length > 0 ? (
+            <p className="rp-article">
+              By depth, {joinAnd(tvlLeaders.map((v) => `${v.name} at ${usd(v.tvl)}`))}{" "}
+              hold the largest XRP positions on the page. Deposits concentrate on{" "}
+              {tvlByNetwork[0].label}, which carries{" "}
+              <strong>{tvlByNetwork[0].pctOfTotal.toFixed(0)}%</strong> of tracked
+              TVL, reflecting where wrapped XRP liquidity is deepest.
+            </p>
+          ) : null}
+
+          <p className="rp-source-note">
+            {land
+              ? land.note
+              : "Total XRP-denominated DeFi TVL across tracked venues. Sources: DeFiLlama, Spectra and Portals."}{" "}
+            TVL split by network and type is computed from the {stats.venues}{" "}
+            tracked products as of {updated}.
+          </p>
         </section>
 
         {venueCharts.length > 0 && (
@@ -960,15 +1128,19 @@ export default function XrpYieldRankingPage() {
             <p className="rp-lead">
               Every product on this page is published as clean, downloadable
               data for research and AI agents, licensed CC-BY-4.0. Each JSON
-              carries the current rate and TVL plus its full daily rate history;
-              each CSV is that daily rate series.
+              carries the current rate and TVL plus its full daily rate and TVL
+              history; each CSV is that daily series. The landscape&rsquo;s total
+              TVL over time is published too.
             </p>
             <div className="rp-data-primary">
               <a className="rp-data-btn" href="/data/xrp-yield/index.json">
                 Full dataset · JSON
               </a>
               <a className="rp-data-btn" href="/data/xrp-yield/history.csv">
-                All products, daily rates · CSV
+                All products, daily rate &amp; TVL · CSV
+              </a>
+              <a className="rp-data-btn" href="/data/xrp-yield/landscape-tvl.csv">
+                Landscape TVL over time · CSV
               </a>
             </div>
             <div className="rp-data-list">

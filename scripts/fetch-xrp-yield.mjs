@@ -68,17 +68,29 @@ async function getJson(url, cache, tries = 3) {
 const round2 = (v) => (v == null ? null : Math.round(v * 100) / 100);
 const mean = (a) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
 
-// One point per calendar day from a DeFiLlama chart, {d, apy}, capped.
-function dailySeries(rows, capDays = 90) {
+// One point per calendar day from a DeFiLlama chart. Keeps APY plus the TVL and
+// per-share price on the same day so the report can chart landscape TVL growth
+// and (for vaults) share-price appreciation, not just the rate. Older callers
+// read `.apy`; the extra `.tvl`/`.pps` fields are additive and default to null.
+// capDays defaults to the full series (to each pool's inception) — the report's
+// per-card charts slice their own window, but the landscape aggregate wants
+// depth, so we no longer truncate at the source.
+function dailySeries(rows, capDays = Infinity) {
   const byDay = new Map();
   for (const r of rows || []) {
-    if (!r || !Number.isFinite(r.apy)) continue;
-    byDay.set(String(r.timestamp).slice(0, 10), Math.round(r.apy * 100) / 100);
+    if (!r) continue;
+    const apy = Number.isFinite(r.apy) ? Math.round(r.apy * 100) / 100 : null;
+    const tvl = Number.isFinite(r.tvlUsd) ? Math.round(r.tvlUsd) : null;
+    const pps = Number.isFinite(r.pricePerShare)
+      ? Math.round(r.pricePerShare * 1e6) / 1e6
+      : null;
+    if (apy == null && tvl == null) continue;
+    byDay.set(String(r.timestamp).slice(0, 10), { apy, tvl, pps });
   }
-  return [...byDay.entries()]
-    .map(([d, apy]) => ({ d, apy }))
-    .sort((a, b) => (a.d < b.d ? -1 : 1))
-    .slice(-capDays);
+  const out = [...byDay.entries()]
+    .map(([d, v]) => ({ d, apy: v.apy, tvl: v.tvl, pps: v.pps }))
+    .sort((a, b) => (a.d < b.d ? -1 : 1));
+  return Number.isFinite(capDays) ? out.slice(-capDays) : out;
 }
 
 // Base row shared by every product, from its venue display fields. Live metrics
@@ -142,6 +154,50 @@ async function portalsCurrent(key) {
     await new Promise((res) => setTimeout(res, 1200 * (i + 1)));
   }
   return null;
+}
+
+// Daily {d, apy, tvl, pps} history for a Portals token, to inception. The paid
+// /v2/tokens/history endpoint (id=<network:address>) returns per-day points
+// carrying liquidity (TVL), pricePerShare and apy — the same shape we derive
+// from DeFiLlama's /chart, so the landscape aggregate can sum both sources on
+// one axis. Newest-first from the API; we sort ascending. Needs PORTALS_KEY.
+async function portalsHistory(key) {
+  const safe = key.replace(/[:]/g, "_");
+  const cached = readCache(PORTALS_CACHE, `portals-hist-${safe}.json`);
+  let doc = cached;
+  if (!doc) {
+    if (!PORTALS_KEY) return [];
+    const url = `https://api.portals.fi/v2/tokens/history?id=${encodeURIComponent(key)}`;
+    for (let i = 0; i < 3 && !doc; i++) {
+      try {
+        const r = await fetch(url, {
+          signal: AbortSignal.timeout(30_000),
+          headers: { accept: "application/json", Authorization: `Bearer ${PORTALS_KEY}` },
+        });
+        if (r.ok) doc = await r.json();
+        else console.error(`[xrp-yield] portals history ${key} -> HTTP ${r.status}`);
+      } catch (e) {
+        console.error(`[xrp-yield] portals history ${key} -> ${e.message ?? e}`);
+      }
+      if (!doc) await new Promise((res) => setTimeout(res, 1200 * (i + 1)));
+    }
+  }
+  const rows = Array.isArray(doc?.history) ? doc.history : [];
+  const byDay = new Map();
+  for (const r of rows) {
+    const d = String(r?.time ?? "").slice(0, 10);
+    if (!d) continue;
+    const apy = Number.isFinite(+r.apy) ? Math.round(+r.apy * 100) / 100 : null;
+    const tvl = Number.isFinite(+r.liquidity) ? Math.round(+r.liquidity) : null;
+    const pps = Number.isFinite(+r.pricePerShare)
+      ? Math.round(+r.pricePerShare * 1e6) / 1e6
+      : null;
+    if (apy == null && tvl == null) continue;
+    byDay.set(d, { apy, tvl, pps });
+  }
+  return [...byDay.entries()]
+    .map(([d, v]) => ({ d, apy: v.apy, tvl: v.tvl, pps: v.pps }))
+    .sort((a, b) => (a.d < b.d ? -1 : 1));
 }
 
 const main = async () => {
@@ -266,6 +322,19 @@ const main = async () => {
         if (apy == null) {
           row.rateNa = true;
           row.rateBasis = "na";
+        }
+        // Daily TVL/APY/share-price to inception for the landscape aggregate.
+        const phist = await portalsHistory(src.portalsKey);
+        if (phist.length >= 2) {
+          row.history = phist;
+          row.inception = phist[0].d;
+          const rates = phist.map((h) => h.apy).filter(Number.isFinite).slice(-90);
+          if (rates.length >= 7) {
+            row.range90d = {
+              min: Math.round(Math.min(...rates) * 100) / 100,
+              max: Math.round(Math.max(...rates) * 100) / 100,
+            };
+          }
         }
       } else {
         // kind === "none": tracked, but no public rate feed.

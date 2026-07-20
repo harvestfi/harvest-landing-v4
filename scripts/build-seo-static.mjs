@@ -107,7 +107,7 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 - [Machine-readable index](${SITE_URL}/data/index.json): every tracked strategy as JSON (slug, asset, chain, APY, TVL), each linking to its per-vault file.
 - Per-strategy JSON at ${SITE_URL}/data/<slug>.json (e.g. ${SITE_URL}/data/usdc-autopilot-base.json) — current APY, TVL, contract addresses and a history summary. Agent-native; one fetch per vault.
 - Per-strategy daily history CSV at ${SITE_URL}/history/<slug>.csv (e.g. ${SITE_URL}/history/usdc-autopilot-base.csv) — daily APY, TVL and share price, also linked from each product page's Historical Data section.
-- [XRP report dataset](${SITE_URL}/data/xrp-yield/index.json): the XRP Yield Ranking as JSON — every ranked product with current rate, TVL and links to a per-product JSON (metadata + full daily rate history) and CSV. Combined long-format history for all products at ${SITE_URL}/data/xrp-yield/history.csv.
+- [XRP report dataset](${SITE_URL}/data/xrp-yield/index.json): the XRP Yield Ranking as JSON — every ranked product with current rate, TVL and links to a per-product JSON (metadata + full daily rate and TVL history) and CSV. Combined long-format history for all products at ${SITE_URL}/data/xrp-yield/history.csv. Total XRP DeFi TVL over time (the landscape growth series) at ${SITE_URL}/data/xrp-yield/landscape-tvl.json and ${SITE_URL}/data/xrp-yield/landscape-tvl.csv.
 - [Sitemap](${SITE_URL}/sitemap.xml): every indexable URL (hubs + 150 product pages).
 
 ## Optional
