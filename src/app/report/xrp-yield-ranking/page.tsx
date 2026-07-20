@@ -115,6 +115,9 @@ interface XrpTradingMarket {
   maturityDate: string | null;
   expired?: boolean;
   pool: string;
+  // The Spectra market / Principal Token address (distinct from the LP `pool`
+  // for live markets; collapses to `pool` for pinned expired markets).
+  market?: string;
   yt: string | null;
   txns: number;
   traders: number;
@@ -590,33 +593,59 @@ export default function XrpYieldRankingPage() {
         })
       : "n/a";
 
-  // Onchain references: raw contract addresses for the wrapped-XRP assets and
-  // every Spectra stXRP market (PT/pool), matured ones included. The Spectra
-  // rows come straight from the trading feed, so expired markets that have
-  // rolled off the live pool list are still listed by their pool contract.
-  const onchainRefs: {
+  // Onchain references: raw contract addresses, grouped. Wrapped-XRP assets;
+  // the vault / lending-market / LP receipt tokens we actually read holders from
+  // (holders.token); and every Spectra stXRP market split into its three legs —
+  // the LP pool token, the Principal Token and the Yield Token — matured markets
+  // included (their PT address collapses to the pool once they roll off the live
+  // list, so only LP + YT are shown there).
+  interface RefRow {
     name: string;
+    type: string;
     chain: string;
     address: string;
     expired?: boolean;
-    explorer?: string;
-  }[] = [
-    ...WRAPPED_TOKENS.filter((t) => t.address).map((t) => ({
+    group: "asset" | "vault" | "market";
+  }
+  const isSpectraMarketToken = (p: XrpPool) =>
+    (p.venueSlug ?? "").startsWith("spectra-pt-") ||
+    (p.venueSlug ?? "").startsWith("spectra-pool-");
+  const onchainRefs: RefRow[] = [
+    ...WRAPPED_TOKENS.filter((t) => t.address).map<RefRow>((t) => ({
       name: nice(t.token),
+      type: "Wrapped token",
       chain: t.chain,
       address: t.address as string,
-      explorer: t.explorer,
+      group: "asset",
     })),
-    ...(data.yieldTrading?.markets ?? [])
-      .filter((m) => m.maturityDate && m.pool)
-      .slice()
-      .sort((a, b) => ((a.maturityDate ?? "") < (b.maturityDate ?? "") ? -1 : 1))
-      .map((m) => ({
-        name: `stXRP PT · ${matLabel(m.maturityDate)}`,
-        chain: "Flare",
-        address: m.pool,
-        expired: !!m.expired,
+    ...pools
+      .filter((p) => p.holders?.token && !isSpectraMarketToken(p))
+      .map<RefRow>((p) => ({
+        name: `${assetHead(p)}${p.detail ? ` · ${p.detail}` : ""}`,
+        type: typeLabel(p),
+        chain: p.chain,
+        address: p.holders!.token as string,
+        group: "vault",
       })),
+    ...(data.yieldTrading?.markets ?? [])
+      .filter((m) => m.maturityDate)
+      .slice()
+      // Live markets first (by maturity), matured markets pushed to the end.
+      .sort((a, b) => {
+        if (!!a.expired !== !!b.expired) return a.expired ? 1 : -1;
+        return (a.maturityDate ?? "") < (b.maturityDate ?? "") ? -1 : 1;
+      })
+      .flatMap<RefRow>((m) => {
+        const mat = matLabel(m.maturityDate);
+        const rows: RefRow[] = [];
+        if (m.pool)
+          rows.push({ name: `stXRP · ${mat}`, type: "LP pool token", chain: "Flare", address: m.pool, expired: !!m.expired, group: "market" });
+        if (m.market && m.market.toLowerCase() !== m.pool.toLowerCase())
+          rows.push({ name: `stXRP · ${mat}`, type: "Principal Token", chain: "Flare", address: m.market, expired: !!m.expired, group: "market" });
+        if (m.yt)
+          rows.push({ name: `stXRP · ${mat}`, type: "Yield Token", chain: "Flare", address: m.yt, expired: !!m.expired, group: "market" });
+        return rows;
+      }),
   ];
 
   // Freshness date shown as "Last updated" / "As of". Uses the most recent of
@@ -1698,28 +1727,39 @@ export default function XrpYieldRankingPage() {
           <p className="rp-eyebrow">Reference</p>
           <h2 id="onchain-references">Onchain references</h2>
           <p className="rp-lead">
-            Raw contract addresses for every wrapped-XRP asset and Spectra stXRP
-            market referenced in this report, matured markets included. All are
-            third-party contracts; verify each on its explorer before you use it.
+            Contract addresses for every asset and product in this report: the
+            wrapped-XRP tokens, the vault / lending / LP receipt tokens the
+            holder counts are read from, and each Spectra stXRP market split into
+            its LP pool, Principal and Yield tokens, matured markets included.
+            All are third-party contracts; verify each before you use it.
           </p>
           <div className="rp-dtable-wrap">
             <table className="rp-dtable rp-ref-table">
               <thead>
                 <tr>
                   <th>Asset / Product</th>
+                  <th>Type</th>
                   <th>Network</th>
                   <th>Address</th>
                 </tr>
               </thead>
               <tbody>
-                {onchainRefs.map((r) => (
-                  <tr key={`${r.name}-${r.address}`}>
+                {onchainRefs.map((r, i) => (
+                  <tr
+                    key={`${r.name}-${r.type}-${r.address}`}
+                    className={
+                      i > 0 && onchainRefs[i - 1].group !== r.group
+                        ? "rp-ref-group"
+                        : undefined
+                    }
+                  >
                     <td className="strong">
                       {r.name}
                       {r.expired ? (
                         <span className="rp-dtag rp-ref-tag">Matured</span>
                       ) : null}
                     </td>
+                    <td className="rp-ref-type">{r.type}</td>
                     <td>{chainLabel(r.chain)}</td>
                     <td>
                       <span className="rp-ref-addr">
@@ -1733,11 +1773,12 @@ export default function XrpYieldRankingPage() {
             </table>
           </div>
           <p className="rp-source-note">
-            Wrapped-token addresses are the canonical ERC-20 (or SPL) contracts;
-            Spectra rows are each stXRP market&rsquo;s pool contract on Flare,
-            including markets that have already matured. Lending, vault and DEX
-            venues are tracked via DeFiLlama and Portals and link out to their
-            own pages in the ranking above.
+            Wrapped-token rows are the canonical ERC-20 (or SPL) contracts; vault
+            and market rows are the receipt / share tokens the holder ranking is
+            read from; Spectra rows are each stXRP market&rsquo;s LP pool,
+            Principal and Yield token contracts on Flare, matured markets
+            included. Underlying rates and TVL are sourced via DeFiLlama, Spectra
+            and Portals.
           </p>
         </section>
 
