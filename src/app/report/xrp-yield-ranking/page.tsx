@@ -181,7 +181,7 @@ const pct = (v: number | null) => (v == null ? "-" : `${v.toFixed(2)}%`);
 // doesn't exist), so a value that rounds to 100 without being exactly 100 is
 // shown as ">99%".
 const walletPct = (v: number | null | undefined) =>
-  v == null ? "—" : v < 100 && v >= 99.5 ? ">99%" : `${v.toFixed(0)}%`;
+  v == null ? "n/a" : v < 100 && v >= 99.5 ? ">99%" : `${v.toFixed(0)}%`;
 const usd = (n: number) =>
   n >= 1_000_000_000
     ? `$${(n / 1_000_000_000).toFixed(2)}B`
@@ -335,7 +335,7 @@ export default function XrpYieldRankingPage() {
           year: "numeric",
           timeZone: "UTC",
         })
-      : "—";
+      : "n/a";
   // A PT's implied fixed rate annualizes over its remaining term, so in the
   // final days before maturity a sliver of price gap explodes to absurd APYs
   // (millions of %). Drop the last week before maturity and cap at a sane
@@ -587,7 +587,7 @@ export default function XrpYieldRankingPage() {
           year: "numeric",
           timeZone: "UTC",
         })
-      : "—";
+      : "n/a";
 
   // Freshness date shown as "Last updated" / "As of". Uses the most recent of
   // the snapshot and its enrichment passes (landscape, holders, trading) so the
@@ -766,9 +766,9 @@ export default function XrpYieldRankingPage() {
           <h2 id="overview">Overview</h2>
           <div className="rp-article">
             <p>
-              Earning yield on XRP is quietly growing into one of the more active
-              corners of DeFi. XRP is not a proof-of-stake asset, so there is no
-              native staking rate to claim.
+              Through 2026, earning yield on XRP has quietly grown into one of
+              the more active corners of DeFi. XRP is not a proof-of-stake asset,
+              so there is no native staking rate to claim.
             </p>
             <p>
               The XRP Ledger&rsquo;s native AMM already pays trading fees
@@ -1276,8 +1276,8 @@ export default function XrpYieldRankingPage() {
                 <p className="rp-source-note">
                   {trading.note} Every stXRP market is included, so quiet
                   stretches on the daily chart are real lulls between maturities
-                  — demand thinning as one maturity winds down before the next
-                  ramps — not missing pools. As of {holderAsOf}. Trade and trader
+                  (demand thinning as one maturity winds down before the next
+                  ramps), not missing pools. As of {holderAsOf}. Trade and trader
                   counts are a floor on the busiest matured markets, where the
                   venue caps the returned history.
                 </p>
@@ -1415,7 +1415,7 @@ export default function XrpYieldRankingPage() {
             <p>
               The wrapper matters as much as the venue: some are trustless and
               collateral-backed, others rest on a single custodian. The first
-              three below &mdash; FXRP, stXRP and cbXRP &mdash; back every venue in
+              three below, FXRP, stXRP and cbXRP, back every venue in
               this report; wXRP is included as the main form on Solana, a market
               that sits outside this report&rsquo;s Flare-and-Base scope for now.
             </p>
@@ -1755,9 +1755,8 @@ function InfoBox({ children }: { children: ReactNode }) {
     <div className="rp-info">
       <span className="rp-callout-ico" aria-hidden="true">
         <svg viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="8.25" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M10 9v4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="10" cy="6.4" r="1.05" fill="currentColor" />
+          <circle cx="10" cy="5.7" r="1.5" fill="currentColor" />
+          <rect x="8.7" y="8.6" width="2.6" height="6.7" rx="1.3" fill="currentColor" />
         </svg>
       </span>
       <p className="rp-info-body">{children}</p>
@@ -1772,11 +1771,14 @@ function TipBox({ children }: { children: ReactNode }) {
       <span className="rp-callout-ico" aria-hidden="true">
         <svg viewBox="0 0 20 20" fill="none">
           <path
-            d="M8 15.5h4M8.4 13.2c0-1.1-.55-1.7-1.3-2.5a4 4 0 1 1 5.8 0c-.75.8-1.3 1.4-1.3 2.5"
+            d="M10 2.8a4.6 4.6 0 0 0-2.7 8.3c.5.37.85.9.95 1.5l.1.6h3.3l.1-.6c.1-.6.45-1.13.95-1.5A4.6 4.6 0 0 0 10 2.8Z"
+            fill="currentColor"
+          />
+          <path
+            d="M8.5 15.3h3M9.1 17h1.8"
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
         </svg>
       </span>
@@ -1878,7 +1880,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                       : undefined
                 }
               >
-                {p.rateNa ? "—" : pct(histRate(p))}
+                {p.rateNa ? "n/a" : pct(histRate(p))}
               </span>
               <span className="hub-cell rp-cell-text">
                 <span className="rp-type">{typeLabel(p)}</span>
@@ -1886,7 +1888,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
               <span className="hub-cell rp-cell-text">{p.platform}</span>
               <span className="hub-cell rp-cell-text">{chainLabel(p.chain)}</span>
               <span className="hub-cell hub-num">
-                {p.tvlUsd > 0 ? usd(p.tvlUsd) : "—"}
+                {p.tvlUsd > 0 ? usd(p.tvlUsd) : "n/a"}
               </span>
               <span className="hub-cell rp-cell-action">
                 <DiscoverButton

@@ -25,7 +25,7 @@ function fmtDate(d: string): string {
   });
 }
 const pct = (v: number | null | undefined) =>
-  v == null ? "—" : `${v.toFixed(2)}%`;
+  v == null ? "n/a" : `${v.toFixed(2)}%`;
 
 export function ReportChart({
   history,
