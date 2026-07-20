@@ -872,6 +872,128 @@
 }
 .rp-page .rp-trade-subhead ~ .rp-trade-subhead { margin-top: 44px; }
 .rp-page .rp-trade-sublead { margin-top: 0; }
+
+/* ---- Data table (Figma) — replaces the progress-bar breakdowns. Clean rows:
+   bold header with a divider, light row separators, no vertical lines, no
+   underlines, numbers right-aligned. ---- */
+.rp-dtable-wrap { width: 100%; overflow-x: auto; margin: 6px 0 2px; }
+.rp-page .rp-dtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+  line-height: 20px;
+}
+.rp-page .rp-dtable th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--uni-ink);
+  padding: 0 10px 9px;
+  border-bottom: 1px solid var(--uni-line, #dedee6);
+  white-space: nowrap;
+}
+.rp-page .rp-dtable td {
+  padding: 9px 10px;
+  color: var(--uni-ink-2, #3e3e46);
+  border-bottom: 1px solid var(--rp-card-border, #eeeef5);
+  vertical-align: middle;
+}
+.rp-page .rp-dtable tbody tr:last-child td { border-bottom: 0; }
+.rp-page .rp-dtable th:first-child,
+.rp-page .rp-dtable td:first-child { padding-left: 0; }
+.rp-page .rp-dtable th:last-child,
+.rp-page .rp-dtable td:last-child { padding-right: 0; }
+.rp-page .rp-dtable .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rp-page .rp-dtable td.strong { color: var(--uni-ink); font-weight: 600; }
+.rp-dtag {
+  font-size: 12px;
+  color: var(--uni-ink-3, #8a887f);
+  border: 1px solid var(--rp-card-border, #e2e3e5);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+/* ---- Pill buttons (Figma): thin outline, white bg, icon + label. Applied to
+   the report's utility buttons (Discover/Open, data downloads). ---- */
+.rp-page .rp-discover,
+.rp-page .uni-home-content a.rp-data-btn,
+.rp-page .rp-data-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--rp-card-border, #dedee6);
+  background: var(--rp-card-bg, #fff);
+  background-image: none;
+  color: var(--uni-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.rp-page .rp-discover:hover,
+.rp-page .uni-home-content a.rp-data-btn:hover,
+.rp-page .rp-data-btn:hover {
+  background: rgba(10, 10, 17, 0.03);
+  border-color: var(--uni-line, #c9cace);
+  color: var(--uni-ink);
+}
+:root[data-theme="dark"] .rp-page .rp-discover:hover,
+:root[data-theme="dark"] .rp-page .rp-data-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ---- Info box (Figma): rounded, thin border, (i) icon, neutral. ---- */
+.rp-info,
+.rp-tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--rp-card-border, #dedee6);
+  background: var(--rp-card-bg, #fff);
+  margin: 8px 0;
+}
+.rp-info-icon,
+.rp-tip-icon { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+.rp-info-icon { color: var(--uni-ink-3, #6b6d72); }
+.rp-page .rp-info-body,
+.rp-page .rp-tip-body {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--uni-ink-2, #3e3e46);
+}
+.rp-page .rp-info-body strong { color: var(--uni-ink); font-weight: 600; }
+
+/* ---- Tip box (Figma): green tint + lightbulb. ---- */
+.rp-tip {
+  border-color: #a6f4c5;
+  background: #f0fdf4;
+}
+.rp-tip-icon { color: #12b76a; }
+.rp-page .rp-tip-body { color: #085d3a; }
+.rp-page .rp-tip-body strong { color: #054f31; font-weight: 700; }
+:root[data-theme="dark"] .rp-tip {
+  border-color: rgba(18, 183, 106, 0.35);
+  background: rgba(18, 183, 106, 0.09);
+}
+:root[data-theme="dark"] .rp-page .rp-tip-body { color: #7be0ad; }
+:root[data-theme="dark"] .rp-page .rp-tip-body strong { color: #a6f4c5; }
+
+/* A little breathing room under every ranking table by default, so whatever
+   follows (a note or paragraph) never kisses the bottom row. */
+.rp-page .rp-rank { margin-bottom: 15px; }
 /* Breathing room so the first commentary paragraph doesn't kiss the bottom edge
    of the bars (landscape/trading) or the holder table above it. */
 .rp-land-splits + .rp-article,
@@ -1557,6 +1679,18 @@
   .rp-page .rp-rank-head h3 { font-size: 15px; line-height: 1.3; }
   .rp-page .rp-article h3,
   .rp-page .rp-chain-head h3 { font-size: 14px; line-height: 1.3; margin-top: 22px; }
+  /* Trading sub-headings must stay below the section H2 (16px), not above it. */
+  .rp-page .rp-trade-subhead { font-size: 15px; line-height: 1.3; margin: 16px 0 5px; }
+  .rp-page .rp-trade-subhead ~ .rp-trade-subhead { margin-top: 30px; }
+  /* Stat tiles: numbers + labels sized to the phone so they don't overflow. */
+  .rp-page .rp-land-num { font-size: 19px; }
+  .rp-page .rp-land-lab { font-size: 11px; letter-spacing: 0.04em; }
+  .rp-page .rp-land-stat { padding: 13px 14px; gap: 3px; }
+  /* Data-table type on mobile, matched to the body scale. */
+  .rp-page .rp-dtable { font-size: 13px; line-height: 18px; }
+  .rp-page .rp-dtable th { font-size: 12px; padding-bottom: 8px; }
+  .rp-page .rp-dtable td { padding: 8px; }
+  .rp-page .rp-info-body, .rp-page .rp-tip-body { font-size: 13px; line-height: 1.55; }
 
   .rp-page .uni-home-content .rp-article p,
   .rp-page .uni-home-content .rp-snapshot p,

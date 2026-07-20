@@ -54,7 +54,7 @@ const allMarkets = Array.isArray(poolsDoc?.data)
   : Array.isArray(poolsDoc)
     ? poolsDoc
     : [];
-const xrpMarkets = allMarkets
+const activeMarkets = allMarkets
   .filter((m) => /xrp/i.test(`${m?.ibt?.symbol ?? ""}${m?.name ?? ""}`))
   .map((m) => ({
     market: String(m.address).toLowerCase(),
@@ -65,12 +65,41 @@ const xrpMarkets = allMarkets
   }))
   .filter((m) => m.pool);
 
+// Expired stXRP markets drop off the Spectra /pools list, but their /activity
+// and /volume endpoints still return the full trade history — and they carry the
+// bulk of all-time volume, so the trading picture is badly incomplete without
+// them. Pinned here (pool + YT + maturity) so they are always included.
+const EXPIRED_STXRP_POOLS = [
+  {
+    pool: "0xa65a736bcf1f4af7a8f353027218f2d54b3048eb",
+    yt: "0x46f0c7b81128e031604ecb3e8a7e28dd3f8a50c9",
+    maturity: Math.floor(Date.UTC(2026, 2, 5) / 1000), // PT-stXRP 2026/03/05
+    ibt: "stXRP",
+  },
+  {
+    pool: "0x80743e896df841900803a46f6d8451e0f9ef6f4a",
+    yt: "0xf8b0bafbb2e3c023c606b04296b2df73f4a0d918",
+    maturity: Math.floor(Date.UTC(2026, 5, 4) / 1000), // PT-stXRP 2026/06/04
+    ibt: "stXRP",
+  },
+];
+const activePools = new Set(activeMarkets.map((m) => m.pool));
+const xrpMarkets = [
+  ...activeMarkets,
+  ...EXPIRED_STXRP_POOLS.filter((m) => !activePools.has(m.pool)).map((m) => ({
+    ...m,
+    market: m.pool,
+    expired: true,
+  })),
+];
+
 if (!xrpMarkets.length) {
   console.error("[xrp-trading] no stXRP markets found; leaving data untouched.");
   process.exit(0);
 }
 
 const data = JSON.parse(readFileSync(DATA_FILE, "utf-8"));
+const nowMs = Date.now();
 
 const allTraders = new Set();
 const dailyMap = new Map(); // d -> {buyUsd, sellUsd}
@@ -128,6 +157,7 @@ for (const m of xrpMarkets) {
   markets.push({
     maturity: m.maturity,
     maturityDate: m.maturity ? dstr(m.maturity) : null,
+    expired: m.maturity ? m.maturity * 1000 < nowMs : false,
     pool: m.pool,
     market: m.market,
     yt: m.yt,

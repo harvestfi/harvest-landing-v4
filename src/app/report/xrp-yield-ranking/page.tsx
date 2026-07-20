@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -111,6 +112,7 @@ interface XrpLandscape {
 // scripts/fetch-xrp-trading.mjs: how much the fixed-yield markets are traded.
 interface XrpTradingMarket {
   maturityDate: string | null;
+  expired?: boolean;
   pool: string;
   yt: string | null;
   txns: number;
@@ -366,10 +368,28 @@ export default function XrpYieldRankingPage() {
     spectraStats && earnXrp
       ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP Principal Tokens and MetaVault, averaging about ${pct(spectraStats.avgApy)}, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates but add impermanent loss and usually lean on incentives, so the ranking sorts every venue by its real 30-day average.`
       : `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Single-sided lending and vaults are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually lean on incentives.`;
+  // Highest-rate product for the "highest APY" answer (pools arrive rate-sorted).
+  const topRate = pools
+    .filter((p) => !p.rateNa)
+    .reduce<XrpPool | null>(
+      (best, p) => (best && (histRate(best) ?? 0) >= (histRate(p) ?? 0) ? best : p),
+      null,
+    );
+  const totalTvlFaq = pools
+    .filter(tvlCounts)
+    .reduce((s, p) => s + (p.tvlUsd || 0), 0);
+  // Answers rewritten at request time with live report data, so every one
+  // mentions XRP and carries a real figure from the page above.
+  const FAQ_DATA: Record<string, string> = {
+    "What is the best XRP yield right now?": bestYieldAnswer,
+    "How do you earn interest on XRP?": `You move XRP onto a smart-contract chain as a wrapped token such as FXRP or cbXRP, then put it to work: supply it to a lending market for borrower interest, deposit it in a curated vault, hold a fixed-rate Principal Token, or add it to a liquidity pool for swap fees. This report tracks ${stats.venues} such XRP products across ${stats.chains.length} networks (${joinAnd(stats.chains.map(chainLabel))}), holding about ${usd(totalTvlFaq)} in total, ranked by their real 30-day rate.`,
+    "What is the highest APY for XRP?": topRate
+      ? `Right now the highest 30-day rate on this page is about ${pct(histRate(topRate))} on ${assetHead(topRate)} at ${topRate.platform}${isDual(topRate) ? ", a two-asset liquidity pool" : ""}. The top numbers are almost always dual-exposure XRP pools boosted by reward emissions, which is why they also carry impermanent loss and tend to fade. Across the ${ratedCount} rated XRP products the capital-weighted average is nearer ${pct(tvlWeightedApy)}, and a steadier single-sided rate is often the more durable choice. The 30-day figure is the better guide than the spot number.`
+      : FAQ.find((f) => f.q === "What is the highest APY for XRP?")!.a,
+    "What is impermanent loss in an XRP liquidity pool?": `It is the gap between simply holding your two tokens and supplying them to a pool. In an XRP pool that pairs a wrapped XRP token such as cbXRP or FXRP with a second asset, if the two prices drift apart the pool rebalances against your position, so it can end up worth less than holding, even after the swap fees and rewards it earned. It is the main reason the dual-exposure XRP pools in the ranking above carry more risk than their headline rate suggests.`,
+  };
   const faqs = FAQ.map((f) =>
-    f.q === "What is the best XRP yield right now?"
-      ? { ...f, a: bestYieldAnswer }
-      : f,
+    FAQ_DATA[f.q] ? { ...f, a: FAQ_DATA[f.q] } : f,
   );
 
   // Structured-data inputs (rendered as JSON-LD at the top of the page).
@@ -485,21 +505,18 @@ export default function XrpYieldRankingPage() {
   const tradeVol = trading ? trading.totals.buyUsd + trading.totals.sellUsd : 0;
   const tradeTop = trading?.markets.find((m) => m.buyUsd + m.sellUsd > 0) ?? null;
   // Markets with meaningful flow (drop dust markets with a trade or two).
-  const tradeActive = trading
+  const tradeMkts = trading
     ? trading.markets.filter((m) => m.buyUsd + m.sellUsd >= 1000)
     : [];
-  const tradeMonthFmt = (mo: string) =>
-    new Date(`${mo}-01T00:00:00Z`).toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    });
-  // Busiest month by volume — the surge the prose calls out.
-  const tradePeakMonth = trading?.monthly.length
-    ? trading.monthly.reduce((m, x) =>
-        x.buyUsd + x.sellUsd > m.buyUsd + m.sellUsd ? x : m,
-      )
-    : null;
+  const tradeActive = tradeMkts; // alias kept for existing references
+  // The nearest live (not-yet-matured) market, and how much of all-time volume
+  // ran through markets that have since matured.
+  const tradeLiveTop = tradeMkts.find((m) => !m.expired) ?? null;
+  const tradeExpiredVol = tradeMkts
+    .filter((m) => m.expired)
+    .reduce((s, m) => s + m.buyUsd + m.sellUsd, 0);
+  const tradeExpiredPct = tradeVol ? Math.round((tradeExpiredVol / tradeVol) * 100) : 0;
+  const tradeMaturedCount = tradeMkts.filter((m) => m.expired).length;
   const matLabel = (d: string | null) =>
     d
       ? new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -869,45 +886,49 @@ export default function XrpYieldRankingPage() {
           <div className="rp-land-splits">
             <div className="rp-land-split">
               <h3 className="rp-land-split-h">By network</h3>
-              <ul className="rp-land-bars">
-                {tvlByNetwork.map((r) => (
-                  <li key={r.label}>
-                    <span className="rp-land-bar-top">
-                      <span>{r.label}</span>
-                      <span className="rp-land-bar-val">
-                        {usd(r.tvl)} · {r.pctOfTotal.toFixed(0)}%
-                      </span>
-                    </span>
-                    <span className="rp-land-bar-track">
-                      <span
-                        className="rp-land-bar-fill"
-                        style={{ width: `${Math.max(2, r.pctOfTotal)}%` }}
-                      />
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="rp-dtable-wrap">
+                <table className="rp-dtable">
+                  <thead>
+                    <tr>
+                      <th>Network</th>
+                      <th className="num">TVL</th>
+                      <th className="num">Share</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tvlByNetwork.map((r) => (
+                      <tr key={r.label}>
+                        <td className="strong">{r.label}</td>
+                        <td className="num">{usd(r.tvl)}</td>
+                        <td className="num">{r.pctOfTotal.toFixed(0)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div className="rp-land-split">
               <h3 className="rp-land-split-h">By product type</h3>
-              <ul className="rp-land-bars">
-                {tvlByType.map((r) => (
-                  <li key={r.label}>
-                    <span className="rp-land-bar-top">
-                      <span>{r.label}</span>
-                      <span className="rp-land-bar-val">
-                        {usd(r.tvl)} · {r.pctOfTotal.toFixed(0)}%
-                      </span>
-                    </span>
-                    <span className="rp-land-bar-track">
-                      <span
-                        className="rp-land-bar-fill"
-                        style={{ width: `${Math.max(2, r.pctOfTotal)}%` }}
-                      />
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="rp-dtable-wrap">
+                <table className="rp-dtable">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th className="num">TVL</th>
+                      <th className="num">Share</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tvlByType.map((r) => (
+                      <tr key={r.label}>
+                        <td className="strong">{r.label}</td>
+                        <td className="num">{usd(r.tvl)}</td>
+                        <td className="num">{r.pctOfTotal.toFixed(0)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -1075,8 +1096,8 @@ export default function XrpYieldRankingPage() {
                   The flip side is how actively these markets trade. Every
                   fixed-rate (PT) trade has a variable-yield (YT) counterpart, so
                   the buy and sell flow is a direct read on demand for the stXRP
-                  yield. The figures below cover every stXRP market on Spectra
-                  this year.
+                  yield. The figures below cover every stXRP market on Spectra,
+                  including the {tradeMaturedCount} that have since matured.
                 </p>
             <div className="rp-land-stats">
               <div className="rp-land-stat">
@@ -1096,8 +1117,8 @@ export default function XrpYieldRankingPage() {
                 <span className="rp-land-lab">Unique traders</span>
               </div>
               <div className="rp-land-stat">
-                <span className="rp-land-num">{tradeActive.length}</span>
-                <span className="rp-land-lab">Active markets</span>
+                <span className="rp-land-num">{tradeMkts.length}</span>
+                <span className="rp-land-lab">stXRP markets</span>
               </div>
             </div>
 
@@ -1109,62 +1130,58 @@ export default function XrpYieldRankingPage() {
               />
             ) : null}
 
-            <div className="rp-land-splits rp-trade-splits">
-              <div className="rp-land-split">
-                <h3 className="rp-land-split-h">By maturity</h3>
-                <ul className="rp-land-bars">
-                  {tradeActive.map((m) => {
-                    const v = m.buyUsd + m.sellUsd;
-                    const share = tradeVol ? (v / tradeVol) * 100 : 0;
-                    return (
-                      <li key={m.pool}>
-                        <span className="rp-land-bar-top">
-                          <span>{matLabel(m.maturityDate)} maturity</span>
-                          <span className="rp-land-bar-val">
-                            {usd(v)} · {m.traders} traders
-                          </span>
+            <div className="rp-dtable-wrap">
+              <table className="rp-dtable">
+                <thead>
+                  <tr>
+                    <th>Maturity</th>
+                    <th className="num">Volume</th>
+                    <th className="num">Traders</th>
+                    <th className="num">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tradeMkts.map((m) => (
+                    <tr key={m.pool}>
+                      <td className="strong">{matLabel(m.maturityDate)}</td>
+                      <td className="num">{usd(m.buyUsd + m.sellUsd)}</td>
+                      <td className="num">{m.traders.toLocaleString()}</td>
+                      <td className="num">
+                        <span className="rp-dtag">
+                          {m.expired ? "Matured" : "Live"}
                         </span>
-                        <span className="rp-land-bar-track">
-                          <span
-                            className="rp-land-bar-fill"
-                            style={{ width: `${Math.max(2, share)}%` }}
-                          />
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <p className="rp-article">
-              Activity was negligible until it took off in{" "}
-              {tradePeakMonth ? tradeMonthFmt(tradePeakMonth.mo) : "mid-2026"}:
-              trading concentrates almost entirely in the nearest liquid
-              maturity, the{" "}
-              <strong>{matLabel(tradeTop?.maturityDate ?? null)}</strong> market,
-              which alone accounts for{" "}
+            <p className="rp-article rp-trade-insights">
+              XRP fixed-yield trading has run at real scale since late 2025:{" "}
+              <strong>{usd(tradeVol)}</strong> across {tradeMkts.length} stXRP
+              markets and {trading.totals.traders} unique traders. The bulk ran
+              through markets that have since matured, which carried{" "}
+              <strong>{tradeExpiredPct}%</strong> of all volume; the single
+              busiest was the{" "}
+              <strong>{matLabel(tradeTop?.maturityDate ?? null)}</strong>{" "}
+              maturity at{" "}
               <strong>
-                {tradeTop && tradeVol
-                  ? Math.round(
-                      ((tradeTop.buyUsd + tradeTop.sellUsd) / tradeVol) * 100,
-                    )
-                  : 0}
-                %
-              </strong>{" "}
-              of volume across {trading.totals.traders} unique traders. Buys
-              outweigh sells{" "}
-              <strong>
-                {usd(trading.totals.buyUsd)}
-              </strong>{" "}
-              to <strong>{usd(trading.totals.sellUsd)}</strong> overall — a lean
-              toward locking the fixed rate rather than exiting it — while the
-              longer-dated markets stay near-dormant, a sign that demand sits at
-              the front of the curve.
+                {usd((tradeTop?.buyUsd ?? 0) + (tradeTop?.sellUsd ?? 0))}
+              </strong>
+              . Among live markets, the nearest{" "}
+              <strong>{matLabel(tradeLiveTop?.maturityDate ?? null)}</strong>{" "}
+              maturity leads. Buys and sells run close to even overall,{" "}
+              <strong>{usd(trading.totals.buyUsd)}</strong> to{" "}
+              <strong>{usd(trading.totals.sellUsd)}</strong>, a market roughly
+              balanced between locking the fixed rate and taking the variable
+              side.
             </p>
 
                 <p className="rp-source-note">
-                  {trading.note} As of {holderAsOf}.
+                  {trading.note} As of {holderAsOf}. Trade and trader counts are
+                  a floor on the busiest matured markets, where the venue caps
+                  the returned history.
                 </p>
               </>
             ) : null}
@@ -1274,11 +1291,17 @@ export default function XrpYieldRankingPage() {
               Type column names each product so like compares with like.
             </p>
 
-            <div className="rp-callout">
+            <TipBox>
+              When comparing XRP venues, weigh the <strong>30-day rate</strong>{" "}
+              over the spot number: a wrapped-XRP pool riding a short reward
+              spike can top the spot ranking yet fade within weeks, while a deep
+              single-sided lending or vault rate tends to hold.
+            </TipBox>
+            <InfoBox>
               Every venue on this page is an external protocol tracked for
               research. None are {SITE_NAME} products. This page is informational
               only, and past rates are no promise of what a venue pays next.
-            </div>
+            </InfoBox>
           </div>
         </section>
 
@@ -1420,11 +1443,11 @@ export default function XrpYieldRankingPage() {
                 this risk but never remove it.
               </dd>
             </dl>
-            <div className="rp-callout">
+            <InfoBox>
               This page is informational only. It does not constitute financial
               advice. Past rates are no promise of future ones, and no DeFi yield
               is risk-free.
-            </div>
+            </InfoBox>
           </div>
         </section>
 
@@ -1624,6 +1647,38 @@ function typeLabel(p: XrpPool): string {
   if (k === "Fixed-term pool") return "Fixed-Term";
   if (k === "Vault") return "Vault";
   return "Pool";
+}
+
+// Neutral info box (Figma): rounded, thin border, (i) icon + body.
+function InfoBox({ children }: { children: ReactNode }) {
+  return (
+    <div className="rp-info">
+      <svg className="rp-info-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="8.25" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M10 9v4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="10" cy="6.4" r="1.05" fill="currentColor" />
+      </svg>
+      <p className="rp-info-body">{children}</p>
+    </div>
+  );
+}
+
+// Green tip box (Figma): lightbulb + body.
+function TipBox({ children }: { children: ReactNode }) {
+  return (
+    <div className="rp-tip">
+      <svg className="rp-tip-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path
+          d="M8 15.5h4M8.4 13.2c0-1.1-.55-1.7-1.3-2.5a4 4 0 1 1 5.8 0c-.75.8-1.3 1.4-1.3 2.5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <p className="rp-tip-body">{children}</p>
+    </div>
+  );
 }
 
 // Resolve a pool to one of the product-type keys. Curated rows carry an
