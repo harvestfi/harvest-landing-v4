@@ -1030,6 +1030,39 @@
 :root[data-theme="dark"] .rp-dtag-live,
 .uni-home-test.dark .rp-dtag-live { color: #5fd398; border-color: rgba(26, 127, 75, 0.5); background: rgba(26, 127, 75, 0.16); }
 
+/* ---- Onchain references table: a compact, low-key reference. Small type and
+   tight rows so a long address list never dominates the page. ---- */
+.rp-page .rp-ref-table { font-size: 13px; line-height: 17px; }
+.rp-page .rp-ref-table th { font-size: 11.5px; padding-bottom: 7px; }
+.rp-page .rp-ref-table td { padding: 6px 10px; }
+.rp-page .rp-ref-table td.strong { font-weight: 600; }
+/* Hairline between the asset / vault / market groups. */
+.rp-page .rp-ref-table tr.rp-ref-group td { border-top: 1px solid var(--uni-line, #dedee6); padding-top: 11px; }
+.rp-ref-type { color: var(--uni-ink-3, #6b6d72); white-space: nowrap; }
+.rp-ref-tag { margin-left: 8px; font-weight: 600; font-size: 10.5px; padding: 0 6px; }
+.rp-ref-addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+}
+.rp-page .rp-ref-table code {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--uni-ink-2, #3e3e46);
+  word-break: break-all;
+}
+.rp-page .rp-ref-table td:first-child { white-space: nowrap; }
+@media (max-width: 640px) {
+  .rp-page .rp-ref-table { font-size: 12px; }
+  .rp-page .rp-ref-table th { font-size: 10.5px; }
+  .rp-page .rp-ref-table td { padding: 5px 7px; }
+  .rp-page .rp-ref-table code { font-size: 10px; }
+  .rp-ref-type { font-size: 11px; }
+  .rp-ref-tag { display: inline-block; margin-left: 6px; }
+}
+
 /* ---- Pill buttons (Figma): thin outline, white bg, icon + label. Applied to
    the report's utility buttons (Discover/Open, data downloads). ---- */
 .rp-page .rp-discover,
@@ -1093,8 +1126,12 @@
   box-shadow: 0 1px 2px rgba(10, 10, 17, 0.12);
 }
 .rp-callout-ico svg { display: block; width: 18px; height: 18px; }
-.rp-page .rp-info-body,
-.rp-page .rp-tip-body {
+/* Must out-specify `.rp-page .uni-home-content .rp-article p` (0,3,1), which
+   otherwise puts a 22px bottom margin inside the flex item so align-items:center
+   pushes the visible text toward the top edge. Hence the extra `.rp-tip`/
+   `.rp-info` class here (0,4,0). */
+.rp-page .uni-home-content .rp-info .rp-info-body,
+.rp-page .uni-home-content .rp-tip .rp-tip-body {
   margin: 0;
   align-self: center;
   font-size: 15.5px;
@@ -1847,6 +1884,10 @@
   .rp-page .uni-home-content .rp-method dd { font-size: 13px; line-height: 20px; }
   .rp-page .uni-home-content .rp-method dt { font-size: 13px; line-height: 1.4; }
   .rp-page .uni-home-content .rp-source-note { font-size: 12px; line-height: 18px; }
+  /* Methodology-box text matches the source-note scale on phones (it was
+     rendering at the larger desktop 15px). */
+  .rp-page .rp-methodology p { font-size: 12px; line-height: 18px; }
+  .rp-page .rp-methodology { padding: 13px 14px; }
   .rp-page .rp-snapshot .rp-snapshot-note { font-size: 12.5px; line-height: 19px; }
   .rp-page .rp-callout { font-size: 13px; line-height: 1.55; padding: 16px 18px; }
   .rp-page .rp-faq-q { font-size: 14px; line-height: 1.3; }
