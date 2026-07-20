@@ -46,6 +46,38 @@ async function getJson(url) {
 const dstr = (unixSec) => new Date(unixSec * 1000).toISOString().slice(0, 10);
 const mstr = (unixSec) => new Date(unixSec * 1000).toISOString().slice(0, 7);
 
+// Spectra pool /chart rows are [epochSeconds, { apy: "6.50", ... }]; apy is the
+// PT max fixed rate as a percent string. Normalise to {t(ms), apy(number)}.
+function readChartRows(doc) {
+  const rows = Array.isArray(doc) ? doc : Array.isArray(doc?.data) ? doc.data : [];
+  const out = [];
+  for (const r of rows) {
+    let ms, aRaw;
+    if (Array.isArray(r)) {
+      ms = Number(r[0]) * 1000;
+      aRaw = r[1]?.apy ?? r[1];
+    } else {
+      ms = Number(r.timestamp ?? r.t) * 1000;
+      aRaw = r.apy ?? r.value ?? r.y;
+    }
+    const apy = Number(aRaw);
+    if (Number.isFinite(ms) && Number.isFinite(apy)) out.push({ t: ms, apy });
+  }
+  return out.sort((a, b) => a.t - b.t);
+}
+// Downsample a rate chart to one point per calendar day, capped so the combined
+// overlay series stays lean in data/xrp-yield.json.
+function dailyRate(chart, capDays = 260) {
+  const byDay = new Map();
+  for (const r of chart) {
+    byDay.set(new Date(r.t).toISOString().slice(0, 10), Math.round(r.apy * 100) / 100);
+  }
+  return [...byDay.entries()]
+    .map(([d, apy]) => ({ d, apy }))
+    .sort((a, b) => (a.d < b.d ? -1 : 1))
+    .slice(-capDays);
+}
+
 // Discover every stXRP market and its AMM pool address from the Spectra pool
 // list, so the set stays correct as markets are added or roll off.
 const poolsDoc = await getJson(`${API}/pools`);
@@ -106,12 +138,17 @@ const dailyMap = new Map(); // d -> {buyUsd, sellUsd}
 const markets = [];
 
 for (const m of xrpMarkets) {
-  const [activity, volume] = await Promise.all([
+  const [activity, volume, chart] = await Promise.all([
     getJson(`${API}/pools/${m.pool}/activity`),
     getJson(`${API}/pools/${m.pool}/volume`),
+    getJson(`${API}/pools/${m.pool}/chart`),
   ]);
   const act = Array.isArray(activity) ? activity : [];
   const vol = Array.isArray(volume) ? volume : [];
+  // Daily PT max-fixed-rate history for this maturity. Matured markets still
+  // return their full chart, so overlaying every market extends the fixed-rate
+  // record much further back than the two live PTs alone.
+  const rateHistory = dailyRate(readChartRows(chart));
 
   const traders = new Set();
   let buyCount = 0,
@@ -173,6 +210,7 @@ for (const m of xrpMarkets) {
     removeLiqCount,
     firstDate: Number.isFinite(firstTs) ? dstr(firstTs) : null,
     lastDate: lastTs ? dstr(lastTs) : null,
+    rateHistory,
   });
   await new Promise((res) => setTimeout(res, 200));
 }

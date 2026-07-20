@@ -31,6 +31,7 @@ interface ReportClick {
   product: string | null;
   chain: string | null;
   venue_ref: string | null;
+  rank: number | null;
   target_url: string | null;
   source: string | null;
   country: string | null;
@@ -41,9 +42,9 @@ interface ReportClick {
 const ROWS_FETCH_LIMIT = 1000;
 const ROWS_DISPLAY_LIMIT = 200;
 
-// Time | Venue | Event | Chain | Source | Country | Device | Session
+// Time | Venue | Event | Pos | Chain | Source | Country | Device | Session
 const TABLE_COLS =
-  "140px minmax(170px, 1.5fr) 90px 110px 110px 100px 100px 110px";
+  "140px minmax(170px, 1.5fr) 110px 60px 110px 110px 100px 100px 110px";
 
 export default function ReportClicksPage() {
   const [clicks, setClicks] = useState<ReportClick[] | null>(null);
@@ -55,7 +56,7 @@ export default function ReportClicksPage() {
     (async () => {
       try {
         const params =
-          "select=id,created_at,session_id,event,source_page,platform,product,chain,venue_ref,target_url,source,country,city,device_type&order=created_at.desc&limit=" +
+          "select=id,created_at,session_id,event,source_page,platform,product,chain,venue_ref,rank,target_url,source,country,city,device_type&order=created_at.desc&limit=" +
           ROWS_FETCH_LIMIT;
         const data = await supabaseSelect<ReportClick>(
           "report_outbound_clicks",
@@ -91,11 +92,12 @@ export default function ReportClicksPage() {
             <h1 className="uni-hub-h1">Report Outbound Clicks</h1>
             <p className="uni-hub-sub aq-sub-full">
               Clicks leaving the /report pages for third-party venues. Tracked
-              separately from the into-app funnel: an &ldquo;open&rdquo; is a
-              Discover / Visit click that opened the leave-site prompt, a
-              &ldquo;confirm&rdquo; is an &ldquo;I understand&rdquo; that
-              followed through. Same session, source and geo fields as the rest
-              of the control room.
+              separately from the into-app funnel: an &ldquo;Opened&rdquo; is an
+              Open-button click that opened the leave-site prompt; a
+              &ldquo;Qualified lead&rdquo; is an &ldquo;I understand&rdquo;
+              confirmation that followed through. Only qualified leads count as
+              leads. Same session, source and geo fields as the rest of the
+              control room.
             </p>
           </div>
         </div>
@@ -111,9 +113,9 @@ export default function ReportClicksPage() {
         }}
       >
         <Stat label="Opened" value={stats?.opens} />
-        <Stat label="Confirmed (left)" value={stats?.confirms} />
+        <Stat label="Qualified leads" value={stats?.confirms} />
         <Stat
-          label="Confirm rate"
+          label="Qualification rate"
           value={stats?.confirmRate ?? undefined}
           suffix="%"
         />
@@ -137,6 +139,8 @@ export default function ReportClicksPage() {
             timeframe={timeframe}
             onTimeframeChange={setTimeframe}
           />
+          <ProductBreakdownSection clicks={clicks} />
+          <RankBreakdownSection clicks={clicks} />
           <TableSection clicks={clicks.slice(0, ROWS_DISPLAY_LIMIT)} />
         </>
       )}
@@ -279,6 +283,147 @@ function labelForDaysAgo(d: number): string {
   return `${d} days ago`;
 }
 
+interface BreakdownRow {
+  key: string;
+  label: string;
+  opens: number;
+  confirms: number;
+  total: number;
+}
+
+// Ranked horizontal-bar list, in the same visual spirit as the aq-chart bars
+// but laid out as rows. Each row: label, a proportional bar, and Opens /
+// Qualified-leads counts.
+function BreakdownBars({ rows }: { rows: BreakdownRow[] }) {
+  const max = Math.max(1, ...rows.map((r) => r.total));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {rows.map((r) => {
+        const widthPct = Math.max((r.total / max) * 100, r.total > 0 ? 4 : 0);
+        return (
+          <div key={r.key} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: 12,
+                fontSize: 13,
+              }}
+            >
+              <span style={{ fontWeight: 600, color: "#2b2a26" }}>{r.label}</span>
+              <span style={{ fontSize: 12, color: "#6e6c66", whiteSpace: "nowrap" }}>
+                {r.opens.toLocaleString("en-US")} opened ·{" "}
+                <span style={{ color: "#1c7d47", fontWeight: 600 }}>
+                  {r.confirms.toLocaleString("en-US")} qualified
+                </span>
+              </span>
+            </div>
+            <div
+              style={{
+                height: 8,
+                borderRadius: 999,
+                background: "rgba(0,0,0,0.06)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${widthPct}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  background: "rgba(34,160,90,0.55)",
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProductBreakdownSection({ clicks }: { clicks: ReportClick[] }) {
+  const rows = useMemo(() => {
+    const map = new Map<string, BreakdownRow>();
+    for (const c of clicks) {
+      const label = c.product ?? c.platform ?? "Unknown";
+      const key = label;
+      const existing = map.get(key) ?? {
+        key,
+        label,
+        opens: 0,
+        confirms: 0,
+        total: 0,
+      };
+      if (c.event === "open") existing.opens++;
+      else if (c.event === "confirm") existing.confirms++;
+      existing.total++;
+      map.set(key, existing);
+    }
+    return Array.from(map.values())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 12);
+  }, [clicks]);
+
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <h2 className="uni-hub-section-title">Top products by clicks</h2>
+        <span className="uni-hub-section-meta">which products people click to</span>
+      </header>
+      {rows.length === 0 ? (
+        <div className="uni-hub-empty">No product clicks captured yet.</div>
+      ) : (
+        <div className="aq-chart-card">
+          <BreakdownBars rows={rows} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RankBreakdownSection({ clicks }: { clicks: ReportClick[] }) {
+  const rows = useMemo(() => {
+    const map = new Map<number, BreakdownRow>();
+    for (const c of clicks) {
+      if (c.rank == null) continue;
+      const existing = map.get(c.rank) ?? {
+        key: String(c.rank),
+        label: `#${c.rank}`,
+        opens: 0,
+        confirms: 0,
+        total: 0,
+      };
+      if (c.event === "open") existing.opens++;
+      else if (c.event === "confirm") existing.confirms++;
+      existing.total++;
+      map.set(c.rank, existing);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([, row]) => row);
+  }, [clicks]);
+
+  return (
+    <section className="uni-hub-section">
+      <header className="uni-hub-section-head">
+        <h2 className="uni-hub-section-title">Ranking position by clicks</h2>
+        <span className="uni-hub-section-meta">
+          which position on the ranking gets most clicks
+        </span>
+      </header>
+      {rows.length === 0 ? (
+        <div className="uni-hub-empty">No ranked-position clicks captured yet.</div>
+      ) : (
+        <div className="aq-chart-card">
+          <BreakdownBars rows={rows} />
+        </div>
+      )}
+    </section>
+  );
+}
+
 function TableSection({ clicks }: { clicks: ReportClick[] }) {
   return (
     <section className="uni-hub-section">
@@ -303,6 +448,7 @@ function TableSection({ clicks }: { clicks: ReportClick[] }) {
               <span className="hub-th">Time</span>
               <span className="hub-th">Venue</span>
               <span className="hub-th">Event</span>
+              <span className="hub-th">Pos</span>
               <span className="hub-th">Network</span>
               <span className="hub-th">Source</span>
               <span className="hub-th">Country</span>
@@ -335,6 +481,9 @@ function TableSection({ clicks }: { clicks: ReportClick[] }) {
                 </span>
                 <span className="hub-cell">
                   <EventChip event={c.event} />
+                </span>
+                <span className="hub-cell aq-cell-text">
+                  {c.rank != null ? `#${c.rank}` : "—"}
                 </span>
                 <span className="hub-cell aq-cell-text">{c.chain ?? "—"}</span>
                 <span className="hub-cell aq-cell-text">{c.source ?? "—"}</span>
@@ -375,7 +524,11 @@ function EventChip({ event }: { event: string | null }) {
         color: isConfirm ? "#1c7d47" : "#6e6c66",
       }}
     >
-      {event === "confirm" ? "Confirmed" : event === "open" ? "Opened" : (event ?? "—")}
+      {event === "confirm"
+        ? "Qualified lead"
+        : event === "open"
+          ? "Opened"
+          : (event ?? "—")}
     </span>
   );
 }

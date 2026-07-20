@@ -11,6 +11,7 @@ import { ReportToc, type TocItem } from "@/components/report/report-toc";
 import { ReportChart } from "@/components/report/report-chart";
 import { LandscapeChart } from "@/components/report/landscape-chart";
 import { TradingChart } from "@/components/report/trading-chart";
+import { OverlayChart } from "@/components/report/overlay-chart";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { VENUE_GROUPS, WRAPPED_TOKENS, type VenueNote } from "./venue-notes";
 import {
@@ -121,6 +122,10 @@ interface XrpTradingMarket {
   sellUsd: number;
   buyCount: number;
   sellCount: number;
+  // Daily PT max-fixed-rate history for this maturity (from the Spectra pool
+  // /chart endpoint). Present for every market including matured ones, which is
+  // what lets the overlay chart reach back further than the live PTs alone.
+  rateHistory?: { d: string; apy: number }[];
 }
 interface XrpYieldTrading {
   generatedAt: string;
@@ -307,6 +312,50 @@ export default function XrpYieldRankingPage() {
     ? Math.max(...ptRows.map((p) => histRate(p) ?? 0))
     : 0;
 
+  // Combined "max fixed rate" overlay: one line per stXRP maturity that carried
+  // real volume, on a shared axis. Each line is trimmed at its maturity (the
+  // Spectra chart pads post-maturity points with a rate that decays to zero) and
+  // dust markets are dropped, so the picture stays honest. Because matured
+  // markets still return their full chart, the overlay reaches back to when the
+  // first liquid market opened — far deeper than the two live PTs on their own.
+  const PT_OVERLAY_MIN_VOL = 1_000_000;
+  const matLabelShort = (d: string | null) =>
+    d
+      ? new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        })
+      : "—";
+  // A PT's implied fixed rate annualizes over its remaining term, so in the
+  // final days before maturity a sliver of price gap explodes to absurd APYs
+  // (millions of %). Drop the last week before maturity and cap at a sane
+  // ceiling so those degenerate points never distort the shared axis.
+  const PT_RATE_CEILING = 60;
+  const PT_TAIL_DAYS = 10;
+  const dayNum = (d: string) => Date.parse(`${d}T00:00:00Z`);
+  const ptOverlay = (data.yieldTrading?.markets ?? [])
+    .filter((m) => m.buyUsd + m.sellUsd >= PT_OVERLAY_MIN_VOL)
+    .map((m) => {
+      const matMs = m.maturityDate ? dayNum(m.maturityDate) : null;
+      return {
+        label: matLabelShort(m.maturityDate),
+        maturityDate: m.maturityDate,
+        expired: !!m.expired,
+        points: (m.rateHistory ?? []).filter((p) => {
+          if (!(p.apy > 0) || p.apy > PT_RATE_CEILING) return false;
+          if (matMs == null) return true;
+          const dtm = (matMs - dayNum(p.d)) / 86_400_000;
+          return dtm >= PT_TAIL_DAYS;
+        }),
+      };
+    })
+    .filter((s) => s.points.length >= 8)
+    .sort((a, b) => ((a.maturityDate ?? "") < (b.maturityDate ?? "") ? -1 : 1));
+  const ptOverlayStart = ptOverlay
+    .flatMap((s) => s.points.map((p) => p.d))
+    .reduce<string | null>((min, d) => (min == null || d < min ? d : min), null);
+
   // Early-answer snippet inputs: the top rate among non-PT single-exposure
   // products, the top dual-exposure pool, and the top fixed-rate PT (kept
   // distinct so the three clauses don't repeat the same row). Lists arrive
@@ -406,43 +455,43 @@ export default function XrpYieldRankingPage() {
   // Right-rail "In this report" tree. Conditional sections are included only
   // when they render, so scroll-spy never points at a missing anchor.
   const tocItems: TocItem[] = [
-    { id: "snapshot-title", label: "XRP yield right now" },
-    { id: "rankings-title", label: "The ranking" },
-    { id: "rank-single", label: "Single-exposure", level: 1 },
-    { id: "rank-dual", label: "Dual-exposure", level: 1 },
-    { id: "overview-title", label: "Overview" },
-    { id: "landscape-title", label: "XRP yield landscape" },
+    { id: "yield-now", label: "XRP yield right now" },
+    { id: "ranking", label: "The ranking" },
+    { id: "ranking-single-exposure", label: "Single-exposure", level: 1 },
+    { id: "ranking-dual-exposure", label: "Dual-exposure", level: 1 },
+    { id: "overview", label: "Overview" },
+    { id: "yield-landscape", label: "XRP yield landscape" },
     ...(pools.some((p) => p.holders)
-      ? [{ id: "popular-title", label: "Most popular by holders" }]
+      ? [{ id: "most-popular", label: "Most popular by holders" }]
       : []),
     ...(venueCharts.length > 0
-      ? [{ id: "ratehist-title", label: "30-day rate history" }]
+      ? [{ id: "rate-history", label: "30-day rate history" }]
       : []),
     ...(ptRows.length > 0 || data.yieldTrading
       ? [
-          { id: "trading-title", label: "XRP yield trading activity" },
-          ...(ptRows.length > 0
-            ? [{ id: "trade-pt", label: "Fixed-rate (Principal Tokens)", level: 1 }]
+          { id: "yield-trading", label: "XRP yield trading activity" },
+          ...(ptOverlay.length > 0 || ptRows.length > 0
+            ? [{ id: "yield-trading-fixed-rate", label: "Fixed-rate (Principal Tokens)", level: 1 }]
             : []),
           ...(data.yieldTrading
-            ? [{ id: "trade-yt", label: "Variable-rate (Yield Tokens)", level: 1 }]
+            ? [{ id: "yield-trading-variable-rate", label: "Variable-rate (Yield Tokens)", level: 1 }]
             : []),
         ]
       : []),
-    { id: "where-title", label: "Where yield comes from" },
-    { id: "src-lending", label: "Lending", level: 1 },
-    { id: "src-vaults", label: "Vaults & liquid staking", level: 1 },
-    { id: "src-liquidity", label: "Liquidity provision", level: 1 },
-    { id: "src-pt", label: "Fixed-rate PTs", level: 1 },
-    { id: "src-sorted", label: "How the ranking is sorted", level: 1 },
-    { id: "tokens-title", label: "Wrapped forms of XRP" },
-    { id: "staking-title", label: "Can you stake XRP?" },
-    { id: "cefi-title", label: "CeFi vs DeFi" },
-    { id: "risks-title", label: "Key risks" },
-    { id: "venues-title", label: "Venues in depth" },
-    { id: "faq-title", label: "FAQ" },
-    { id: "data-title", label: "Data & downloads" },
-    { id: "method-title", label: "Method & scope" },
+    { id: "where-yield-comes-from", label: "Where yield comes from" },
+    { id: "source-lending", label: "Lending", level: 1 },
+    { id: "source-vaults", label: "Vaults & liquid staking", level: 1 },
+    { id: "source-liquidity", label: "Liquidity provision", level: 1 },
+    { id: "source-fixed-rate-pts", label: "Fixed-rate PTs", level: 1 },
+    { id: "how-the-ranking-is-sorted", label: "How the ranking is sorted", level: 1 },
+    { id: "wrapped-xrp", label: "Wrapped forms of XRP" },
+    { id: "can-you-stake-xrp", label: "Can you stake XRP?" },
+    { id: "cefi-vs-defi", label: "CeFi vs DeFi" },
+    { id: "key-risks", label: "Key risks" },
+    { id: "venues-in-depth", label: "Venues in depth" },
+    { id: "faq", label: "FAQ" },
+    { id: "machine-readable-data", label: "Data & downloads" },
+    { id: "method-and-scope", label: "Method & scope" },
   ];
 
   // Three representative marks for the hero: XRP and its two headline wrapped
@@ -688,7 +737,7 @@ export default function XrpYieldRankingPage() {
             rate and split by exposure.
           </p>
           <p className="rp-updated">Last updated {updated}</p>
-          <a href="#rankings" className="uni-home-cta-primary">
+          <a href="#ranking" className="uni-home-cta-primary">
             Explore the ranking
             <span aria-hidden="true">↓</span>
           </a>
@@ -698,9 +747,9 @@ export default function XrpYieldRankingPage() {
       <main className="uni-home-shell">
        <div className="rp-doc">
         <div className="rp-doc-main">
-        <section className="uni-home-content" aria-labelledby="overview-title">
+        <section className="uni-home-content" aria-labelledby="overview">
           <p className="rp-eyebrow">Report</p>
-          <h2 id="overview-title">Overview</h2>
+          <h2 id="overview">Overview</h2>
           <div className="rp-article">
             <p>
               Earning yield on XRP is quietly growing into one of the more active
@@ -736,23 +785,23 @@ export default function XrpYieldRankingPage() {
           </div>
           <nav className="rp-toc" aria-label="On this page">
             <span className="rp-toc-label">On this page</span>
-            <a href="#landscape-title">Landscape</a>
-            <a href="#rankings">The ranking</a>
-            <a href="#ratehist-title">30-day rate history</a>
-            <a href="#where-title">Where yield comes from</a>
-            <a href="#tokens-title">Wrapped forms of XRP</a>
-            <a href="#staking">Can you stake XRP?</a>
-            <a href="#cefi">CeFi vs DeFi</a>
-            <a href="#risks">Risks</a>
-            <a href="#venues-title">Venues in depth</a>
+            <a href="#yield-landscape">Landscape</a>
+            <a href="#ranking">The ranking</a>
+            <a href="#rate-history">30-day rate history</a>
+            <a href="#where-yield-comes-from">Where yield comes from</a>
+            <a href="#wrapped-xrp">Wrapped forms of XRP</a>
+            <a href="#can-you-stake-xrp">Can you stake XRP?</a>
+            <a href="#cefi-vs-defi">CeFi vs DeFi</a>
+            <a href="#key-risks">Risks</a>
+            <a href="#venues-in-depth">Venues in depth</a>
             <a href="#faq">FAQ</a>
-            <a href="#method-title">Method</a>
+            <a href="#method-and-scope">Method</a>
           </nav>
         </section>
 
-        <section className="uni-home-content" id="rankings" aria-labelledby="rankings-title">
+        <section className="uni-home-content" aria-labelledby="ranking">
           <p className="rp-eyebrow">Live rates</p>
-          <h2 id="rankings-title">The ranking</h2>
+          <h2 id="ranking">The ranking</h2>
           <p className="rp-lead">
             The curated XRP products, ranked by rate and split by exposure.
             Single-exposure positions sit on one side of the market; dual-exposure
@@ -761,7 +810,7 @@ export default function XrpYieldRankingPage() {
           </p>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
-              <h3 id="rank-single">Single-exposure XRP yield</h3>
+              <h3 id="ranking-single-exposure">Single-exposure XRP yield</h3>
               <p>
                 {singles.length} one-sided positions with no second asset:
                 lending markets, curated vaults, liquid staking, fixed-rate
@@ -772,7 +821,7 @@ export default function XrpYieldRankingPage() {
           </div>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
-              <h3 id="rank-dual">Dual-exposure XRP pools</h3>
+              <h3 id="ranking-dual-exposure">Dual-exposure XRP pools</h3>
               <p>
                 {duals.length} two-asset liquidity pools that pair an XRP token
                 with something else and earn swap fees plus rewards. Higher
@@ -787,9 +836,9 @@ export default function XrpYieldRankingPage() {
           </p>
         </section>
 
-        <section className="uni-home-content" aria-labelledby="snapshot-title">
+        <section className="uni-home-content" aria-labelledby="yield-now">
           <p className="rp-eyebrow">Summary</p>
-          <h2 id="snapshot-title">XRP yield right now</h2>
+          <h2 id="yield-now">XRP yield right now</h2>
           <div className="rp-snapshot">
             <p>
               As of {updated}, the top vault or lending rate is{" "}
@@ -827,9 +876,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" aria-labelledby="landscape-title">
+        <section className="uni-home-content" aria-labelledby="yield-landscape">
           <p className="rp-eyebrow">The big picture</p>
-          <h2 id="landscape-title">XRP yield landscape</h2>
+          <h2 id="yield-landscape">XRP yield landscape</h2>
           <div className="rp-land-stats">
             <div className="rp-land-stat">
               <span className="rp-land-num">{usd(totalTvl)}</span>
@@ -952,9 +1001,9 @@ export default function XrpYieldRankingPage() {
         </section>
 
         {holderRanked.length > 0 && (
-          <section className="uni-home-content" aria-labelledby="popular-title">
+          <section className="uni-home-content" aria-labelledby="most-popular">
             <p className="rp-eyebrow">Adoption</p>
-            <h2 id="popular-title">Most popular XRP yield sources</h2>
+            <h2 id="most-popular">Most popular XRP yield sources</h2>
             <p className="rp-lead">
               Rate and TVL show how much is deposited; holder counts show how
               many wallets actually hold each product, a read on real adoption
@@ -1041,9 +1090,9 @@ export default function XrpYieldRankingPage() {
         )}
 
         {(ptRows.length > 0 || (trading && tradeActive.length > 0)) && (
-          <section className="uni-home-content" aria-labelledby="trading-title">
+          <section className="uni-home-content" aria-labelledby="yield-trading">
             <p className="rp-eyebrow">Yield trading</p>
-            <h2 id="trading-title">XRP yield trading activity</h2>
+            <h2 id="yield-trading">XRP yield trading activity</h2>
             <p className="rp-lead">
               There are two ways to trade the XRP yield itself, both on
               Spectra&rsquo;s dated staked-XRP markets: lock a fixed rate by
@@ -1052,44 +1101,79 @@ export default function XrpYieldRankingPage() {
               markets have traded this year.
             </p>
 
-            {ptRows.length > 0 ? (
+            {ptOverlay.length > 0 || ptRows.length > 0 ? (
               <>
-                <h3 id="trade-pt" className="rp-trade-subhead">
+                <h3 id="yield-trading-fixed-rate" className="rp-trade-subhead">
                   XRP: Fixed-Rate Yield Trading Activity (Principal Tokens)
                 </h3>
-                <p className="rp-lead rp-trade-sublead">
-                  The locked-in fixed rate on each staked-XRP Principal Token,
-                  tracked day by day since the market opened, straight from
-                  Spectra. A PT secures this rate to maturity, so the line is the
-                  full record of what each maturity has offered.
-                </p>
-                <div className="rp-charts">
-                  {ptRows.map((p) => (
-                    <ReportChart
-                      key={p.id}
-                      history={p.history ?? []}
-                      title={nice(p.displayName ?? p.symbol)}
-                      tvlLabel={`${usd(p.tvlUsd)} TVL`}
-                      nowValue={
-                        p.history?.[p.history.length - 1]?.apy ?? histRate(p)
-                      }
-                      nowLabel="max fixed"
+                {ptOverlay.length > 0 ? (
+                  <>
+                    <p className="rp-lead rp-trade-sublead">
+                      The locked-in max fixed rate on each staked-XRP Principal
+                      Token, every liquid stXRP maturity overlaid on one axis,
+                      straight from Spectra. Because matured markets keep their
+                      record, the fixed-rate history reaches back to{" "}
+                      {ptOverlayStart
+                        ? new Date(`${ptOverlayStart}T00:00:00Z`).toLocaleDateString(
+                            "en-US",
+                            { month: "long", year: "numeric", timeZone: "UTC" },
+                          )
+                        : "the first market"}
+                      , far deeper than the live PTs alone.
+                    </p>
+                    <OverlayChart
+                      series={ptOverlay}
+                      title="Max fixed rate by maturity"
+                      subtitle="daily, liquid stXRP markets overlaid"
                     />
-                  ))}
-                </div>
-                <p className="rp-source-note">
-                  Both maturities opened near {pct(ptOpenHi)} and have eased into
-                  the low single digits since, a gentle downtrend as early demand
-                  settled. The top fixed rate now sits around {pct(ptNowHi)},
-                  still competitive with the single-sided field, and the two
-                  Spectra pools together hold {usd(ptTvl)} in liquidity.
-                </p>
+                    <p className="rp-source-note">
+                      Each line is one maturity&rsquo;s daily max fixed rate from
+                      Spectra, trimmed at maturity (the API pads a decaying rate
+                      past that date). Only markets that carried real volume are
+                      overlaid; the thinnest maturities are left out. A PT locks
+                      its rate to maturity, so matured lines are the full,
+                      finished record of what that market offered. The two live
+                      Spectra PTs together hold {usd(ptTvl)} in liquidity.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="rp-lead rp-trade-sublead">
+                      The locked-in fixed rate on each staked-XRP Principal Token,
+                      tracked day by day since the market opened, straight from
+                      Spectra. A PT secures this rate to maturity, so the line is
+                      the full record of what each maturity has offered.
+                    </p>
+                    <div className="rp-charts">
+                      {ptRows.map((p) => (
+                        <ReportChart
+                          key={p.id}
+                          history={p.history ?? []}
+                          title={nice(p.displayName ?? p.symbol)}
+                          tvlLabel={`${usd(p.tvlUsd)} TVL`}
+                          nowValue={
+                            p.history?.[p.history.length - 1]?.apy ?? histRate(p)
+                          }
+                          nowLabel="max fixed"
+                        />
+                      ))}
+                    </div>
+                    <p className="rp-source-note">
+                      Both maturities opened near {pct(ptOpenHi)} and have eased
+                      into the low single digits since, a gentle downtrend as
+                      early demand settled. The top fixed rate now sits around{" "}
+                      {pct(ptNowHi)}, still competitive with the single-sided
+                      field, and the two Spectra pools together hold {usd(ptTvl)}{" "}
+                      in liquidity.
+                    </p>
+                  </>
+                )}
               </>
             ) : null}
 
             {trading && tradeActive.length > 0 ? (
               <>
-                <h3 id="trade-yt" className="rp-trade-subhead">
+                <h3 id="yield-trading-variable-rate" className="rp-trade-subhead">
                   XRP: Variable-Rate Yield Trading Activity (Yield Tokens)
                 </h3>
                 <p className="rp-lead rp-trade-sublead">
@@ -1179,9 +1263,12 @@ export default function XrpYieldRankingPage() {
             </p>
 
                 <p className="rp-source-note">
-                  {trading.note} As of {holderAsOf}. Trade and trader counts are
-                  a floor on the busiest matured markets, where the venue caps
-                  the returned history.
+                  {trading.note} Every stXRP market is included, so quiet
+                  stretches on the daily chart are real lulls between maturities
+                  — demand thinning as one maturity winds down before the next
+                  ramps — not missing pools. As of {holderAsOf}. Trade and trader
+                  counts are a floor on the busiest matured markets, where the
+                  venue caps the returned history.
                 </p>
               </>
             ) : null}
@@ -1189,9 +1276,9 @@ export default function XrpYieldRankingPage() {
         )}
 
         {venueCharts.length > 0 && (
-          <section className="uni-home-content" aria-labelledby="ratehist-title">
+          <section className="uni-home-content" aria-labelledby="rate-history">
             <p className="rp-eyebrow">Charts</p>
-            <h2 id="ratehist-title">30-day rate history</h2>
+            <h2 id="rate-history">30-day rate history</h2>
             <p className="rp-lead">
               How the rate has moved over the last 30 days for a selection of
               the larger venues, from DeFiLlama&rsquo;s daily record. Useful for
@@ -1217,9 +1304,9 @@ export default function XrpYieldRankingPage() {
           </section>
         )}
 
-        <section className="uni-home-content" aria-labelledby="where-title">
+        <section className="uni-home-content" aria-labelledby="where-yield-comes-from">
           <p className="rp-eyebrow">Guide</p>
-          <h2 id="where-title">Where XRP yield comes from</h2>
+          <h2 id="where-yield-comes-from">Where XRP yield comes from</h2>
           <div className="rp-article">
             <p>
               The rates on this page all trace back to one of a few simple
@@ -1228,7 +1315,7 @@ export default function XrpYieldRankingPage() {
               short-term rewards.
             </p>
 
-            <h3 id="src-lending">Lending</h3>
+            <h3 id="source-lending">Lending</h3>
             <p>
               Wrapped XRP supplied to a money market such as Kinetic on Flare or
               Moonwell on Base earns the interest borrowers pay on their loans.
@@ -1239,7 +1326,7 @@ export default function XrpYieldRankingPage() {
               is the closest thing XRP has to a plain savings rate.
             </p>
 
-            <h3 id="src-vaults">Vaults and liquid staking</h3>
+            <h3 id="source-vaults">Vaults and liquid staking</h3>
             <p>
               Vaults and liquid-staking tokens do the work automatically. A
               curated vault such as Spectra, Upshift, Mystic or Superform, or a
@@ -1252,7 +1339,7 @@ export default function XrpYieldRankingPage() {
               incentives on top.
             </p>
 
-            <h3 id="src-liquidity">Liquidity provision</h3>
+            <h3 id="source-liquidity">Liquidity provision</h3>
             <p>
               Pairing an XRP token with another asset in a pool on SparkDEX or
               Aerodrome earns a share of the swap fees, usually with extra reward
@@ -1264,7 +1351,7 @@ export default function XrpYieldRankingPage() {
               impermanent loss, so these pools reward active management.
             </p>
 
-            <h3 id="src-pt">Fixed-rate Principal Tokens</h3>
+            <h3 id="source-fixed-rate-pts">Fixed-rate Principal Tokens</h3>
             <p>
               Spectra adds one more mechanism that is unique on this list: the
               Principal Token, or PT. A PT for staked XRP trades at a discount
@@ -1283,7 +1370,7 @@ export default function XrpYieldRankingPage() {
               rate, which is the figure this report tracks.
             </p>
 
-            <h3 id="src-sorted">How the ranking is sorted</h3>
+            <h3 id="how-the-ranking-is-sorted">How the ranking is sorted</h3>
             <p>
               Venues are sorted by the 30-day average rate rather than
               today&rsquo;s spot number, so a single big day of rewards cannot
@@ -1305,9 +1392,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" aria-labelledby="tokens-title">
+        <section className="uni-home-content" aria-labelledby="wrapped-xrp">
           <p className="rp-eyebrow">Tokens</p>
-          <h2 id="tokens-title">The wrapped forms of XRP</h2>
+          <h2 id="wrapped-xrp">The wrapped forms of XRP</h2>
           <div className="rp-article">
             <p>
               Beyond the XRP Ledger&rsquo;s own native AMM, every rate on this
@@ -1342,9 +1429,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" id="staking" aria-labelledby="staking-title">
+        <section className="uni-home-content" aria-labelledby="can-you-stake-xrp">
           <p className="rp-eyebrow">Explainer</p>
-          <h2 id="staking-title">Can you stake XRP?</h2>
+          <h2 id="can-you-stake-xrp">Can you stake XRP?</h2>
           <div className="rp-article">
             <p>
               Short answer: no. XRP is not a proof-of-stake asset, and the XRP
@@ -1369,9 +1456,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" id="cefi" aria-labelledby="cefi-title">
+        <section className="uni-home-content" aria-labelledby="cefi-vs-defi">
           <p className="rp-eyebrow">Compare</p>
-          <h2 id="cefi-title">CeFi vs DeFi XRP yield</h2>
+          <h2 id="cefi-vs-defi">CeFi vs DeFi XRP yield</h2>
           <div className="rp-article">
             <p>
               XRP can also earn through centralized &ldquo;Earn&rdquo; programs
@@ -1400,9 +1487,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" id="risks" aria-labelledby="risks-title">
+        <section className="uni-home-content" aria-labelledby="key-risks">
           <p className="rp-eyebrow">Risk</p>
-          <h2 id="risks-title">Key risks</h2>
+          <h2 id="key-risks">Key risks</h2>
           <div className="rp-article">
             <p>
               Every rate on this page carries risk. These are the main ones that
@@ -1451,9 +1538,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" aria-labelledby="venues-title">
+        <section className="uni-home-content" aria-labelledby="venues-in-depth">
           <p className="rp-eyebrow">Reference</p>
-          <h2 id="venues-title">XRP yield venues, explained</h2>
+          <h2 id="venues-in-depth">XRP yield venues, explained</h2>
           <div className="rp-article">
             <p>
               A rate is only as good as what pays it. We looked into each venue
@@ -1478,9 +1565,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" id="faq" aria-labelledby="faq-title">
+        <section className="uni-home-content" aria-labelledby="faq">
           <p className="rp-eyebrow">FAQ</p>
-          <h2 id="faq-title">XRP yield, answered</h2>
+          <h2 id="faq">XRP yield, answered</h2>
           <div className="rp-faq">
             {faqs.map((f, i) => (
               <details className="rp-faq-item" key={i} open={i === 0}>
@@ -1494,9 +1581,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" aria-labelledby="data-title">
+        <section className="uni-home-content" aria-labelledby="machine-readable-data">
           <p className="rp-eyebrow">Data</p>
-          <h2 id="data-title">Machine-readable data</h2>
+          <h2 id="machine-readable-data">Machine-readable data</h2>
           <div className="rp-article">
             <p className="rp-lead">
               Every product on this page is published as clean, downloadable
@@ -1546,9 +1633,9 @@ export default function XrpYieldRankingPage() {
           </div>
         </section>
 
-        <section className="uni-home-content" aria-labelledby="method-title">
+        <section className="uni-home-content" aria-labelledby="method-and-scope">
           <p className="rp-eyebrow">Method</p>
-          <h2 id="method-title">Method &amp; scope</h2>
+          <h2 id="method-and-scope">Method &amp; scope</h2>
           <dl className="rp-method">
             <dt>Inclusion</dt>
             <dd>
@@ -1792,6 +1879,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                   source={`ranking:${p.venueSlug ?? p.project}`}
                   product={assetHead(p)}
                   chain={p.chain}
+                  rank={i + 1}
                 />
               </span>
             </div>

@@ -15,6 +15,13 @@
 // Best-effort and consent-gated, exactly like the into-app tracker: it never
 // blocks navigation, no-ops on /control-room, and no-ops until the Supabase
 // table exists (the insert simply fails silently).
+//
+// SCHEMA NOTE: the `rank` field (1-based ranking position of the clicked row,
+// null for venue-card clicks) needs a matching column on the table:
+//   ALTER TABLE report_outbound_clicks ADD COLUMN rank int;
+// Until that column exists, PostgREST rejects the whole insert, so add the
+// column when deploying this — the Control Room "Ranking position by clicks"
+// breakdown reads it.
 
 import { supabaseInsert } from "@/lib/supabase";
 import {
@@ -34,6 +41,10 @@ export interface ReportOutboundClick {
   // Stable identifier for the row/card the click came from, e.g.
   // "ranking:sparkdex-v4" or "venue:kinetic".
   venueRef?: string;
+  // 1-based position in the ranking table the click came from (1 = top). Null
+  // for clicks that don't originate in a ranked list (e.g. the venue cards), so
+  // the admin panel can read "which ranking position gets the most clicks".
+  rank?: number | null;
   targetUrl: string;
 }
 
@@ -57,6 +68,7 @@ export function trackReportOutbound(c: ReportOutboundClick): void {
       product: c.product ?? null,
       chain: c.chain ?? null,
       venue_ref: c.venueRef ?? null,
+      rank: c.rank ?? null,
       target_url: c.targetUrl,
       source: deriveSource(document.referrer || ""),
       country: geo.country ?? null,
