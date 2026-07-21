@@ -160,7 +160,7 @@ const coveragePct = Math.round((last.tvl / currentTotal) * 100);
 data.landscape = {
   generatedAt: new Date().toISOString(),
   note:
-    "Daily-indexed XRP-denominated DeFi TVL across venues with continuous history: per-pool TVL (DeFiLlama) for the pool-indexed venues, plus Upshift's Flare vault TVL (protocol-level, its entire Flare presence is XRP). Spectra XRP markets and Superform lack a clean daily series and are counted in the current total but not this line. Sources: DeFiLlama, Portals, Spectra.",
+    "Daily-indexed XRP-denominated DeFi TVL across venues with a continuous daily series, plus Upshift's Flare vault TVL (protocol-level, its entire Flare presence is XRP). Venues newly switched to on-chain sourcing rebuild their daily series forward from the switch, so they join this line as history accumulates; their current TVL is always in today's total. Sources: on-chain reads (Base and Flare), Spectra and Portals.",
   coverage: venueSeries.map((s) => ({ venue: s.venue, basis: s.kind, points: s.hist.length })),
   indexedShareOfTotalPct: coveragePct,
   snapshotRemainderUsd: Math.round(remainder),

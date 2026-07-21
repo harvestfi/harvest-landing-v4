@@ -77,6 +77,9 @@ interface XrpPool {
   // "30d" (30-day mean / fixed rate), "current" (live spot APY), "na" (no feed).
   rateBasis?: string;
   rateNa?: boolean;
+  // "high" for small, emission-driven pools whose rate swings week to week.
+  variance?: string;
+  source?: string;
   // Daily series for the charts. `apy` feeds the rate charts; `tvl` and `pps`
   // (added by the TVL backfill) feed the landscape aggregate and are optional so
   // older snapshots still type-check.
@@ -408,6 +411,25 @@ export default function XrpYieldRankingPage() {
   const topDual = duals.find((p) => !p.rateNa) ?? duals[0];
   const ratedCount = stats.rated ?? pools.filter((p) => !p.rateNa).length;
 
+  // Headline range is single-exposure only: those are the comparable, durable
+  // rates. Two-asset LP pools read far higher but are reward emissions on very
+  // small pools, so they get a separate, caveated clause rather than the
+  // headline (which they would otherwise dominate and distort).
+  const singleRates = singles
+    .filter((p) => !p.rateNa)
+    .map(histRate)
+    .filter((v): v is number => v != null);
+  const sLo = singleRates.length ? Math.min(...singleRates) : 0;
+  const sHi = singleRates.length ? Math.max(...singleRates) : 0;
+  const sSorted = [...singleRates].sort((a, b) => a - b);
+  const sMedian = sSorted.length ? sSorted[Math.floor(sSorted.length / 2)] : stats.medianApy;
+  const topDualPool =
+    duals
+      .filter((p) => !p.rateNa)
+      .slice()
+      .sort((a, b) => (histRate(b) ?? 0) - (histRate(a) ?? 0))[0] ?? null;
+  const dHi = topDualPool ? histRate(topDualPool) : null;
+
   // Popularity read for the "XRP yield right now" intro. Holder counts aren't
   // published across these venues, so we weigh how much capital each platform
   // holds (TVL) against what it pays: score = TVL x average rate. The average is
@@ -461,7 +483,7 @@ export default function XrpYieldRankingPage() {
   const earnXrp = pools.find((p) => p.venueSlug === "upshift-earnxrp");
   const bestYieldAnswer =
     spectraStats && earnXrp
-      ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP markets and MetaVault, averaging about ${pct(spectraStats.avgApy)} across the capital tracked there, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates but add impermanent loss and usually lean on incentives, so the ranking sorts every venue by its real 30-day average.`
+      ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP markets and MetaVault, averaging about ${pct(spectraStats.avgApy)} across the capital tracked there, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates, at the cost of impermanent loss and a reliance on incentives; the ranking sorts every venue by its real 30-day average to keep the comparison fair.`
       : `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Single-sided lending and vaults are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually lean on incentives.`;
   // Highest-rate product for the "highest APY" answer (pools arrive rate-sorted).
   const topRate = pools
@@ -479,7 +501,7 @@ export default function XrpYieldRankingPage() {
     "What is the best XRP yield right now?": bestYieldAnswer,
     "How do you earn interest on XRP?": `You move XRP onto a smart-contract chain as a wrapped token such as FXRP or cbXRP, then put it to work: supply it to a lending market for borrower interest, deposit it in a curated vault, hold a fixed-rate Principal Token, or add it to a liquidity pool for swap fees. This report tracks ${stats.venues} such XRP products across ${stats.chains.length} networks (${joinAnd(stats.chains.map(chainLabel))}), holding about ${usd(totalTvlFaq)} in total, ranked by their real 30-day rate.`,
     "What is the highest APY for XRP?": topRate
-      ? `Right now the highest 30-day rate on this page is about ${pct(histRate(topRate))} on ${assetHead(topRate)} at ${topRate.platform}${isDual(topRate) ? ", a two-asset liquidity pool" : ""}. The top numbers are almost always dual-exposure XRP pools boosted by reward emissions, which is why they also carry impermanent loss and tend to fade. Across the ${ratedCount} rated XRP products the capital-weighted average is nearer ${pct(tvlWeightedApy)}, and a steadier single-sided rate is often the more durable choice. The 30-day figure is the better guide than the spot number.`
+      ? `The highest durable rate is single-sided: right now the top single-exposure 30-day rate is about ${pct(sHi)} on ${assetHead(topSingle)} at ${topSingle.platform}. Two-asset liquidity pools can post far larger headline numbers${dHi != null && topDualPool ? `, up to ${pct(dHi)}` : ""}, though these are reward emissions on very small pools${topDualPool ? ` — the top one holds only ${usd(topDualPool.tvlUsd)}` : ""} — that carry impermanent loss and fade quickly, which makes them opportunistic rather than a comparable yield. Across the ${ratedCount} rated XRP products the capital-weighted average is nearer ${pct(tvlWeightedApy)}. The 30-day figure is a better guide than the spot number.`
       : FAQ.find((f) => f.q === "What is the highest APY for XRP?")!.a,
     "What is impermanent loss in an XRP liquidity pool?": `It is the gap between simply holding your two tokens and supplying them to a pool. In an XRP pool that pairs a wrapped XRP token such as cbXRP or FXRP with a second asset, if the two prices drift apart the pool rebalances against your position, so it can end up worth less than holding, even after the swap fees and rewards it earned. It is the main reason the dual-exposure XRP pools in the ranking above carry more risk than their headline rate suggests.`,
   };
@@ -787,7 +809,7 @@ export default function XrpYieldRankingPage() {
           __html: JSON.stringify(
             reportDatasetSchema({
               name: "XRP DeFi yield ranking dataset",
-              description: `Rate, TVL and 90-day range for ${stats.venues} curated XRP-denominated DeFi products (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Sourced from the DeFiLlama, Spectra and Portals APIs; informational research, not financial advice.`,
+              description: `Rate, TVL and 90-day range for ${stats.venues} curated XRP-denominated DeFi products (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Measured on-chain (Base and Flare) with the Spectra API; informational research, not financial advice.`,
               url: PAGE_URL,
               dateModified: dataModifiedIso,
               numberOfItems: stats.venues,
@@ -886,11 +908,21 @@ export default function XrpYieldRankingPage() {
               As of {updated} this report tracks{" "}
               <strong>{stats.venues} XRP products</strong> across{" "}
               <strong>{stats.chains.length} networks</strong>,{" "}
-              {joinAnd(stats.chains.map(chainLabel))}. Rates span{" "}
-              <strong>{pct(lo)}</strong> to{" "}
-              <strong>{pct(hi)}</strong>, with a median of{" "}
-              <strong>{pct(stats.medianApy)}</strong> across the {ratedCount} with
-              a live rate.
+              {joinAnd(stats.chains.map(chainLabel))}. Single-exposure XRP yield
+              sources span <strong>{pct(sLo)}</strong> to{" "}
+              <strong>{pct(sHi)}</strong>, with a median of{" "}
+              <strong>{pct(sMedian)}</strong>.
+              {dHi != null && topDualPool ? (
+                <>
+                  {" "}
+                  Two-asset liquidity pools that pair XRP with an uncorrelated
+                  asset reach far higher, up to <strong>{pct(dHi)}</strong>.
+                  Those figures are almost entirely reward emissions on very
+                  thin liquidity, roughly {usd(topDualPool.tvlUsd)} in the top
+                  pool, and move sharply week to week, which makes them
+                  opportunistic rather than a comparable yield.
+                </>
+              ) : null}
             </p>
             <p>
               <strong>{stats.incentivized} of the {stats.venues}</strong> lean on
@@ -939,8 +971,11 @@ export default function XrpYieldRankingPage() {
               <h3 id="ranking-dual-exposure">Dual-exposure XRP pools</h3>
               <p>
                 {duals.length} two-asset liquidity pools that pair an XRP token
-                with something else and earn swap fees plus rewards. Higher
-                headline rates, with impermanent loss to manage. Sorted by rate.
+                with something else and earn swap fees plus rewards. Their
+                headline rates are the highest on the page, yet the top ones sit
+                on very thin liquidity, a few hundred thousand dollars, where the
+                rate is mostly reward emissions and shifts week to week.
+                Impermanent loss applies. Sorted by rate.
               </p>
             </div>
             <RankTable rows={duals} />
@@ -961,8 +996,9 @@ export default function XrpYieldRankingPage() {
             </TipBox>
           </div>
           <p className="rp-source-note">
-            Rates and TVL from DeFiLlama, Spectra and Portals, as of {updated},
-            refreshed hourly. Each row links to the platform&rsquo;s own site.
+            Rates and TVL measured on-chain (Base and Flare) and via the Spectra
+            API, as of {updated}, refreshed hourly. Each row links to the
+            platform&rsquo;s own site.
           </p>
         </section>
 
@@ -976,9 +1012,10 @@ export default function XrpYieldRankingPage() {
               at {topSingle.platform}
               {topDual ? (
                 <>
-                  , while dual-exposure liquidity pools reach{" "}
+                  . Two-asset liquidity pools post larger headline numbers, up to{" "}
                   <strong>{pct(histRate(topDual))}</strong> on {assetHead(topDual)}{" "}
-                  at {topDual.platform}
+                  at {topDual.platform}, a reward-driven rate on only{" "}
+                  {usd(topDual.tvlUsd)} of liquidity that shifts week to week
                 </>
               ) : null}
               {topPt ? (
@@ -987,8 +1024,8 @@ export default function XrpYieldRankingPage() {
                   <strong>{pct(histRate(topPt))}</strong>, locked to maturity
                 </>
               ) : null}
-              . The median across the {ratedCount} rated products is{" "}
-              <strong>{pct(stats.medianApy)}</strong>.
+              . The median single-exposure rate is{" "}
+              <strong>{pct(sMedian)}</strong>.
             </p>
             {pop1 && pop2 ? (
               <p>
@@ -1126,7 +1163,7 @@ export default function XrpYieldRankingPage() {
             <p>
               {land
                 ? land.note
-                : "Total XRP-denominated DeFi TVL across tracked venues. Sources: DeFiLlama, Spectra and Portals."}{" "}
+                : "Total XRP-denominated DeFi TVL across tracked venues. Sources: on-chain reads (Base and Flare), Spectra and Portals."}{" "}
               TVL split by network and type is computed from the {stats.venues}{" "}
               tracked products as of {updated}.
             </p>
@@ -1873,8 +1910,8 @@ export default function XrpYieldRankingPage() {
             and market rows are the receipt / share tokens the holder ranking is
             read from; Spectra rows are each stXRP market&rsquo;s LP pool,
             Principal and Yield token contracts on Flare, matured markets
-            included. Underlying rates and TVL are sourced via DeFiLlama, Spectra
-            and Portals.
+            included. Underlying rates and TVL are measured on-chain (Base and
+            Flare), with the Spectra API for Spectra&rsquo;s own markets.
           </p>
         </section>
 
@@ -1890,10 +1927,13 @@ export default function XrpYieldRankingPage() {
               liquidity pools. RLUSD, Ripple&rsquo;s dollar stablecoin, is out of
               scope because it is not XRP-denominated.
               <span className="rp-method-break">
-                Each product&rsquo;s rate and TVL are pulled live from its own
-                source: DeFiLlama where a pool is tracked, the Spectra API for
-                Principal Tokens, pools and MetaVaults, and the Portals API for
-                products the others do not cover.
+                Every rate and TVL is <strong>measured on-chain</strong>: read
+                directly from each venue&rsquo;s own contracts on Base and Flare
+                (lending supply rates, vault share prices, pool reserves and
+                gauge emissions), priced with on-chain oracles (Flare&rsquo;s
+                FTSOv2 for XRP, Chainlink on Base). Spectra&rsquo;s own markets
+                come from the Spectra API, and Portals covers the few products
+                the others do not. No third-party yield aggregator is used.
               </span>
             </dd>
             <dt>Ranking</dt>
@@ -1903,7 +1943,7 @@ export default function XrpYieldRankingPage() {
               shown alongside.
             </dd>
             <dt>Freshness</dt>
-            <dd>Refreshed hourly from the DeFiLlama, Spectra and Portals APIs; this page reflects the {updated} snapshot.</dd>
+            <dd>Refreshed hourly by reading Base and Flare on-chain state directly (with the Spectra API for Spectra markets); this page reflects the {updated} snapshot.</dd>
             <dt>What this is not</dt>
             <dd>
               The figures are informational only and are not an endorsement or
@@ -2109,12 +2149,19 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                 title={
                   p.rateNa
                     ? "No public rate feed yet"
-                    : p.rateBasis === "current"
-                      ? "Current APY (30-day history not published)"
-                      : undefined
+                    : p.variance === "high"
+                      ? "Reward-driven rate on a small pool; varies week to week"
+                      : p.rateBasis === "current"
+                        ? "Current on-chain rate"
+                        : undefined
                 }
               >
                 {p.rateNa ? "n/a" : pct(histRate(p))}
+                {p.variance === "high" ? (
+                  <span className="rp-apy-flag" aria-hidden="true">
+                    ~
+                  </span>
+                ) : null}
               </span>
               <span className="hub-cell rp-cell-text">
                 <span className="rp-type">{typeLabel(p)}</span>
