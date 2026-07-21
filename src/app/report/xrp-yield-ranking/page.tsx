@@ -1004,9 +1004,10 @@ export default function XrpYieldRankingPage() {
             {pools.some((p) => p.offchainRewardNote) ? (
               <>
                 {" "}
-                <span aria-hidden="true">†</span> Shows on-chain fee yield only;
-                the venue also pays an rFLR incentive allocated off-chain that is
-                not readable on-chain and so is excluded from the ranking rate.
+                <span aria-hidden="true">†</span> Shows the on-chain yield only;
+                the venue also pays a Flare reward incentive (rFLR or sFLR)
+                allocated off-chain that is not readable on-chain and so is
+                excluded from the ranking rate.
               </>
             ) : null}
           </p>
