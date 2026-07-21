@@ -335,6 +335,8 @@
 }
 /* The Discover button shows its text label on desktop; the arrow is mobile. */
 .rp-discover-arrow { display: none; }
+/* SVG arrow (replaces the → glyph, which centred unreliably on Android). */
+.rp-discover-arrow svg { display: block; width: 15px; height: 15px; }
 
 /* Product name + (mobile) network·platform sub-line. The sub-line is hidden on
    desktop, where Platform and Network have their own columns. */
@@ -600,7 +602,8 @@
 }
 .rp-venue-head .rp-visit-wrap { margin-left: auto; align-self: flex-start; }
 /* The venue "Open" button shows its arrow inline ("Open ->"). */
-.rp-venue-head .rp-discover-arrow { display: inline; margin-left: 5px; font-size: 0.95em; }
+.rp-venue-head .rp-discover-arrow { display: inline-flex; align-items: center; margin-left: 5px; }
+.rp-venue-head .rp-discover-arrow svg { width: 14px; height: 14px; }
 
 /* Stacked layout: full-width description, then a full-width technical-details
    grid underneath it, both within the same card. */
@@ -1054,12 +1057,33 @@
   word-break: break-all;
 }
 .rp-page .rp-ref-table td:first-child { white-space: nowrap; }
+/* On phones the 4-column address table can't fit, so stack each row into a
+   block card (name line, muted type · network, then the wrapping address) and
+   drop the horizontal scroll entirely. */
 @media (max-width: 640px) {
-  .rp-page .rp-ref-table { font-size: 12px; }
-  .rp-page .rp-ref-table th { font-size: 10.5px; }
-  .rp-page .rp-ref-table td { padding: 5px 7px; }
-  .rp-page .rp-ref-table code { font-size: 10px; }
-  .rp-ref-type { font-size: 11px; }
+  .rp-page .rp-ref-table,
+  .rp-page .rp-ref-table tbody,
+  .rp-page .rp-ref-table tr { display: block; }
+  .rp-page .rp-ref-table thead { display: none; }
+  .rp-page .rp-ref-table tr {
+    padding: 11px 0;
+    border-bottom: 1px solid var(--rp-card-border, #eeeef5);
+  }
+  .rp-page .rp-ref-table tr.rp-ref-group { border-top: 1px solid var(--uni-line, #dedee6); }
+  .rp-page .rp-ref-table td {
+    display: inline;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  .rp-page .rp-ref-table td.strong { display: block; font-size: 13px; margin-bottom: 2px; }
+  .rp-page .rp-ref-table td.rp-ref-type { font-size: 11.5px; }
+  .rp-page .rp-ref-table td:nth-child(3) { font-size: 11.5px; color: var(--uni-ink-3, #6b6d72); }
+  .rp-page .rp-ref-table td:nth-child(3)::before { content: " · "; }
+  .rp-page .rp-ref-table td:last-child { display: block; margin-top: 5px; }
+  .rp-page .rp-ref-table code { font-size: 11px; }
+  .rp-page .rp-ref-addr { display: flex; align-items: center; gap: 8px; }
+  .rp-page .rp-ref-addr code { flex: 1 1 auto; min-width: 0; }
   .rp-ref-tag { display: inline-block; margin-left: 6px; }
 }
 
@@ -1860,7 +1884,9 @@
   .rp-page .rp-dtable { font-size: 13px; line-height: 18px; }
   .rp-page .rp-dtable th { font-size: 12px; padding-bottom: 8px; }
   .rp-page .rp-dtable td { padding: 8px; }
-  .rp-page .rp-info-body, .rp-page .rp-tip-body { font-size: 13px; line-height: 1.55; }
+  /* Must match the (0,4,0) desktop callout-body rule to win on phones. */
+  .rp-page .uni-home-content .rp-info .rp-info-body,
+  .rp-page .uni-home-content .rp-tip .rp-tip-body { font-size: 13px; line-height: 1.55; }
 
   /* Looser leading + larger gaps between paragraphs on phones, so long
      data-derived paragraphs break into airy chunks instead of a text wall. */
