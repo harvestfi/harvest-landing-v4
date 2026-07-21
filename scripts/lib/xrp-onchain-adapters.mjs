@@ -319,14 +319,109 @@ export async function aerodromePool({
     cbxrpUsd = pairUsd * p1per0;
     tvlUsd = amt0 * cbxrpUsd + amt1 * pairUsd;
   }
-  // emission APR
+  // emission APR (AERO gauge)
   const rate = await callUint(chain, gauge, SEL.rewardRate, block); // AERO/sec 1e18
   const aeroPerYear = (Number(rate) / 1e18) * 31_536_000;
   const emissionApr = tvlUsd > 0 ? (aeroPerYear * aeroUsd) / tvlUsd * 100 : 0;
+  // fee APR from swap volume over a trailing window. token0 amount is priced in
+  // its own USD terms (WETH or cbXRP), which equals total pool volume.
+  let feeApr = 0;
+  try {
+    const feeFrac = Number(await callUint(chain, pool, SEL.fee, block)) / 1e6;
+    const price0 = cbxrpIs === "token0" ? cbxrpUsd : pairUsd;
+    const toB = block === "latest" ? await blockNumber(chain) : block;
+    const fromB = await blockAtTimestamp(chain, now - 7 * 86400);
+    feeApr = await feeAprFromSwaps({
+      chain,
+      pool,
+      fromBlock: fromB,
+      toBlock: toB,
+      dec0,
+      price0,
+      feeFrac,
+      tvlUsd,
+      windowDays: 7,
+    });
+  } catch {
+    /* fee leg optional */
+  }
   return {
+    apy: emissionApr + feeApr,
+    apyBase: feeApr,
+    apyReward: emissionApr,
+    emissionApr,
+    feeApr,
     tvlUsd: Math.round(tvlUsd),
     cbxrpUsd,
-    emissionApr,
     _amt: { amt0, amt1, pairUsd },
   };
+}
+
+// ---- price bundle + dispatcher ------------------------------------------
+
+// Token USD price from the block explorer's computed exchange rate (DEX-derived
+// by the explorer). Used for reward tokens without an on-chain oracle (WELL).
+const EXPLORER = {
+  base: "https://base.blockscout.com",
+  flare: "https://flare-explorer.flare.network",
+};
+export async function explorerTokenPrice(chain, addr) {
+  try {
+    const r = await fetch(`${EXPLORER[chain]}/api/v2/tokens/${addr}`);
+    const j = await r.json();
+    const p = j?.exchange_rate;
+    return p ? Number(p) : null;
+  } catch {
+    return null;
+  }
+}
+
+const WELL_BASE = "0xa88594d404727625a9437c3f886c7643872296ae";
+
+// Fetch the shared prices once per run.
+export async function getPrices() {
+  const [xrp, flr, aero, well] = await Promise.all([
+    xrpUsd(),
+    flrUsd(),
+    chainlink("base", BASE_FEEDS.aero),
+    explorerTokenPrice("base", WELL_BASE),
+  ]);
+  return { xrp, flr, aero, well: well ?? 0 };
+}
+
+// One entry point the pipeline calls per venue. Returns the metric fields the
+// snapshot expects. `src` is the venue's on-chain source config.
+export async function readOnchain(src, { now, prices }) {
+  const p = prices;
+  switch (src.protocol) {
+    case "compound-kinetic":
+      return kineticFxrp({ market: src.market, underlyingDec: src.underlyingDec ?? 6, xrp: p.xrp, flr: p.flr });
+    case "compound-moonwell":
+      return moonwellCbxrp({
+        market: src.market,
+        comptroller: src.comptroller,
+        underlyingDec: src.underlyingDec ?? 6,
+        xrp: p.xrp,
+        wellUsd: p.well,
+      });
+    case "mystic-vault":
+      return mysticVault({ vault: src.vault, underlyingDec: src.underlyingDec ?? 6, xrp: p.xrp, now });
+    case "sparkdex-pool":
+      return sparkdexPool({ pool: src.pool, dec0: src.dec0 ?? 6, dec1: src.dec1 ?? 6, xrp: p.xrp, now });
+    case "aerodrome":
+      return aerodromePool({
+        pool: src.pool,
+        gauge: src.gauge,
+        token0: src.token0,
+        token1: src.token1,
+        dec0: src.dec0,
+        dec1: src.dec1,
+        cbxrpIs: src.cbxrpIs,
+        pairFeed: BASE_FEEDS[src.pairFeed],
+        aeroUsd: p.aero,
+        now,
+      });
+    default:
+      throw new Error(`unknown onchain protocol ${src.protocol}`);
+  }
 }
