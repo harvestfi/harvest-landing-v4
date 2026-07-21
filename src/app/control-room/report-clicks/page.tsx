@@ -347,7 +347,16 @@ function ProductBreakdownSection({ clicks }: { clicks: ReportClick[] }) {
   const rows = useMemo(() => {
     const map = new Map<string, BreakdownRow>();
     for (const c of clicks) {
-      const label = c.product ?? c.platform ?? "Unknown";
+      // Full product identity: the tracked product now carries the row detail
+      // (e.g. "stXRP · Aug 2026", "cbXRP · Lending market"). Append the platform
+      // when it isn't already implied so two same-named products on different
+      // venues stay distinct and legacy rows that stored only the bare ticker
+      // still resolve to something specific.
+      const productName = c.product ?? c.platform ?? "Unknown";
+      const label =
+        c.platform && c.product && !c.product.includes(c.platform)
+          ? `${c.product} · ${c.platform}`
+          : productName;
       const key = label;
       const existing = map.get(key) ?? {
         key,

@@ -2209,7 +2209,7 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                   platform={p.platform}
                   label="Open"
                   source={`ranking:${p.venueSlug ?? p.project}`}
-                  product={assetHead(p)}
+                  product={`${assetHead(p)}${p.detail ? ` · ${p.detail}` : ""}`}
                   chain={p.chain}
                   rank={i + 1}
                   icon={<TokenIcons symbol={p.symbol} />}
