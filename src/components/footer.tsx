@@ -26,6 +26,11 @@ const ASSET_HREF: Record<string, string> = {
 const RESOURCES = [
   { label: "Methodology", href: "/methodology" },
   { label: "Risk Framework", href: "/risk-framework" },
+];
+
+// Research reports: standalone, data-backed pages. Kept separate from
+// Resources so each report is discoverable as its own destination.
+const REPORTS = [
   { label: "XRP Yield Ranking", href: "/report/xrp-yield-ranking" },
 ];
 
@@ -199,12 +204,20 @@ export async function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Assets */}
+          {/* Column 2: Assets + Reports */}
           <div className="foot-col">
             <div className="foot-col-label mono dim">Yield by Asset</div>
             {assetEntries.map((e) => (
               <Link key={e.asset} href={e.href} className="foot-link">
                 {e.label} <span className="foot-count">({e.count})</span>
+              </Link>
+            ))}
+            <div className="foot-col-label mono dim" style={{ marginTop: 14 }}>
+              Reports
+            </div>
+            {REPORTS.map((l) => (
+              <Link key={l.label} href={l.href} className="foot-link">
+                {l.label}
               </Link>
             ))}
           </div>
