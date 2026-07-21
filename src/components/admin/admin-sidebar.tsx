@@ -60,6 +60,16 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    label: "Reports",
+    items: [
+      {
+        label: "Outbound Clicks",
+        href: "/control-room/report-clicks",
+        icon: "click",
+      },
+    ],
+  },
+  {
     label: "Products",
     items: [
       { label: "View All", href: "/control-room/products", icon: "grid" },

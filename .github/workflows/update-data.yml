@@ -35,6 +35,16 @@ jobs:
         run: node scripts/fetch-holders.mjs
         continue-on-error: true
 
+      - name: Fetch XRP yield report data (DeFiLlama + Spectra + Portals)
+        run: node scripts/fetch-xrp-yield.mjs
+        env:
+          # Portals current APY for the products DeFiLlama/Spectra don't cover
+          # (Upshift earnXRP/MXRPY, Superform). Optional: without the secret the
+          # pipeline falls back to each venue's staticApy snapshot in
+          # data/xrp-venues.json. DeFiLlama + Spectra need no key.
+          PORTALS_API_KEY: ${{ secrets.PORTALS_API_KEY }}
+        continue-on-error: true
+
       - name: Commit and push if changed
         id: commit
         run: |
@@ -42,6 +52,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/vaults.json data/history.json data/slugs.json
           if [ -f data/holders.json ]; then git add data/holders.json; fi
+          if [ -f data/xrp-yield.json ]; then git add data/xrp-yield.json; fi
           if [ -f data/hidden.json ]; then git add data/hidden.json; fi
           if git diff --cached --quiet; then
             echo "No data changes detected."

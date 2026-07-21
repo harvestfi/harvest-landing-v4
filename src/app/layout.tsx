@@ -11,7 +11,8 @@ import "./globals.css";
 // and emits the correct preload + font-display: swap automatically.
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  // Variable font (full 100-900 axis) so the report can use intermediate
+  // weights like 450/650 without the browser rounding to the nearest static cut.
   variable: "--font-inter",
   display: "swap",
 });
