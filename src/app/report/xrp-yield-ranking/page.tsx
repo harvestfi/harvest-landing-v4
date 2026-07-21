@@ -672,6 +672,10 @@ export default function XrpYieldRankingPage() {
     address: string;
     expired?: boolean;
     group: "asset" | "vault" | "market";
+    // Row whose name already carries its product detail (e.g. "… · Permissionless
+    // pool"), so the Type column ("Pool"/"Vault") is redundant once the mobile
+    // view flattens name · type · network onto one line — hidden there only.
+    dupType?: boolean;
   }
   const isSpectraMarketToken = (p: XrpPool) =>
     (p.venueSlug ?? "").startsWith("spectra-pt-") ||
@@ -692,6 +696,7 @@ export default function XrpYieldRankingPage() {
         chain: p.chain,
         address: p.holders!.token as string,
         group: "vault",
+        dupType: !!p.detail,
       })),
     ...(data.yieldTrading?.markets ?? [])
       .filter((m) => m.maturityDate)
@@ -1004,9 +1009,10 @@ export default function XrpYieldRankingPage() {
             {pools.some((p) => p.offchainRewardNote) ? (
               <>
                 {" "}
-                <span aria-hidden="true">†</span> Shows on-chain fee yield only;
-                the venue also pays an rFLR incentive allocated off-chain that is
-                not readable on-chain and so is excluded from the ranking rate.
+                <span aria-hidden="true">†</span> Shows the on-chain yield only;
+                the venue also pays a Flare reward incentive (rFLR or sFLR)
+                allocated off-chain that is not readable on-chain and so is
+                excluded from the ranking rate.
               </>
             ) : null}
           </p>
@@ -1902,7 +1908,13 @@ export default function XrpYieldRankingPage() {
                         <span className="rp-dtag rp-ref-tag">Matured</span>
                       ) : null}
                     </td>
-                    <td className="rp-ref-type">{r.type}</td>
+                    <td
+                      className={
+                        r.dupType ? "rp-ref-type rp-ref-type--min" : "rp-ref-type"
+                      }
+                    >
+                      {r.type}
+                    </td>
                     <td>{chainLabel(r.chain)}</td>
                     <td>
                       <span className="rp-ref-addr">
@@ -2033,39 +2045,45 @@ function typeLabel(p: XrpPool): string {
   return "Pool";
 }
 
-// Neutral info box: tinted (i) icon chip + body.
+// Neutral info box: small (i) badge + label header, then full-width body.
 function InfoBox({ children }: { children: ReactNode }) {
   return (
     <div className="rp-info">
-      <span className="rp-callout-ico" aria-hidden="true">
-        <svg viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="5.7" r="1.5" fill="currentColor" />
-          <rect x="8.7" y="8.6" width="2.6" height="6.7" rx="1.3" fill="currentColor" />
-        </svg>
-      </span>
+      <div className="rp-callout-head">
+        <span className="rp-callout-ico" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="5.7" r="1.5" fill="currentColor" />
+            <rect x="8.7" y="8.6" width="2.6" height="6.7" rx="1.3" fill="currentColor" />
+          </svg>
+        </span>
+        <span className="rp-callout-title">Note</span>
+      </div>
       <p className="rp-info-body">{children}</p>
     </div>
   );
 }
 
-// Green tip box: tinted lightbulb chip + body.
+// Green tip box: small lightbulb badge + label header, then full-width body.
 function TipBox({ children }: { children: ReactNode }) {
   return (
     <div className="rp-tip">
-      <span className="rp-callout-ico" aria-hidden="true">
-        <svg viewBox="0 0 20 20" fill="none">
-          <path
-            d="M10 2.8a4.6 4.6 0 0 0-2.7 8.3c.5.37.85.9.95 1.5l.1.6h3.3l.1-.6c.1-.6.45-1.13.95-1.5A4.6 4.6 0 0 0 10 2.8Z"
-            fill="currentColor"
-          />
-          <path
-            d="M8.5 15.3h3M9.1 17h1.8"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      </span>
+      <div className="rp-callout-head">
+        <span className="rp-callout-ico" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path
+              d="M10 2.8a4.6 4.6 0 0 0-2.7 8.3c.5.37.85.9.95 1.5l.1.6h3.3l.1-.6c.1-.6.45-1.13.95-1.5A4.6 4.6 0 0 0 10 2.8Z"
+              fill="currentColor"
+            />
+            <path
+              d="M8.5 15.3h3M9.1 17h1.8"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
+        <span className="rp-callout-title">Tip</span>
+      </div>
       <p className="rp-tip-body">{children}</p>
     </div>
   );
