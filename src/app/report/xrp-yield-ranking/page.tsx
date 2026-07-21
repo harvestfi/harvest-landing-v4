@@ -483,7 +483,7 @@ export default function XrpYieldRankingPage() {
   const earnXrp = pools.find((p) => p.venueSlug === "upshift-earnxrp");
   const bestYieldAnswer =
     spectraStats && earnXrp
-      ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP markets and MetaVault, averaging about ${pct(spectraStats.avgApy)} across the capital tracked there, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates but add impermanent loss and usually lean on incentives, so the ranking sorts every venue by its real 30-day average.`
+      ? `It depends on risk appetite, but the deepest and most active XRP yield sits with the venues highlighted above: Spectra's staked-XRP markets and MetaVault, averaging about ${pct(spectraStats.avgApy)} across the capital tracked there, and the Clearstar Labs earnXRP vault on Upshift, the single largest at ${usd(earnXrp.tvlUsd)}. As a benchmark, the capital-weighted average across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Two-asset pools post higher headline rates, at the cost of impermanent loss and a reliance on incentives; the ranking sorts every venue by its real 30-day average to keep the comparison fair.`
       : `It depends on risk appetite. As a benchmark, the capital-weighted average rate across the ${ratedCount} tracked products is about ${pct(tvlWeightedApy)}. Single-sided lending and vaults are the closest to a plain rate; liquidity pools show higher headline numbers but add impermanent loss and usually lean on incentives.`;
   // Highest-rate product for the "highest APY" answer (pools arrive rate-sorted).
   const topRate = pools
@@ -501,7 +501,7 @@ export default function XrpYieldRankingPage() {
     "What is the best XRP yield right now?": bestYieldAnswer,
     "How do you earn interest on XRP?": `You move XRP onto a smart-contract chain as a wrapped token such as FXRP or cbXRP, then put it to work: supply it to a lending market for borrower interest, deposit it in a curated vault, hold a fixed-rate Principal Token, or add it to a liquidity pool for swap fees. This report tracks ${stats.venues} such XRP products across ${stats.chains.length} networks (${joinAnd(stats.chains.map(chainLabel))}), holding about ${usd(totalTvlFaq)} in total, ranked by their real 30-day rate.`,
     "What is the highest APY for XRP?": topRate
-      ? `The highest durable rate is single-sided: right now the top single-exposure 30-day rate is about ${pct(sHi)} on ${assetHead(topSingle)} at ${topSingle.platform}. Two-asset liquidity pools can show much larger headline numbers${dHi != null && topDualPool ? `, up to ${pct(dHi)}` : ""}, but those are reward emissions on very small pools${topDualPool ? ` (the top one holds only ${usd(topDualPool.tvlUsd)})` : ""} that carry impermanent loss and fade fast, so they are not a like-for-like yield. Across the ${ratedCount} rated XRP products the capital-weighted average is nearer ${pct(tvlWeightedApy)}. The 30-day figure is a better guide than the spot number.`
+      ? `The highest durable rate is single-sided: right now the top single-exposure 30-day rate is about ${pct(sHi)} on ${assetHead(topSingle)} at ${topSingle.platform}. Two-asset liquidity pools can post far larger headline numbers${dHi != null && topDualPool ? `, up to ${pct(dHi)}` : ""}, though these are reward emissions on very small pools${topDualPool ? ` — the top one holds only ${usd(topDualPool.tvlUsd)}` : ""} — that carry impermanent loss and fade quickly, which makes them opportunistic rather than a comparable yield. Across the ${ratedCount} rated XRP products the capital-weighted average is nearer ${pct(tvlWeightedApy)}. The 30-day figure is a better guide than the spot number.`
       : FAQ.find((f) => f.q === "What is the highest APY for XRP?")!.a,
     "What is impermanent loss in an XRP liquidity pool?": `It is the gap between simply holding your two tokens and supplying them to a pool. In an XRP pool that pairs a wrapped XRP token such as cbXRP or FXRP with a second asset, if the two prices drift apart the pool rebalances against your position, so it can end up worth less than holding, even after the swap fees and rewards it earned. It is the main reason the dual-exposure XRP pools in the ranking above carry more risk than their headline rate suggests.`,
   };
@@ -916,10 +916,11 @@ export default function XrpYieldRankingPage() {
                 <>
                   {" "}
                   Two-asset liquidity pools that pair XRP with an uncorrelated
-                  asset read higher, up to <strong>{pct(dHi)}</strong>, but that
-                  rate is reward emissions on a very small pool, only{" "}
-                  {usd(topDualPool.tvlUsd)} of liquidity, so it swings week to
-                  week and is not a like-for-like yield.
+                  asset reach far higher, up to <strong>{pct(dHi)}</strong>.
+                  Those figures are almost entirely reward emissions on very
+                  thin liquidity, roughly {usd(topDualPool.tvlUsd)} in the top
+                  pool, and move sharply week to week, which makes them
+                  opportunistic rather than a comparable yield.
                 </>
               ) : null}
             </p>
@@ -970,11 +971,11 @@ export default function XrpYieldRankingPage() {
               <h3 id="ranking-dual-exposure">Dual-exposure XRP pools</h3>
               <p>
                 {duals.length} two-asset liquidity pools that pair an XRP token
-                with something else and earn swap fees plus rewards. The headline
-                rates are the highest on the page, but the top ones sit on very
-                thin liquidity (a few hundred thousand dollars), so the rate is
-                mostly reward emissions and swings week to week, with impermanent
-                loss to manage. Sorted by rate.
+                with something else and earn swap fees plus rewards. Their
+                headline rates are the highest on the page, yet the top ones sit
+                on very thin liquidity, a few hundred thousand dollars, where the
+                rate is mostly reward emissions and shifts week to week.
+                Impermanent loss applies. Sorted by rate.
               </p>
             </div>
             <RankTable rows={duals} />
@@ -1011,10 +1012,10 @@ export default function XrpYieldRankingPage() {
               at {topSingle.platform}
               {topDual ? (
                 <>
-                  . Two-asset liquidity pools show larger headline numbers, up to{" "}
+                  . Two-asset liquidity pools post larger headline numbers, up to{" "}
                   <strong>{pct(histRate(topDual))}</strong> on {assetHead(topDual)}{" "}
-                  at {topDual.platform}, but on only {usd(topDual.tvlUsd)} of
-                  liquidity, so that rate is reward-driven and swings week to week
+                  at {topDual.platform}, a reward-driven rate on only{" "}
+                  {usd(topDual.tvlUsd)} of liquidity that shifts week to week
                 </>
               ) : null}
               {topPt ? (
