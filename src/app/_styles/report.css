@@ -1071,18 +1071,29 @@
     padding: 11px 0;
     border-bottom: 1px solid var(--rp-card-border, #eeeef5);
   }
-  .rp-page .rp-ref-table tr.rp-ref-group { border-top: 1px solid var(--uni-line, #dedee6); }
+  /* One uniform divider per entry: every row already has a border-bottom, so
+     the group border-top (and the trailing divider on the last row) just read
+     as doubled/extra hairlines on a phone. Drop both. */
+  .rp-page .rp-ref-table tr.rp-ref-group { border-top: 0; }
+  .rp-page .rp-ref-table tr:last-child { border-bottom: 0; }
   .rp-page .rp-ref-table td {
     display: inline;
     padding: 0;
     border: 0;
     white-space: normal;
   }
-  .rp-page .rp-ref-table td.strong { display: block; font-size: 13px; margin-bottom: 2px; }
-  .rp-page .rp-ref-table td.rp-ref-type { font-size: 11.5px; }
-  .rp-page .rp-ref-table td:nth-child(3) { font-size: 11.5px; color: var(--uni-ink-3, #6b6d72); }
+  /* Name · Type · Network all on one compact line, address on the line below.
+     padding:0 overrides the mobile `.rp-dtable td { padding: 8px }` rule so the
+     "·" separators sit tight rather than floating a cell-width away. */
+  .rp-page .rp-ref-table td.strong { display: inline; font-size: 12.5px; padding: 0; }
+  .rp-page .rp-ref-table td.rp-ref-type { font-size: 12.5px; padding: 0; }
+  .rp-page .rp-ref-table td.rp-ref-type::before { content: " · "; }
+  /* Redundant with the detail already in the name (e.g. "… · Permissionless
+     pool" + "Pool") — hide it, and its "·" goes with it. */
+  .rp-page .rp-ref-table td.rp-ref-type--min { display: none; }
+  .rp-page .rp-ref-table td:nth-child(3) { font-size: 12.5px; padding: 0; color: var(--uni-ink-3, #6b6d72); }
   .rp-page .rp-ref-table td:nth-child(3)::before { content: " · "; }
-  .rp-page .rp-ref-table td:last-child { display: block; margin-top: 5px; }
+  .rp-page .rp-ref-table td:last-child { display: block; padding: 0; margin-top: 4px; }
   .rp-page .rp-ref-table code { font-size: 11px; }
   .rp-page .rp-ref-addr { display: flex; align-items: center; gap: 8px; }
   .rp-page .rp-ref-addr code { flex: 1 1 auto; min-width: 0; }
@@ -1130,36 +1141,47 @@
    second note is rendered as plain fine print (.rp-fineprint). ---- */
 .rp-info,
 .rp-tip {
-  display: flex;
-  gap: 14px;
-  /* Badge sits vertically centred against the note (was top-aligned). */
-  align-items: center;
+  display: block;
   padding: 16px 18px;
   border-radius: 14px;
   border: 1px solid var(--rp-card-border, #dedee6);
   background: var(--rp-card-bg, #fff);
   margin: 24px 0;
 }
+/* Compact header: small badge + uppercase label in the top-left corner, so the
+   body below can run the full width of the box (matches .rp-methodology). */
+.rp-callout-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 .rp-callout-ico {
   flex: none;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
   color: #fff;
   background: #667085; /* neutral (info) badge */
   box-shadow: 0 1px 2px rgba(10, 10, 17, 0.12);
 }
-.rp-callout-ico svg { display: block; width: 18px; height: 18px; }
+.rp-callout-ico svg { display: block; width: 13px; height: 13px; }
+.rp-callout-title {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--uni-ink-3, #6b6d72);
+}
 /* Must out-specify `.rp-page .uni-home-content .rp-article p` (0,3,1), which
-   otherwise puts a 22px bottom margin inside the flex item so align-items:center
-   pushes the visible text toward the top edge. Hence the extra `.rp-tip`/
+   otherwise puts a 22px bottom margin inside the box. Hence the extra `.rp-tip`/
    `.rp-info` class here (0,4,0). */
 .rp-page .uni-home-content .rp-info .rp-info-body,
 .rp-page .uni-home-content .rp-tip .rp-tip-body {
   margin: 0;
-  align-self: center;
   font-size: 15.5px;
   line-height: 1.62;
   color: var(--uni-ink-2, #3e3e46);
@@ -1185,6 +1207,7 @@
   background: #12b76a;
   box-shadow: 0 1px 2px rgba(18, 183, 106, 0.35);
 }
+.rp-tip .rp-callout-title { color: #08663c; }
 .rp-page .rp-tip-body { color: #08663c; }
 .rp-page .rp-tip-body strong { color: #05603a; font-weight: 650; }
 
@@ -1193,6 +1216,8 @@
   border-color: rgba(18, 183, 106, 0.4);
   background: rgba(18, 183, 106, 0.1);
 }
+:root[data-theme="dark"] .rp-tip .rp-callout-title,
+.uni-home-test.dark .rp-tip .rp-callout-title { color: #9ff0c4; }
 :root[data-theme="dark"] .rp-page .rp-tip-body,
 .uni-home-test.dark .rp-page .rp-tip-body { color: #9ff0c4; }
 :root[data-theme="dark"] .rp-page .rp-tip-body strong,
@@ -1933,6 +1958,7 @@
   .rp-page .uni-home-content p.rp-insight,
   .rp-page .uni-home-content .rp-snapshot p,
   .rp-page .uni-home-content .rp-chain-intro,
+  .rp-page .uni-home-content .rp-rank-sort p,
   .rp-page .uni-home-content .rp-venue-prose p {
     font-size: 13px;
     line-height: 22px;
