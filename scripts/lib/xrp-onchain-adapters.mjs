@@ -294,8 +294,11 @@ export async function aerodromePool({
   pairFeed, // chainlink feed for the non-cbXRP leg
   aeroUsd,
   now,
+  asOfTs, // fee window ends here (defaults to now); enables historical points
+  skipFee = false, // emission + TVL only (cheap; used by the weekly mean sampler)
   block = "latest",
 }) {
+  const feeEnd = asOfTs ?? now;
   // reserves via balanceOf(pool)
   const bal = async (t) => Number(toBig(await ethCall(chain, t, call(SEL.balanceOf, encAddr(pool)), block)));
   const [b0, b1, slot0] = await Promise.all([
@@ -326,11 +329,11 @@ export async function aerodromePool({
   // fee APR from swap volume over a trailing window. token0 amount is priced in
   // its own USD terms (WETH or cbXRP), which equals total pool volume.
   let feeApr = 0;
-  try {
+  if (!skipFee) try {
     const feeFrac = Number(await callUint(chain, pool, SEL.fee, block)) / 1e6;
     const price0 = cbxrpIs === "token0" ? cbxrpUsd : pairUsd;
     const toB = block === "latest" ? await blockNumber(chain) : block;
-    const fromB = await blockAtTimestamp(chain, now - 7 * 86400);
+    const fromB = await blockAtTimestamp(chain, feeEnd - 7 * 86400);
     feeApr = await feeAprFromSwaps({
       chain,
       pool,
@@ -424,4 +427,43 @@ export async function readOnchain(src, { now, prices }) {
     default:
       throw new Error(`unknown onchain protocol ${src.protocol}`);
   }
+}
+
+// Aerodrome 30-day mean APY. Emissions reset weekly (votes), TVL and volume
+// swing, so a single spot read badly overstates the sustained yield. We sample
+// ~4 weekly points (each with that week's emission rate, TVL and trailing fee
+// volume, at historical prices) and average — matching how the sustained
+// 30-day figure is meant to read.
+export async function aerodromeMean30d(cfg, now) {
+  const chain = cfg.chain ?? "base";
+  // Emission APR is what swings week to week (weekly vote resets), so sample it
+  // across 4 weeks (cheap: no logs). Swap fees are far steadier, so compute the
+  // fee APR once over the trailing week and add it to the emission mean.
+  const emis = [];
+  for (const wk of [0, 7, 14, 21]) {
+    const ts = now - wk * 86400;
+    const block = wk === 0 ? "latest" : await blockAtTimestamp(chain, ts);
+    let aeroUsd;
+    try {
+      aeroUsd = await chainlink(chain, BASE_FEEDS.aero, block);
+    } catch {
+      aeroUsd = cfg.aeroUsd;
+    }
+    try {
+      const r = await aerodromePool({ ...cfg, aeroUsd, now, asOfTs: ts, block, skipFee: true });
+      if (Number.isFinite(r.emissionApr)) emis.push(r.emissionApr);
+    } catch {
+      /* skip a bad week */
+    }
+  }
+  if (!emis.length) return null;
+  const emissionMean = emis.reduce((a, b) => a + b, 0) / emis.length;
+  let feeApr = 0;
+  try {
+    const full = await aerodromePool({ ...cfg, now });
+    feeApr = full.feeApr ?? 0;
+  } catch {
+    /* fee optional */
+  }
+  return { mean: emissionMean + feeApr, emissionMean, feeApr, emisWeeks: emis };
 }
