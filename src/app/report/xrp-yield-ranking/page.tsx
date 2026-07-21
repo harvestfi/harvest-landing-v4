@@ -2034,39 +2034,45 @@ function typeLabel(p: XrpPool): string {
   return "Pool";
 }
 
-// Neutral info box: tinted (i) icon chip + body.
+// Neutral info box: small (i) badge + label header, then full-width body.
 function InfoBox({ children }: { children: ReactNode }) {
   return (
     <div className="rp-info">
-      <span className="rp-callout-ico" aria-hidden="true">
-        <svg viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="5.7" r="1.5" fill="currentColor" />
-          <rect x="8.7" y="8.6" width="2.6" height="6.7" rx="1.3" fill="currentColor" />
-        </svg>
-      </span>
+      <div className="rp-callout-head">
+        <span className="rp-callout-ico" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="5.7" r="1.5" fill="currentColor" />
+            <rect x="8.7" y="8.6" width="2.6" height="6.7" rx="1.3" fill="currentColor" />
+          </svg>
+        </span>
+        <span className="rp-callout-title">Note</span>
+      </div>
       <p className="rp-info-body">{children}</p>
     </div>
   );
 }
 
-// Green tip box: tinted lightbulb chip + body.
+// Green tip box: small lightbulb badge + label header, then full-width body.
 function TipBox({ children }: { children: ReactNode }) {
   return (
     <div className="rp-tip">
-      <span className="rp-callout-ico" aria-hidden="true">
-        <svg viewBox="0 0 20 20" fill="none">
-          <path
-            d="M10 2.8a4.6 4.6 0 0 0-2.7 8.3c.5.37.85.9.95 1.5l.1.6h3.3l.1-.6c.1-.6.45-1.13.95-1.5A4.6 4.6 0 0 0 10 2.8Z"
-            fill="currentColor"
-          />
-          <path
-            d="M8.5 15.3h3M9.1 17h1.8"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      </span>
+      <div className="rp-callout-head">
+        <span className="rp-callout-ico" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path
+              d="M10 2.8a4.6 4.6 0 0 0-2.7 8.3c.5.37.85.9.95 1.5l.1.6h3.3l.1-.6c.1-.6.45-1.13.95-1.5A4.6 4.6 0 0 0 10 2.8Z"
+              fill="currentColor"
+            />
+            <path
+              d="M8.5 15.3h3M9.1 17h1.8"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
+        <span className="rp-callout-title">Tip</span>
+      </div>
       <p className="rp-tip-body">{children}</p>
     </div>
   );
