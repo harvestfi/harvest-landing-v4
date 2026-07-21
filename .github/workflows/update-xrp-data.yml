@@ -1,0 +1,90 @@
+name: Update XRP Report Data
+
+# Refreshes the /report/xrp-yield-ranking dataset daily so its rates, TVL,
+# holder counts, trading activity and the "Last updated / As of" dates stay
+# current. Separate from update-data.yml (the hourly vault-data job) so a
+# failure in one never blocks the other.
+#
+# PORTALS_API_KEY should be set as a repository secret for live Upshift/Superform
+# data; without it those products fall back to their static values but every
+# other step (DeFiLlama, Spectra, Blockscout) still runs and the dates still
+# advance.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-xrp-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Live rates/TVL for the allowlisted venues. Portals products need the key;
+      # without it they use their static fallback, so this is not fatal.
+      - name: Hydrate XRP venues (DeFiLlama, Spectra, Portals)
+        run: node scripts/fetch-xrp-yield.mjs
+        env:
+          PORTALS_API_KEY: ${{ secrets.PORTALS_API_KEY }}
+        continue-on-error: true
+
+      - name: Apply curated overrides
+        run: node scripts/apply-xrp-overrides.mjs
+        continue-on-error: true
+
+      # TVL/APY/share-price history to inception (DeFiLlama /chart + Portals).
+      - name: Backfill TVL history
+        run: node scripts/backfill-xrp-tvl-history.mjs
+        env:
+          PORTALS_API_KEY: ${{ secrets.PORTALS_API_KEY }}
+        continue-on-error: true
+
+      # Landscape TVL aggregate (per-pool + Upshift protocol-level).
+      - name: Build landscape series
+        run: node scripts/build-xrp-landscape.mjs
+        continue-on-error: true
+
+      # Holder counts + concentration from the chain explorers.
+      - name: Fetch holder data
+        run: node scripts/fetch-xrp-holders.mjs
+        continue-on-error: true
+
+      # Spectra stXRP yield-market trading activity.
+      - name: Fetch trading activity
+        run: node scripts/fetch-xrp-trading.mjs
+        continue-on-error: true
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/xrp-yield.json
+          if git diff --cached --quiet; then
+            echo "No XRP data changes detected."
+            exit 0
+          fi
+          git commit -m "chore: update XRP report data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, rebasing on origin/main."
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "Failed to push after retries."
+          exit 1
