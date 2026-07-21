@@ -1006,13 +1006,20 @@ export default function XrpYieldRankingPage() {
             Rates and TVL measured on-chain (Base and Flare) and via the Spectra
             API, as of {updated}, refreshed hourly. Each row links to the
             platform&rsquo;s own site.
+            {pools.some((p) => p.variance === "high") ? (
+              <>
+                {" "}
+                The largest headline rates come from small two-asset pools whose
+                reward-driven APY swings week to week, so read them as
+                opportunistic outliers rather than durable yield.
+              </>
+            ) : null}
             {pools.some((p) => p.offchainRewardNote) ? (
               <>
                 {" "}
-                <span aria-hidden="true">†</span> Shows the on-chain yield only;
-                the venue also pays a Flare reward incentive (rFLR or sFLR)
-                allocated off-chain that is not readable on-chain and so is
-                excluded from the ranking rate.
+                A few venues also pay a Flare reward incentive (rFLR or sFLR)
+                allocated off-chain that is not readable on-chain, so their
+                ranking rate reflects on-chain yield only.
               </>
             ) : null}
           </p>
@@ -2187,16 +2194,6 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                 }
               >
                 {p.rateNa ? "n/a" : pct(histRate(p))}
-                {p.variance === "high" ? (
-                  <span className="rp-apy-flag" aria-hidden="true">
-                    ~
-                  </span>
-                ) : null}
-                {p.offchainRewardNote ? (
-                  <span className="rp-apy-flag" aria-hidden="true">
-                    †
-                  </span>
-                ) : null}
               </span>
               <span className="hub-cell rp-cell-text">
                 <span className="rp-type">{typeLabel(p)}</span>
