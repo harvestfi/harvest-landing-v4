@@ -28,6 +28,13 @@ import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadVenues } from "./apply-xrp-overrides.mjs";
 import { fetchSpectraMarket, fetchSpectraMetavault } from "./fetch-spectra.mjs";
+import {
+  getPrices,
+  readOnchain,
+  aerodromePool,
+  aerodromeMean30d,
+  BASE_FEEDS,
+} from "./lib/xrp-onchain-adapters.mjs";
 
 const ROOT = process.cwd();
 const OUT_FILE = join(ROOT, "data", "xrp-yield.json");
@@ -220,11 +227,13 @@ const main = async () => {
   }
   const prevHolders = new Map();
   const prevHistory = new Map();
+  const prevSource = new Map();
   for (const p of prev?.pools ?? []) {
     const key = p.venueSlug ?? p.id;
     if (!key) continue;
     if (p.holders) prevHolders.set(key, p.holders);
     if (Array.isArray(p.history) && p.history.length) prevHistory.set(key, p.history);
+    if (p.source) prevSource.set(key, p.source);
   }
 
   // DeFiLlama pools once, indexed by poolId for the defillama-sourced rows.
@@ -239,6 +248,13 @@ const main = async () => {
     if (Array.isArray(all)) for (const p of all) byId.set(p.pool, p);
     else console.error("[xrp-yield] DeFiLlama pools unreachable; defillama rows may be rate-n/a.");
   }
+
+  // On-chain venues read their rate + TVL straight from Base/Flare state. Fetch
+  // the shared prices (XRP/FLR from FTSOv2, ETH/BTC/AERO from Chainlink, WELL
+  // from the explorer) once for the whole run.
+  const NOW = Math.floor(Date.now() / 1000);
+  const needOnchain = venues.some((v) => v.source?.kind === "onchain");
+  const prices = needOnchain ? await getPrices() : null;
 
   const pools = [];
   for (const v of venues) {
@@ -356,6 +372,41 @@ const main = async () => {
             };
           }
         }
+      } else if (src.kind === "onchain") {
+        // Read APY + TVL directly from chain state (see scripts/lib).
+        if (src.protocol === "aerodrome") {
+          // Small, emission-driven pools: spot APR swings hard, so the headline
+          // is a weekly-sampled mean and the row is flagged high-variance.
+          const cfg = { ...src, pairFeed: BASE_FEEDS[src.pairFeed], aeroUsd: prices.aero };
+          const spot = await aerodromePool({ ...cfg, now: NOW });
+          const m = await aerodromeMean30d(cfg, NOW);
+          const apy = m ? m.mean : spot.apy;
+          row.apy = apy;
+          row.apyMean30d = apy;
+          row.apyBase = m ? m.feeApr : spot.feeApr; // swap fees
+          row.apyReward = m ? m.emissionMean : spot.emissionApr; // AERO emissions
+          row.tvlUsd = spot.tvlUsd;
+          row.rateBasis = "30d";
+          row.variance = "high";
+          row.incentivized = true;
+          row.rewardShare = apy > 0 ? Math.round((row.apyReward / apy) * 100) / 100 : 0;
+        } else {
+          const r = await readOnchain(src, { now: NOW, prices });
+          row.apy = r.apy;
+          row.apyBase = r.apyBase ?? null;
+          row.apyReward = r.apyReward ?? null;
+          row.apyMean30d = r.apyMean30d ?? r.apy;
+          row.tvlUsd = r.tvlUsd;
+          // Lending/pool spot rates read as "current"; the vault's realized
+          // figure is a trailing average.
+          row.rateBasis = src.protocol === "mystic-vault" ? "30d" : "current";
+          if (r.apyReward != null && r.apy > 0) {
+            row.rewardShare = Math.round((r.apyReward / r.apy) * 100) / 100;
+            row.incentivized = r.apyReward / r.apy > 0.5;
+          }
+        }
+        row.source = "onchain";
+        row.llamaUrl = v.url;
       } else {
         // kind === "none": tracked, but no public rate feed.
         row.rateNa = true;
@@ -373,11 +424,32 @@ const main = async () => {
   // Re-attach enrichment that this script doesn't produce itself: holder counts
   // (from fetch-xrp-holders) always, and a daily-backfilled history where this
   // run didn't already capture one. Keeps the report whole between daily runs.
+  const today = new Date(NOW * 1000).toISOString().slice(0, 10);
   for (const p of pools) {
     const key = p.venueSlug ?? p.id;
     if (!key) continue;
     if (!p.holders && prevHolders.has(key)) p.holders = prevHolders.get(key);
-    if ((p.history?.length ?? 0) < 2 && prevHistory.has(key)) p.history = prevHistory.get(key);
+    if (p.source === "onchain") {
+      // On-chain venues accumulate their OWN daily series: carry prior on-chain
+      // points (never stale aggregator history from before the switch), then
+      // append today's reading. One point per UTC day; keep ~90 days.
+      const prior = prevSource.get(key) === "onchain" ? prevHistory.get(key) ?? [] : [];
+      if (!p.rateNa && Number.isFinite(p.apy)) {
+        const merged = prior.filter((h) => h.d !== today);
+        merged.push({ d: today, apy: p.apy, tvl: p.tvlUsd });
+        p.history = merged.slice(-90);
+        p.inception = p.history[0]?.d ?? today;
+        const tail = p.history.slice(-90).map((h) => h.apy).filter(Number.isFinite);
+        if (tail.length >= 7) {
+          p.range90d = {
+            min: Math.round(Math.min(...tail) * 100) / 100,
+            max: Math.round(Math.max(...tail) * 100) / 100,
+          };
+        }
+      }
+    } else if ((p.history?.length ?? 0) < 2 && prevHistory.has(key)) {
+      p.history = prevHistory.get(key);
+    }
   }
 
   // Rank by best available rate (30-day mean or current), n/a rows last.
@@ -390,7 +462,7 @@ const main = async () => {
 
   const out = {
     generatedAt: new Date().toISOString(),
-    source: "DeFiLlama, Spectra and Portals APIs",
+    source: "on-chain reads (Base + Flare) and the Spectra API",
     stats: {
       venues: pools.length,
       rated: rated.length,

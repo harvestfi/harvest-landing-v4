@@ -77,6 +77,9 @@ interface XrpPool {
   // "30d" (30-day mean / fixed rate), "current" (live spot APY), "na" (no feed).
   rateBasis?: string;
   rateNa?: boolean;
+  // "high" for small, emission-driven pools whose rate swings week to week.
+  variance?: string;
+  source?: string;
   // Daily series for the charts. `apy` feeds the rate charts; `tvl` and `pps`
   // (added by the TVL backfill) feed the landscape aggregate and are optional so
   // older snapshots still type-check.
@@ -787,7 +790,7 @@ export default function XrpYieldRankingPage() {
           __html: JSON.stringify(
             reportDatasetSchema({
               name: "XRP DeFi yield ranking dataset",
-              description: `Rate, TVL and 90-day range for ${stats.venues} curated XRP-denominated DeFi products (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Sourced from the DeFiLlama, Spectra and Portals APIs; informational research, not financial advice.`,
+              description: `Rate, TVL and 90-day range for ${stats.venues} curated XRP-denominated DeFi products (lending, vaults, liquid staking, fixed-rate Principal Tokens and liquidity pools) across ${stats.chains.length} networks, refreshed hourly. Measured on-chain (Base and Flare) with the Spectra API; informational research, not financial advice.`,
               url: PAGE_URL,
               dateModified: dataModifiedIso,
               numberOfItems: stats.venues,
@@ -961,8 +964,9 @@ export default function XrpYieldRankingPage() {
             </TipBox>
           </div>
           <p className="rp-source-note">
-            Rates and TVL from DeFiLlama, Spectra and Portals, as of {updated},
-            refreshed hourly. Each row links to the platform&rsquo;s own site.
+            Rates and TVL measured on-chain (Base and Flare) and via the Spectra
+            API, as of {updated}, refreshed hourly. Each row links to the
+            platform&rsquo;s own site.
           </p>
         </section>
 
@@ -1126,7 +1130,7 @@ export default function XrpYieldRankingPage() {
             <p>
               {land
                 ? land.note
-                : "Total XRP-denominated DeFi TVL across tracked venues. Sources: DeFiLlama, Spectra and Portals."}{" "}
+                : "Total XRP-denominated DeFi TVL across tracked venues. Sources: on-chain reads (Base and Flare), Spectra and Portals."}{" "}
               TVL split by network and type is computed from the {stats.venues}{" "}
               tracked products as of {updated}.
             </p>
@@ -1873,8 +1877,8 @@ export default function XrpYieldRankingPage() {
             and market rows are the receipt / share tokens the holder ranking is
             read from; Spectra rows are each stXRP market&rsquo;s LP pool,
             Principal and Yield token contracts on Flare, matured markets
-            included. Underlying rates and TVL are sourced via DeFiLlama, Spectra
-            and Portals.
+            included. Underlying rates and TVL are measured on-chain (Base and
+            Flare), with the Spectra API for Spectra&rsquo;s own markets.
           </p>
         </section>
 
@@ -1890,10 +1894,13 @@ export default function XrpYieldRankingPage() {
               liquidity pools. RLUSD, Ripple&rsquo;s dollar stablecoin, is out of
               scope because it is not XRP-denominated.
               <span className="rp-method-break">
-                Each product&rsquo;s rate and TVL are pulled live from its own
-                source: DeFiLlama where a pool is tracked, the Spectra API for
-                Principal Tokens, pools and MetaVaults, and the Portals API for
-                products the others do not cover.
+                Every rate and TVL is <strong>measured on-chain</strong>: read
+                directly from each venue&rsquo;s own contracts on Base and Flare
+                (lending supply rates, vault share prices, pool reserves and
+                gauge emissions), priced with on-chain oracles (Flare&rsquo;s
+                FTSOv2 for XRP, Chainlink on Base). Spectra&rsquo;s own markets
+                come from the Spectra API, and Portals covers the few products
+                the others do not. No third-party yield aggregator is used.
               </span>
             </dd>
             <dt>Ranking</dt>
@@ -1903,7 +1910,7 @@ export default function XrpYieldRankingPage() {
               shown alongside.
             </dd>
             <dt>Freshness</dt>
-            <dd>Refreshed hourly from the DeFiLlama, Spectra and Portals APIs; this page reflects the {updated} snapshot.</dd>
+            <dd>Refreshed hourly by reading Base and Flare on-chain state directly (with the Spectra API for Spectra markets); this page reflects the {updated} snapshot.</dd>
             <dt>What this is not</dt>
             <dd>
               The figures are informational only and are not an endorsement or
@@ -2109,12 +2116,19 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                 title={
                   p.rateNa
                     ? "No public rate feed yet"
-                    : p.rateBasis === "current"
-                      ? "Current APY (30-day history not published)"
-                      : undefined
+                    : p.variance === "high"
+                      ? "Reward-driven rate on a small pool; varies week to week"
+                      : p.rateBasis === "current"
+                        ? "Current on-chain rate"
+                        : undefined
                 }
               >
                 {p.rateNa ? "n/a" : pct(histRate(p))}
+                {p.variance === "high" ? (
+                  <span className="rp-apy-flag" aria-hidden="true">
+                    ~
+                  </span>
+                ) : null}
               </span>
               <span className="hub-cell rp-cell-text">
                 <span className="rp-type">{typeLabel(p)}</span>
