@@ -672,6 +672,10 @@ export default function XrpYieldRankingPage() {
     address: string;
     expired?: boolean;
     group: "asset" | "vault" | "market";
+    // Row whose name already carries its product detail (e.g. "… · Permissionless
+    // pool"), so the Type column ("Pool"/"Vault") is redundant once the mobile
+    // view flattens name · type · network onto one line — hidden there only.
+    dupType?: boolean;
   }
   const isSpectraMarketToken = (p: XrpPool) =>
     (p.venueSlug ?? "").startsWith("spectra-pt-") ||
@@ -692,6 +696,7 @@ export default function XrpYieldRankingPage() {
         chain: p.chain,
         address: p.holders!.token as string,
         group: "vault",
+        dupType: !!p.detail,
       })),
     ...(data.yieldTrading?.markets ?? [])
       .filter((m) => m.maturityDate)
@@ -1903,7 +1908,13 @@ export default function XrpYieldRankingPage() {
                         <span className="rp-dtag rp-ref-tag">Matured</span>
                       ) : null}
                     </td>
-                    <td className="rp-ref-type">{r.type}</td>
+                    <td
+                      className={
+                        r.dupType ? "rp-ref-type rp-ref-type--min" : "rp-ref-type"
+                      }
+                    >
+                      {r.type}
+                    </td>
                     <td>{chainLabel(r.chain)}</td>
                     <td>
                       <span className="rp-ref-addr">

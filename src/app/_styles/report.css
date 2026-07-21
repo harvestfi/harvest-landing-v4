@@ -1071,7 +1071,11 @@
     padding: 11px 0;
     border-bottom: 1px solid var(--rp-card-border, #eeeef5);
   }
-  .rp-page .rp-ref-table tr.rp-ref-group { border-top: 1px solid var(--uni-line, #dedee6); }
+  /* One uniform divider per entry: every row already has a border-bottom, so
+     the group border-top (and the trailing divider on the last row) just read
+     as doubled/extra hairlines on a phone. Drop both. */
+  .rp-page .rp-ref-table tr.rp-ref-group { border-top: 0; }
+  .rp-page .rp-ref-table tr:last-child { border-bottom: 0; }
   .rp-page .rp-ref-table td {
     display: inline;
     padding: 0;
@@ -1084,6 +1088,9 @@
   .rp-page .rp-ref-table td.strong { display: inline; font-size: 12.5px; padding: 0; }
   .rp-page .rp-ref-table td.rp-ref-type { font-size: 12.5px; padding: 0; }
   .rp-page .rp-ref-table td.rp-ref-type::before { content: " · "; }
+  /* Redundant with the detail already in the name (e.g. "… · Permissionless
+     pool" + "Pool") — hide it, and its "·" goes with it. */
+  .rp-page .rp-ref-table td.rp-ref-type--min { display: none; }
   .rp-page .rp-ref-table td:nth-child(3) { font-size: 12.5px; padding: 0; color: var(--uni-ink-3, #6b6d72); }
   .rp-page .rp-ref-table td:nth-child(3)::before { content: " · "; }
   .rp-page .rp-ref-table td:last-child { display: block; padding: 0; margin-top: 4px; }
