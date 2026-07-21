@@ -1,30 +1,59 @@
 # Harvest yield index
 
-> Independent on-chain DeFi yield index. Tracks live APY, TVL, and share-price history for vetted yield strategies across Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM.
+> Independent on-chain DeFi yield index, operating since 2020. Tracks live
+> APY, TVL, share-price history and derived metrics (stability, yield
+> trajectory, cohort benchmarking) for 150+ vetted yield strategies across
+> Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh
+> hourly from Harvest's own on-chain indexer.
+
+## Preferred citation
+
+Harvest Finance on-chain yield index. https://harvest.finance
+Source and methodology: https://harvest.finance/methodology
+Figures are indexed from on-chain vault-contract events by Harvest's own indexer, running since 2020. Cite the specific product page or its data file (https://harvest.finance/data/<slug>.json) for a single strategy.
+
+## Data licensing
+
+All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/). You may use, share and adapt it, including commercially, with attribution and a link back to https://harvest.finance. Per-page Dataset JSON-LD carries the same license, a citation string and dateModified.
 
 ## Canonical entry points
 
-- [Home](https://harvest.finance/): all tracked strategies, sortable rankings.
-- [Methodology](https://harvest.finance/methodology): how every metric is computed.
+- [Home](https://harvest.finance/): all tracked strategies, sortable rankings by APY, TVL and network.
+- [Methodology](https://harvest.finance/methodology): how every metric (APY, TVL, share price, tracked age) is computed.
 - [Risk framework](https://harvest.finance/risk-framework): smart-contract, oracle, and counterparty considerations.
-- [About](https://harvest.finance/about): operator background, fair-launch history.
+- [About](https://harvest.finance/about): operator background and fair-launch history.
 
 ## Asset hubs
 
-- [USDC](https://harvest.finance/usdc)
-- [USDT](https://harvest.finance/usdt)
-- [ETH](https://harvest.finance/eth)
-- [BTC](https://harvest.finance/btc)
+- [USDC](https://harvest.finance/usdc): USDC strategies ranked by live APY and TVL.
+- [USDT](https://harvest.finance/usdt): USDT strategies ranked by live APY and TVL.
+- [ETH](https://harvest.finance/eth): ETH and ETH-LST strategies ranked by live APY and TVL.
+- [BTC](https://harvest.finance/btc): BTC (WBTC / cbBTC / tBTC) strategies ranked by live APY and TVL.
 
 ## Network hubs
 
-- [Ethereum](https://harvest.finance/ethereum)
-- [Base](https://harvest.finance/base)
-- [Arbitrum](https://harvest.finance/arbitrum)
-- [Polygon](https://harvest.finance/polygon)
-- [zkSync](https://harvest.finance/zksync)
-- [HyperEVM](https://harvest.finance/hyperevm)
+- [Ethereum](https://harvest.finance/ethereum): every strategy we track on Ethereum mainnet.
+- [Base](https://harvest.finance/base): every strategy we track on Base.
+- [Arbitrum](https://harvest.finance/arbitrum): every strategy we track on Arbitrum.
+- [Polygon](https://harvest.finance/polygon): every strategy we track on Polygon.
+- [zkSync](https://harvest.finance/zksync): every strategy we track on zkSync Era.
+- [HyperEVM](https://harvest.finance/hyperevm): every strategy we track on HyperEVM.
 
-## Sitemap
+## Reports
 
-- https://harvest.finance/sitemap.xml
+- [XRP Yield Ranking](https://harvest.finance/report/xrp-yield-ranking): every XRP-denominated DeFi yield source (XRP, FXRP, stXRP, cbXRP, wXRP) ranked by real 30-day rate. Covers lending, vaults, liquid staking, fixed-rate Spectra Principal Tokens and liquidity pools, split by single- vs dual-exposure, across Flare and Base. XRP has no native staking, so these are the real on-chain rates. Externally sourced from DeFiLlama, Spectra and Portals, refreshed hourly. Machine-readable data (per-product JSON + daily-rate CSV) at https://harvest.finance/data/xrp-yield/index.json. All venues are third-party protocols, not Harvest products.
+
+## Data
+
+- [Machine-readable index](https://harvest.finance/data/index.json): every tracked strategy as JSON (slug, asset, chain, APY, TVL), each linking to its per-vault file.
+- Per-strategy JSON at https://harvest.finance/data/<slug>.json (e.g. https://harvest.finance/data/usdc-autopilot-base.json) — current APY, TVL, contract addresses and a history summary. Agent-native; one fetch per vault.
+- Per-strategy daily history CSV at https://harvest.finance/history/<slug>.csv (e.g. https://harvest.finance/history/usdc-autopilot-base.csv) — daily APY, TVL and share price, also linked from each product page's Historical Data section.
+- [XRP report dataset](https://harvest.finance/data/xrp-yield/index.json): the XRP Yield Ranking as JSON — every ranked product with current rate, TVL and links to a per-product JSON (metadata + full daily rate and TVL history) and CSV. Combined long-format history for all products at https://harvest.finance/data/xrp-yield/history.csv. Total XRP DeFi TVL over time (the landscape growth series) at https://harvest.finance/data/xrp-yield/landscape-tvl.json and https://harvest.finance/data/xrp-yield/landscape-tvl.csv.
+- [Sitemap](https://harvest.finance/sitemap.xml): every indexable URL (hubs + 150 product pages).
+
+## Optional
+
+- [Security](https://harvest.finance/security): security posture and audits.
+- [Disclosures](https://harvest.finance/disclosures): editorial and conflict-of-interest disclosures.
+- [Contact](https://harvest.finance/contact): how to reach the team.
+- [Terms](https://harvest.finance/terms) · [Privacy](https://harvest.finance/privacy)

@@ -80,6 +80,8 @@ interface XrpPool {
   // "high" for small, emission-driven pools whose rate swings week to week.
   variance?: string;
   source?: string;
+  // Set when the shown rate excludes an off-chain reward we can't read on-chain.
+  offchainRewardNote?: string | null;
   // Daily series for the charts. `apy` feeds the rate charts; `tvl` and `pps`
   // (added by the TVL backfill) feed the landscape aggregate and are optional so
   // older snapshots still type-check.
@@ -999,6 +1001,15 @@ export default function XrpYieldRankingPage() {
             Rates and TVL measured on-chain (Base and Flare) and via the Spectra
             API, as of {updated}, refreshed hourly. Each row links to the
             platform&rsquo;s own site.
+            {pools.some((p) => p.offchainRewardNote) ? (
+              <>
+                {" "}
+                <span aria-hidden="true">†</span> Shows the on-chain yield only;
+                the venue also pays a Flare reward incentive (rFLR or sFLR)
+                allocated off-chain that is not readable on-chain and so is
+                excluded from the ranking rate.
+              </>
+            ) : null}
           </p>
         </section>
 
@@ -2149,17 +2160,24 @@ function RankTable({ rows }: { rows: XrpPool[] }) {
                 title={
                   p.rateNa
                     ? "No public rate feed yet"
-                    : p.variance === "high"
-                      ? "Reward-driven rate on a small pool; varies week to week"
-                      : p.rateBasis === "current"
-                        ? "Current on-chain rate"
-                        : undefined
+                    : p.offchainRewardNote
+                      ? p.offchainRewardNote
+                      : p.variance === "high"
+                        ? "Reward-driven rate on a small pool; varies week to week"
+                        : p.rateBasis === "current"
+                          ? "Current on-chain rate"
+                          : undefined
                 }
               >
                 {p.rateNa ? "n/a" : pct(histRate(p))}
                 {p.variance === "high" ? (
                   <span className="rp-apy-flag" aria-hidden="true">
                     ~
+                  </span>
+                ) : null}
+                {p.offchainRewardNote ? (
+                  <span className="rp-apy-flag" aria-hidden="true">
+                    †
                   </span>
                 ) : null}
               </span>
