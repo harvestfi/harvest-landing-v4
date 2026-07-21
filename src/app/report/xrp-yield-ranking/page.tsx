@@ -196,6 +196,13 @@ const histRate = (p: XrpPool) => p.apyMean30d ?? p.apy;
 // symbol for older snapshots that predate the `asset` field).
 const assetHead = (p: XrpPool) => p.asset ?? nice(p.displayName ?? p.symbol);
 
+// Grammatical "A, B and C" join for prose lists built from live data.
+const joinList = (items: string[]): string => {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+};
+
 // Nicer casing for display (icons still key off the raw token).
 const nice = (s: string) =>
   s
@@ -278,10 +285,12 @@ export default function XrpYieldRankingPage() {
   // TVL contribution is suppressed to avoid the double-count.
   const tvlCounts = (p: XrpPool) => !(p.venueSlug ?? "").startsWith("spectra-pt-");
 
-  // Hero hook: the stXRP PT · Aug 2026 opportunity (the rank-1 single-sided
-  // fixed rate), pinned so the hero card mirrors that specific product's data.
+  // Hero hook: the rank-1 single-sided product — the highest-rate one-sided
+  // position (no impermanent loss), whatever it currently is. Pools arrive
+  // rate-sorted, so the first non-dual with a live rate is the top of the
+  // single-exposure table (today the stXRP PT · Nov 2026).
   const featured =
-    pools.find((p) => p.venueSlug === "spectra-pt-aug-2026") ??
+    pools.find((p) => !isDual(p) && !p.rateNa) ??
     pools.find((p) => !isDual(p)) ??
     pools[0];
 
@@ -311,6 +320,26 @@ export default function XrpYieldRankingPage() {
     )
     .sort((a, b) => (histRate(b) ?? 0) - (histRate(a) ?? 0))
     .slice(0, 6);
+  // Answer-first highlight for the 30-day rate-history section: the current
+  // spread across the charted venues and the single largest 30-day move, so the
+  // section opens with a citable read instead of a caption.
+  const rhStats = venueCharts.map((p) => {
+    const h = (p.history ?? []).slice(-30);
+    const start = h[0]?.apy ?? null;
+    const now = histRate(p);
+    return {
+      name: assetHead(p),
+      now,
+      delta: start != null && now != null ? now - start : null,
+    };
+  });
+  const rhRates = rhStats.map((s) => s.now).filter((v): v is number => v != null);
+  const rhHi = rhRates.length ? Math.max(...rhRates) : null;
+  const rhLo = rhRates.length ? Math.min(...rhRates) : null;
+  const rhTop = rhHi != null ? rhStats.find((s) => s.now === rhHi) : null;
+  const rhMover = rhStats
+    .filter((s) => s.delta != null)
+    .sort((a, b) => Math.abs(b.delta!) - Math.abs(a.delta!))[0];
   // Trajectory + TVL blend for the PT commentary (derived, so it stays accurate
   // between snapshots).
   const ptTvl = ptRows.reduce((s, p) => s + p.tvlUsd, 0);
@@ -476,6 +505,7 @@ export default function XrpYieldRankingPage() {
     { id: "ranking", label: "The ranking" },
     { id: "ranking-single-exposure", label: "Single-exposure", level: 1 },
     { id: "ranking-dual-exposure", label: "Dual-exposure", level: 1 },
+    { id: "how-the-ranking-is-sorted", label: "How it is sorted", level: 1 },
     { id: "overview", label: "Overview" },
     { id: "yield-landscape", label: "XRP yield landscape" },
     ...(pools.some((p) => p.holders)
@@ -500,7 +530,7 @@ export default function XrpYieldRankingPage() {
     { id: "source-vaults", label: "Vaults & liquid staking", level: 1 },
     { id: "source-liquidity", label: "Liquidity provision", level: 1 },
     { id: "source-fixed-rate-pts", label: "Fixed-rate PTs", level: 1 },
-    { id: "how-the-ranking-is-sorted", label: "How the ranking is sorted", level: 1 },
+    { id: "source-yield-tokens", label: "Yield Tokens", level: 1 },
     { id: "wrapped-xrp", label: "Wrapped forms of XRP" },
     { id: "can-you-stake-xrp", label: "Can you stake XRP?" },
     { id: "cefi-vs-defi", label: "CeFi vs DeFi" },
@@ -565,6 +595,18 @@ export default function XrpYieldRankingPage() {
     year: "numeric",
     timeZone: "UTC",
   });
+  // Answer-first walk of the holder ranking, top to bottom, so the section
+  // leads with a citable summary rather than methodology. The runners-up are
+  // named with their counts; a long tail collapses to a "+N more" clause.
+  const holderRunnerUps = holderRanked
+    .slice(1)
+    .map((p) => `${assetHead(p)} on ${p.platform} (${(p.holders!.count ?? 0).toLocaleString()})`);
+  const holderFollow =
+    holderRunnerUps.length <= 4
+      ? joinList(holderRunnerUps)
+      : `${holderRunnerUps.slice(0, 4).join(", ")}, and ${
+          holderRunnerUps.length - 4
+        } more`;
 
   // Spectra stXRP yield-market trading activity: total flow, the active markets
   // ranked by volume, and the buy/sell skew that reads as sentiment on the rate.
@@ -903,6 +945,21 @@ export default function XrpYieldRankingPage() {
             </div>
             <RankTable rows={duals} />
           </div>
+          <div className="rp-rank-sort">
+            <h3 id="how-the-ranking-is-sorted">How the ranking is sorted</h3>
+            <p>
+              Venues are sorted by the 30-day average rate rather than
+              today&rsquo;s spot number, so a single big day of rewards cannot
+              flatter a venue to the top. The tables are split by exposure, and a
+              Type column names each product so like compares with like.
+            </p>
+            <TipBox>
+              When comparing XRP venues, weigh the <strong>30-day rate</strong>{" "}
+              over the spot number: a wrapped-XRP pool riding a short reward
+              spike can top the spot ranking yet fade within weeks, while a deep
+              single-sided lending or vault rate tends to hold.
+            </TipBox>
+          </div>
           <p className="rp-source-note">
             Rates and TVL from DeFiLlama, Spectra and Portals, as of {updated},
             refreshed hourly. Each row links to the platform&rsquo;s own site.
@@ -1064,26 +1121,45 @@ export default function XrpYieldRankingPage() {
             </p>
           ) : null}
 
-          <p className="rp-source-note">
-            {land
-              ? land.note
-              : "Total XRP-denominated DeFi TVL across tracked venues. Sources: DeFiLlama, Spectra and Portals."}{" "}
-            TVL split by network and type is computed from the {stats.venues}{" "}
-            tracked products as of {updated}.
-          </p>
+          <div className="rp-methodology">
+            <span className="rp-methodology-label">Chart Methodology Note</span>
+            <p>
+              {land
+                ? land.note
+                : "Total XRP-denominated DeFi TVL across tracked venues. Sources: DeFiLlama, Spectra and Portals."}{" "}
+              TVL split by network and type is computed from the {stats.venues}{" "}
+              tracked products as of {updated}.
+            </p>
+          </div>
         </section>
 
         {holderRanked.length > 0 && (
           <section className="uni-home-content" aria-labelledby="most-popular">
             <p className="rp-eyebrow">Adoption</p>
             <h2 id="most-popular">Most popular XRP yield sources</h2>
+            {holderTop ? (
+              <p className="rp-lead">
+                By on-chain holder count, the most widely held XRP yield product
+                is {assetHead(holderTop)} on {holderTop.platform}, with{" "}
+                {(holderTop.holders!.count ?? 0).toLocaleString()} wallets as of{" "}
+                {holderAsOf}.
+                {holderFollow ? ` It is followed by ${holderFollow}.` : ""}
+              </p>
+            ) : null}
+            {holderTop ? (
+              <p className="rp-lead">
+                Across the {holderRanked.length} products that expose a public
+                holder-bearing token, roughly {holderTotal.toLocaleString()}{" "}
+                wallets hold XRP yield onchain.
+              </p>
+            ) : null}
             <p className="rp-lead">
               Rate and TVL show how much is deposited; holder counts show how
               many wallets actually hold each product, a read on real adoption
               and on whether a product is spread across many depositors or
-              concentrated in a few. Ranked by on-chain holders as of{" "}
-              {holderAsOf}, with the largest wallet&rsquo;s share where the
-              token&rsquo;s supply exposes it.
+              concentrated in a few. The table below ranks by on-chain holders,
+              with the largest wallet&rsquo;s share where the token&rsquo;s
+              supply exposes it.
             </p>
             <div className="hub-table-wrap rp-rank rp-rank-holders" data-nosnippet="">
               <div className="hub-table" role="table" aria-label="XRP products by holders">
@@ -1288,8 +1364,8 @@ export default function XrpYieldRankingPage() {
             {trading.daily.filter((p) => p.d >= TRADING_WINDOW_START).length > 2 ? (
               <TradingChart
                 series={trading.daily.filter((p) => p.d >= TRADING_WINDOW_START)}
-                title="Daily trading volume"
-                subtitle="buy + sell, all stXRP markets · since Jun 2026"
+                title="Daily stXRP fixed-yield trading volume"
+                subtitle="Principal-Token buy + sell across every Spectra stXRP market · since Jun 2026"
               />
             ) : null}
 
@@ -1368,6 +1444,19 @@ export default function XrpYieldRankingPage() {
             <p className="rp-eyebrow">Charts</p>
             <h2 id="rate-history">30-day rate history</h2>
             <p className="rp-lead">
+              {rhHi != null && rhLo != null && rhTop ? (
+                <>
+                  Over the last 30 days, headline rates across the{" "}
+                  {venueCharts.length} larger charted venues sat between{" "}
+                  <strong>{pct(rhLo)}</strong> and <strong>{pct(rhHi)}</strong>,
+                  topped by {rhTop.name} at {pct(rhHi)}.
+                  {rhMover && rhMover.delta != null && Math.abs(rhMover.delta) >= 0.1
+                    ? ` ${rhMover.name} moved most, ${
+                        rhMover.delta >= 0 ? "up" : "down"
+                      } about ${Math.abs(rhMover.delta).toFixed(1)} points. `
+                    : " "}
+                </>
+              ) : null}
               How the rate has moved over the last 30 days for a selection of
               the larger venues, from DeFiLlama&rsquo;s daily record. Useful for
               telling a steady rate apart from one riding a short-lived incentive
@@ -1397,10 +1486,14 @@ export default function XrpYieldRankingPage() {
           <h2 id="where-yield-comes-from">Where XRP yield comes from</h2>
           <div className="rp-article">
             <p>
-              The rates on this page all trace back to one of a few simple
-              sources. Knowing which source is behind a number makes it much
-              easier to tell a steady, organic rate from one that is mostly
-              short-term rewards.
+              <strong>
+                In short, XRP yield comes from four sources: lending wrapped XRP
+                to money markets, vaults and liquid staking, providing liquidity
+                in pools, and fixed-rate Principal Tokens.
+              </strong>{" "}
+              Every rate on this page traces back to one of them. Knowing which
+              source is behind a number makes it much easier to tell a steady,
+              organic rate from one that is mostly short-term rewards.
             </p>
 
             <h3 id="source-lending">Lending</h3>
@@ -1458,20 +1551,23 @@ export default function XrpYieldRankingPage() {
               rate, which is the figure this report tracks.
             </p>
 
-            <h3 id="how-the-ranking-is-sorted">How the ranking is sorted</h3>
+            <h3 id="source-yield-tokens">Yield Tokens</h3>
             <p>
-              Venues are sorted by the 30-day average rate rather than
-              today&rsquo;s spot number, so a single big day of rewards cannot
-              flatter a venue to the top. The tables are split by exposure, and a
-              Type column names each product so like compares with like.
+              Yield Tokens, or YTs, are the other half of a Spectra market and
+              are worth naming even though a YT is not a yield source in itself.
+              A YT is a derivative of XRP-denominated yield: it strips out and
+              trades the variable yield a wrapped-XRP position earns up to
+              maturity, which lets a holder amplify exposure to that onchain
+              yield and to any associated points program without posting the full
+              principal.
+            </p>
+            <p>
+              Spectra is currently the leader for XRP yield trading, and most YT
+              activity these days sits on the stXRP pools, where traders buy YT
+              to bet on a potential Firelight airdrop by accumulating its
+              Firelight points.
             </p>
 
-            <TipBox>
-              When comparing XRP venues, weigh the <strong>30-day rate</strong>{" "}
-              over the spot number: a wrapped-XRP pool riding a short reward
-              spike can top the spot ranking yet fade within weeks, while a deep
-              single-sided lending or vault rate tends to hold.
-            </TipBox>
             <p className="rp-fineprint">
               Every venue on this page is an external protocol tracked for
               research. None are {SITE_NAME} products. This page is informational
@@ -1788,15 +1884,17 @@ export default function XrpYieldRankingPage() {
           <dl className="rp-method">
             <dt>Inclusion</dt>
             <dd>
-              A defined set of {stats.venues} XRP-denominated products, whether
+              A defined set of {stats.venues}{" "}XRP-denominated products, whether
               XRP itself or a wrapped variant such as FXRP, stXRP or cbXRP, across
               lending, vaults, liquid staking, fixed-rate Principal Tokens and
               liquidity pools. RLUSD, Ripple&rsquo;s dollar stablecoin, is out of
-              scope because it is not XRP-denominated. Each product&rsquo;s rate
-              and TVL are pulled live from its own source: DeFiLlama where a pool
-              is tracked, the Spectra API for Principal Tokens, pools and
-              MetaVaults, and the Portals API for products the others do not
-              cover.
+              scope because it is not XRP-denominated.
+              <span className="rp-method-break">
+                Each product&rsquo;s rate and TVL are pulled live from its own
+                source: DeFiLlama where a pool is tracked, the Spectra API for
+                Principal Tokens, pools and MetaVaults, and the Portals API for
+                products the others do not cover.
+              </span>
             </dd>
             <dt>Ranking</dt>
             <dd>
