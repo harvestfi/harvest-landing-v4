@@ -69,10 +69,25 @@ export async function ftsoFeed(sym) {
   return { price: Number(value) / 10 ** dec, decimals: dec };
 }
 
+// On-chain FXRP/USD₮0 pool (Algebra; FXRP = token0, both 6 dec) as a price
+// fallback: FTSOv2 getFeedById can be whitelist-gated and revert, and if XRP
+// pricing breaks every venue's TVL breaks, so we keep an independent source.
+const FXRP_USDT_POOL = "0x927485d88a66253c63af9163dca5f21c25a57393";
+async function fxrpUsdFromPool() {
+  const r = await ethCall("flare", FXRP_USDT_POOL, "0xe76c01e4"); // Algebra globalState()
+  const s = Number(toBig(word(r, 0))) / 2 ** 96;
+  return s * s; // USDT0 per FXRP ≈ USD
+}
 let _xrpUsd = null;
 export async function xrpUsd() {
-  if (_xrpUsd == null) _xrpUsd = (await ftsoFeed("XRP/USD")).price;
-  return _xrpUsd;
+  if (_xrpUsd != null) return _xrpUsd;
+  try {
+    const p = (await ftsoFeed("XRP/USD")).price;
+    if (Number.isFinite(p) && p > 0.1 && p < 100) return (_xrpUsd = p);
+    throw new Error("ftso XRP/USD out of range");
+  } catch {
+    return (_xrpUsd = await fxrpUsdFromPool());
+  }
 }
 let _flrUsd = null;
 export async function flrUsd() {

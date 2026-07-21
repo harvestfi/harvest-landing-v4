@@ -138,6 +138,9 @@ function baseRow(v) {
     // a live spot APY (Portals, Spectra pool/metavault); "na" when unavailable.
     rateBasis: "30d",
     rateNa: false,
+    // When the displayed rate deliberately excludes an off-chain reward we
+    // can't read on-chain (e.g. SparkDEX's rFLR), the row carries this note.
+    offchainRewardNote: v.offchainRewardNote ?? null,
   };
 }
 
