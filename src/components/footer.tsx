@@ -32,6 +32,7 @@ const RESOURCES = [
 // Resources so each report is discoverable as its own destination.
 const REPORTS = [
   { label: "XRP Yield Ranking", href: "/report/xrp-yield-ranking" },
+  { label: "Aerodrome LP Yield", href: "/report/aerodrome" },
 ];
 
 // Legitimacy-signal pages.
