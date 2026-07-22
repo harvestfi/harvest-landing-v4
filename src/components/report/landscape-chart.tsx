@@ -89,7 +89,7 @@ export function LandscapeChart({
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
           role="img"
-          aria-label={`Tracked XRP DeFi TVL over time, ${usd(h[0].tvl)} to ${usd(h[h.length - 1].tvl)}`}
+          aria-label={`${title} over time, ${usd(h[0].tvl)} to ${usd(h[h.length - 1].tvl)}`}
           style={{ cursor: "crosshair", touchAction: "pan-y" }}
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();

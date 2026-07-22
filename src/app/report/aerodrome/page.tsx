@@ -7,6 +7,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { AssetIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { ReportToc, type TocItem } from "@/components/report/report-toc";
+import { LandscapeChart } from "@/components/report/landscape-chart";
 import {
   breadcrumbSchema,
   faqPageSchema,
@@ -67,12 +68,40 @@ interface AeroData {
   pools: AeroPool[];
 }
 
+interface AeroPoolGrowth {
+  slug: string;
+  pair: string;
+  firstDate: string;
+  days: number;
+  growthPct: number;
+  annualizedPct: number;
+}
+interface AeroHistory {
+  generatedAt: string;
+  latestTvl: number | null;
+  latestDate: string | null;
+  tvlOneYearAgo: number | null;
+  series: { d: string; tvl: number }[];
+  perPool: AeroPoolGrowth[];
+}
+
 function loadData(): AeroData | null {
   try {
     const f = join(process.cwd(), "data", "aerodrome-yield.json");
     if (!existsSync(f)) return null;
     const d = JSON.parse(readFileSync(f, "utf-8")) as AeroData;
     return Array.isArray(d.pools) && d.pools.length > 0 ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadHistory(): AeroHistory | null {
+  try {
+    const f = join(process.cwd(), "data", "aerodrome-history.json");
+    if (!existsSync(f)) return null;
+    const d = JSON.parse(readFileSync(f, "utf-8")) as AeroHistory;
+    return Array.isArray(d.series) && d.series.length >= 2 ? d : null;
   } catch {
     return null;
   }
@@ -284,12 +313,42 @@ export default function AerodromeReportPage() {
     .sort((a, b) => b.realApy - a.realApy);
   const topDurable = meaningful[0];
 
+  // Footprint over time: aggregate first-party Harvest vault TVL across the
+  // covered pools. Trim the near-zero pre-2024 tail so the chart opens on the
+  // meaningful era (the run-up, the peak, and the normalization since).
+  const history = loadHistory();
+  let hSeries: { d: string; tvl: number }[] = [];
+  let hPeak: { d: string; tvl: number } | null = null;
+  let hLatest: { d: string; tvl: number } | null = null;
+  let bestCompounder: AeroPoolGrowth | null = null;
+  if (history) {
+    const firstIdx = history.series.findIndex((p) => p.tvl >= 10_000);
+    hSeries = firstIdx >= 0 ? history.series.slice(firstIdx) : history.series;
+    hPeak = hSeries.reduce((m, p) => (p.tvl > m.tvl ? p : m), hSeries[0]);
+    hLatest = hSeries[hSeries.length - 1];
+    // A credible representative compounder: the best share-price growth among
+    // pools that carry real liquidity today (never a thin micro-pool outlier).
+    const durableSlugs = new Set(
+      pools.filter((p) => p.poolTvlUsd >= THIN_TVL).map((p) => p.slug),
+    );
+    bestCompounder =
+      history.perPool.find((p) => durableSlugs.has(p.slug)) ??
+      history.perPool[0] ??
+      null;
+  }
+
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: "UTC",
   });
+  const fmtMonthYear = (d: string) =>
+    new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
 
   const toc: TocItem[] = [
     { id: "overview", label: "Overview" },
@@ -302,6 +361,9 @@ export default function AerodromeReportPage() {
     { id: "rate-stability", label: "Rate stability", level: 1 },
     { id: "auto-compounding", label: "The auto-compounding edge" },
     { id: "tvl-landscape", label: "TVL landscape" },
+    ...(hSeries.length >= 2
+      ? [{ id: "footprint", label: "Footprint over time" }]
+      : []),
     { id: "trading-volume", label: "Trading volume" },
     { id: "depositors", label: "Popular by depositors" },
     { id: "key-risks", label: "Key risks" },
@@ -618,6 +680,39 @@ export default function AerodromeReportPage() {
               as of {updated}. Bar length is relative to the deepest covered pool.
             </p>
           </section>
+
+          {hSeries.length >= 2 && hPeak && hLatest ? (
+            <section className="uni-home-content" aria-labelledby="footprint">
+              <p className="rp-eyebrow">Trajectory</p>
+              <h2 id="footprint">Harvest&rsquo;s Aerodrome footprint over time</h2>
+              <p>
+                Liquidity in these vaults has moved with the wider Base cycle. The
+                covered set scaled up through early 2024 to a peak near{" "}
+                {usd(hPeak.tvl)} in {fmtMonthYear(hPeak.d)}, then normalized to
+                about {usd(hLatest.tvl)} today as capital rotated across chains and
+                opportunities. Deposits ebb and flow, but the vaults kept
+                compounding throughout: the share price only ever accrues
+                {bestCompounder
+                  ? `, and a deposit left in ${bestCompounder.pair} since ${fmtMonthYear(bestCompounder.firstDate)} has compounded about ${bestCompounder.growthPct.toFixed(0)}% over ${bestCompounder.days} days`
+                  : ""}
+                .
+              </p>
+              <LandscapeChart
+                series={hSeries}
+                title="Harvest liquidity on Aerodrome"
+                subtitle="covered pools, total vault TVL"
+                nowLabel={`as of ${updated}`}
+                color="#14b8a6"
+              />
+              <p className="rp-source-note">
+                Total Harvest vault TVL summed across the {history?.perPool.length ?? pools.length}{" "}
+                covered Aerodrome pools, from first-party vault history (each pool
+                carried forward within its own indexed span). Share-price growth is
+                the vault&rsquo;s realized, auto-compounded return net of the
+                performance fee. As of {updated}.
+              </p>
+            </section>
+          ) : null}
 
           <section className="uni-home-content" aria-labelledby="trading-volume">
             <p className="rp-eyebrow">Activity</p>

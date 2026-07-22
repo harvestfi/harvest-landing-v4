@@ -20,6 +20,21 @@ const data = JSON.parse(readFileSync(SRC, "utf-8"));
 const pools = (data.pools || []).filter((p) => !p.error);
 mkdirSync(OUT_DIR, { recursive: true });
 
+// Optional first-party TVL history (aggregate footprint over time), if the
+// prebuild aggregator produced it.
+const HIST = join(process.cwd(), "data", "aerodrome-history.json");
+let history = null;
+if (existsSync(HIST)) {
+  try {
+    const h = JSON.parse(readFileSync(HIST, "utf-8"));
+    if (Array.isArray(h.series) && h.series.length >= 2) {
+      history = { latestTvl: h.latestTvl, series: h.series, perPool: h.perPool };
+    }
+  } catch {
+    history = null;
+  }
+}
+
 // index.json - the snapshot as published.
 writeFileSync(
   join(OUT_DIR, "index.json"),
@@ -32,6 +47,7 @@ writeFileSync(
       license: "CC-BY-4.0",
       poolCount: pools.length,
       pools,
+      ...(history ? { tvlHistory: history } : {}),
     },
     null,
     2,
