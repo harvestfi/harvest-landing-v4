@@ -333,6 +333,92 @@
     minmax(82px, 0.72fr) 88px 90px;
   gap: 14px;
 }
+
+/* ---- Aerodrome ranking: two APY columns side by side (Pool APR + Harvest 30d).
+   Reuses every .rp-rank cell style; only the grid and the two num-column tints
+   differ. Columns: # | Pool | Pool APR | Harvest 30d | Pair | Pool TVL | action */
+.ae-rank .hub-thead,
+.ae-rank .hub-row {
+  grid-template-columns: 34px minmax(150px, 1.6fr) 100px 100px 94px 90px 84px;
+  gap: 14px;
+}
+/* The Harvest lens reads a shade lighter than the ranked Pool APR beside it. */
+.rp-page .ae-rank .ae-harvest {
+  color: var(--uni-ink-2, #3e3e46);
+  font-weight: 500;
+}
+/* Thin-liquidity marker on a reward-driven APR. */
+.ae-rank .ae-thin {
+  margin-left: 3px;
+  font-weight: 600;
+  color: var(--rp-eyebrow, #b26a00);
+  cursor: help;
+}
+
+/* ---- Aerodrome TVL landscape: horizontal bars (name | bar | value). ---- */
+.ae-landscape {
+  margin: 18px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.ae-land-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 150px) 1fr 78px;
+  align-items: center;
+  gap: 12px;
+}
+.rp-page .ae-land-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--uni-ink, #1a1a1f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ae-land-bar-wrap {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--rp-card-border, #eeeef5);
+  overflow: hidden;
+}
+.ae-land-bar {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #ffb936, #ff9f1c);
+}
+.rp-page .ae-land-val {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--uni-ink-2, #3e3e46);
+}
+@media (max-width: 640px) {
+  .ae-land-row {
+    grid-template-columns: minmax(72px, 40%) 1fr 56px;
+    gap: 8px;
+  }
+  .rp-page .ae-land-name { font-size: 12px; }
+  .rp-page .ae-land-val { font-size: 11.5px; }
+}
+@media (max-width: 640px) {
+  .ae-rank .hub-thead,
+  .ae-rank .hub-row {
+    grid-template-columns: 18px minmax(0, 1fr) 62px 40px;
+    gap: 8px;
+  }
+  /* Show # (1), Pool (2), Pool APR (3), action (7); hide Harvest/Pair/TVL. */
+  .ae-rank .hub-thead > :nth-child(4),
+  .ae-rank .hub-row > :nth-child(4),
+  .ae-rank .hub-thead > :nth-child(5),
+  .ae-rank .hub-row > :nth-child(5),
+  .ae-rank .hub-thead > :nth-child(6),
+  .ae-rank .hub-row > :nth-child(6) {
+    display: none;
+  }
+}
 /* The Discover button shows its text label on desktop; the arrow is mobile. */
 .rp-discover-arrow { display: none; }
 /* SVG arrow (replaces the → glyph, which centred unreliably on Android). */

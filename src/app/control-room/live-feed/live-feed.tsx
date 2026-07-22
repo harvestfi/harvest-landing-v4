@@ -202,6 +202,13 @@ const ENGAGEMENT_OPTIONS: ReadonlyArray<{ value: Engagement; label: string }> = 
 // the deposit time comes from the chain block, so allow a little slack
 // when deciding which connect "precedes" the event.
 const CONNECT_SKEW_MS = 90_000;
+// Report pages aren't vault products, so they never appear in the product-name
+// map — but the operator still wants to isolate their traffic. Surface them in
+// the product filter with a friendly label, keyed by page path (slug form).
+const REPORT_PAGES: Record<string, string> = {
+  "report/xrp-yield-ranking": "XRP Yield Report",
+  "report/aerodrome": "Aerodrome LP Report",
+};
 // An hsid lives in per-tab sessionStorage, so it can persist for many hours
 // across a kept-open tab - the same visitor returning hours apart shares one
 // hsid. Split a session into separate clusters whenever the gap between
@@ -1227,11 +1234,12 @@ export function LiveFeed({ productNames }: { productNames: Record<string, string
       if (it.kind === "click" || it.kind === "event") slug = it.vaultSlug;
       else if (it.kind === "visit" && it.pagePath.startsWith("/")) {
         const s = it.pagePath.slice(1).toLowerCase();
-        if (productNames[s]) slug = s;
+        // Vault product page, or a report page (so its traffic is isolatable).
+        if (productNames[s] || REPORT_PAGES[s]) slug = s;
       }
       if (!slug) continue;
       const key = slug.toLowerCase();
-      if (!seen.has(key)) seen.set(key, productNames[key] ?? slug);
+      if (!seen.has(key)) seen.set(key, REPORT_PAGES[key] ?? productNames[key] ?? slug);
     }
     return [...seen.entries()]
       .map(([value, label]) => ({ value, label }))

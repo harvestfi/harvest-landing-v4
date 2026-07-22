@@ -347,17 +347,7 @@ function ProductBreakdownSection({ clicks }: { clicks: ReportClick[] }) {
   const rows = useMemo(() => {
     const map = new Map<string, BreakdownRow>();
     for (const c of clicks) {
-      // Full product identity: the tracked product now carries the row detail
-      // (e.g. "stXRP · Aug 2026", "cbXRP · Lending market"). Append the platform
-      // when it isn't already implied so two same-named products on different
-      // venues stay distinct and legacy rows that stored only the bare ticker
-      // still resolve to something specific.
-      const productName = c.product ?? c.platform ?? "Unknown";
-      const label =
-        c.platform && c.product && !c.product.includes(c.platform)
-          ? `${c.product} · ${c.platform}`
-          : productName;
-      const key = label;
+      const { key, label } = productIdentity(c);
       const existing = map.get(key) ?? {
         key,
         label,
@@ -365,6 +355,12 @@ function ProductBreakdownSection({ clicks }: { clicks: ReportClick[] }) {
         confirms: 0,
         total: 0,
       };
+      // Prefer the richest label seen for this product (a detailed product
+      // string beats a slug-derived one), so a group's label is stable
+      // regardless of which click is processed first.
+      if (label.includes("·") && !existing.label.includes("·")) {
+        existing.label = label;
+      }
       if (c.event === "open") existing.opens++;
       else if (c.event === "confirm") existing.confirms++;
       existing.total++;
@@ -517,6 +513,64 @@ function TableSection({ clicks }: { clicks: ReportClick[] }) {
 function venueLabel(c: ReportClick): string {
   const platform = c.platform ?? "Unknown";
   return c.product ? `${platform} · ${c.product}` : platform;
+}
+
+// Token casing for humanizing a venue_ref slug into a readable product name.
+const REF_TOKEN_CASE: Record<string, string> = {
+  pt: "PT",
+  yt: "YT",
+  lp: "LP",
+  fxrp: "FXRP",
+  stxrp: "stXRP",
+  cbxrp: "cbXRP",
+  csxrp: "csXRP",
+  xrp: "XRP",
+  wxrp: "wXRP",
+  weth: "WETH",
+  cbbtc: "cbBTC",
+  mxrpy: "MXRPY",
+  bizfxrp: "bizFXRP",
+  earnxrp: "earnXRP",
+  metavault: "MetaVault",
+  sparkdex: "SparkDEX",
+};
+
+function humanizeRef(slug: string): string {
+  return slug
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map(
+      (t) => REF_TOKEN_CASE[t.toLowerCase()] ?? t.charAt(0).toUpperCase() + t.slice(1),
+    )
+    .join(" ");
+}
+
+// Precise product identity for the "Top products by clicks" breakdown.
+//
+// venue_ref ("ranking:spectra-pt-nov-2026" | "venue:spectra-metavault-fxrp") is
+// the unique, always-present product id, so it distinguishes every Spectra
+// market — PT vs pool vs MetaVault — down the long tail, even for rows tracked
+// before the product string carried that detail. We group by the slug (so
+// ranking + venue-card clicks for the same product merge, and same-named
+// products on different venues never collide) and label with the richest
+// string available: the detailed tracked product when present, otherwise the
+// humanized slug (e.g. "Spectra PT Nov 2026", "Spectra MetaVault FXRP").
+function productIdentity(c: ReportClick): { key: string; label: string } {
+  const ref = (c.venue_ref ?? "").replace(/^(ranking|venue):/, "").trim();
+  const detailed = !!c.product && c.product.includes("·");
+  let label: string;
+  if (detailed) {
+    label =
+      c.platform && !c.product!.includes(c.platform)
+        ? `${c.product} · ${c.platform}`
+        : c.product!;
+  } else if (ref) {
+    label = humanizeRef(ref);
+  } else {
+    label = c.product ?? c.platform ?? "Unknown";
+  }
+  const key = ref || label;
+  return { key, label };
 }
 
 function EventChip({ event }: { event: string | null }) {

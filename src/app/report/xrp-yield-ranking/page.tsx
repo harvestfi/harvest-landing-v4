@@ -516,9 +516,12 @@ export default function XrpYieldRankingPage() {
     name: `${assetHead(p)} on ${p.platform}`,
     url: p.platformUrl ?? p.llamaUrl,
   }));
+  // Two levels only: "Report" was an intermediate crumb with no page of its
+  // own (there is no /report index), so Google flagged its ListItem for a
+  // missing `item` URL. Drop it — Home › XRP Yield Ranking is valid and matches
+  // the visible breadcrumb.
   const crumbs = [
     { name: SITE_NAME, url: SITE_URL },
-    { name: "Report" },
     { name: "XRP Yield Ranking", url: PAGE_URL },
   ];
 
@@ -2274,8 +2277,6 @@ function Crumbs() {
   return (
     <nav className="rp-crumbs" aria-label="Breadcrumb">
       <Link href="/">{SITE_NAME}</Link>
-      <span className="sep">/</span>
-      <span>Report</span>
       <span className="sep">/</span>
       <span>XRP Yield Ranking</span>
     </nav>
