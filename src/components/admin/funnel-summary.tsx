@@ -1194,10 +1194,20 @@ type ChartDimension = "engine" | "landing";
 const TOP_LANDINGS = 12;
 const OTHER = "Other";
 
-// Legend/tooltip label: strip the leading slash off landing paths so they read
-// compactly; engines and "Other" pass through unchanged.
+// Friendly names for report landings so they read as a product in the legend,
+// and are recognisable when isolated from the rest of the SEO breakdown.
+const LANDING_LABELS: Record<string, string> = {
+  "/report/xrp-yield-ranking": "XRP Yield Report",
+  "/report/aerodrome": "Aerodrome LP Report",
+};
+const isReportLanding = (k: string) => k.startsWith("/report/");
+
+// Legend/tooltip label: friendly name for report landings, otherwise strip the
+// leading slash off landing paths so they read compactly; engines and "Other"
+// pass through unchanged.
 function catLabel(cat: string, dimension: ChartDimension): string {
-  if (dimension === "landing" && cat !== OTHER) return cat.replace(/^\//, "");
+  if (dimension === "landing" && cat !== OTHER)
+    return LANDING_LABELS[cat] ?? cat.replace(/^\//, "");
   return cat;
 }
 
@@ -1234,10 +1244,16 @@ function buildCategories(
     const present = [...counts.keys()].sort(
       (a, b) => (counts.get(b) || 0) - (counts.get(a) || 0),
     );
-    ordered =
-      present.length > TOP_LANDINGS
-        ? [...present.slice(0, TOP_LANDINGS), OTHER]
-        : present;
+    // Always draw report landings individually (never fold into "Other"), so
+    // they stay isolatable even at low volume; fill the rest of the top slots by
+    // volume, then sort the drawn set by volume for a clean legend.
+    const pinned = present.filter(isReportLanding);
+    const rest = present.filter((k) => !isReportLanding(k));
+    const room = Math.max(0, TOP_LANDINGS - pinned.length);
+    const shown = [...new Set([...pinned, ...rest.slice(0, room)])].sort(
+      (a, b) => (counts.get(b) || 0) - (counts.get(a) || 0),
+    );
+    ordered = shown.length < present.length ? [...shown, OTHER] : shown;
   }
   const color: Record<string, string> = {};
   ordered.forEach(
