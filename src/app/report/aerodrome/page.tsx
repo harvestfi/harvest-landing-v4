@@ -48,9 +48,11 @@ interface AeroPool {
   feeApr: number;
   realApy: number;
   emissionSpot?: number;
+  volumeUsdDay: number | null;
   harvestApy24h: number | null;
   harvestApy30d: number | null;
   harvestTvlUsd: number | null;
+  holders: number | null;
   rateBasis: string;
   error?: string;
 }
@@ -255,15 +257,28 @@ export default function AerodromeReportPage() {
     .sort((a, b) => b.ratio - a.ratio);
   const topCompound = compoundGaps[0];
 
-  // Rate stability: how far this week's emission sits from the 30-day mean.
-  const moved = pools
-    .filter((p) => p.emissionSpot != null)
-    .map((p) => ({
-      ...p,
-      drift: Math.abs((p.emissionSpot ?? 0) - p.emissionApr) / Math.max(0.5, p.emissionApr),
-    }))
-    .sort((a, b) => b.drift - a.drift);
-  const topMoved = moved[0];
+  // Rate stability: a rate made almost entirely of emissions is the least
+  // durable (a weekly vote can move the incentive); a real fee share holds
+  // steadier because it is earned from trading, not rented from the AERO budget.
+  const emissionLed = pools
+    .filter((p) => p.realApy > 1)
+    .map((p) => ({ ...p, emShare: p.emissionApr / Math.max(0.5, p.realApy) }))
+    .sort((a, b) => b.emShare - a.emShare);
+  const mostEmissionLed = emissionLed[0];
+  const feeBacked = [...emissionLed]
+    .filter((p) => p.emShare < 0.75 && p.poolTvlUsd >= THIN_TVL)
+    .sort((a, b) => a.emShare - b.emShare)[0];
+
+  // Trading volume (most-traded pools) and depositor counts (second-wave depth).
+  const byVolume = [...pools]
+    .filter((p) => p.volumeUsdDay != null)
+    .sort((a, b) => (b.volumeUsdDay ?? 0) - (a.volumeUsdDay ?? 0));
+  const maxVol = byVolume[0]?.volumeUsdDay ?? 1;
+  const totalVolDay = pools.reduce((s, p) => s + (p.volumeUsdDay ?? 0), 0);
+  const byHolders = [...pools]
+    .filter((p) => p.holders != null)
+    .sort((a, b) => (b.holders ?? 0) - (a.holders ?? 0));
+  const totalHolders = pools.reduce((s, p) => s + (p.holders ?? 0), 0);
   const meaningful = pools
     .filter((p) => p.poolTvlUsd >= THIN_TVL)
     .sort((a, b) => b.realApy - a.realApy);
@@ -287,6 +302,8 @@ export default function AerodromeReportPage() {
     { id: "rate-stability", label: "Rate stability", level: 1 },
     { id: "auto-compounding", label: "The auto-compounding edge" },
     { id: "tvl-landscape", label: "TVL landscape" },
+    { id: "trading-volume", label: "Trading volume" },
+    { id: "depositors", label: "Popular by depositors" },
     { id: "key-risks", label: "Key risks" },
     { id: "method-and-scope", label: "Method & scope" },
     { id: "onchain-references", label: "Onchain references" },
@@ -527,13 +544,14 @@ export default function AerodromeReportPage() {
               <h3 id="rate-stability">Rate stability</h3>
               <p>
                 Because emissions reset weekly, a pool&rsquo;s headline rate is
-                only as durable as its votes. The report ranks on the 30-day mean
-                to smooth that, but the gap between this week&rsquo;s emission and
-                the 30-day mean is a useful signal:{" "}
-                {topMoved ? `${topMoved.pair} has moved the most, its current emission sitting about ${(topMoved.drift * 100).toFixed(0)}% off its 30-day average` : "most pools sit close to their average"}.
-                A large gap means the rate is being actively re-priced by voters
-                and should be read as opportunistic; a small gap means the pool
-                has held a steady incentive.
+                only as durable as its votes, and the tell is how much of the
+                rate is emissions versus fees. A rate that is almost entirely
+                emissions{mostEmissionLed ? `, like ${mostEmissionLed.pair} at about ${(mostEmissionLed.emShare * 100).toFixed(0)}% emission-led,` : ""}{" "}
+                can reset at the next epoch if voters move the incentive
+                elsewhere. A pool with a real fee share{feeBacked ? `, like ${feeBacked.pair},` : ""}{" "}
+                earns from trading volume that does not vanish on a vote, so its
+                rate holds steadier. Read a high, emission-heavy rate as
+                opportunistic and a fee-backed rate as the more dependable one.
               </p>
             </div>
             <p className="rp-source-note">
@@ -598,6 +616,75 @@ export default function AerodromeReportPage() {
             <p className="rp-source-note">
               Pool TVL is measured on-chain from reserves, priced via Chainlink,
               as of {updated}. Bar length is relative to the deepest covered pool.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="trading-volume">
+            <p className="rp-eyebrow">Activity</p>
+            <h2 id="trading-volume">Trading volume</h2>
+            <p>
+              Fees only exist where swaps happen, so volume is what separates a
+              fee-backed rate from a purely emission-rented one. Across the
+              covered pools, on-chain swaps run at about {usd(totalVolDay)} a day,
+              heavily concentrated:{" "}
+              {byVolume[0] ? `${byVolume[0].pair} alone does roughly ${usd(byVolume[0].volumeUsdDay ?? 0)} a day` : "in a few deep pools"}.
+              The bars below rank the covered pools by average daily swap volume.
+            </p>
+            <div className="ae-landscape">
+              {byVolume.slice(0, 10).map((p) => (
+                <div className="ae-land-row" key={p.slug}>
+                  <span className="ae-land-name" title={p.pair}>{p.pair}</span>
+                  <span className="ae-land-bar-wrap">
+                    <span
+                      className="ae-land-bar ae-bar-vol"
+                      style={{ width: `${Math.max(1.5, ((p.volumeUsdDay ?? 0) / maxVol) * 100)}%` }}
+                    />
+                  </span>
+                  <span className="ae-land-val">{usd(p.volumeUsdDay ?? 0)}</span>
+                </div>
+              ))}
+            </div>
+            <p className="rp-source-note">
+              Average daily swap volume, computed from the pool&rsquo;s on-chain
+              swap logs over the trailing fee window, as of {updated}.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="depositors">
+            <p className="rp-eyebrow">Adoption</p>
+            <h2 id="depositors">Most popular by depositors</h2>
+            <p>
+              Depositor counts are the clearest read on which pools people
+              actually trust with capital through Harvest, independent of the
+              headline rate. Across the covered vaults there are {totalHolders.toLocaleString("en-US")}{" "}
+              depositors;{" "}
+              {byHolders[0] ? `${byHolders[0].pair} leads with ${byHolders[0].holders}` : "adoption is spread across the set"}.
+            </p>
+            <div className="rp-dtable-wrap">
+              <table className="rp-dtable">
+                <thead>
+                  <tr>
+                    <th>Pool</th>
+                    <th className="num">Depositors</th>
+                    <th className="num">Pool TVL</th>
+                    <th className="num">Harvest 30d</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {byHolders.slice(0, 10).map((p) => (
+                    <tr key={p.slug}>
+                      <td className="strong">{p.pair}</td>
+                      <td className="num">{p.holders?.toLocaleString("en-US") ?? "n/a"}</td>
+                      <td className="num">{usd(p.poolTvlUsd)}</td>
+                      <td className="num">{pct(p.harvestApy30d)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="rp-source-note">
+              Depositor counts are the number of distinct addresses holding each
+              Harvest vault token, from our indexer, as of {updated}.
             </p>
           </section>
 

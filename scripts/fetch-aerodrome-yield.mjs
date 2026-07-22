@@ -34,6 +34,14 @@ const vaults = Array.isArray(vaultsDoc)
   : vaultsDoc.vaults || Object.values(vaultsDoc);
 const vaultBySlug = new Map(vaults.map((v) => [v.slug, v]));
 
+// Holder counts per vault (data/holders.json is { vaultAddress(lowercase): count }).
+let holdersMap = {};
+try {
+  holdersMap = JSON.parse(readFileSync("data/holders.json", "utf8"));
+} catch {
+  /* holders optional */
+}
+
 const now = Math.floor(Date.now() / 1000);
 
 async function main() {
@@ -73,10 +81,13 @@ async function main() {
         feeApr: Number(y.feeApr.toFixed(3)),
         realApy: Number((y.emissionApr + y.feeApr).toFixed(3)),
         emissionSpot: y.emissionSpot != null ? Number(y.emissionSpot.toFixed(3)) : undefined,
+        // Trailing average daily swap volume (USD), from the fee-window logs.
+        volumeUsdDay: y.volumeUsdDay != null ? Math.round(y.volumeUsdDay) : null,
         // Harvest lens (first-party, auto-compounded)
         harvestApy24h: vault.apy24h ?? null,
         harvestApy30d: vault.apy30d ?? null,
         harvestTvlUsd: vault.tvl != null ? Math.round(vault.tvl) : null,
+        holders: holdersMap[(v.vaultAddress || "").toLowerCase()] ?? null,
         rateBasis: USE_MEAN ? "30d" : "spot",
       };
       rows.push(row);

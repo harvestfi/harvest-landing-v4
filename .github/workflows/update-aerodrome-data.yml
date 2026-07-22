@@ -6,10 +6,10 @@ name: Update Aerodrome Report Data
 # vault figures from data/vaults.json. Separate from the vault-data and XRP jobs
 # so a failure in one never blocks the others.
 #
-# Emission APR uses the 30-day weekly-sampled mean (emissions rotate weekly with
-# veAERO votes); fees are the trailing on-chain swap volume. The fetcher only
-# writes on success, so a flaky run just skips the day and keeps the last good
-# snapshot (the step is continue-on-error).
+# Emission APR is the current on-chain gauge rate (validated against our own
+# apyBreakdown); fees + swap volume are the trailing on-chain window; holder
+# counts join from data/holders.json. The fetcher only writes on success, so a
+# flaky run just skips the day and keeps the last good snapshot (continue-on-error).
 
 on:
   schedule:
@@ -34,9 +34,9 @@ jobs:
         with:
           node-version: "20"
 
-      # On-chain pool yield (30d-mean emission + trailing fee) joined to vaults.
+      # On-chain pool yield (current emission + trailing fee/volume) + holders.
       - name: Fetch Aerodrome pool yield
-        run: node scripts/fetch-aerodrome-yield.mjs --mean --fee-days 7
+        run: node scripts/fetch-aerodrome-yield.mjs --fee-days 2
         continue-on-error: true
 
       - name: Commit and push if changed

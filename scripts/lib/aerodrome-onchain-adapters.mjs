@@ -191,8 +191,11 @@ export async function classicFeeApr({
       (Number(toBig(word(l.data, 0))) + Number(toBig(word(l.data, 2)))) /
       10 ** dec0;
   }
-  const feesUsd = vol0 * price0 * ff;
-  return tvlUsd > 0 ? (feesUsd * (365 / windowDays)) / tvlUsd * 100 : 0;
+  const volumeUsd = vol0 * price0;
+  const feesUsd = volumeUsd * ff;
+  const feeApr = tvlUsd > 0 ? (feesUsd * (365 / windowDays)) / tvlUsd * 100 : 0;
+  // volumeUsd is the swap volume over the whole window; the caller normalizes.
+  return { feeApr, volumeUsd, windowDays };
 }
 
 // Full pool yield at a block: emission APR (staked denominator) + fee APR + TVL.
@@ -227,10 +230,11 @@ export async function aeroPoolYield({
         100;
   }
   let feeApr = 0;
+  let volumeUsdDay = null;
   if (!skipFee) {
     try {
       const ff = await feeFrac(pool, p.stable);
-      feeApr = await classicFeeApr({
+      const fee = await classicFeeApr({
         pool,
         dec0: p.d0,
         price0: p0,
@@ -239,6 +243,8 @@ export async function aeroPoolYield({
         windowDays: feeWindowDays,
         toBlock: block === "latest" ? undefined : block,
       });
+      feeApr = fee.feeApr;
+      volumeUsdDay = fee.windowDays > 0 ? fee.volumeUsd / fee.windowDays : null;
     } catch {
       /* fee leg optional */
     }
@@ -254,6 +260,7 @@ export async function aeroPoolYield({
     gauge: g,
     emissionApr,
     feeApr,
+    volumeUsdDay,
     apy: emissionApr + feeApr,
     p0,
     p1,
