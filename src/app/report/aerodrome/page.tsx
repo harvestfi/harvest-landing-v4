@@ -233,6 +233,37 @@ export default function AerodromeReportPage() {
   const byTvl = [...pools].sort((a, b) => b.poolTvlUsd - a.poolTvlUsd);
   const topByTvl = byTvl[0];
   const maxTvl = byTvl[0]?.poolTvlUsd ?? 1;
+
+  // Where the yield comes from: TVL-weighted split of emissions vs swap fees
+  // across the covered set, and the pools whose yield is most fee-led (organic).
+  const wEmit = pools.reduce((s, p) => s + p.emissionApr * p.poolTvlUsd, 0);
+  const wFee = pools.reduce((s, p) => s + p.feeApr * p.poolTvlUsd, 0);
+  const emitShare = wEmit + wFee > 0 ? (wEmit / (wEmit + wFee)) * 100 : 0;
+  const feeShare = 100 - emitShare;
+  // Composition bars: top pools by rate, each split into emission + fee.
+  const byRate = [...pools].sort((a, b) => b.realApy - a.realApy);
+  const maxRate = byRate[0]?.realApy ?? 1;
+  const feeLed = [...pools]
+    .filter((p) => p.realApy > 1 && p.poolTvlUsd >= THIN_TVL)
+    .sort((a, b) => b.feeApr / b.realApy - a.feeApr / a.realApy)[0];
+
+  // Auto-compounding edge: pools where the Harvest 30d return most exceeds the
+  // raw pool APR (frequent AERO harvest + reward-token price moves).
+  const compoundGaps = pools
+    .filter((p) => p.harvestApy30d != null && p.realApy > 1)
+    .map((p) => ({ ...p, ratio: (p.harvestApy30d ?? 0) / Math.max(0.5, p.realApy) }))
+    .sort((a, b) => b.ratio - a.ratio);
+  const topCompound = compoundGaps[0];
+
+  // Rate stability: how far this week's emission sits from the 30-day mean.
+  const moved = pools
+    .filter((p) => p.emissionSpot != null)
+    .map((p) => ({
+      ...p,
+      drift: Math.abs((p.emissionSpot ?? 0) - p.emissionApr) / Math.max(0.5, p.emissionApr),
+    }))
+    .sort((a, b) => b.drift - a.drift);
+  const topMoved = moved[0];
   const meaningful = pools
     .filter((p) => p.poolTvlUsd >= THIN_TVL)
     .sort((a, b) => b.realApy - a.realApy);
@@ -251,7 +282,12 @@ export default function AerodromeReportPage() {
     { id: "volatile-pools", label: "Volatile pools", level: 1 },
     { id: "correlated-pools", label: "Correlated pools", level: 1 },
     { id: "how-ranked", label: "How it is ranked", level: 1 },
+    { id: "yield-sources", label: "Where yield comes from" },
+    { id: "how-emissions", label: "How emissions work", level: 1 },
+    { id: "rate-stability", label: "Rate stability", level: 1 },
+    { id: "auto-compounding", label: "The auto-compounding edge" },
     { id: "tvl-landscape", label: "TVL landscape" },
+    { id: "key-risks", label: "Key risks" },
     { id: "method-and-scope", label: "Method & scope" },
     { id: "onchain-references", label: "Onchain references" },
     { id: "data-downloads", label: "Data & downloads" },
@@ -431,6 +467,111 @@ export default function AerodromeReportPage() {
             </p>
           </section>
 
+          <section className="uni-home-content" aria-labelledby="yield-sources">
+            <p className="rp-eyebrow">Sources</p>
+            <h2 id="yield-sources">Where the yield comes from</h2>
+            <p>
+              An Aerodrome pool pays two kinds of yield. <strong>Emissions</strong>{" "}
+              are AERO tokens the protocol mints to the pool&rsquo;s gauge as an
+              incentive; <strong>fees</strong> are the cut of every swap that
+              routes through the pool. Weighted by liquidity across the covered
+              set, about {emitShare.toFixed(0)}% of the yield is emission-driven
+              and {feeShare.toFixed(0)}% comes from swap fees. The split matters:
+              fee yield is organic and tends to persist, while emissions are an
+              incentive that rotates and can be cut.
+            </p>
+            <div className="ae-splitbar" aria-hidden="true">
+              <span className="ae-split-emit" style={{ width: `${emitShare}%` }} />
+              <span className="ae-split-fee" style={{ width: `${feeShare}%` }} />
+            </div>
+            <div className="ae-split-legend">
+              <span><span className="ae-dot ae-dot-emit" /> Emissions {emitShare.toFixed(0)}%</span>
+              <span><span className="ae-dot ae-dot-fee" /> Swap fees {feeShare.toFixed(0)}%</span>
+            </div>
+            <p>
+              Per pool, the mix varies widely. The bars below split each
+              pool&rsquo;s rate into its emission and fee parts (top pools by
+              rate). A pool leaning on fees, like {feeLed ? feeLed.pair : "the deeper venues"},
+              earns from real trading volume; a pool leaning on emissions is
+              renting its rate from the AERO incentive budget.
+            </p>
+            <div className="ae-landscape">
+              {byRate.slice(0, 10).map((p) => (
+                <div className="ae-land-row" key={p.slug}>
+                  <span className="ae-land-name" title={p.pair}>{p.pair}</span>
+                  <span className="ae-land-bar-wrap ae-comp-wrap">
+                    <span className="ae-split-emit" style={{ width: `${(p.emissionApr / maxRate) * 100}%` }} />
+                    <span className="ae-split-fee" style={{ width: `${(p.feeApr / maxRate) * 100}%` }} />
+                  </span>
+                  <span className="ae-land-val">{pct(p.realApy)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="rp-rank-sort">
+              <h3 id="how-emissions">How emissions work</h3>
+              <p>
+                Aerodrome runs on veAERO: holders lock AERO for vote-escrowed
+                veAERO and vote each week on which pools&rsquo; gauges receive
+                emissions. Votes set the gauge weights, and emissions are
+                distributed to stakers in that pool for the epoch (a one-week
+                cycle). Because the votes are re-cast every epoch, a pool&rsquo;s
+                emission rate can jump or fall week to week as vote incentives
+                (bribes) and capital move around. Only liquidity staked in the
+                gauge earns the emissions, which is why this report measures the
+                rate against the staked TVL rather than the whole pool.
+              </p>
+            </div>
+
+            <div className="rp-rank-sort">
+              <h3 id="rate-stability">Rate stability</h3>
+              <p>
+                Because emissions reset weekly, a pool&rsquo;s headline rate is
+                only as durable as its votes. The report ranks on the 30-day mean
+                to smooth that, but the gap between this week&rsquo;s emission and
+                the 30-day mean is a useful signal:{" "}
+                {topMoved ? `${topMoved.pair} has moved the most, its current emission sitting about ${(topMoved.drift * 100).toFixed(0)}% off its 30-day average` : "most pools sit close to their average"}.
+                A large gap means the rate is being actively re-priced by voters
+                and should be read as opportunistic; a small gap means the pool
+                has held a steady incentive.
+              </p>
+            </div>
+            <p className="rp-source-note">
+              Emission and fee APRs are measured on-chain (Base), as of {updated}.
+              The weighted split is by pool TVL across the covered set.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="auto-compounding">
+            <p className="rp-eyebrow">The edge</p>
+            <h2 id="auto-compounding">The auto-compounding edge</h2>
+            <p>
+              The Pool APR is what the pool pays before anything is done with the
+              rewards. Left alone, emitted AERO just accumulates as claimable
+              tokens; its value is exposed to the AERO price and earns nothing
+              further. Harvest&rsquo;s vault harvests that AERO on a schedule,
+              swaps it back into the pool&rsquo;s assets and re-deposits, so the
+              position compounds on itself. Over a 30-day window that compounding,
+              plus any move in the AERO price while the rewards were held, is why
+              the Harvest 30d column can sit well above the raw Pool APR.
+            </p>
+            <p>
+              The effect is largest exactly where emissions are largest.{" "}
+              {topCompound ? (
+                <>
+                  On {topCompound.pair}, for instance, the raw pool rate is about{" "}
+                  {pct(topCompound.realApy)}, while Harvest&rsquo;s realized
+                  30-day return was near {pct(topCompound.harvestApy30d)}.
+                </>
+              ) : null}{" "}
+              On low-emission pools the two numbers converge, because there is
+              little reward to compound. The trade-off is that the Harvest figure
+              is a realized, backward-looking number net of the vault&rsquo;s
+              performance fee, whereas the Pool APR is the forward rate the pool
+              is paying now; both are shown so neither is mistaken for the other.
+            </p>
+          </section>
+
           <section className="uni-home-content" aria-labelledby="tvl-landscape">
             <p className="rp-eyebrow">Landscape</p>
             <h2 id="tvl-landscape">Where the liquidity sits</h2>
@@ -458,6 +599,45 @@ export default function AerodromeReportPage() {
               Pool TVL is measured on-chain from reserves, priced via Chainlink,
               as of {updated}. Bar length is relative to the deepest covered pool.
             </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="key-risks">
+            <p className="rp-eyebrow">Risk</p>
+            <h2 id="key-risks">Key risks</h2>
+            <p>
+              Every row here is a two-token liquidity position, which carries a
+              specific set of risks distinct from simply holding the assets.
+            </p>
+            <dl className="rp-method">
+              <dt>Impermanent loss</dt>
+              <dd>
+                When the two paired assets move apart in price, an LP ends up with
+                more of the loser and less of the winner than simply holding would
+                have left them. It is larger on volatile pairs (an asset against
+                ETH) and small on correlated pairs (an ETH derivative against ETH).
+                A high rate can still be eroded by impermanent loss.
+              </dd>
+              <dt>Emission decay</dt>
+              <dd>
+                Most of the yield is AERO emissions, which are an incentive, not a
+                fee. veAERO voters can move emissions away from a pool at the next
+                weekly epoch, so a rate that looks high today is not guaranteed to
+                last.
+              </dd>
+              <dt>Reward-token exposure</dt>
+              <dd>
+                Rewards are paid in AERO. Until they are harvested and swapped, the
+                realized return depends on the AERO price, which can fall as well
+                as rise.
+              </dd>
+              <dt>Depeg and contract risk</dt>
+              <dd>
+                Correlated pairs assume the two legs stay pegged; a depeg breaks
+                that. And every pool, gauge and vault is a third-party or Harvest
+                smart contract with the usual smart-contract risk. Verify each
+                address before use.
+              </dd>
+            </dl>
           </section>
 
           <section className="uni-home-content" aria-labelledby="method-and-scope">
