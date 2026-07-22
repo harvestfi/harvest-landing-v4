@@ -264,12 +264,17 @@ export async function aeroPoolYield({
 // weekly blocks (each with that week's rate + TVL + staked share) and mean them,
 // then add one trailing-7d fee window. Mirrors the XRP aerodromeMean30d shape but
 // with the staked-TVL denominator and the classic-pool reads.
+const BASE_BLOCK_SEC = 2;
 export async function aeroPoolMean30d({ pool, gauge, px, now, weeks = 4, feeWindowDays = 7 }) {
   const g = gauge ?? (await gaugeOf(pool));
+  const head = await blockNumber(CHAIN);
   const emissions = [];
   for (let w = 0; w < weeks; w++) {
-    const ts = now - w * 7 * 86400;
-    const block = w === 0 ? "latest" : await blockAtTimestamp(CHAIN, ts);
+    // Estimate the block a week back rather than binary-searching for it — the
+    // emission rate is constant within an epoch, so being a few hundred blocks
+    // off is immaterial and this avoids ~25 sequential calls per sample.
+    const block =
+      w === 0 ? "latest" : Math.max(1, head - Math.round((w * 7 * 86400) / BASE_BLOCK_SEC));
     const r = await aeroPoolYield({ pool, gauge: g, px, skipFee: true, block });
     if (!r.error) emissions.push(r.emissionApr);
   }

@@ -17,16 +17,16 @@ import {
 import "../../_styles/home.css";
 import "../../_styles/report.css";
 
-// /report/aerodrome — a continuously updated ranking of the Aerodrome (Base)
+// /report/aerodrome: a continuously updated ranking of the Aerodrome (Base)
 // liquidity pools Harvest runs auto-compounding vaults for. The ranked metric is
 // the objective on-chain pool yield (gauge emissions + swap fees), measured
 // on-chain and aggregator-free. Harvest's own auto-compounded 30-day APY sits
-// beside it as one lens — this page is the operator's transparent research view.
+// beside it as one lens; this page is the operator's transparent research view.
 
 const PAGE_URL = `${SITE_URL}/report/aerodrome`;
 const BASESCAN = "https://basescan.org/address/";
 // Pools below this TVL are reward-driven micro-pools whose headline APR swings
-// week to week — flagged so a large emission number on thin liquidity never
+// week to week, flagged so a large emission number on thin liquidity never
 // reads as a durable rate.
 const THIN_TVL = 250_000;
 
@@ -77,7 +77,7 @@ function loadData(): AeroData | null {
 }
 
 const pct = (v: number | null | undefined) =>
-  v == null ? "—" : `${v.toFixed(2)}%`;
+  v == null ? "n/a" : `${v.toFixed(2)}%`;
 const usd = (n: number) =>
   n >= 1_000_000
     ? `$${(n / 1_000_000).toFixed(1)}M`
@@ -92,9 +92,9 @@ const median = (xs: number[]) => {
 };
 
 export const metadata: Metadata = {
-  title: "Aerodrome LP Yield Ranking (Base) — Real On-Chain APR | Harvest",
+  title: "Aerodrome LP Yield Ranking: Real On-Chain APR | Harvest",
   description:
-    "The Aerodrome (Base) liquidity pools Harvest auto-compounds, ranked by real on-chain pool yield — gauge emissions plus swap fees, measured on-chain — with Harvest's auto-compounded 30-day APY beside each pool. Refreshed regularly.",
+    "The Aerodrome liquidity pools on Base that Harvest auto-compounds, ranked by real on-chain pool yield (gauge emissions plus swap fees, measured on-chain), with Harvest's auto-compounded 30-day APY beside each pool. Refreshed regularly.",
   alternates: { canonical: PAGE_URL },
 };
 
@@ -230,7 +230,9 @@ export default function AerodromeReportPage() {
   const realRates = pools.map((p) => p.realApy);
   const medReal = median(realRates);
   const topReal = [...pools].sort((a, b) => b.realApy - a.realApy)[0];
-  const topByTvl = [...pools].sort((a, b) => b.poolTvlUsd - a.poolTvlUsd)[0];
+  const byTvl = [...pools].sort((a, b) => b.poolTvlUsd - a.poolTvlUsd);
+  const topByTvl = byTvl[0];
+  const maxTvl = byTvl[0]?.poolTvlUsd ?? 1;
   const meaningful = pools
     .filter((p) => p.poolTvlUsd >= THIN_TVL)
     .sort((a, b) => b.realApy - a.realApy);
@@ -249,15 +251,17 @@ export default function AerodromeReportPage() {
     { id: "volatile-pools", label: "Volatile pools", level: 1 },
     { id: "correlated-pools", label: "Correlated pools", level: 1 },
     { id: "how-ranked", label: "How it is ranked", level: 1 },
+    { id: "tvl-landscape", label: "TVL landscape" },
     { id: "method-and-scope", label: "Method & scope" },
     { id: "onchain-references", label: "Onchain references" },
+    { id: "data-downloads", label: "Data & downloads" },
     { id: "faq", label: "FAQ" },
   ];
 
   const faqs = [
     {
       q: "What does this report rank?",
-      a: `The ${pools.length} Aerodrome liquidity pools on Base that Harvest runs auto-compounding vaults for, ranked by real on-chain pool APR — AERO gauge emissions plus swap fees. It is not a full Aerodrome index; it is the operator's transparent view of the pools we cover.`,
+      a: `The ${pools.length} Aerodrome liquidity pools on Base that Harvest runs auto-compounding vaults for, ranked by real on-chain pool APR: AERO gauge emissions plus swap fees. It is not a full Aerodrome index; it is the operator's transparent view of the pools we cover.`,
     },
     {
       q: "How is the pool APR measured?",
@@ -265,7 +269,7 @@ export default function AerodromeReportPage() {
     },
     {
       q: "Why is Harvest's 30-day APY often higher than the pool APR?",
-      a: "The Pool APR column is the raw rate the pool pays right now. The Harvest 30d column is our vault's realized, auto-compounded return over the last 30 days — it compounds harvested AERO back into the position and reflects reward-token price moves over the window, so it can sit above the spot pool APR. They measure different things and are shown side by side on purpose.",
+      a: "The Pool APR column is the raw rate the pool pays right now. The Harvest 30d column is our vault's realized, auto-compounded return over the last 30 days; it compounds harvested AERO back into the position and reflects reward-token price moves over the window, so it can sit above the spot pool APR. They measure different things and are shown side by side on purpose.",
     },
     {
       q: "Why do tiny pools show the largest APRs?",
@@ -273,7 +277,7 @@ export default function AerodromeReportPage() {
     },
     {
       q: "What are impermanent loss and the risks here?",
-      a: "Every row is a two-token liquidity pool, so it carries impermanent loss when the paired assets diverge — larger for volatile pairs than correlated ones. Emissions are incentive-driven and not guaranteed. All addresses are third-party contracts; verify each before use.",
+      a: "Every row is a two-token liquidity pool, so it carries impermanent loss when the paired assets diverge, larger for volatile pairs than correlated ones. Emissions are incentive-driven and not guaranteed. All addresses are third-party contracts; verify each before use.",
     },
   ];
 
@@ -293,7 +297,7 @@ export default function AerodromeReportPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(reportWebPageSchema({
-          name: "Aerodrome LP Yield Ranking (Base)",
+          name: "Aerodrome LP Yield Ranking",
           url: PAGE_URL,
           description: `The ${pools.length} Aerodrome liquidity pools on Base that Harvest auto-compounds, ranked by real on-chain pool APR (gauge emissions + swap fees), measured on-chain, with Harvest's auto-compounded 30-day APY beside each.`,
           dateModified: data.generatedAt,
@@ -302,11 +306,17 @@ export default function AerodromeReportPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(reportDatasetSchema({
-          name: "Aerodrome LP Yield Ranking (Base) — dataset",
+          name: "Aerodrome LP Yield Ranking dataset",
           description: "Per-pool on-chain yield (emission APR, fee APR, TVL) for the Aerodrome Base pools Harvest runs vaults for, plus first-party auto-compounded APY, measured on-chain.",
           url: PAGE_URL,
           dateModified: data.generatedAt,
           numberOfItems: pools.length,
+          keywords: ["Aerodrome", "Base", "liquidity pool", "LP", "AERO", "yield", "APR", "TVL", "DeFi"],
+          sources: ["https://aerodrome.finance"],
+          distribution: [
+            { format: "application/json", url: `${SITE_URL}/data/aerodrome/index.json` },
+            { format: "text/csv", url: `${SITE_URL}/data/aerodrome/pools.csv` },
+          ],
         })) }}
       />
       <script
@@ -322,11 +332,11 @@ export default function AerodromeReportPage() {
 
       <section className="uni-home-hero rp-hero">
         <div className="uni-home-hero-inner">
-          <h1 className="uni-home-h1">Aerodrome LP Yield Ranking (Base)</h1>
+          <h1 className="uni-home-h1">Aerodrome LP Yield Ranking</h1>
           <p className="uni-home-sub">
             The {pools.length}{" "}Aerodrome liquidity pools on Base that Harvest
             runs auto-compounding vaults for, ranked by their real on-chain pool
-            APR — AERO gauge emissions plus swap fees, measured on-chain. Each
+            APR: AERO gauge emissions plus swap fees, measured on-chain. Each
             pool&rsquo;s Harvest auto-compounded 30-day return sits beside it as a
             second lens.
           </p>
@@ -349,8 +359,8 @@ export default function AerodromeReportPage() {
               on-chain pool APR is about {pct(topDurable?.realApy)} on{" "}
               {topDurable?.pair} ({usd(topDurable?.poolTvlUsd ?? 0)} of
               liquidity); the median across the set is {pct(medReal)}. Thin,
-              reward-driven pools can post far larger headline numbers — up to{" "}
-              {pct(topReal?.realApy)} on {topReal?.pair} — but on only{" "}
+              reward-driven pools can post far larger headline numbers, up to{" "}
+              {pct(topReal?.realApy)} on {topReal?.pair}, but on only{" "}
               {usd(topReal?.poolTvlUsd ?? 0)} of liquidity, where the rate is
               emission-driven and swings week to week. The deepest pool is{" "}
               {topByTvl?.pair} at {usd(topByTvl?.poolTvlUsd ?? 0)}. The covered
@@ -402,10 +412,10 @@ export default function AerodromeReportPage() {
             <div className="rp-rank-sort">
               <h3 id="how-ranked">How it is ranked</h3>
               <p>
-                Pools are ranked by the real on-chain rate they pay — AERO gauge
+                Pools are ranked by the real on-chain rate they pay: AERO gauge
                 emissions (rate × AERO price over the liquidity actually staked in
                 the gauge) plus swap fees (on-chain volume × the pool&rsquo;s fee
-                tier) — not a spot advertised APR. Emissions rotate weekly with
+                tier), not a marketed headline number. Emissions rotate weekly with
                 veAERO votes, so a large number on thin liquidity is opportunistic
                 rather than durable; those rows carry a <span aria-hidden="true">~</span> marker
                 and their small TVL is shown.
@@ -415,9 +425,38 @@ export default function AerodromeReportPage() {
               Pool rates and TVL are measured on-chain (Base), as of {updated}.
               The Harvest 30d column is our first-party auto-compounded vault
               return for the same pool; it compounds harvested AERO and reflects
-              reward-token price moves, so it can sit above the spot pool APR — it
+              reward-token price moves, so it can sit above the spot pool APR; it
               is a different measure, shown as a lens. Each row links to
               Harvest&rsquo;s vault for that pool.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="tvl-landscape">
+            <p className="rp-eyebrow">Landscape</p>
+            <h2 id="tvl-landscape">Where the liquidity sits</h2>
+            <p>
+              The {pools.length} covered pools hold {usd(totalPoolTvl)}{" "}of
+              liquidity between them, concentrated in a handful of deep pools.
+              Depth matters: the deeper the pool, the more durable its rate and
+              the smaller the price impact of entering or leaving a position.
+            </p>
+            <div className="ae-landscape">
+              {byTvl.slice(0, 12).map((p) => (
+                <div className="ae-land-row" key={p.slug}>
+                  <span className="ae-land-name" title={p.pair}>{p.pair}</span>
+                  <span className="ae-land-bar-wrap">
+                    <span
+                      className="ae-land-bar"
+                      style={{ width: `${Math.max(1.5, (p.poolTvlUsd / maxTvl) * 100)}%` }}
+                    />
+                  </span>
+                  <span className="ae-land-val">{usd(p.poolTvlUsd)}</span>
+                </div>
+              ))}
+            </div>
+            <p className="rp-source-note">
+              Pool TVL is measured on-chain from reserves, priced via Chainlink,
+              as of {updated}. Bar length is relative to the deepest covered pool.
             </p>
           </section>
 
@@ -436,7 +475,7 @@ export default function AerodromeReportPage() {
               <dd>
                 Measured on-chain and aggregator-free. Emissions: the gauge reward
                 rate × AERO/USD (Chainlink) annualized over the TVL staked in the
-                gauge — only staked liquidity earns emissions. Fees: on-chain swap
+                gauge, since only staked liquidity earns emissions. Fees: on-chain swap
                 volume × the pool&rsquo;s factory fee tier, annualized. TVL: pool
                 reserves priced against Chainlink feeds.
               </dd>
@@ -497,6 +536,23 @@ export default function AerodromeReportPage() {
               pool&rsquo;s gauge; PoolFactory{" "}
               <code>0x420DD381b31aEf6683db6B902084cB0FFECe40Da</code> provides the
               fee tier. Prices via Chainlink on Base.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="data-downloads">
+            <p className="rp-eyebrow">Data</p>
+            <h2 id="data-downloads">Data &amp; downloads</h2>
+            <p>
+              The full snapshot is published as machine-readable files for agents
+              and analysts, under a CC-BY-4.0 license (use it, including
+              commercially, with attribution and a link back). The same files are
+              declared in this page&rsquo;s Dataset metadata.
+            </p>
+            <p className="rp-source-note">
+              Snapshot JSON:{" "}
+              <a href="/data/aerodrome/index.json">/data/aerodrome/index.json</a>.
+              Flat per-pool CSV:{" "}
+              <a href="/data/aerodrome/pools.csv">/data/aerodrome/pools.csv</a>.
             </p>
           </section>
 

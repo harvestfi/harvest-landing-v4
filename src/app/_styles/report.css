@@ -354,6 +354,55 @@
   color: var(--rp-eyebrow, #b26a00);
   cursor: help;
 }
+
+/* ---- Aerodrome TVL landscape: horizontal bars (name | bar | value). ---- */
+.ae-landscape {
+  margin: 18px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.ae-land-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 150px) 1fr 78px;
+  align-items: center;
+  gap: 12px;
+}
+.rp-page .ae-land-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--uni-ink, #1a1a1f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ae-land-bar-wrap {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--rp-card-border, #eeeef5);
+  overflow: hidden;
+}
+.ae-land-bar {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #ffb936, #ff9f1c);
+}
+.rp-page .ae-land-val {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--uni-ink-2, #3e3e46);
+}
+@media (max-width: 640px) {
+  .ae-land-row {
+    grid-template-columns: minmax(72px, 40%) 1fr 56px;
+    gap: 8px;
+  }
+  .rp-page .ae-land-name { font-size: 12px; }
+  .rp-page .ae-land-val { font-size: 11.5px; }
+}
 @media (max-width: 640px) {
   .ae-rank .hub-thead,
   .ae-rank .hub-row {

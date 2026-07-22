@@ -1,0 +1,62 @@
+name: Update Aerodrome Report Data
+
+# Refreshes the /report/aerodrome dataset daily so its on-chain pool APRs
+# (gauge emissions + swap fees), TVL and the "Last updated" date stay current.
+# Reads Base directly (mainnet.base.org / Blockscout) and joins our first-party
+# vault figures from data/vaults.json. Separate from the vault-data and XRP jobs
+# so a failure in one never blocks the others.
+#
+# Emission APR is the current on-chain gauge rate (validated against our own
+# apyBreakdown); fees are the trailing on-chain swap volume. A 30d weekly-mean
+# sampler exists in the adapter for later, but the daily job uses the reliable
+# current-rate read.
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-aerodrome-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # On-chain pool yield (current emission + trailing fee) joined to vaults.
+      - name: Fetch Aerodrome pool yield
+        run: node scripts/fetch-aerodrome-yield.mjs --fee-days 7
+        continue-on-error: true
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/aerodrome-yield.json
+          if git diff --cached --quiet; then
+            echo "No Aerodrome data changes detected."
+            exit 0
+          fi
+          git commit -m "chore: update Aerodrome report data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, rebasing on origin/main."
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "Failed to push after retries."
+          exit 1
