@@ -1,4 +1,5 @@
 import { FunnelSummary } from "@/components/admin/funnel-summary";
+import { RecurringFromDeepLanding } from "@/components/admin/recurring-from-deep-landing";
 
 // Admin > SEO Summary. The search-engine funnel. Renders the shared
 // FunnelSummary scoped to the "SEO" source group; the AI Summary page
@@ -6,6 +7,7 @@ import { FunnelSummary } from "@/components/admin/funnel-summary";
 
 export default function SeoSummaryPage() {
   return (
+    <>
     <FunnelSummary
       group="SEO"
       copy={{
@@ -31,5 +33,7 @@ export default function SeoSummaryPage() {
         },
       }}
     />
+    <RecurringFromDeepLanding />
+    </>
   );
 }
