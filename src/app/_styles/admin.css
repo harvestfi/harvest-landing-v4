@@ -1842,3 +1842,129 @@ body:has(.admin-shell) .foot {
   font-size: 12.5px;
   color: var(--ink-3);
 }
+
+/* === Deep-landing loyalty (components/admin/recurring-from-deep-landing.tsx) ===
+   SEO Summary extension: a loyalty funnel + per-landing bars, built on the same
+   uni-hub tokens so it reads as one system with the funnel table above it. */
+.uni-hub-test .dll-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 720px) {
+  .uni-hub-test .dll-stats { grid-template-columns: 1fr; }
+}
+.uni-hub-test .dll-stat-sub {
+  font-size: 11.5px;
+  color: var(--uni-ink-3);
+  line-height: 1.35;
+}
+.uni-hub-test .dll-empty {
+  padding: 22px 16px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-sm);
+}
+.uni-hub-test .dll-card {
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-sm);
+}
+.uni-hub-test .dll-card-title {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  margin-bottom: 14px;
+}
+
+/* Loyalty funnel: discovery -> recurring -> returned to homepage. */
+.uni-hub-test .dll-funnel { display: flex; flex-direction: column; gap: 12px; }
+.uni-hub-test .dll-funnel-row {
+  display: grid;
+  grid-template-columns: 190px 1fr 104px;
+  align-items: center;
+  gap: 12px;
+}
+.uni-hub-test .dll-funnel-label { font-size: 12.5px; color: var(--uni-ink-2); }
+.uni-hub-test .dll-funnel-track,
+.uni-hub-test .dll-bar-track {
+  position: relative;
+  height: 20px;
+  background: var(--uni-card-2);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.uni-hub-test .dll-bar-track { height: 18px; }
+.uni-hub-test .dll-funnel-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  border-radius: 5px;
+  transition: width .3s ease;
+}
+.uni-hub-test .dll-funnel-fill[data-tone="disc"] { background: #cbd5e1; }
+.uni-hub-test .dll-funnel-fill[data-tone="rec"] { background: #e0952a; }
+.uni-hub-test .dll-funnel-fill[data-tone="home"] { background: #2f9e8f; }
+.uni-hub-test .dll-funnel-val,
+.uni-hub-test .dll-bar-val {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--uni-ink);
+  text-align: right;
+  white-space: nowrap;
+}
+.uni-hub-test .dll-funnel-val em,
+.uni-hub-test .dll-bar-val em {
+  color: var(--uni-ink-3); font-style: normal; margin-left: 6px;
+}
+
+/* Which landing pages earn recurring visitors. */
+.uni-hub-test .dll-bars { display: flex; flex-direction: column; gap: 9px; }
+.uni-hub-test .dll-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) 1fr 96px;
+  align-items: center;
+  gap: 12px;
+}
+.uni-hub-test .dll-bar-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--uni-ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.uni-hub-test .dll-bar-disc,
+.uni-hub-test .dll-bar-rec {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  border-radius: 5px;
+}
+.uni-hub-test .dll-bar-disc { background: #f0d9a8; }
+.uni-hub-test .dll-bar-rec { background: #e0952a; }
+.uni-hub-test .dll-legend {
+  display: flex; gap: 18px;
+  margin-top: 14px;
+  font-size: 11.5px; color: var(--uni-ink-2);
+}
+.uni-hub-test .dll-dot {
+  display: inline-block; width: 9px; height: 9px;
+  border-radius: 2px; vertical-align: middle; margin-right: 5px;
+}
+.uni-hub-test .dll-dot-disc { background: #f0d9a8; }
+.uni-hub-test .dll-dot-rec { background: #e0952a; }
+.uni-hub-test .dll-note {
+  margin-top: 14px;
+  font-size: 12px; line-height: 1.5;
+  color: var(--uni-ink-2);
+}
+@media (max-width: 600px) {
+  .uni-hub-test .dll-funnel-row,
+  .uni-hub-test .dll-bar-row { grid-template-columns: 1fr auto; }
+  .uni-hub-test .dll-funnel-label,
+  .uni-hub-test .dll-bar-name { grid-column: 1 / -1; }
+}
+
+/* Dark theme accents. */
+:root[data-theme="dark"] .uni-hub-test .dll-funnel-fill[data-tone="disc"] { background: rgba(255,255,255,0.18); }
+:root[data-theme="dark"] .uni-hub-test .dll-funnel-fill[data-tone="rec"] { background: #ffb936; }
+:root[data-theme="dark"] .uni-hub-test .dll-funnel-fill[data-tone="home"] { background: #34d3bf; }
+:root[data-theme="dark"] .uni-hub-test .dll-bar-disc { background: rgba(255,185,54,0.28); }
+:root[data-theme="dark"] .uni-hub-test .dll-bar-rec { background: #ffb936; }
+:root[data-theme="dark"] .uni-hub-test .dll-dot-disc { background: rgba(255,185,54,0.28); }
+:root[data-theme="dark"] .uni-hub-test .dll-dot-rec { background: #ffb936; }
