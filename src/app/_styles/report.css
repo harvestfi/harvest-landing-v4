@@ -403,6 +403,45 @@
   .rp-page .ae-land-name { font-size: 12px; }
   .rp-page .ae-land-val { font-size: 11.5px; }
 }
+
+/* ---- Emissions-vs-fees: one aggregate split bar + per-pool composition bars. */
+.ae-splitbar {
+  display: flex;
+  height: 18px;
+  border-radius: 9px;
+  overflow: hidden;
+  margin: 16px 0 8px;
+  background: var(--rp-card-border, #eeeef5);
+}
+.ae-split-emit {
+  height: 100%;
+  background: linear-gradient(90deg, #ffb936, #ff9f1c);
+}
+.ae-split-fee {
+  height: 100%;
+  background: linear-gradient(90deg, #2dd4bf, #14b8a6);
+}
+.ae-split-legend {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--uni-ink-2, #3e3e46);
+  margin-bottom: 4px;
+}
+.ae-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.ae-dot-emit { background: #ff9f1c; }
+.ae-dot-fee { background: #14b8a6; }
+/* Per-pool composition bar: two segments inside the landscape bar track. */
+.ae-comp-wrap { display: flex; }
+/* Volume bars read teal (volume drives fees), distinct from the amber TVL bars. */
+.ae-bar-vol { background: linear-gradient(90deg, #2dd4bf, #14b8a6); }
 @media (max-width: 640px) {
   .ae-rank .hub-thead,
   .ae-rank .hub-row {

@@ -7,6 +7,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { AssetIcon } from "@/components/token-icons";
 import { CopyAddressButton } from "@/components/copy-address-button";
 import { ReportToc, type TocItem } from "@/components/report/report-toc";
+import { LandscapeChart } from "@/components/report/landscape-chart";
 import {
   breadcrumbSchema,
   faqPageSchema,
@@ -48,9 +49,11 @@ interface AeroPool {
   feeApr: number;
   realApy: number;
   emissionSpot?: number;
+  volumeUsdDay: number | null;
   harvestApy24h: number | null;
   harvestApy30d: number | null;
   harvestTvlUsd: number | null;
+  holders: number | null;
   rateBasis: string;
   error?: string;
 }
@@ -65,12 +68,40 @@ interface AeroData {
   pools: AeroPool[];
 }
 
+interface AeroPoolGrowth {
+  slug: string;
+  pair: string;
+  firstDate: string;
+  days: number;
+  growthPct: number;
+  annualizedPct: number;
+}
+interface AeroHistory {
+  generatedAt: string;
+  latestTvl: number | null;
+  latestDate: string | null;
+  tvlOneYearAgo: number | null;
+  series: { d: string; tvl: number }[];
+  perPool: AeroPoolGrowth[];
+}
+
 function loadData(): AeroData | null {
   try {
     const f = join(process.cwd(), "data", "aerodrome-yield.json");
     if (!existsSync(f)) return null;
     const d = JSON.parse(readFileSync(f, "utf-8")) as AeroData;
     return Array.isArray(d.pools) && d.pools.length > 0 ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadHistory(): AeroHistory | null {
+  try {
+    const f = join(process.cwd(), "data", "aerodrome-history.json");
+    if (!existsSync(f)) return null;
+    const d = JSON.parse(readFileSync(f, "utf-8")) as AeroHistory;
+    return Array.isArray(d.series) && d.series.length >= 2 ? d : null;
   } catch {
     return null;
   }
@@ -233,10 +264,78 @@ export default function AerodromeReportPage() {
   const byTvl = [...pools].sort((a, b) => b.poolTvlUsd - a.poolTvlUsd);
   const topByTvl = byTvl[0];
   const maxTvl = byTvl[0]?.poolTvlUsd ?? 1;
+
+  // Where the yield comes from: TVL-weighted split of emissions vs swap fees
+  // across the covered set, and the pools whose yield is most fee-led (organic).
+  const wEmit = pools.reduce((s, p) => s + p.emissionApr * p.poolTvlUsd, 0);
+  const wFee = pools.reduce((s, p) => s + p.feeApr * p.poolTvlUsd, 0);
+  const emitShare = wEmit + wFee > 0 ? (wEmit / (wEmit + wFee)) * 100 : 0;
+  const feeShare = 100 - emitShare;
+  // Composition bars: top pools by rate, each split into emission + fee.
+  const byRate = [...pools].sort((a, b) => b.realApy - a.realApy);
+  const maxRate = byRate[0]?.realApy ?? 1;
+  const feeLed = [...pools]
+    .filter((p) => p.realApy > 1 && p.poolTvlUsd >= THIN_TVL)
+    .sort((a, b) => b.feeApr / b.realApy - a.feeApr / a.realApy)[0];
+
+  // Auto-compounding edge: pools where the Harvest 30d return most exceeds the
+  // raw pool APR (frequent AERO harvest + reward-token price moves).
+  const compoundGaps = pools
+    .filter((p) => p.harvestApy30d != null && p.realApy > 1)
+    .map((p) => ({ ...p, ratio: (p.harvestApy30d ?? 0) / Math.max(0.5, p.realApy) }))
+    .sort((a, b) => b.ratio - a.ratio);
+  const topCompound = compoundGaps[0];
+
+  // Rate stability: a rate made almost entirely of emissions is the least
+  // durable (a weekly vote can move the incentive); a real fee share holds
+  // steadier because it is earned from trading, not rented from the AERO budget.
+  const emissionLed = pools
+    .filter((p) => p.realApy > 1)
+    .map((p) => ({ ...p, emShare: p.emissionApr / Math.max(0.5, p.realApy) }))
+    .sort((a, b) => b.emShare - a.emShare);
+  const mostEmissionLed = emissionLed[0];
+  const feeBacked = [...emissionLed]
+    .filter((p) => p.emShare < 0.75 && p.poolTvlUsd >= THIN_TVL)
+    .sort((a, b) => a.emShare - b.emShare)[0];
+
+  // Trading volume (most-traded pools) and depositor counts (second-wave depth).
+  const byVolume = [...pools]
+    .filter((p) => p.volumeUsdDay != null)
+    .sort((a, b) => (b.volumeUsdDay ?? 0) - (a.volumeUsdDay ?? 0));
+  const maxVol = byVolume[0]?.volumeUsdDay ?? 1;
+  const totalVolDay = pools.reduce((s, p) => s + (p.volumeUsdDay ?? 0), 0);
+  const byHolders = [...pools]
+    .filter((p) => p.holders != null)
+    .sort((a, b) => (b.holders ?? 0) - (a.holders ?? 0));
+  const totalHolders = pools.reduce((s, p) => s + (p.holders ?? 0), 0);
   const meaningful = pools
     .filter((p) => p.poolTvlUsd >= THIN_TVL)
     .sort((a, b) => b.realApy - a.realApy);
   const topDurable = meaningful[0];
+
+  // Footprint over time: aggregate first-party Harvest vault TVL across the
+  // covered pools. Trim the near-zero pre-2024 tail so the chart opens on the
+  // meaningful era (the run-up, the peak, and the normalization since).
+  const history = loadHistory();
+  let hSeries: { d: string; tvl: number }[] = [];
+  let hPeak: { d: string; tvl: number } | null = null;
+  let hLatest: { d: string; tvl: number } | null = null;
+  let bestCompounder: AeroPoolGrowth | null = null;
+  if (history) {
+    const firstIdx = history.series.findIndex((p) => p.tvl >= 10_000);
+    hSeries = firstIdx >= 0 ? history.series.slice(firstIdx) : history.series;
+    hPeak = hSeries.reduce((m, p) => (p.tvl > m.tvl ? p : m), hSeries[0]);
+    hLatest = hSeries[hSeries.length - 1];
+    // A credible representative compounder: the best share-price growth among
+    // pools that carry real liquidity today (never a thin micro-pool outlier).
+    const durableSlugs = new Set(
+      pools.filter((p) => p.poolTvlUsd >= THIN_TVL).map((p) => p.slug),
+    );
+    bestCompounder =
+      history.perPool.find((p) => durableSlugs.has(p.slug)) ??
+      history.perPool[0] ??
+      null;
+  }
 
   const updated = new Date(data.generatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -244,6 +343,12 @@ export default function AerodromeReportPage() {
     day: "numeric",
     timeZone: "UTC",
   });
+  const fmtMonthYear = (d: string) =>
+    new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
 
   const toc: TocItem[] = [
     { id: "overview", label: "Overview" },
@@ -251,7 +356,17 @@ export default function AerodromeReportPage() {
     { id: "volatile-pools", label: "Volatile pools", level: 1 },
     { id: "correlated-pools", label: "Correlated pools", level: 1 },
     { id: "how-ranked", label: "How it is ranked", level: 1 },
+    { id: "yield-sources", label: "Where yield comes from" },
+    { id: "how-emissions", label: "How emissions work", level: 1 },
+    { id: "rate-stability", label: "Rate stability", level: 1 },
+    { id: "auto-compounding", label: "The auto-compounding edge" },
     { id: "tvl-landscape", label: "TVL landscape" },
+    ...(hSeries.length >= 2
+      ? [{ id: "footprint", label: "Footprint over time" }]
+      : []),
+    { id: "trading-volume", label: "Trading volume" },
+    { id: "depositors", label: "Popular by depositors" },
+    { id: "key-risks", label: "Key risks" },
     { id: "method-and-scope", label: "Method & scope" },
     { id: "onchain-references", label: "Onchain references" },
     { id: "data-downloads", label: "Data & downloads" },
@@ -431,6 +546,112 @@ export default function AerodromeReportPage() {
             </p>
           </section>
 
+          <section className="uni-home-content" aria-labelledby="yield-sources">
+            <p className="rp-eyebrow">Sources</p>
+            <h2 id="yield-sources">Where the yield comes from</h2>
+            <p>
+              An Aerodrome pool pays two kinds of yield. <strong>Emissions</strong>{" "}
+              are AERO tokens the protocol mints to the pool&rsquo;s gauge as an
+              incentive; <strong>fees</strong> are the cut of every swap that
+              routes through the pool. Weighted by liquidity across the covered
+              set, about {emitShare.toFixed(0)}% of the yield is emission-driven
+              and {feeShare.toFixed(0)}% comes from swap fees. The split matters:
+              fee yield is organic and tends to persist, while emissions are an
+              incentive that rotates and can be cut.
+            </p>
+            <div className="ae-splitbar" aria-hidden="true">
+              <span className="ae-split-emit" style={{ width: `${emitShare}%` }} />
+              <span className="ae-split-fee" style={{ width: `${feeShare}%` }} />
+            </div>
+            <div className="ae-split-legend">
+              <span><span className="ae-dot ae-dot-emit" /> Emissions {emitShare.toFixed(0)}%</span>
+              <span><span className="ae-dot ae-dot-fee" /> Swap fees {feeShare.toFixed(0)}%</span>
+            </div>
+            <p>
+              Per pool, the mix varies widely. The bars below split each
+              pool&rsquo;s rate into its emission and fee parts (top pools by
+              rate). A pool leaning on fees, like {feeLed ? feeLed.pair : "the deeper venues"},
+              earns from real trading volume; a pool leaning on emissions is
+              renting its rate from the AERO incentive budget.
+            </p>
+            <div className="ae-landscape">
+              {byRate.slice(0, 10).map((p) => (
+                <div className="ae-land-row" key={p.slug}>
+                  <span className="ae-land-name" title={p.pair}>{p.pair}</span>
+                  <span className="ae-land-bar-wrap ae-comp-wrap">
+                    <span className="ae-split-emit" style={{ width: `${(p.emissionApr / maxRate) * 100}%` }} />
+                    <span className="ae-split-fee" style={{ width: `${(p.feeApr / maxRate) * 100}%` }} />
+                  </span>
+                  <span className="ae-land-val">{pct(p.realApy)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="rp-rank-sort">
+              <h3 id="how-emissions">How emissions work</h3>
+              <p>
+                Aerodrome runs on veAERO: holders lock AERO for vote-escrowed
+                veAERO and vote each week on which pools&rsquo; gauges receive
+                emissions. Votes set the gauge weights, and emissions are
+                distributed to stakers in that pool for the epoch (a one-week
+                cycle). Because the votes are re-cast every epoch, a pool&rsquo;s
+                emission rate can jump or fall week to week as vote incentives
+                (bribes) and capital move around. Only liquidity staked in the
+                gauge earns the emissions, which is why this report measures the
+                rate against the staked TVL rather than the whole pool.
+              </p>
+            </div>
+
+            <div className="rp-rank-sort">
+              <h3 id="rate-stability">Rate stability</h3>
+              <p>
+                Because emissions reset weekly, a pool&rsquo;s headline rate is
+                only as durable as its votes, and the tell is how much of the
+                rate is emissions versus fees. A rate that is almost entirely
+                emissions{mostEmissionLed ? `, like ${mostEmissionLed.pair} at about ${(mostEmissionLed.emShare * 100).toFixed(0)}% emission-led,` : ""}{" "}
+                can reset at the next epoch if voters move the incentive
+                elsewhere. A pool with a real fee share{feeBacked ? `, like ${feeBacked.pair},` : ""}{" "}
+                earns from trading volume that does not vanish on a vote, so its
+                rate holds steadier. Read a high, emission-heavy rate as
+                opportunistic and a fee-backed rate as the more dependable one.
+              </p>
+            </div>
+            <p className="rp-source-note">
+              Emission and fee APRs are measured on-chain (Base), as of {updated}.
+              The weighted split is by pool TVL across the covered set.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="auto-compounding">
+            <p className="rp-eyebrow">The edge</p>
+            <h2 id="auto-compounding">The auto-compounding edge</h2>
+            <p>
+              The Pool APR is what the pool pays before anything is done with the
+              rewards. Left alone, emitted AERO just accumulates as claimable
+              tokens; its value is exposed to the AERO price and earns nothing
+              further. Harvest&rsquo;s vault harvests that AERO on a schedule,
+              swaps it back into the pool&rsquo;s assets and re-deposits, so the
+              position compounds on itself. Over a 30-day window that compounding,
+              plus any move in the AERO price while the rewards were held, is why
+              the Harvest 30d column can sit well above the raw Pool APR.
+            </p>
+            <p>
+              The effect is largest exactly where emissions are largest.{" "}
+              {topCompound ? (
+                <>
+                  On {topCompound.pair}, for instance, the raw pool rate is about{" "}
+                  {pct(topCompound.realApy)}, while Harvest&rsquo;s realized
+                  30-day return was near {pct(topCompound.harvestApy30d)}.
+                </>
+              ) : null}{" "}
+              On low-emission pools the two numbers converge, because there is
+              little reward to compound. The trade-off is that the Harvest figure
+              is a realized, backward-looking number net of the vault&rsquo;s
+              performance fee, whereas the Pool APR is the forward rate the pool
+              is paying now; both are shown so neither is mistaken for the other.
+            </p>
+          </section>
+
           <section className="uni-home-content" aria-labelledby="tvl-landscape">
             <p className="rp-eyebrow">Landscape</p>
             <h2 id="tvl-landscape">Where the liquidity sits</h2>
@@ -458,6 +679,147 @@ export default function AerodromeReportPage() {
               Pool TVL is measured on-chain from reserves, priced via Chainlink,
               as of {updated}. Bar length is relative to the deepest covered pool.
             </p>
+          </section>
+
+          {hSeries.length >= 2 && hPeak && hLatest ? (
+            <section className="uni-home-content" aria-labelledby="footprint">
+              <p className="rp-eyebrow">Trajectory</p>
+              <h2 id="footprint">Harvest&rsquo;s Aerodrome footprint over time</h2>
+              <p>
+                Liquidity in these vaults has moved with the wider Base cycle. The
+                covered set scaled up through early 2024 to a peak near{" "}
+                {usd(hPeak.tvl)} in {fmtMonthYear(hPeak.d)}, then normalized to
+                about {usd(hLatest.tvl)} today as capital rotated across chains and
+                opportunities. Deposits ebb and flow, but the vaults kept
+                compounding throughout: the share price only ever accrues
+                {bestCompounder
+                  ? `, and a deposit left in ${bestCompounder.pair} since ${fmtMonthYear(bestCompounder.firstDate)} has compounded about ${bestCompounder.growthPct.toFixed(0)}% over ${bestCompounder.days} days`
+                  : ""}
+                .
+              </p>
+              <LandscapeChart
+                series={hSeries}
+                title="Harvest liquidity on Aerodrome"
+                subtitle="covered pools, total vault TVL"
+                nowLabel={`as of ${updated}`}
+                color="#14b8a6"
+              />
+              <p className="rp-source-note">
+                Total Harvest vault TVL summed across the {history?.perPool.length ?? pools.length}{" "}
+                covered Aerodrome pools, from first-party vault history (each pool
+                carried forward within its own indexed span). Share-price growth is
+                the vault&rsquo;s realized, auto-compounded return net of the
+                performance fee. As of {updated}.
+              </p>
+            </section>
+          ) : null}
+
+          <section className="uni-home-content" aria-labelledby="trading-volume">
+            <p className="rp-eyebrow">Activity</p>
+            <h2 id="trading-volume">Trading volume</h2>
+            <p>
+              Fees only exist where swaps happen, so volume is what separates a
+              fee-backed rate from a purely emission-rented one. Across the
+              covered pools, on-chain swaps run at about {usd(totalVolDay)} a day,
+              heavily concentrated:{" "}
+              {byVolume[0] ? `${byVolume[0].pair} alone does roughly ${usd(byVolume[0].volumeUsdDay ?? 0)} a day` : "in a few deep pools"}.
+              The bars below rank the covered pools by average daily swap volume.
+            </p>
+            <div className="ae-landscape">
+              {byVolume.slice(0, 10).map((p) => (
+                <div className="ae-land-row" key={p.slug}>
+                  <span className="ae-land-name" title={p.pair}>{p.pair}</span>
+                  <span className="ae-land-bar-wrap">
+                    <span
+                      className="ae-land-bar ae-bar-vol"
+                      style={{ width: `${Math.max(1.5, ((p.volumeUsdDay ?? 0) / maxVol) * 100)}%` }}
+                    />
+                  </span>
+                  <span className="ae-land-val">{usd(p.volumeUsdDay ?? 0)}</span>
+                </div>
+              ))}
+            </div>
+            <p className="rp-source-note">
+              Average daily swap volume, computed from the pool&rsquo;s on-chain
+              swap logs over the trailing fee window, as of {updated}.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="depositors">
+            <p className="rp-eyebrow">Adoption</p>
+            <h2 id="depositors">Most popular by depositors</h2>
+            <p>
+              Depositor counts are the clearest read on which pools people
+              actually trust with capital through Harvest, independent of the
+              headline rate. Across the covered vaults there are {totalHolders.toLocaleString("en-US")}{" "}
+              depositors;{" "}
+              {byHolders[0] ? `${byHolders[0].pair} leads with ${byHolders[0].holders}` : "adoption is spread across the set"}.
+            </p>
+            <div className="rp-dtable-wrap">
+              <table className="rp-dtable">
+                <thead>
+                  <tr>
+                    <th>Pool</th>
+                    <th className="num">Depositors</th>
+                    <th className="num">Pool TVL</th>
+                    <th className="num">Harvest 30d</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {byHolders.slice(0, 10).map((p) => (
+                    <tr key={p.slug}>
+                      <td className="strong">{p.pair}</td>
+                      <td className="num">{p.holders?.toLocaleString("en-US") ?? "n/a"}</td>
+                      <td className="num">{usd(p.poolTvlUsd)}</td>
+                      <td className="num">{pct(p.harvestApy30d)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="rp-source-note">
+              Depositor counts are the number of distinct addresses holding each
+              Harvest vault token, from our indexer, as of {updated}.
+            </p>
+          </section>
+
+          <section className="uni-home-content" aria-labelledby="key-risks">
+            <p className="rp-eyebrow">Risk</p>
+            <h2 id="key-risks">Key risks</h2>
+            <p>
+              Every row here is a two-token liquidity position, which carries a
+              specific set of risks distinct from simply holding the assets.
+            </p>
+            <dl className="rp-method">
+              <dt>Impermanent loss</dt>
+              <dd>
+                When the two paired assets move apart in price, an LP ends up with
+                more of the loser and less of the winner than simply holding would
+                have left them. It is larger on volatile pairs (an asset against
+                ETH) and small on correlated pairs (an ETH derivative against ETH).
+                A high rate can still be eroded by impermanent loss.
+              </dd>
+              <dt>Emission decay</dt>
+              <dd>
+                Most of the yield is AERO emissions, which are an incentive, not a
+                fee. veAERO voters can move emissions away from a pool at the next
+                weekly epoch, so a rate that looks high today is not guaranteed to
+                last.
+              </dd>
+              <dt>Reward-token exposure</dt>
+              <dd>
+                Rewards are paid in AERO. Until they are harvested and swapped, the
+                realized return depends on the AERO price, which can fall as well
+                as rise.
+              </dd>
+              <dt>Depeg and contract risk</dt>
+              <dd>
+                Correlated pairs assume the two legs stay pegged; a depeg breaks
+                that. And every pool, gauge and vault is a third-party or Harvest
+                smart contract with the usual smart-contract risk. Verify each
+                address before use.
+              </dd>
+            </dl>
           </section>
 
           <section className="uni-home-content" aria-labelledby="method-and-scope">
