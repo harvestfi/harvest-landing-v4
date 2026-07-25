@@ -123,7 +123,9 @@ const median = (xs: number[]) => {
 };
 
 export const metadata: Metadata = {
-  title: "Aerodrome LP Yield Ranking: Real On-Chain APR | Harvest",
+  // `absolute` bypasses the root layout's `%s | Harvest` template, which would
+  // otherwise append a second " | Harvest" to a title that already carries one.
+  title: { absolute: "Aerodrome LP Yield Ranking: Real On-Chain APR | Harvest" },
   description:
     "The Aerodrome liquidity pools on Base that Harvest auto-compounds, ranked by real on-chain pool yield (gauge emissions plus swap fees, measured on-chain), with Harvest's auto-compounded 30-day APY beside each pool. Refreshed regularly.",
   alternates: { canonical: PAGE_URL },
