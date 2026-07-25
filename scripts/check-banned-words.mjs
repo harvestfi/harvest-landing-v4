@@ -74,14 +74,33 @@ const PHRASE_ALLOWLIST = [
   /liquidity returns/gi, // verb usage in withdrawal-availability clause
 ];
 
+const POLYGON_VENUES_JSON = path.join(ROOT, "data", "polygon-venues.json");
+
+// /polygon and /polygon/[venue] are a second editorial surface (the mixed
+// third-party + Harvest ranking, see methodology.tsx#inclusion) that predates
+// this gate's scope by definition ("single product pages"). Its prose is new
+// and gets the same lint: pass slug-shaped paths (not just bare slugs) through
+// so path.join(PUBLIC_DIR, `${slug}.html`) resolves the nested route file.
+async function loadPolygonSlugs() {
+  try {
+    const raw = await fs.readFile(POLYGON_VENUES_JSON, "utf8");
+    const doc = JSON.parse(raw);
+    const venues = Array.isArray(doc.venues) ? doc.venues : [];
+    return ["polygon", ...venues.map((v) => `polygon/${v.slug}`)];
+  } catch {
+    return [];
+  }
+}
+
 async function loadProductSlugs() {
   const raw = await fs.readFile(VAULTS_JSON, "utf8");
   const vaults = JSON.parse(raw);
-  return new Set(
-    vaults
+  return new Set([
+    ...vaults
       .map((v) => v.slug)
       .filter((s) => typeof s === "string" && s.length > 0),
-  );
+    ...(await loadPolygonSlugs()),
+  ]);
 }
 
 // Strip <script> and <style> blocks, then the footer (universal

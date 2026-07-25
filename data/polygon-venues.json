@@ -1,0 +1,258 @@
+{
+  "note": "Canonical third-party venue list for /polygon (the mixed ranking) and /polygon/[venue]. This is the ALLOWLIST: only these venues render, nothing scanned automatically. scripts/fetch-polygon-yield.mjs hydrates each row's live rate/TVL from its `source`: kind=onchain (direct Aave v3 Pool read via scripts/lib/polygon-onchain-adapters.mjs, the primary/spine method) or kind=portals (api.portals.fi current APY, used only for venues with no simple public rate-reading contract -- RWA fund tokens and the Morpho market below -- same disclosed-fallback role Portals already plays for 3 of the 15 XRP venues, never the primary source). All rows are `operator: external` -- third-party protocols Harvest does not run. Harvest's own Polygon vaults are a separate, clearly-labelled section on the same page, sourced from data/vaults.json as usual. Rows below 0.005% APY (rounds to the site's '-' placeholder, see formatAPY) are excluded per editorial decision, except where a near-zero rate is itself the finding worth stating (see WBTC).",
+  "aaveV3Pool": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+  "venues": [
+    {
+      "slug": "aave-v3-usdc-polygon",
+      "asset": "USDC",
+      "assetGroup": "USDC",
+      "detail": "Aave v3 · Native USDC",
+      "symbol": "USDC",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0x3c499c542cef5e3811e1192ce70d8cc03d5c3359&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "underlyingDec": 6,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "aave-v3-usdce-polygon",
+      "asset": "USDC.e",
+      "assetGroup": "USDC",
+      "detail": "Aave v3 · Bridged USDC.e",
+      "symbol": "USDC",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0x2791bca1f2de4661ed88a30c99a7a9449aa84174&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "underlyingDec": 6,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "morpho-usdc-polygon",
+      "asset": "USDC",
+      "assetGroup": "USDC",
+      "detail": "Morpho Blue · WBTC-collateralized market",
+      "symbol": "USDC",
+      "platform": "Morpho",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://polygonscan.com/address/0x1cfe584af3db05c7f39d60e458a87a8b2f6b5d8c6125631984ec489f1d13553b",
+      "source": {
+        "kind": "portals",
+        "portalsKey": "polygon:0x1cfe584af3db05c7f39d60e458a87a8b2f6b5d8c6125631984ec489f1d13553b",
+        "staticApy": 2.21,
+        "staticTvl": 907885
+      }
+    },
+    {
+      "slug": "aave-v3-usdt-polygon",
+      "asset": "USDT",
+      "assetGroup": "USDT",
+      "detail": "Aave v3",
+      "symbol": "USDT",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0xc2132d05d31c914a87c6611c10748aeb04b58e8f&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "underlyingDec": 6,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "aave-v3-dai-polygon",
+      "asset": "DAI",
+      "assetGroup": "DAI",
+      "detail": "Aave v3",
+      "symbol": "DAI",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0x8f3cf7ad23cd3cadbd9735aff958023239c6a063&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "underlyingDec": 18,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "aave-v3-weth-polygon",
+      "asset": "WETH",
+      "assetGroup": "ETH",
+      "detail": "Aave v3",
+      "symbol": "WETH",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0x7ceb23fd6bc0add59e62ac25578270cff1b9f619&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+        "underlyingDec": 18,
+        "priceRef": "eth"
+      }
+    },
+    {
+      "slug": "aave-v3-wbtc-polygon",
+      "asset": "WBTC",
+      "assetGroup": "BTC",
+      "detail": "Aave v3",
+      "symbol": "WBTC",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6",
+        "underlyingDec": 8,
+        "priceRef": "btc"
+      },
+      "editorialNote": "Polygon's single largest lending pool by TVL currently pays close to nothing to WBTC suppliers -- a genuinely useful finding, stated rather than omitted."
+    },
+    {
+      "slug": "aave-v3-wmatic-polygon",
+      "asset": "WMATIC",
+      "assetGroup": "POL",
+      "detail": "Aave v3",
+      "symbol": "WMATIC",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+        "underlyingDec": 18,
+        "priceRef": "matic"
+      }
+    },
+    {
+      "slug": "aave-v3-eurs-polygon",
+      "asset": "EURS",
+      "assetGroup": "EURS",
+      "detail": "Aave v3",
+      "symbol": "EURS",
+      "platform": "Aave v3",
+      "entity": "Permissionless",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "exposure": "single",
+      "url": "https://app.aave.com/reserve-overview/?underlyingAsset=0xe111178a87a3bff0c8d18decba5798827539ae99&marketName=proto_polygon_v3",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0xe111178a87a3bff0c8d18decba5798827539ae99",
+        "underlyingDec": 2,
+        "priceRef": "eur"
+      }
+    },
+    {
+      "slug": "blackrock-buidl-polygon",
+      "asset": "BUIDL",
+      "assetGroup": "Tokenized RWA",
+      "detail": "BlackRock · Institutional Digital Liquidity Fund",
+      "symbol": "BUIDL",
+      "platform": "BlackRock BUIDL",
+      "entity": "Issued by BlackRock, tokenized by Securitize",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Tokenized money-market fund",
+      "exposure": "single",
+      "accessNote": "Accreditation-gated: available only to eligible/qualified purchasers through Securitize.",
+      "url": "https://polygonscan.com/token/0x2893ef551b6dd69f661ac00f11d93e5dc5dc0e99",
+      "source": {
+        "kind": "portals",
+        "portalsKey": "polygon:0x2893ef551b6dd69f661ac00f11d93e5dc5dc0e99",
+        "staticApy": 3.54,
+        "staticTvl": 13447967
+      }
+    },
+    {
+      "slug": "hamilton-lane-scope-polygon",
+      "asset": "HLSCOPE",
+      "assetGroup": "Tokenized RWA",
+      "detail": "Hamilton Lane · SCOPE private-credit fund",
+      "symbol": "HLSCOPE",
+      "platform": "Hamilton Lane SCOPE",
+      "entity": "Issued by Hamilton Lane, tokenized by Securitize",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Tokenized private-credit fund",
+      "exposure": "single",
+      "accessNote": "Accreditation-gated: available only to eligible/qualified purchasers through Securitize.",
+      "url": "https://polygonscan.com/token/0x4c5ca366e26409845624e29b62c388a06961a792",
+      "source": {
+        "kind": "portals",
+        "portalsKey": "polygon:0x4c5ca366e26409845624e29b62c388a06961a792",
+        "staticApy": 11.07,
+        "staticTvl": 4082566
+      }
+    },
+    {
+      "slug": "apollo-acred-polygon",
+      "asset": "ACRED",
+      "assetGroup": "Tokenized RWA",
+      "detail": "Apollo · Diversified Credit fund",
+      "symbol": "ACRED",
+      "platform": "Apollo Diversified Credit",
+      "entity": "Issued by Apollo, tokenized by Securitize",
+      "operator": "external",
+      "chain": "Polygon",
+      "productType": "Tokenized private-credit fund",
+      "exposure": "single",
+      "accessNote": "Accreditation-gated: available only to eligible/qualified purchasers through Securitize.",
+      "url": "https://polygonscan.com/token/0xfce60bbc52a5705cec5b445501fbaf3274dc43d0",
+      "source": {
+        "kind": "portals",
+        "portalsKey": "polygon:0xfce60bbc52a5705cec5b445501fbaf3274dc43d0",
+        "staticApy": 2.66,
+        "staticTvl": 903421
+      }
+    }
+  ]
+}

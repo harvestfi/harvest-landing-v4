@@ -198,23 +198,22 @@ export default function AboutPage() {
           <section id="how-we-operate" className="meth-section">
             <h2 className="meth-h2">How we operate today</h2>
             <p>
-              The current index covers strategies operated by Harvest. We
-              disclose this explicitly because positioning as a
-              &ldquo;neutral aggregator&rdquo; while only listing our own
-              products would be misleading. The{" "}
+              The index is mostly strategies Harvest operates. Since
+              methodology v1.1 it also covers a small, criteria-gated set of
+              third-party venues on Polygon that Harvest does not operate,
+              control, or take custody through, rated on the same rate-first
+              basis and clearly labelled as third-party throughout. The{" "}
               <Link href="/methodology" className="meth-link">methodology</Link>
-              ,{" "}
-              <Link href="/risk-framework" className="meth-link">risk framework</Link>
-              , and ranking logic are designed to apply equally to
-              third-party operators, and expansion to cover them is in
-              development. When that ships, we&rsquo;ll publish the same
-              data with the same calculations across all operators in scope.
+              {" "}documents exactly which criteria a third-party venue has to
+              meet and which networks they currently apply to.
             </p>
             <p>
-              In the meantime, what we publish is honest about its scope:
-              data on Harvest-operated strategies, derived from our own
-              indexer monitoring our own vault contracts, with the
-              calculation methodology fully documented.
+              What we publish is honest about its scope either way: data on
+              Harvest-operated strategies comes from our own indexer
+              monitoring our own vault contracts; data on third-party venues
+              comes from that venue&rsquo;s own public contract state
+              wherever a direct read exists, with the calculation
+              methodology fully documented in both cases.
             </p>
             <p>
               We don&rsquo;t take advertising. We don&rsquo;t sell premium

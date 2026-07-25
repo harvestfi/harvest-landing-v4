@@ -29,6 +29,18 @@ const CHAINS = {
     ],
     blockSec: 1.155,
   },
+  polygon: {
+    id: 137,
+    // publicnode first: it's the archive node the historical-block reads
+    // (blockAtTimestamp, backfills) need. Blockscout's eth-rpc proxy is the
+    // fallback for the same reason the Base/Flare pairs use their explorer as
+    // a fallback: independent infra if the primary RPC is degraded.
+    rpcs: [
+      "https://polygon-bor-rpc.publicnode.com",
+      "https://polygon.blockscout.com/api/eth-rpc",
+    ],
+    blockSec: 2.1,
+  },
 };
 
 // ---- low-level RPC -------------------------------------------------------
@@ -208,6 +220,8 @@ export const SEL = {
   totalAssets: "0x01e1d114",
   convertToAssets: "0x07a2d13a", // (uint256 shares)
   asset: "0x38d52e0f",
+  // Aave v3 Pool
+  getReserveData: "0x35ea6a75", // (address asset) -> ReserveData tuple
   // Flare FTSO
   getContractAddressByName: "0x82760fca", // registry (string)
   getFeedById: "0x93e9f806", // FtsoV2 (bytes21)

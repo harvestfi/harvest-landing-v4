@@ -550,10 +550,28 @@ function runSelfTest() {
 
 // ---------- driver --------------------------------------------------------
 
+const POLYGON_VENUES_JSON = path.join(ROOT, "data", "polygon-venues.json");
+
+// See the matching comment in check-banned-words.mjs: /polygon and
+// /polygon/[venue] are a second editorial surface this gate now also covers.
+async function loadPolygonSlugs() {
+  try {
+    const raw = await fs.readFile(POLYGON_VENUES_JSON, "utf8");
+    const doc = JSON.parse(raw);
+    const venues = Array.isArray(doc.venues) ? doc.venues : [];
+    return ["polygon", ...venues.map((v) => `polygon/${v.slug}`)];
+  } catch {
+    return [];
+  }
+}
+
 async function loadProductSlugs() {
   const raw = await fs.readFile(VAULTS_JSON, "utf8");
   const vaults = JSON.parse(raw);
-  return vaults.map((v) => v.slug).filter((s) => typeof s === "string" && s.length > 0);
+  return [
+    ...vaults.map((v) => v.slug).filter((s) => typeof s === "string" && s.length > 0),
+    ...(await loadPolygonSlugs()),
+  ];
 }
 
 async function main() {

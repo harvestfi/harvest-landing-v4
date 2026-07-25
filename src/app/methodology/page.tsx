@@ -6,6 +6,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { stripChainSuffix } from "@/lib/format";
 import { breadcrumbSchema, articleSchema } from "@/lib/jsonld";
 import { METHODOLOGY_VERSION, METHODOLOGY_CHANGELOG, METHODOLOGY_URL } from "@/lib/methodology";
+import { getPolygonVenueCount } from "@/lib/polygon-yield";
 
 const TITLE = "Methodology: How Harvest Tracks DeFi Yields | Harvest";
 const DESCRIPTION =
@@ -78,8 +79,8 @@ const LIMITATIONS = [
     desc: "This site does not publish per-strategy risk ratings or opinions. The risk dimensions listed in the Risk framework section describe the categories of risk present in DeFi vault strategies; they are informational only and do not constitute advice.",
   },
   {
-    title: "Third-party operators not yet indexed",
-    desc: "The index currently covers only Harvest-operated strategies. DeFi protocols that deploy similar vault structures (Yearn, Beefy, Convex, etc.) are not represented.",
+    title: "Third-party coverage is limited to Polygon",
+    desc: "As of v1.1 the index includes a small, curated set of third-party venues on Polygon under the criteria in the Inclusion section. Other networks remain Harvest-only, and most DeFi protocols and networks are not represented at all; this is a curated index, not a survey of DeFi.",
   },
   {
     title: "No lifetime APY figure",
@@ -102,6 +103,7 @@ function StructuredData({ data }: { data: object }) {
 
 export default async function MethodologyPage() {
   const [allVaults, liveVaults] = await Promise.all([getVaults(), getLiveVaults()]);
+  const polygonVenueCount = getPolygonVenueCount();
 
   const chains = new Set(liveVaults.map((v) => v.chain));
   const assets = new Set(liveVaults.map((v) => v.asset));
@@ -193,11 +195,14 @@ export default async function MethodologyPage() {
               <h2 className="meth-h2">What the index covers</h2>
 
               <div className="meth-callout">
-                All {allVaults.length} strategies currently in this index are operated
-                by Harvest. This is not a neutral third-party aggregator -
-                it is Harvest's own product catalog. The index is being expanded to
-                cover strategies from other operators under the same methodology as
-                that infrastructure develops. See the{" "}
+                {allVaults.length} strategies in this index are operated by Harvest.
+                Since v1.1, the index also covers {polygonVenueCount} third-party
+                venues on Polygon, listed separately and clearly labelled as
+                third-party under the criteria in the{" "}
+                <a href="#inclusion">Inclusion and exclusion criteria</a> section.
+                This is not a neutral aggregator of all of DeFi - it is Harvest's
+                own product catalog plus a small, curated set of external venues we
+                do not operate. See the{" "}
                 <a href="#disclosure">Disclosure</a> section for the full picture.
               </div>
 
@@ -472,9 +477,51 @@ export default async function MethodologyPage() {
                 Exclusion is automated; no manual review step currently exists.
               </p>
               <p>
-                Formal inclusion criteria for third-party operators - minimum audit
-                requirements, TVL floors, track-record length - will be published as an
-                amendment to this methodology before any third-party strategies are added.
+                As of v1.1, third-party (non-Harvest-operated) venues may be included
+                on a per-network basis once a network has this section's criteria
+                published for it. A venue must meet all of the following:
+              </p>
+              <ul className="meth-limit-list">
+                <li>
+                  <b>Rate verifiable on-chain.</b> Preferred inclusion is a venue whose
+                  rate we read directly from its own public contract state (e.g. a
+                  lending pool's <code>getReserveData</code>), the same standard applied
+                  to Harvest's own strategies. A venue without a directly readable rate
+                  may still be included with a rate sourced from a labelled third-party
+                  API (currently Portals), disclosed per row as such and never presented
+                  as an on-chain read.
+                </li>
+                <li>
+                  <b>Minimum $500,000 in tracked deposits</b> at the time of inclusion,
+                  read from the venue's own contract (or its issuer's reported figure for
+                  tokenized funds without on-chain TVL).
+                </li>
+                <li>
+                  <b>Permissionless or a regulated, named issuer.</b> Included venues are
+                  either permissionless smart contracts (e.g. Aave, Morpho) or tokenized
+                  funds with a named, regulated issuer (e.g. BlackRock, Hamilton Lane,
+                  Apollo, via Securitize). Anonymous-team or unaudited farms are excluded
+                  regardless of TVL or rate.
+                </li>
+                <li>
+                  <b>No payment for inclusion or ranking.</b> Third-party venues do not
+                  pay to be listed and cannot pay to rank higher; ranking is sorted
+                  solely by rate, identically to Harvest's own strategies. See{" "}
+                  <a href="#disclosure">Disclosure</a>.
+                </li>
+                <li>
+                  <b>Clearly labelled as third-party.</b> Every third-party row and page
+                  discloses its operator, is never described as a Harvest product, and
+                  links out through an interstitial rather than embedding the venue's
+                  flow.
+                </li>
+              </ul>
+              <p>
+                First applied to Polygon ({polygonVenueCount} venues at publication:
+                Aave v3, Morpho, and the Securitize-tokenized BlackRock BUIDL, Hamilton
+                Lane SCOPE and Apollo Diversified Credit funds). Extending these
+                criteria to additional networks will itself be logged as a methodology
+                version, per <a href="#versioning">Methodology versioning</a>.
               </p>
             </section>
 
@@ -537,10 +584,21 @@ export default async function MethodologyPage() {
                 depending on the metric.
               </p>
               <p>
-                We do not integrate third-party RPC providers or external aggregation
-                services. All data originates from Harvest's own API and subgraph. Data
-                accuracy on this site is therefore directly dependent on the accuracy
-                of those upstream sources.
+                For Harvest-operated strategies, all data originates from Harvest's own
+                API and subgraph; data accuracy on those pages is directly dependent on
+                the accuracy of those upstream sources.
+              </p>
+              <p>
+                Third-party venues (see <a href="#inclusion">Inclusion and exclusion
+                criteria</a>) are priced differently, deliberately not through Harvest's
+                API: rates are read directly from each venue's own public contract state
+                over standard JSON-RPC, the same class of infrastructure the venues'
+                own front ends use, with a labelled third-party API (Portals) used only
+                as a fallback where no such contract read exists, and disclosed per row
+                when it is. This is closer to the site's own on-chain-first practice
+                elsewhere (see the XRP and Aerodrome reports) than to a DeFiLlama-style
+                aggregation: no third-party yield-aggregator feed is used as the primary
+                rate for any listing on this site.
               </p>
             </section>
 
@@ -600,26 +658,30 @@ export default async function MethodologyPage() {
 
               <div className="meth-disclosure">
                 <p>
-                  Harvest operates every strategy currently listed in this index.
-                  The index is not, at this stage, a neutral aggregator of third-party
-                  protocols - it is an index of Harvest's own products. We state this
-                  explicitly because the site's positioning as an "independent yield index"
-                  reflects an intended future state, not the current one. Readers and
-                  journalists should interpret ranked listings as rankings within the
-                  Harvest product catalog, not across DeFi at large.
+                  Harvest operates {allVaults.length} of the strategies listed in this
+                  index. Since v1.1, {polygonVenueCount} additional listings on Polygon
+                  are third-party venues Harvest does not operate, control, or take
+                  custody through; those rows and their pages are labelled as
+                  third-party and link out through an interstitial rather than any
+                  Harvest product flow. This is still not a neutral aggregator of all of
+                  DeFi - it is Harvest's own product catalog plus a small, named,
+                  criteria-gated set of external venues, not a survey of the market.
+                  Readers and journalists should interpret ranked listings accordingly.
                 </p>
                 <p>
-                  Listing position and ranking are determined solely by APY (or the sort
-                  order selected by the user). Operator status does not influence ranking
-                  because, at present, all listed strategies share the same operator.
-                  When third-party strategies are added, the same APY-first ranking
-                  methodology will apply equally to all operators.
+                  Listing position and ranking are determined solely by rate (or the
+                  sort order selected by the user); operator status does not influence
+                  ranking, and the same rate-first ranking methodology applies equally to
+                  Harvest and third-party rows on the same page.
                 </p>
                 <p>
-                  This site does not currently generate referral or affiliate revenue from
-                  any strategy listing. If referral links or affiliate arrangements are
-                  introduced in the future, they will be disclosed inline on the relevant
-                  strategy pages and in this section.
+                  This site does not accept payment for inclusion or for a higher
+                  ranking, from Harvest or third-party venues alike. Outbound links to
+                  third-party venues carry a <code>ref=harvest.finance</code> attribution
+                  parameter so those platforms can attribute the traffic; this is not a
+                  paid referral or affiliate arrangement. If a paid referral or affiliate
+                  arrangement is introduced for any listing in the future, it will be
+                  disclosed inline on the relevant page and in this section.
                 </p>
               </div>
             </section>

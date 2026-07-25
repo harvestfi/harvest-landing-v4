@@ -94,7 +94,7 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 - [Ethereum](${SITE_URL}/ethereum): every strategy we track on Ethereum mainnet.
 - [Base](${SITE_URL}/base): every strategy we track on Base.
 - [Arbitrum](${SITE_URL}/arbitrum): every strategy we track on Arbitrum.
-- [Polygon](${SITE_URL}/polygon): every strategy we track on Polygon.
+- [Polygon](${SITE_URL}/polygon): a rate-ranked mix of third-party Polygon venues (Aave v3, Morpho, tokenized RWA funds) and the strategies we operate ourselves, each row labelled by operator.
 - [zkSync](${SITE_URL}/zksync): every strategy we track on zkSync Era.
 - [HyperEVM](${SITE_URL}/hyperevm): every strategy we track on HyperEVM.
 

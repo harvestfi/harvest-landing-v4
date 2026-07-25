@@ -4,6 +4,7 @@ import { getCanonicalSlugs } from "@/lib/canonical-vaults";
 import { SITE_URL } from "@/lib/constants";
 import { NETWORKS } from "@/lib/networks";
 import { LIVE_PLATFORM_SLUGS } from "@/lib/platforms";
+import { getPolygonVenues } from "@/lib/polygon-yield";
 
 export const dynamic = "force-static";
 
@@ -44,6 +45,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(),
     changeFrequency: "daily" as const,
     priority: 0.9,
+  }));
+
+  // Third-party venue pages under /polygon (see methodology.tsx#inclusion).
+  // Not gated like vault pages: every venue in the allowlist is meant to be
+  // indexable, same as the hub itself.
+  const polygonVenuePages = getPolygonVenues().map((v) => ({
+    url: `${SITE_URL}/polygon/${v.venueSlug}`,
+    lastModified: new Date(),
+    changeFrequency: "daily" as const,
+    priority: 0.7,
   }));
 
   return [
@@ -116,6 +127,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...assetHubPages,
     ...networkHubPages,
     ...platformHubPages,
+    ...polygonVenuePages,
     ...vaultPages,
   ];
 }

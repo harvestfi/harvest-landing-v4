@@ -1,0 +1,62 @@
+name: Update Polygon Ranking Data
+
+# Refreshes data/polygon-yield.json (the /polygon mixed ranking and its
+# /polygon/[venue] pages) hourly. Separate from update-data.yml (Harvest's own
+# vault data) so a failure in one never blocks the other.
+#
+# PORTALS_API_KEY should be set as a repository secret. It is required for the
+# three Securitize-tokenized RWA rows and the Morpho row (no public contract
+# read for those); without it they fall back to their static snapshot. Aave v3
+# rows are unaffected -- their rate is read directly from the Pool contract.
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-polygon-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Hydrate Polygon venues (Aave v3 on-chain + Portals fallback)
+        run: node scripts/fetch-polygon-yield.mjs
+        env:
+          PORTALS_API_KEY: ${{ secrets.PORTALS_API_KEY }}
+          NODE_USE_ENV_PROXY: "1"
+        continue-on-error: true
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/polygon-yield.json
+          if git diff --cached --quiet; then
+            echo "No Polygon data changes detected."
+            exit 0
+          fi
+          git commit -m "chore: update Polygon ranking data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, rebasing on origin/main."
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "Failed to push after retries."
+          exit 1
