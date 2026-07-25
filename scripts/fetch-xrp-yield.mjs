@@ -489,12 +489,60 @@ const main = async () => {
   if (prev?.landscape) out.landscape = prev.landscape;
   if (prev?.yieldTrading) out.yieldTrading = prev.yieldTrading;
 
+  // Only rewrite the file when something OTHER than the run stamp changed.
+  //
+  // WHY: `generatedAt` used to be set to now() on every run and written
+  // unconditionally. Because it lives inside the file the workflow diffs, the
+  // "commit only if changed" guard in update-data.yml / update-xrp-data.yml
+  // could never fire — the file was always byte-different, so every run
+  // committed, every commit rebuilt, and the report's visible "Last updated"
+  // date plus its three schema `dateModified` fields advanced whether or not a
+  // single rate had moved. That trains answer engines to read our freshness
+  // signal as a pipeline heartbeat carrying no information, which is expensive
+  // for a site whose whole citation strategy rests on those dates.
+  //
+  // With this guard, `generatedAt` means "when the data last changed". If the
+  // report's figures are identical, the file is left untouched, the workflow's
+  // guard fires, and no rebuild happens. Note this does not stop most hourly
+  // commits — on-chain rates and oracle-priced TVL genuinely move — but it does
+  // make the claim true: if the date advanced, something changed.
+  if (prev && canonicalJson(stripRunStamp(prev)) === canonicalJson(stripRunStamp(out))) {
+    console.log(
+      "[xrp-yield] no material change since the last snapshot; leaving data/xrp-yield.json (and its generatedAt) untouched.",
+    );
+    return;
+  }
+
   mkdirSync(join(ROOT, "data"), { recursive: true });
   writeFileSync(OUT_FILE, JSON.stringify(out, null, 2), "utf-8");
   console.log(
     `[xrp-yield] wrote ${pools.length} products (${rated.length} rated) across ${out.stats.chains.length} chains, median ${out.stats.medianApy}% -> data/xrp-yield.json`,
   );
 };
+
+// Drop the only field this script stamps with wall-clock time, so two snapshots
+// can be compared on their actual content. The nested stamps
+// (landscape.generatedAt, yieldTrading.generatedAt, pools[].holders.asOf) are
+// owned by the daily enrichment scripts and are carried over verbatim, so a
+// change in one of those IS a material change and should commit.
+function stripRunStamp(snapshot) {
+  const { generatedAt: _ignored, ...rest } = snapshot;
+  return rest;
+}
+
+// Key-order-independent serialization: the enrichment scripts rewrite the file
+// and may not preserve our key order, so a plain JSON.stringify comparison
+// would report a false difference.
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${canonicalJson(value[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
 
 main().catch((e) => {
   console.error("[xrp-yield] fatal:", e);

@@ -722,12 +722,22 @@ export default function XrpYieldRankingPage() {
       }),
   ];
 
-  // Freshness date shown as "Last updated" / "As of". Uses the most recent of
-  // the snapshot and its enrichment passes (landscape, holders, trading) so the
-  // date reflects when the report's data was actually last refreshed — and a
-  // scheduled job (.github/workflows/update-xrp-data.yml) re-runs the pipeline
-  // daily so it keeps moving.
-  const freshestTs = Math.max(
+  // Freshness date shown as "Last updated" / "As of", and fed to dateModified on
+  // the WebPage, Article and Dataset schema nodes.
+  //
+  // Two things make this honest rather than a heartbeat:
+  //
+  // 1. The pipeline scripts only rewrite data/xrp-yield.json when something
+  //    other than their own run stamp changed (see fetch-xrp-yield.mjs). So each
+  //    stamp below advances only when that pass produced different data, and the
+  //    max of them means "when the report's data last changed".
+  // 2. The result is then capped by the newest observation actually present in
+  //    the data. If the daily series have gone stale — a degraded run where
+  //    venues fall back to their previous values while the job still completes —
+  //    the cap stops the page advertising freshness it does not have. The cap is
+  //    end-of-day so a same-day observation never drags the timestamp backwards
+  //    within the day, which means it costs nothing in the healthy case.
+  const changeTs = Math.max(
     ...[
       data.generatedAt,
       data.landscape?.generatedAt,
@@ -738,6 +748,21 @@ export default function XrpYieldRankingPage() {
       .map((s) => new Date(s).getTime())
       .filter((t) => Number.isFinite(t)),
   );
+
+  // Newest day carried by any daily series in the snapshot: per-pool rate/TVL
+  // history, the landscape TVL aggregate, or the yield-trading activity.
+  const observationDays: string[] = [
+    ...data.pools.flatMap((p) => (p.history ?? []).map((h) => h.d)),
+    ...(data.landscape?.series ?? []).map((s) => s.d),
+    ...(data.yieldTrading?.daily ?? []).map((s) => s.d),
+  ].filter((d): d is string => typeof d === "string" && d.length >= 10);
+  const newestObservationDay =
+    observationDays.length > 0 ? observationDays.reduce((a, b) => (a > b ? a : b)) : null;
+  const observationCapTs = newestObservationDay
+    ? new Date(`${newestObservationDay}T23:59:59.999Z`).getTime()
+    : Number.POSITIVE_INFINITY;
+
+  const freshestTs = Math.min(changeTs, observationCapTs);
   const updated = new Date(freshestTs).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
@@ -959,11 +984,17 @@ export default function XrpYieldRankingPage() {
         <section className="uni-home-content" aria-labelledby="ranking">
           <p className="rp-eyebrow">Live rates</p>
           <h2 id="ranking">The ranking</h2>
+          {/* Answer-first opener: one self-contained sentence carrying the
+              top-line finding AND the scope it applies to, so an AI Overview or
+              featured snippet can excerpt it without stripping the population
+              the numbers describe. The tables themselves are data-nosnippet. */}
           <p className="rp-lead">
-            The curated XRP products, ranked by rate and split by exposure.
-            Single-exposure positions sit on one side of the market; dual-exposure
-            positions pair an XRP token with a second asset. The Type column names
-            each product.
+            Across the {pools.length} XRP products this report tracks, 30-day
+            rates run from {pct(lo)} to {pct(hi)}, with a median of{" "}
+            {pct(stats.medianApy)}. Products are ranked by rate and split by
+            exposure: single-exposure positions sit on one side of the market;
+            dual-exposure positions pair an XRP token with a second asset. The
+            Type column names each product.
           </p>
           <div className="rp-rank-group">
             <div className="rp-rank-head">
@@ -1033,7 +1064,8 @@ export default function XrpYieldRankingPage() {
           <h2 id="yield-now">XRP yield right now</h2>
           <div className="rp-snapshot">
             <p>
-              As of {updated}, the top vault or lending rate is{" "}
+              Of the {pools.length} XRP products this report tracks, the top
+              vault or lending rate as of {updated} is{" "}
               <strong>{pct(histRate(topSingle))}</strong> on {assetHead(topSingle)}{" "}
               at {topSingle.platform}
               {topDual ? (
@@ -1202,8 +1234,9 @@ export default function XrpYieldRankingPage() {
             <h2 id="most-popular">Most popular XRP yield sources</h2>
             {holderTop ? (
               <p className="rp-lead">
-                By on-chain holder count, the most widely held XRP yield product
-                is {assetHead(holderTop)} on {holderTop.platform}, with{" "}
+                By on-chain holder count, the most widely held of the{" "}
+                {pools.length} XRP yield products this report tracks is{" "}
+                {assetHead(holderTop)} on {holderTop.platform}, with{" "}
                 {(holderTop.holders!.count ?? 0).toLocaleString()} wallets as of{" "}
                 {holderAsOf}.
                 {holderFollow ? ` It is followed by ${holderFollow}.` : ""}

@@ -21,6 +21,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { freezeStampIfUnchanged } from "./lib/snapshot-stamp.mjs";
 
 const ROOT = process.cwd();
 const DATA_FILE = join(ROOT, "data", "xrp-yield.json");
@@ -245,7 +246,9 @@ const totals = {
   lastDate: daily[daily.length - 1]?.d ?? null,
 };
 
-data.yieldTrading = {
+// Stamp frozen when the trading activity is unchanged, so an idle daily run
+// leaves the file byte-identical. See scripts/lib/snapshot-stamp.mjs.
+data.yieldTrading = freezeStampIfUnchanged(data.yieldTrading, {
   generatedAt: new Date().toISOString(),
   asset: "stXRP",
   venue: "Spectra",
@@ -255,7 +258,7 @@ data.yieldTrading = {
   monthly: [...monthly.entries()].map(([mo, v]) => ({ mo, buyUsd: v.buyUsd, sellUsd: v.sellUsd })),
   daily,
   markets,
-};
+});
 
 writeFileSync(DATA_FILE, JSON.stringify(data, null, 2) + "\n", "utf-8");
 console.log(
