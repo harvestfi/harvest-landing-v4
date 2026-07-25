@@ -22,6 +22,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { freezeStampIfUnchanged } from "./lib/snapshot-stamp.mjs";
 
 const ROOT = process.cwd();
 const DATA_FILE = join(ROOT, "data", "xrp-yield.json");
@@ -127,13 +128,20 @@ for (const p of pools) {
   }
   const holdersDoc = await getJson(`${host}/api/v2/tokens/${addr}/holders`);
   const conc = concentration(holdersDoc?.items, tok?.total_supply);
-  p.holders = {
-    count,
-    token: addr,
-    symbol: tok?.symbol ?? null,
-    ...conc,
-    asOf,
-  };
+  // Freeze asOf when this pool's holder figures are unchanged, so an idle daily
+  // run leaves the file byte-identical and the report's date does not advance on
+  // data that did not move. See scripts/lib/snapshot-stamp.mjs.
+  p.holders = freezeStampIfUnchanged(
+    p.holders,
+    {
+      count,
+      token: addr,
+      symbol: tok?.symbol ?? null,
+      ...conc,
+      asOf,
+    },
+    "asOf",
+  );
   console.log(
     `[xrp-holders] ${String(p.venueSlug).padEnd(24)} ${String(count).padStart(6)} holders  top1=${conc.top1Pct ?? "—"}%  top10=${conc.top10Pct ?? "—"}%`,
   );

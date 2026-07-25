@@ -667,7 +667,7 @@ LP-pair variants - no [LP boost] sub-variant.`}</CodeBlock>
   Last updated <relative>
     relative = formatRelativeUpdated(max of all history series timestamps)
 
-  Harvest is an independent onchain yield index. Performance data reflects
+  Harvest is an onchain yield index. Performance data reflects
   historical onchain activity and is not a forecast. See the [methodology],
   [risk framework], [terms], and [disclosures] for details on how data is
   calculated and the risks associated with onchain yield strategies.`}</CodeBlock>

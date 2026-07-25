@@ -35,12 +35,30 @@ function readSiteUrl() {
   return m[1].replace(/\/$/, "");
 }
 
+// Same trick for the "strategies tracked" floor: constants.ts is the single
+// source, so llms.txt can never state a different figure from the product-page
+// meta descriptions or /methodology.
+function readTrackedLabel() {
+  const src = readFileSync(CONSTANTS_FILE, "utf-8");
+  const m = src.match(
+    /export\s+const\s+TRACKED_STRATEGIES_LABEL\s*=\s*["'`]([^"'`]+)["'`]/,
+  );
+  if (!m) {
+    console.error(
+      "[seo-static] could not find TRACKED_STRATEGIES_LABEL in constants.ts",
+    );
+    process.exit(1);
+  }
+  return m[1];
+}
+
 if (!existsSync(PUBLIC_DIR)) {
   console.error("[seo-static] public/ not found; run after `mv out public`.");
   process.exit(1);
 }
 
 const SITE_URL = readSiteUrl();
+const TRACKED_LABEL = readTrackedLabel();
 
 // Mirror of the old app/robots.ts output (MetadataRoute.Robots format).
 const robots = `User-Agent: *
@@ -59,9 +77,9 @@ Sitemap: ${SITE_URL}/sitemap.xml
 // over-stuffing llms.txt defeats its purpose as a concise index.
 const llms = `# Harvest yield index
 
-> Independent on-chain DeFi yield index, operating since 2020. Tracks live
+> Onchain yield index, operating since 2020. Tracks live
 > APY, TVL, share-price history and derived metrics (stability, yield
-> trajectory, cohort benchmarking) for 150+ vetted yield strategies across
+> trajectory, cohort benchmarking) for ${TRACKED_LABEL} vetted yield strategies across
 > Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh
 > hourly from Harvest's own on-chain indexer.
 
@@ -100,7 +118,7 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 
 ## Reports
 
-- [XRP Yield Ranking](${SITE_URL}/report/xrp-yield-ranking): every XRP-denominated DeFi yield source (XRP, FXRP, stXRP, cbXRP, wXRP) ranked by real 30-day rate. Covers lending, vaults, liquid staking, fixed-rate Spectra Principal Tokens and liquidity pools, split by single- vs dual-exposure, across Flare and Base. XRP has no native staking, so these are the real on-chain rates. Externally sourced from DeFiLlama, Spectra and Portals, refreshed hourly. Machine-readable data (per-product JSON + daily-rate CSV) at ${SITE_URL}/data/xrp-yield/index.json. All venues are third-party protocols, not Harvest products.
+- [XRP Yield Ranking](${SITE_URL}/report/xrp-yield-ranking): every XRP-denominated DeFi yield source (XRP, FXRP, stXRP, cbXRP, wXRP) ranked by real 30-day rate. Covers lending, vaults, liquid staking, fixed-rate Spectra Principal Tokens and liquidity pools, split by single- vs dual-exposure, across Flare and Base. XRP has no native staking, so these are the real on-chain rates. Rates and TVL are measured onchain (Base and Flare) from each venue's own contracts, priced with onchain oracles, with the Spectra API for Spectra's own markets; no third-party yield aggregator is used. Refreshed hourly. Machine-readable data (per-product JSON + daily-rate CSV) at ${SITE_URL}/data/xrp-yield/index.json. All venues are third-party protocols, not Harvest products.
 
 ## Data
 

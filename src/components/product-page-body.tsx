@@ -970,7 +970,7 @@ function ProductPageFootnote({ history }: { history: FullVaultHistory }) {
         )}
       </p>
       <p className="pp-footnote-disclosure">
-        Harvest is an independent onchain yield index. Performance
+        Harvest is an onchain yield index. Performance
         data reflects historical onchain activity and is not a
         forecast. See the{" "}
         <Link href="/methodology">methodology</Link>,{" "}

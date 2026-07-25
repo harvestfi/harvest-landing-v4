@@ -395,7 +395,7 @@ Young-vault framing (`trackedDays > 0 && < 30`): `avgPhrase = "an average of {AP
 Eligible: same asset, `apy24h > 0`, `tvl > 0`, not self. Ordering — **Autopilot/single-asset:** same-network same-type → same-network other-type → off-network same-type. **LP-pair:** same-network LP-pair → same-network single-asset → off-network LP-pair. Card: asset icon · canonical name + `[LP]` if applicable · chain · 24h APY · TVL.
 
 ## 14 · Footnote
-`Latest data point: {Month D, YYYY} ({relative})` (max timestamp across all series) + `Harvest is an independent onchain yield index. Performance data reflects historical onchain activity and is not a forecast. See the methodology, risk framework, terms, and disclosures …`
+`Latest data point: {Month D, YYYY} ({relative})` (max timestamp across all series) + `Harvest is an onchain yield index. Performance data reflects historical onchain activity and is not a forecast. See the methodology, risk framework, terms, and disclosures …`
 
 
 ===============================================================

@@ -15,12 +15,13 @@ const URL = `${SITE_URL}/about`;
 // without needing an editor to revisit the copy.
 const FOUNDING_DATE_ISO = "2020-09-01";
 
-// Social handles - replace # with the real URLs when available. They're
-// surfaced via Organization.sameAs and in the body of the "What's next"
-// section.
-const TWITTER_URL = "#";
-const DISCORD_URL = "#";
-const GITHUB_URL = "#";
+// Social handles for the visible body links in the "What's next" section.
+// These match the canonical Organization.sameAs list in app/layout.tsx, which
+// is the single place those profiles are declared as structured data - this page
+// no longer emits its own Organization node (see below).
+const TWITTER_URL = "https://x.com/harvest_finance";
+const DISCORD_URL = "https://discord.gg/xHXe3tYjPY";
+const GITHUB_URL = "https://github.com/harvestfi";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -51,25 +52,6 @@ function aboutPageSchema() {
   };
 }
 
-function organizationSchema() {
-  const sameAs: string[] = [];
-  if (TWITTER_URL.startsWith("http")) sameAs.push(TWITTER_URL);
-  if (DISCORD_URL.startsWith("http")) sameAs.push(DISCORD_URL);
-  if (GITHUB_URL.startsWith("http")) sameAs.push(GITHUB_URL);
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SITE_NAME,
-    url: SITE_URL,
-    logo: `${SITE_URL}/icon`,
-    foundingDate: FOUNDING_DATE_ISO,
-    description:
-      "Independent onchain yield index tracking DeFi yield strategies since 2020.",
-    ...(sameAs.length > 0 ? { sameAs } : {}),
-  };
-}
-
 export default function AboutPage() {
   const crumbs = [
     { name: "Home", url: SITE_URL },
@@ -95,10 +77,11 @@ export default function AboutPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutPageSchema()) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
-      />
+      {/* No local Organization node here. The root layout already emits the
+          canonical one on every page, with the full 8-entry sameAs. Emitting a
+          second one here shipped a conflicting logo (/icon vs /icon.png), a
+          different foundingDate and an empty sameAs on the very page meant to
+          define the entity - the opposite of an entity-resolution signal. */}
 
       <div className="meth-header">
         <nav className="meth-crumbs mono dim">
@@ -108,7 +91,7 @@ export default function AboutPage() {
         </nav>
         <h1 className="meth-title">About Harvest</h1>
         <p className="meth-subtitle">
-          Independent onchain yield index. Operating since 2020.
+          Onchain yield index. Operating since 2020.
         </p>
       </div>
 

@@ -164,7 +164,7 @@ export async function Footer() {
               <span className="brand-dot" aria-hidden="true" />
             </Link>
             <span className="foot-tagline">
-              Independent onchain yield index
+              Onchain yield index
             </span>
             <span className="foot-since">
               Operating since 2020 · 5+ years onchain
