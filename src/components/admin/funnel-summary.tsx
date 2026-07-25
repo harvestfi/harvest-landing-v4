@@ -48,6 +48,7 @@ import {
   sourceDomain,
 } from "@/lib/channels";
 import { isBotRow, detectSpoofedFingerprints, fingerprintKey } from "@/lib/bots";
+import { SeoExport } from "./seo-export";
 import { FilterHint } from "@/components/admin/filter-hint";
 import "@/app/_styles/asset-hub.css";
 
@@ -128,7 +129,7 @@ const SEO_FEED_COLS =
   "132px 132px 92px 104px minmax(170px, 1.7fr) 64px 96px 128px 84px 54px";
 
 // One action within a session (a visit, click, or on-chain event).
-interface SeoAction {
+export interface SeoAction {
   id: string;
   time: string;
   kind: "visit" | "click" | "deposit" | "withdraw";
@@ -140,7 +141,7 @@ interface SeoAction {
 }
 
 // One SEO-acquired session: the unit of the funnel. One table row.
-interface SeoSession {
+export interface SeoSession {
   sessionId: string;
   seoName: string; // primary (first-touch) search channel, e.g. "Google"
   // Every distinct search engine that touched the session (first-seen
@@ -1093,6 +1094,12 @@ export function FunnelSummary({
             hidden={hidden}
             setHidden={setHidden}
           />
+
+          {/* Downloads. Fed the whole group with bots stripped unconditionally
+              (never the showBots toggle): the raw table is mostly crawlers, so
+              an export carrying them would poison downstream analysis. The
+              component derives the "Isolate direct" scope itself. */}
+          <SeoExport sessions={sessions.filter((s) => !s.bot)} group={group} />
 
           {(() => {
             const totalPages = Math.max(

@@ -1968,3 +1968,90 @@ body:has(.admin-shell) .foot {
 :root[data-theme="dark"] .uni-hub-test .dll-bar-rec { background: #ffb936; }
 :root[data-theme="dark"] .uni-hub-test .dll-dot-disc { background: rgba(255,185,54,0.28); }
 :root[data-theme="dark"] .uni-hub-test .dll-dot-rec { background: #ffb936; }
+
+/* === SEO / AI Summary exports (components/admin/seo-export.tsx) ===========
+   Sits between the funnel chart and the session table. Same uni-hub tokens as
+   the surrounding admin surfaces so it reads as part of the page, not a widget. */
+.uni-hub-test .sx-wrap {
+  margin: 22px 0 18px;
+  padding: 16px 18px;
+  background: var(--uni-card);
+  border-radius: var(--uni-radius-sm);
+}
+.uni-hub-test .sx-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.uni-hub-test .sx-title {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uni-ink);
+}
+.uni-hub-test .sx-meta {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--uni-ink-3);
+  letter-spacing: 0.02em;
+}
+.uni-hub-test .sx-rows { display: flex; flex-direction: column; gap: 10px; }
+.uni-hub-test .sx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.uni-hub-test .sx-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  color: var(--uni-ink-2);
+  min-width: 118px;
+}
+.uni-hub-test .sx-label em {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 11px;
+  color: var(--uni-ink-3);
+}
+.uni-hub-test .sx-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.uni-hub-test .sx-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--uni-line);
+  background: var(--uni-card-2);
+  color: var(--uni-ink);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.uni-hub-test .sx-btn:hover { border-color: #e0952a; }
+.uni-hub-test .sx-btn-primary {
+  border-color: #e0952a;
+  background: rgba(224, 149, 42, 0.10);
+  font-weight: 600;
+}
+.uni-hub-test .sx-btn-primary:hover { background: rgba(224, 149, 42, 0.18); }
+.uni-hub-test .sx-note {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--uni-ink-3);
+}
+:root[data-theme="dark"] .uni-hub-test .sx-btn:hover { border-color: #ffb936; }
+:root[data-theme="dark"] .uni-hub-test .sx-btn-primary {
+  border-color: #ffb936;
+  background: rgba(255, 185, 54, 0.12);
+}
+:root[data-theme="dark"] .uni-hub-test .sx-btn-primary:hover { background: rgba(255, 185, 54, 0.20); }
+@media (max-width: 620px) {
+  .uni-hub-test .sx-row { align-items: flex-start; }
+  .uni-hub-test .sx-btns { width: 100%; }
+  .uni-hub-test .sx-btn { flex: 1 1 auto; }
+}
