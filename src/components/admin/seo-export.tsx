@@ -288,13 +288,16 @@ export function SeoExport({
               <button type="button" className="sx-btn" onClick={() => actionsCsv(scope)}>
                 Actions CSV
               </button>
+              {/* Label stays group-neutral: this component also renders on the
+                  AI Summary, where "JSON for AI" would read as "JSON about AI
+                  traffic" rather than "JSON to feed an agent". */}
               <button
                 type="button"
                 className="sx-btn sx-btn-primary"
                 onClick={() => json(scope)}
-                title="Richest format: sessions with nested action timelines plus a field glossary. Best for feeding an AI agent."
+                title="Richest format: sessions with nested action timelines plus a field glossary. Best for feeding an AI agent as context."
               >
-                JSON for AI
+                Context JSON
               </button>
             </span>
           </div>
@@ -302,9 +305,9 @@ export function SeoExport({
       </div>
       <p className="sx-note">
         Sessions CSV is one row per session. Actions CSV is one row per event
-        (visit, click, deposit, withdraw), the finest granularity we hold. JSON
-        carries the same sessions with their full action timelines plus a field
-        glossary, so an agent can read it without extra context.
+        (visit, click, deposit, withdraw), the finest granularity we hold.
+        Context JSON carries the same sessions with their full action timelines
+        plus a field glossary, so an AI agent can read it without extra context.
       </p>
     </div>
   );
