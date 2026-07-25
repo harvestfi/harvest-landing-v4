@@ -105,7 +105,7 @@ const ORGANIZATION_JSONLD = {
   // is the protocol's 2020 launch; knowsAbout enumerates the topics the index
   // is authoritative on; contactPoint + areaServed round out the profile.
   foundingDate: "2020",
-  slogan: "Independent onchain DeFi yield index",
+  slogan: "Onchain yield index",
   areaServed: "Worldwide",
   knowsAbout: [
     "DeFi yield",

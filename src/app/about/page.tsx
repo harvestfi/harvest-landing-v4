@@ -91,7 +91,7 @@ export default function AboutPage() {
         </nav>
         <h1 className="meth-title">About Harvest</h1>
         <p className="meth-subtitle">
-          Independent onchain yield index. Operating since 2020.
+          Onchain yield index. Operating since 2020.
         </p>
       </div>
 

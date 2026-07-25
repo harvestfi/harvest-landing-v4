@@ -603,8 +603,9 @@ export default async function MethodologyPage() {
                   Harvest operates every strategy currently listed in this index.
                   The index is not, at this stage, a neutral aggregator of third-party
                   protocols - it is an index of Harvest's own products. We state this
-                  explicitly because the site's positioning as an "independent yield index"
-                  reflects an intended future state, not the current one. Readers and
+                  explicitly because &ldquo;yield index&rdquo; could otherwise be read as
+                  market-wide coverage. Covering other operators under this same
+                  methodology is an intended future state, not the current one. Readers and
                   journalists should interpret ranked listings as rankings within the
                   Harvest product catalog, not across DeFi at large.
                 </p>

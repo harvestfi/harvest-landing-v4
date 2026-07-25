@@ -729,7 +729,7 @@ if applicable, chain icon + chain name + stripped category, 24h APY, TVL.`}</Cod
     "Last updated just now" / "N minutes ago" / "N hours ago" / "N days
     ago" / "Last updated on Month D, YYYY"
 
-  Harvest is an independent onchain yield index. Performance data reflects
+  Harvest is an onchain yield index. Performance data reflects
   historical onchain activity and is not a forecast. See the [methodology],
   [risk framework], [terms], and [disclosures] for details on how data is
   calculated and the risks associated with onchain yield strategies.`}</CodeBlock>

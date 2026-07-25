@@ -77,7 +77,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
 // over-stuffing llms.txt defeats its purpose as a concise index.
 const llms = `# Harvest yield index
 
-> Independent on-chain DeFi yield index, operating since 2020. Tracks live
+> Onchain yield index, operating since 2020. Tracks live
 > APY, TVL, share-price history and derived metrics (stability, yield
 > trajectory, cohort benchmarking) for ${TRACKED_LABEL} vetted yield strategies across
 > Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh
