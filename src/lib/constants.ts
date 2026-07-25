@@ -10,12 +10,20 @@ export const ASSET_COLORS: Record<Asset, string> = {
 
 export const SITE_NAME = "Harvest";
 
-// Stable, platform-wide floor for "strategies tracked" copy used in
-// product-page meta descriptions. Hardcoded as a round floor (the
-// index currently carries 150+ products) so the description never
-// drifts between the hourly static rebuilds the way a live count
-// would: Google caches the snippet, and a fixed figure keeps it
-// accurate without re-crawls. Bump the floor when the index grows.
+// Stable, platform-wide floor for "strategies tracked" copy. THE single source
+// for that figure: product-page meta descriptions, the llms.txt summary (scraped
+// by scripts/build-seo-static.mjs) and /methodology all read it from here, so
+// they can no longer state different numbers.
+//
+// Deliberately a fixed floor, not a live count: Google caches the snippet, and a
+// live figure would drift between the hourly static rebuilds and misstate a
+// financial page on a stale crawl.
+//
+// Why 100+ and not 150+: the catalogue holds ~156 products, but only ~121 are
+// indexable after the quality gate and ~98 are live after the LP-pair and
+// staleness filters (the number the footer computes). 100+ is the only round
+// floor that holds against every figure a crawler can actually verify. Bump it
+// when the live count clears the next hundred, not when the catalogue does.
 export const TRACKED_STRATEGIES_LABEL = "100+";
 // 140-160 char floor per Google's recommended description length.
 // Mentions the four anchor assets + the hourly-refresh cadence so the

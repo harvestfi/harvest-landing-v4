@@ -122,7 +122,7 @@ export default function SecurityPage() {
             <p>
               The Harvest contract system has been deployed onchain
               continuously since 2020. Across that period the codebase
-              has been reviewed by four independent security firms. Each
+              has been reviewed by five independent security firms. Each
               report is published in full at the source, linked below
               alongside a concise summary of the substantive findings.
             </p>

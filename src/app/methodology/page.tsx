@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HomeCrumb } from "@/components/home-crumb";
 import { getLiveVaults, getVaults } from "@/lib/data";
-import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { SITE_NAME, SITE_URL, TRACKED_STRATEGIES_LABEL } from "@/lib/constants";
 import { stripChainSuffix } from "@/lib/format";
 import { breadcrumbSchema, articleSchema } from "@/lib/jsonld";
 import { METHODOLOGY_VERSION, METHODOLOGY_CHANGELOG, METHODOLOGY_URL } from "@/lib/methodology";
 
 const TITLE = "Methodology: How Harvest Tracks DeFi Yields | Harvest";
 const DESCRIPTION =
-  "How Harvest tracks 150+ DeFi yield strategies across Ethereum, Base, Arbitrum and more. APY calculations, data sources, ranking rules, refresh cadence and the editorial guardrails behind the index.";
+  `How Harvest tracks ${TRACKED_STRATEGIES_LABEL} DeFi yield strategies across Ethereum, Base, Arbitrum and more. APY calculations, data sources, ranking rules, refresh cadence and the editorial guardrails behind the index.`;
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

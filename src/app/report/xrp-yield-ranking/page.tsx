@@ -857,7 +857,20 @@ export default function XrpYieldRankingPage() {
                 "TVL",
                 "Principal Token",
               ],
-              sources: ["https://defillama.com", "https://spectra.finance"],
+              // Provenance must match what the page body states: rates and TVL
+              // are read directly from each venue's own contracts on Base and
+              // Flare, priced with onchain oracles, with the Spectra API for
+              // Spectra's own markets. This previously credited DeFiLlama, which
+              // the pipeline no longer reads and whose terms restrict commercial
+              // republishing - the reason the onchain path was built. Crediting
+              // it here contradicted the Method section ("No third-party yield
+              // aggregator is used") on the exact surface answer engines read.
+              sources: [
+                "https://spectra.finance",
+                "https://aerodrome.finance",
+                "https://moonwell.fi",
+                "https://flare.network",
+              ],
               distribution: [
                 {
                   format: "application/json",
