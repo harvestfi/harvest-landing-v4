@@ -30,6 +30,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { freezeStampIfUnchanged } from "./lib/snapshot-stamp.mjs";
 
 const ROOT = process.cwd();
 const DATA_FILE = join(ROOT, "data", "xrp-yield.json");
@@ -157,7 +158,10 @@ const peak = trimmed.reduce((m, p) => (p.tvl > m.tvl ? p : m), trimmed[0]);
 const last = trimmed[trimmed.length - 1];
 const coveragePct = Math.round((last.tvl / currentTotal) * 100);
 
-data.landscape = {
+// Stamp is frozen when the series and coverage are unchanged, so an idle daily
+// run leaves the file byte-identical and the report's "Last updated" date does
+// not advance on data that did not move. See scripts/lib/snapshot-stamp.mjs.
+data.landscape = freezeStampIfUnchanged(data.landscape, {
   generatedAt: new Date().toISOString(),
   note:
     "Daily-indexed XRP-denominated DeFi TVL across venues with a continuous daily series, plus Upshift's Flare vault TVL (protocol-level, its entire Flare presence is XRP). Venues newly switched to on-chain sourcing rebuild their daily series forward from the switch, so they join this line as history accumulates; their current TVL is always in today's total. Sources: on-chain reads (Base and Flare), Spectra and Portals.",
@@ -169,7 +173,7 @@ data.landscape = {
   peak: { d: peak.d, tvl: peak.tvl },
   latest: { d: last.d, tvl: last.tvl },
   series: trimmed,
-};
+});
 
 writeFileSync(DATA_FILE, JSON.stringify(data, null, 2) + "\n", "utf-8");
 console.log(
