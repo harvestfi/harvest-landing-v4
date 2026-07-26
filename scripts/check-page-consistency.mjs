@@ -551,6 +551,7 @@ function runSelfTest() {
 // ---------- driver --------------------------------------------------------
 
 const POLYGON_VENUES_JSON = path.join(ROOT, "data", "polygon-venues.json");
+const EXTERNAL_PRODUCTS_JSON = path.join(ROOT, "data", "external-products.json");
 
 // See the matching comment in check-banned-words.mjs: /polygon and
 // /polygon/[venue] are a second editorial surface this gate now also covers.
@@ -565,12 +566,26 @@ async function loadPolygonSlugs() {
   }
 }
 
+// /product/[slug]: third editorial surface, Supabase-backed standalone
+// product pages (see src/lib/external-products.ts).
+async function loadExternalProductSlugs() {
+  try {
+    const raw = await fs.readFile(EXTERNAL_PRODUCTS_JSON, "utf8");
+    const doc = JSON.parse(raw);
+    const products = Array.isArray(doc.products) ? doc.products : [];
+    return products.map((p) => `product/${p.slug}`);
+  } catch {
+    return [];
+  }
+}
+
 async function loadProductSlugs() {
   const raw = await fs.readFile(VAULTS_JSON, "utf8");
   const vaults = JSON.parse(raw);
   return [
     ...vaults.map((v) => v.slug).filter((s) => typeof s === "string" && s.length > 0),
     ...(await loadPolygonSlugs()),
+    ...(await loadExternalProductSlugs()),
   ];
 }
 

@@ -1,0 +1,184 @@
+{
+  "note": "Curated allowlist for standalone /product/[slug] pages. Same philosophy as data/polygon-venues.json: this is the list, not a scanner. scripts/sync-external-products.mjs hydrates each row's live apy/tvl (onchain where an adapter exists, Portals otherwise -- see scripts/lib/external-product-adapters.mjs) and upserts the result into Supabase (public.external_products + public.external_product_history), which is what the pages actually render from at build time (src/lib/external-products.ts). This file only ever changes when a product is added, removed, or its static metadata changes; it never carries live numbers or history, unlike the polygon-venues.json + polygon-yield.json split this supersedes for anything added here.",
+  "products": [
+    {
+      "slug": "fluid-usdt-polygon",
+      "asset": "USDT0",
+      "assetGroup": "USDT",
+      "platform": "Fluid",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://fluid.io/137/lending/usdt?mode=deposit",
+      "vaultTokenAddress": "0x6f5e34eFf43D9ab7c977512509C53840B5EfBA85",
+      "source": { "kind": "portals" }
+    },
+    {
+      "slug": "aave-v3-dai-polygon",
+      "asset": "DAI",
+      "assetGroup": "DAI",
+      "platform": "Aave",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.aave.com/reserve-overview/?underlyingAsset=0x8f3cf7ad23cd3cadbd9735aff958023239c6a063&marketName=proto_polygon_v3",
+      "vaultTokenAddress": "0x82e64f49ed5ec1bc6e43dad4fc8af9bb3a2312ee",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "underlyingDec": 18,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "aave-v3-usdce-polygon",
+      "asset": "USDC.e",
+      "assetGroup": "USDC",
+      "platform": "Aave",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.aave.com/reserve-overview/?underlyingAsset=0x2791bca1f2de4661ed88a30c99a7a9449aa84174&marketName=proto_polygon_v3",
+      "vaultTokenAddress": "0x625e7708f30ca75bfd92586e17077590c60eb4cd",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "underlyingDec": 6,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "fluid-usdc-polygon",
+      "asset": "USDC",
+      "assetGroup": "USDC",
+      "platform": "Fluid",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://fluid.io/137/lending/usdc?mode=deposit",
+      "vaultTokenAddress": "0x571d456b578fDC34E26E6D636736ED7c0CDB9d89",
+      "source": { "kind": "portals" }
+    },
+    {
+      "slug": "aave-v3-usdc-polygon",
+      "asset": "USDC",
+      "assetGroup": "USDC",
+      "platform": "Aave",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.aave.com/reserve-overview/?underlyingAsset=0x3c499c542cef5e3811e1192ce70d8cc03d5c3359&marketName=proto_polygon_v3",
+      "vaultTokenAddress": "0xa4d94019934d8333ef880abffbf2fdd611c762bd",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "underlyingDec": 6,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "aave-v3-usdt-polygon",
+      "asset": "USDT0",
+      "assetGroup": "USDT",
+      "platform": "Aave",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.aave.com/reserve-overview/?underlyingAsset=0xc2132d05d31c914a87c6611c10748aeb04b58e8f&marketName=proto_polygon_v3",
+      "vaultTokenAddress": "0x6ab707aca953edaefbc4fd23ba73294241490620",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "underlyingDec": 6,
+        "priceRef": "usd"
+      }
+    },
+    {
+      "slug": "fluid-weth-polygon",
+      "asset": "WETH",
+      "assetGroup": "ETH",
+      "platform": "Fluid",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://fluid.io/137/lending/weth?mode=deposit",
+      "vaultTokenAddress": "0xD3154535E4D0e179583ad694859E4e876EB12d24",
+      "source": { "kind": "portals" }
+    },
+    {
+      "slug": "compound-v3-usdc-polygon",
+      "asset": "USDC",
+      "assetGroup": "USDC",
+      "platform": "Compound",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.compound.finance/markets/usdc.e-polygon",
+      "vaultTokenAddress": "0xF25212E676D1F7F89Cd72fFEe66158f541246445",
+      "source": { "kind": "portals" }
+    },
+    {
+      "slug": "compound-blue-usdc-polygon",
+      "asset": "USDC",
+      "assetGroup": "USDC",
+      "platform": "Compound Blue",
+      "chain": "Polygon",
+      "productType": "Lending market (Morpho vault)",
+      "productUrl": "https://app.morpho.org/polygon/vault/0x781FB7F6d845E3bE129289833b04d43Aa8558c42/compound-usdc#overview",
+      "vaultTokenAddress": "0x781FB7F6d845E3bE129289833b04d43Aa8558c42",
+      "source": { "kind": "portals" }
+    },
+    {
+      "slug": "compound-blue-usdt-polygon",
+      "asset": "USDT0",
+      "assetGroup": "USDT",
+      "platform": "Compound Blue",
+      "chain": "Polygon",
+      "productType": "Lending market (Morpho vault)",
+      "productUrl": "https://app.morpho.org/polygon/vault/0xfD06859A671C21497a2EB8C5E3fEA48De924D6c8/compound-usdt#overview",
+      "vaultTokenAddress": "0xfD06859A671C21497a2EB8C5E3fEA48De924D6c8",
+      "source": { "kind": "portals" }
+    },
+    {
+      "slug": "compound-v3-usdt-polygon",
+      "asset": "USDT0",
+      "assetGroup": "USDT",
+      "platform": "Compound",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.compound.finance/markets/usdt0-polygon",
+      "vaultTokenAddress": "0xaeB318360f27748Acb200CE616E389A6C9409a07",
+      "source": { "kind": "portals" }
+    },
+    {
+      "slug": "aave-v3-weth-polygon",
+      "asset": "WETH",
+      "assetGroup": "ETH",
+      "platform": "Aave",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.aave.com/reserve-overview/?underlyingAsset=0x7ceb23fd6bc0add59e62ac25578270cff1b9f619&marketName=proto_polygon_v3",
+      "vaultTokenAddress": "0xe50fa9b3c56ffb159cb0fca61f5c9d750e8128c8",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+        "underlyingDec": 18,
+        "priceRef": "eth"
+      }
+    },
+    {
+      "slug": "aave-v3-wbtc-polygon",
+      "asset": "WBTC",
+      "assetGroup": "BTC",
+      "platform": "Aave",
+      "chain": "Polygon",
+      "productType": "Lending market",
+      "productUrl": "https://app.aave.com/reserve-overview/?underlyingAsset=0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6&marketName=proto_polygon_v3",
+      "vaultTokenAddress": "0x078f358208685046a11c85e8ad32895ded33a249",
+      "source": {
+        "kind": "onchain",
+        "protocol": "aave-v3",
+        "asset": "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6",
+        "underlyingDec": 8,
+        "priceRef": "btc"
+      }
+    }
+  ]
+}

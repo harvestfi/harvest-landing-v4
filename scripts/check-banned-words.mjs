@@ -75,6 +75,7 @@ const PHRASE_ALLOWLIST = [
 ];
 
 const POLYGON_VENUES_JSON = path.join(ROOT, "data", "polygon-venues.json");
+const EXTERNAL_PRODUCTS_JSON = path.join(ROOT, "data", "external-products.json");
 
 // /polygon and /polygon/[venue] are a second editorial surface (the mixed
 // third-party + Harvest ranking, see methodology.tsx#inclusion) that predates
@@ -92,6 +93,19 @@ async function loadPolygonSlugs() {
   }
 }
 
+// /product/[slug] is a third editorial surface: standalone third-party
+// product pages backed by Supabase (see src/lib/external-products.ts).
+async function loadExternalProductSlugs() {
+  try {
+    const raw = await fs.readFile(EXTERNAL_PRODUCTS_JSON, "utf8");
+    const doc = JSON.parse(raw);
+    const products = Array.isArray(doc.products) ? doc.products : [];
+    return products.map((p) => `product/${p.slug}`);
+  } catch {
+    return [];
+  }
+}
+
 async function loadProductSlugs() {
   const raw = await fs.readFile(VAULTS_JSON, "utf8");
   const vaults = JSON.parse(raw);
@@ -100,6 +114,7 @@ async function loadProductSlugs() {
       .map((v) => v.slug)
       .filter((s) => typeof s === "string" && s.length > 0),
     ...(await loadPolygonSlugs()),
+    ...(await loadExternalProductSlugs()),
   ]);
 }
 

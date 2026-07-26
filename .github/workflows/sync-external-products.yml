@@ -1,0 +1,36 @@
+name: Sync External Product Data
+
+# Refreshes public.external_products + public.external_product_history in
+# Supabase (see supabase/external_products.sql) for every row in
+# data/external-products.json. Unlike update-polygon-data.yml, this writes to
+# Supabase instead of committing a JSON file back to the repo -- there is
+# nothing to git-commit here, which is the point (see the note at the top of
+# scripts/sync-external-products.mjs).
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sync-external-products:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync to Supabase
+        run: node scripts/sync-external-products.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PORTALS_API_KEY: ${{ secrets.PORTALS_API_KEY }}
+          NODE_USE_ENV_PROXY: "1"

@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/constants";
 import { NETWORKS } from "@/lib/networks";
 import { LIVE_PLATFORM_SLUGS } from "@/lib/platforms";
 import { getPolygonVenues } from "@/lib/polygon-yield";
+import { getExternalProductSlugsFromRegistry, POLYGON_VENUE_OVERLAP } from "@/lib/external-products";
 
 export const dynamic = "force-static";
 
@@ -56,6 +57,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "daily" as const,
     priority: 0.7,
   }));
+
+  // Standalone /product/[slug] pages, excluding slugs that canonicalize back
+  // to an existing /polygon/[venue] page (see POLYGON_VENUE_OVERLAP) so the
+  // sitemap never lists two URLs for the same venue.
+  const externalProductPages = getExternalProductSlugsFromRegistry()
+    .filter((slug) => !(slug in POLYGON_VENUE_OVERLAP))
+    .map((slug) => ({
+      url: `${SITE_URL}/product/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.6,
+    }));
 
   return [
     {
@@ -128,6 +141,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...networkHubPages,
     ...platformHubPages,
     ...polygonVenuePages,
+    ...externalProductPages,
     ...vaultPages,
   ];
 }
