@@ -47,7 +47,7 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     token: "FXRP",
     icon: "FXRP",
     chain: "Flare",
-    desc: "XRP bridged onto Flare through the FAssets system. It is a 1:1, over-collateralized ERC-20 minted by independent agents who post collateral (roughly 1.3x) while the real XRP stays on the XRP Ledger, verified on-chain rather than held by one custodian. FXRP went live on Flare mainnet on 24 September 2025 and is the base asset behind nearly all Flare XRP yield.",
+    desc: "FXRP is a 1:1 over-collateralized ERC-20 representation of XRP on Flare, minted through the FAssets system by independent agents who post roughly 1.3x collateral while the underlying XRP remains on the XRP Ledger. FXRP backing is verified onchain rather than held by a single custodian. FXRP went live on Flare mainnet on 24 September 2025 and is the base asset behind nearly all Flare XRP yield.",
     address: "0xad552a648c74d49e10027ab8a618a3ad4901c5be",
     explorer: "https://flarescan.com/token/0xad552a648c74d49e10027ab8a618a3ad4901c5be",
     explorerName: "Flarescan",
@@ -56,7 +56,7 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     token: "stXRP",
     icon: "stXRP",
     chain: "Flare",
-    desc: "Firelight's liquid staking token, minted 1:1 from FXRP. Its yield is designed to come from DeFi insurance, where other protocols pay cover fees that flow back to stXRP holders, rather than from token inflation. Firelight was incubated by Sentora, and stXRP is used across SparkDEX and Spectra.",
+    desc: "stXRP is Firelight's liquid staking token on Flare, minted 1:1 from FXRP. stXRP yield is designed to come from DeFi insurance cover fees paid by other protocols rather than from token inflation. Firelight was incubated by Sentora, and stXRP is used across SparkDEX and Spectra.",
     address: "0x4c18ff3c89632c3dd62e796c0afa5c07c4c1b2b3",
     explorer: "https://flarescan.com/token/0x4c18ff3c89632c3dd62e796c0afa5c07c4c1b2b3",
     explorerName: "Flarescan",
@@ -65,7 +65,7 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     token: "cbXRP",
     icon: "cbXRP",
     chain: "Base",
-    desc: "Coinbase Wrapped XRP, an ERC-20 on Base backed 1:1 by XRP held in Coinbase custody, with published proof of reserves. It launched in June 2025 and is the XRP form used across Base venues like Aerodrome and Moonwell. Backing is custodial, so it rests on Coinbase rather than an on-chain collateral system.",
+    desc: "cbXRP is Coinbase Wrapped XRP, an ERC-20 on Base backed 1:1 by XRP held in Coinbase custody with published proof of reserves. cbXRP launched in June 2025 and is the XRP form used across Base venues including Aerodrome and Moonwell. cbXRP backing is custodial, so it rests on Coinbase rather than on an onchain collateral system.",
     address: "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
     explorer: "https://basescan.org/token/0xcb585250f852c6c6bf90434ab21a00f02833a4af",
     explorerName: "Basescan",
@@ -74,7 +74,7 @@ export const WRAPPED_TOKENS: WrappedToken[] = [
     token: "wXRP",
     icon: "wXRP",
     chain: "Solana",
-    desc: "Wrapped XRP on Solana, issued and custodied by Hex Trust and bridged through LayerZero, backed 1:1 by native XRP in segregated custody. It is the XRP form behind Solana pools on Raydium, Jupiter and elsewhere.",
+    desc: "wXRP is wrapped XRP on Solana, issued and custodied by Hex Trust and bridged through LayerZero, backed 1:1 by native XRP in segregated custody. wXRP is the XRP form behind Solana pools on Raydium, Jupiter and elsewhere. wXRP sits outside this report's Flare and Base scope.",
     address: "6UpQcMAb5xMzxc7ZfPaVMgx3KqsvKZdT5U718BzD5We2",
     explorer: "https://solscan.io/token/6UpQcMAb5xMzxc7ZfPaVMgx3KqsvKZdT5U718BzD5We2",
     explorerName: "Solscan",
@@ -138,7 +138,7 @@ export const VENUE_GROUPS: VenueGroup[] = [
         url: "https://sparkdex.ai/pool/v4/add",
         blurb: [
           "SparkDEX is the leading DEX on Flare, spanning concentrated-liquidity pools (v3.1 and a v4 built on Algebra) and a perps venue. The stXRP / FXRP pool pairs Firelight's staked XRP with wrapped XRP, so both legs track XRP and the pair stays tight.",
-          "LPs earn swap fees plus rFLR from Flare's emissions program, which vests over roughly 12 months. Because both sides are XRP-denominated, impermanent loss is limited compared with a pool against an unrelated asset. On the v4 app the two tokens are entered by hand into the add-liquidity form.",
+          "As of {ASOF}, LPs earned swap fees plus rFLR from Flare's emissions program, which vests over roughly 12 months. Because both sides are XRP-denominated, impermanent loss is limited compared with a pool against an unrelated asset. On the v4 app the two tokens are entered by hand into the add-liquidity form.",
         ],
         facts: [
           { label: "Yield source", value: "Swap fees plus rFLR emissions" },
@@ -158,7 +158,7 @@ export const VENUE_GROUPS: VenueGroup[] = [
         url: "https://app.mysticfinance.xyz/vault?vaultAddress=0x53184adabf312b490bf1ebcfdc896feff6019a14&chainId=14",
         blurb: [
           "Mystic Finance is the front end for Morpho-powered lending on Flare. Supplying FXRP into its Clearstar-curated vault mints csXRP, a share token that represents the deposited FXRP plus the interest it earns as the curator allocates it across Morpho markets.",
-          "The yield is borrow interest from those markets, net of a fee (documented at 5 to 20 percent of interest) split between Mystic and the curator. Because a curator actively moves the money, depositors rely on that allocation as well as the underlying contracts.",
+          "The yield is borrow interest from those markets, net of a fee documented at 5 to 20 percent of interest as of {ASOF}, split between Mystic and the curator. Because a curator actively moves the money, depositors rely on that allocation as well as the underlying contracts.",
         ],
         facts: [
           { label: "Yield source", value: "Borrow interest from Morpho lending markets" },
@@ -199,7 +199,7 @@ export const VENUE_GROUPS: VenueGroup[] = [
         url: "https://app.superform.xyz/vault/14_0x34f90dfa0f1b2f691ee3a3a87954f8d282193c16",
         blurb: [
           "Superform is a cross-chain yield marketplace. Its Flare vault, bizFXRP, is an institutional-grade strategy curated by Byzantine Labs that routes FXRP into Flare's XRP lending markets, tracked as an ERC-1155 SuperPosition.",
-          "The base yield is lending interest, actively reallocated by the curator. Superform layers its own Points program on top, roughly one point per $100 held per hour, with multipliers and NFT boosts.",
+          "The base yield is lending interest, actively reallocated by the curator. As of {ASOF}, Superform's Points program awarded roughly one point per $100 held per hour, with multipliers and NFT boosts.",
         ],
         facts: [
           { label: "Yield source", value: "Flare XRP lending interest" },
@@ -227,7 +227,7 @@ export const VENUE_GROUPS: VenueGroup[] = [
         assets: ["cbXRP", "cbBTC"],
         url: "https://aerodrome.finance/connect?to=%2Fdeposit%3Ftoken0%3D0xcb585250f852C6c6bf90434AB21A00f02833a4af%26token1%3D0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf%26type%3D100%26chain0%3D8453%26chain1%3D8453%26factory%3D0xf8f2eB4940CFE7d13603DDDD87f123820Fc061Ef",
         blurb: [
-          "Aerodrome is the main ve(3,3) DEX on Base, built by the Velodrome team. Its Slipstream pools are Uniswap v3 style concentrated liquidity, and XRP comes in as Coinbase Wrapped XRP.",
+          "Aerodrome is a ve(3,3) decentralized exchange on Base, built by the Velodrome team. Its Slipstream pools are Uniswap v3 style concentrated liquidity, and XRP comes in as Coinbase Wrapped XRP.",
           "The cbXRP / cbBTC and cbXRP / WETH pools pay swap fees plus AERO emissions that veAERO voters steer to each pool every week. Rates move with vote weight and campaigns, and concentrated liquidity carries impermanent loss if the two sides drift apart.",
         ],
         facts: [
