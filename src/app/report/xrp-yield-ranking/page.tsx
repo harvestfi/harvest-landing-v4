@@ -575,9 +575,13 @@ export default function XrpYieldRankingPage() {
     name: `${assetHead(p)} on ${p.platform}`,
     url: p.platformUrl ?? p.llamaUrl,
   }));
+  // Two levels only. "Report" was an intermediate crumb with no page of its
+  // own (there is no /report index), so breadcrumbSchema emitted a middle
+  // ListItem with a name and no `item` URL, which Google Search Console flags
+  // as an error. Home > XRP Yield Ranking is valid, and the visible breadcrumb
+  // below drops the same segment so the two stay in lockstep.
   const crumbs = [
     { name: SITE_NAME, url: SITE_URL },
-    { name: "Report" },
     { name: "XRP Yield Ranking", url: PAGE_URL },
   ];
 
@@ -2465,8 +2469,6 @@ function Crumbs() {
   return (
     <nav className="rp-crumbs" aria-label="Breadcrumb">
       <Link href="/">{SITE_NAME}</Link>
-      <span className="sep">/</span>
-      <span>Report</span>
       <span className="sep">/</span>
       <span>XRP Yield Ranking</span>
     </nav>
