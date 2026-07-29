@@ -465,7 +465,7 @@ const main = async () => {
 
   const out = {
     generatedAt: new Date().toISOString(),
-    source: "on-chain reads (Base + Flare) and the Spectra API",
+    source: "onchain reads (Base + Flare) and the Spectra API",
     stats: {
       venues: pools.length,
       rated: rated.length,

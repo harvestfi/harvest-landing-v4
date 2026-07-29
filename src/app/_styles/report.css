@@ -177,6 +177,34 @@
   margin: 0 0 14px;
 }
 .rp-article strong { color: var(--uni-ink); font-weight: 600; }
+/* Key-findings list. Sits under a section's prose lead: the lead serves a
+   classic featured snippet (40 to 60 words), the list gives an AI Overview a
+   clean set of self-contained rows to lift. Each item is a full sentence
+   carrying its own scope and date, so markers are subtle and line-height
+   matches body prose; these read as sentences, not as a scannable index. */
+.rp-keyfind {
+  margin: 0 0 16px;
+  padding: 0 0 0 20px;
+  list-style: none;
+}
+.rp-keyfind li {
+  position: relative;
+  font-size: 15.5px;
+  line-height: 1.72;
+  color: var(--uni-ink-2);
+  margin: 0 0 10px;
+}
+.rp-keyfind li::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--uni-accent, #ffb936);
+}
+.rp-keyfind li strong { color: var(--uni-ink); font-weight: 600; }
 .rp-callout {
   margin: 8px 0 4px;
   padding: 14px 18px;
