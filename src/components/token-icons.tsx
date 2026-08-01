@@ -57,11 +57,17 @@ interface IconProps {
   priority?: boolean;
 }
 
+// `decorative` sets alt="" and hides the icon from assistive tech. Use it
+// wherever the ticker is already printed next to the icon: otherwise the
+// accessible name and the visible label both say "XRP", which a screen reader
+// reads twice and a text extractor sees as a duplicated token.
+// Left off by default, because an icon standing alone does need a real alt.
 export function AssetIcon({
   asset,
   size = 22,
   priority = false,
-}: { asset: string } & IconProps) {
+  decorative = false,
+}: { asset: string; decorative?: boolean } & IconProps) {
   // Exact match first; then any unmapped XRP-family token (XRP, cbXRP, csXRP,
   // wXRP...) falls back to the generic XRP mark rather than a letter monogram.
   // Keeps the map open for exact per-token icons to be added later.
@@ -70,7 +76,8 @@ export function AssetIcon({
     return (
       <img
         src={icon.src}
-        alt={asset}
+        alt={decorative ? "" : asset}
+        aria-hidden={decorative || undefined}
         width={size}
         height={size}
         loading={priority ? "eager" : "lazy"}

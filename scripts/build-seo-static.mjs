@@ -118,6 +118,7 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 
 ## Reports
 
+- [XRP Rich List](${SITE_URL}/xrp-rich-list): the balance distribution of every funded XRP Ledger account, read by walking the ledger's own state tree rather than from an explorer's rich-list endpoint. Covers the largest accounts with named holders where a source can be shown, the minimum balance for each percentile tier (top 0.1%, 1%, 5%, 10%, 25%, 50%), accounts and XRP held per decade band, XRP supply including escrow and the amount destroyed by fees, and a client-side percentile calculator that needs no address. Machine-readable data (snapshot JSON + three CSVs) at ${SITE_URL}/data/xrp-rich-list/index.json.
 - [XRP Yield Ranking](${SITE_URL}/report/xrp-yield-ranking): every XRP-denominated DeFi yield source (XRP, FXRP, stXRP, cbXRP, wXRP) ranked by real 30-day rate. Covers lending, vaults, liquid staking, fixed-rate Spectra Principal Tokens and liquidity pools, split by single- vs dual-exposure, across Flare and Base. XRP has no native staking, so these are the real on-chain rates. Rates and TVL are measured onchain (Base and Flare) from each venue's own contracts, priced with onchain oracles, with the Spectra API for Spectra's own markets; no third-party yield aggregator is used. Refreshed hourly. Machine-readable data (per-product JSON + daily-rate CSV) at ${SITE_URL}/data/xrp-yield/index.json. All venues are third-party protocols, not Harvest products.
 
 ## Data

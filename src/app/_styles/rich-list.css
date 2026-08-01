@@ -1,0 +1,2040 @@
+/* /xrp-rich-list.
+   Layered on top of home.css + report.css, which supply the tokens
+   (--uni-ink, --uni-line, --uni-card, --uni-gold) and the page shell. Only
+   what the rich list adds lives here, under an rl- prefix so nothing collides
+   with the rp- report styles the page also loads.
+
+   Note the deliberate avoidance of report.css's flex `order` block, which keys
+   on [aria-labelledby="*-title"]. No section on this page is named *-title. */
+
+.uni-home-test.rl-page {
+  /* The column IS the reading measure now, so a paragraph fills it edge to
+     edge instead of stopping 300px short of the tables beside it. Artifacts
+     tables, charts and card grids share it exactly, so the page has one
+     margin and nothing overhangs the text. */
+  --uni-max: 880px;
+
+  /* The input and the button under it are one stacked pair, so they share a
+     height rather than each sizing itself off its own padding and type. */
+  --rl-control-h: 62px;
+  /* Body copy on this page ran grey enough to read as disabled text. The house
+     tokens are set for a hero on gold, where ink at 62% still has contrast to
+     spare; on the white sections that make up most of this page the same value
+     lands near 3:1. These are the same hues pulled darker, so the page keeps
+     its hierarchy and stops looking washed out. */
+  --uni-ink-2: #262521;
+  --uni-ink-3: #4b4944;
+  --rl-dim: color-mix(in srgb, var(--uni-ink) 82%, transparent);
+  --rl-hair: var(--uni-line, #dddee0);
+}
+
+/* ---- one margin ---------------------------------------------------------
+   Tables, charts and card grids share the paragraph's column exactly. They
+   used to overhang it to the right, which bought the ranking some width and
+   cost the page its single edge: artifacts visibly stuck out past the text.
+   Nothing overhangs now. The ranking is the only table that struggles for
+   room at this measure, and it scrolls inside its own frame rather than
+   pushing the layout around. */
+
+/* ---- headings ----------------------------------------------------------
+   report.css sets section headings at 35px in --rp-heading, a navy carried
+   over from the yield report. On this page they read as grey next to the
+   near-black H1, and 35px over a 16.5px paragraph is a bigger step than the
+   page needs now that the column is narrower. */
+.uni-home-test.rp-page.rl-page .uni-home-content > h2,
+.uni-home-test.rp-page.rl-page .uni-home-content h2 {
+  font-size: 28px;
+  line-height: 1.22;
+  font-weight: 650;
+  letter-spacing: -0.018em;
+  color: var(--uni-ink);
+  margin: 0 0 14px;
+}
+.uni-home-test.rp-page.rl-page .uni-home-content h3 { color: var(--uni-ink); }
+
+/* ---- section rhythm ----------------------------------------------------
+   The report's sections sit inside .rp-doc-main, which gives every one of them
+   `padding: 26px 0` (report.css:843). This page's sections are direct children
+   of the shell and inherited none of it, so a table, a chart, a caption and a
+   second table ran together with nothing between them. Sections here get more
+   than the report's, because each one now carries a lead, an artifact and a
+   note rather than prose alone. */
+.uni-home-test .rl-section { padding: 40px 0 36px; }
+.uni-home-test .rl-section + .rl-section {
+  border-top: 1px solid color-mix(in srgb, var(--rl-hair) 70%, transparent);
+}
+.uni-home-test .rl-page-section { padding: 40px 0 36px; }
+
+/* ---- one paragraph style -----------------------------------------------
+   Every paragraph of prose on this page is set the same way: the FAQ answer's
+   treatment, applied everywhere. Before this the page carried five sizes for
+   the same job (a 19px lead, a 15.5px section lead-in, a 15px note, a 16px
+   pull quote, a 17.5px calculator lead), which read as five kinds of text
+   rather than one voice.
+
+   Enumerated rather than written as `.uni-home-content p`, because that would
+   also catch the chart card's description, the filter readout and the
+   checklist items, which are interface labels rather than prose. */
+/* home.css clips the shell horizontally. The wide artifacts deliberately
+   overhang it, so on this page it must not. They are capped against the
+   viewport, so nothing can cause a horizontal scrollbar. */
+/* ---- palette ------------------------------------------------------------
+   This page used to pin itself light in both directions, which fixed one bug
+   and created another: report.css and home.css flip their tokens to near-white
+   under a dark preference, and every surface here is light by construction, so
+   a dark-preference visitor was reading #f1f2f7 headings on white. Pinning
+   stopped that, and also made the site's own theme toggle do nothing here.
+
+   So it follows the house pattern instead, the one report.css already uses:
+   the media query is the pre-hydration default and [data-theme] is
+   authoritative in both directions. A blocking script in layout.tsx stamps
+   data-theme from the OS preference before first paint, so the attribute is
+   always present and the light override below always wins when it should.
+
+   The surfaces themselves are tokenised further down rather than hardcoded, so
+   the frames, cards and badges follow the theme instead of staying white. */
+.uni-home-test.rl-page {
+  --rl-surface: #ffffff;
+  --rl-surface-2: #f1f5f4;
+  --rl-badge-bg: #ffffff;
+  --rl-avatar-ring: #ffffff;
+}
+:root[data-theme="light"] .uni-home-test.rl-page {
+  --rp-heading: #191717;
+  --rp-body: #4b4944;
+  --rp-link: #191717;
+  --rp-link-underline: rgba(25, 23, 23, 0.32);
+  --rp-eyebrow: #b07d10;
+  --rp-toc-top: #191717;
+  --rp-toc-sub: #4b4944;
+  --rp-toc-rail: rgba(10, 10, 17, 0.08);
+  --uni-ink: #191717;
+  --uni-ink-2: #262521;
+  --uni-ink-3: #4b4944;
+  --uni-line: #dddee0;
+  --uni-bg: #ffffff;
+  --uni-card: #f1f5f4;
+  --uni-card-2: #ffffff;
+  --rl-surface: #ffffff;
+  --rl-surface-2: #f1f5f4;
+  --rl-badge-bg: #ffffff;
+  --rl-avatar-ring: #ffffff;
+}
+/* Dark. Warm rather than blue-grey, to sit under the gold the calculator and
+   the header image bring with them. */
+:root[data-theme="dark"] .uni-home-test.rl-page,
+:root[data-theme="dark"] .uni-home-test.rl-page.rp-page {
+  --rp-heading: #f4f2ee;
+  --rp-body: #c3c0b8;
+  --rp-link: #f4f2ee;
+  --rp-link-underline: rgba(244, 242, 238, 0.34);
+  --rp-eyebrow: #ffb936;
+  --rp-toc-top: #f4f2ee;
+  --rp-toc-sub: #c3c0b8;
+  --rp-toc-rail: rgba(255, 255, 255, 0.1);
+  --uni-ink: #f4f2ee;
+  --uni-ink-2: #e2dfd8;
+  --uni-ink-3: #c3c0b8;
+  --uni-line: #35332f;
+  --uni-bg: #131211;
+  --uni-card: #1c1a18;
+  --uni-card-2: #1c1a18;
+  --rl-hair: #35332f;
+  --rl-surface: #1a1816;
+  --rl-surface-2: #221f1c;
+  --rl-badge-bg: #201d1a;
+  --rl-avatar-ring: #201d1a;
+}
+@media (prefers-color-scheme: dark) {
+  .uni-home-test.rl-page {
+    --rp-heading: #f4f2ee;
+    --rp-body: #c3c0b8;
+    --rp-link: #f4f2ee;
+    --rp-link-underline: rgba(244, 242, 238, 0.34);
+    --rp-eyebrow: #ffb936;
+    --rp-toc-top: #f4f2ee;
+    --rp-toc-sub: #c3c0b8;
+    --rp-toc-rail: rgba(255, 255, 255, 0.1);
+    --uni-ink: #f4f2ee;
+    --uni-ink-2: #e2dfd8;
+    --uni-ink-3: #c3c0b8;
+    --uni-line: #35332f;
+    --uni-bg: #131211;
+    --uni-card: #1c1a18;
+    --uni-card-2: #1c1a18;
+    --rl-hair: #35332f;
+    --rl-surface: #1a1816;
+    --rl-surface-2: #221f1c;
+    --rl-badge-bg: #201d1a;
+    --rl-avatar-ring: #201d1a;
+  }
+}
+
+.uni-home-test.rl-page { overflow-x: visible; }
+
+/* ---- box clearance ------------------------------------------------------
+   Every boxed artifact carried a top margin and no bottom one, so the
+   paragraph after it sat flush against the border. A box needs air on both
+   sides or it reads as part of the sentence under it. */
+.uni-home-test.rl-page .rl-stats,
+.uni-home-test.rl-page .rl-breakdown,
+.uni-home-test.rl-page .rl-dtable-wrap,
+.uni-home-test.rl-page .rl-chart-card,
+.uni-home-test.rl-page .rl-rank-box,
+.uni-home-test.rl-page .rl-highlight,
+.uni-home-test.rl-page .rl-figure,
+.uni-home-test.rl-page .rl-feature-card {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+/* A note annotates the box above it, but "annotates" is not "touches". It
+   still needs a clear gap, just a smaller one than a new paragraph gets.
+   Sibling margins collapse to the larger of the two, so this is the floor
+   rather than an addition to the box's own bottom margin. */
+/* Notes are annotation, not body copy: smaller and lighter than a paragraph,
+   so a stack of them under a table reads as fine print rather than as more
+   article to get through. Prefixed with all three page classes because
+   `.uni-home-test .uni-home-content p` carries an element and outranks a
+   two-class rule, which is what had them rendering at full 16px body size. */
+.uni-home-test.rp-page.rl-page .rl-note {
+  margin-top: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--uni-ink) 60%, transparent);
+  max-width: none;
+}
+.uni-home-test.rp-page.rl-page .rl-note + .rl-note { margin-top: 10px; }
+
+
+.uni-home-test.rp-page.rl-page .rp-lead,
+.uni-home-test.rp-page.rl-page .rl-section-intro,
+.uni-home-test.rp-page.rl-page .rl-highlight,
+.uni-home-test.rp-page.rl-page .rl-calc-pitch-sub,
+.uni-home-test.rp-page.rl-page .rl-faq-desc,
+.uni-home-test.rp-page.rl-page .rl-faq-a,
+.uni-home-test.rp-page.rl-page .rp-article p,
+.uni-home-test.rp-page.rl-page .rp-source-note,
+.uni-home-test.rp-page.rl-page .rl-bridge p,
+.uni-home-test.rp-page.rl-page .rl-method dd {
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--uni-ink-3);
+  max-width: none;
+}
+/* Bold inside a paragraph stays at full ink. The FAQ answers carry no bold,
+   so the reference does not settle this; muted bold on muted body would make
+   the emphasis invisible, which is the one thing bold exists to do. */
+.uni-home-test.rp-page.rl-page .rp-lead strong,
+.uni-home-test.rp-page.rl-page .rl-section-intro strong,
+.uni-home-test.rp-page.rl-page .rl-note strong,
+.uni-home-test.rp-page.rl-page .rl-highlight strong,
+.uni-home-test.rp-page.rl-page .rp-article p strong,
+.uni-home-test.rp-page.rl-page .rl-bridge p strong {
+  color: var(--uni-ink);
+}
+
+.uni-home-test .rl-section-intro { margin: 12px 0 0; }
+.uni-home-test .rl-note { margin: 22px 0 0; }
+
+/* home.css caps .uni-home-hero-inner at 60% because the homepage hero floats a
+   preview card in the space to its right. Neither hero band here does, so the
+   cap just leaves 40% of a full-width gold panel empty. */
+.uni-home-test.rl-page .uni-home-hero-inner { max-width: 100%; }
+
+/* ---- intro: an article opener ------------------------------------------
+   No gold band. The calculator below it is the page's one gold surface, and
+   two of them stacked left the H1 competing with the tool for the same
+   emphasis. Headline, dateline, featured image, summary, in one column. */
+
+.uni-home-test .rl-intro {
+  padding: 8px 0 44px;
+}
+/* Full width and unwrapped. home.css caps .uni-home-h1 at 26ch for the
+   homepage headline, which is a sentence; this one is a title and reads as a
+   title only on one line. */
+.uni-home-test .rl-h1 {
+  margin: 0 0 8px;
+  max-width: none;
+  white-space: nowrap;
+}
+
+/* The freshness stamp, set as an article dateline rather than as a pill. The
+   claim is the same either way; the badge treatment gave a routine line the
+   visual weight of a status indicator. */
+.uni-home-test .rl-dateline {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 21px;
+  color: var(--uni-ink-3);
+}
+@media (max-width: 560px) {
+  .uni-home-test .rl-h1 { white-space: normal; }
+}
+
+/* The featured image. Aspect ratio matches the file's own 1200x671 so the
+   reserved box is exactly what the image fills, which means no letterboxing
+   and no crop, and nothing under it moves when the file finishes loading. */
+/* Provenance for the header composite. Smaller and quieter than a note: it
+   is there to be findable rather than read, and it must not compete with the
+   summary directly under it. */
+.uni-home-test.rp-page.rl-page .rl-figure-credit {
+  margin: 8px 0 0;
+  max-width: none;
+  font-size: 11.5px;
+  line-height: 16px;
+  color: color-mix(in srgb, var(--uni-ink) 52%, transparent);
+}
+
+.uni-home-test .rl-figure {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1200 / 671;
+  object-fit: cover;
+  margin: 26px 0 0;
+  border-radius: var(--uni-radius, 20px);
+}
+
+.uni-home-test .rl-summary-h {
+  margin: 34px 0 0;
+  font-family: var(--display);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--uni-ink);
+}
+
+/* The summary bullets. Gold markers, because the summary is the block most
+   likely to be read and nothing else, so it carries the page's accent rather
+   than the neutral square the other lists use. */
+.uni-home-test .rl-keyfind {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 13px;
+  max-width: none;
+}
+.uni-home-test .rl-keyfind li {
+  position: relative;
+  padding-left: 24px;
+  font-size: 16.5px;
+  line-height: 26px;
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-keyfind li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--uni-gold, #ffb936);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--uni-gold, #ffb936) 22%, transparent);
+}
+
+/* ---- calculator: the shadcn "feature" layout ---------------------------
+   One bordered, rounded card holding a two-column grid: eyebrow badge,
+   heading, lead and a checklist on the left, the artifact on the right. That
+   is the reference component's shape, with the calculator standing in for its
+   empty muted square.
+
+   Written against this repo's tokens rather than pasted in. The reference is
+   Tailwind + shadcn, and while Tailwind v4 is installed here (globals.css:1)
+   shadcn is not: there is no components.json, no components/ui, no cn(), and
+   none of `border`, `bg-muted`, `text-muted-foreground` or `text-primary`
+   resolve, because those are shadcn theme variables this project never
+   defined. Pasting the component would have meant adding shadcn plus
+   class-variance-authority, clsx, tailwind-merge and lucide-react, and then
+   maintaining a second set of colour tokens beside --uni-*, for one section.
+   The layout is what was worth taking; it is reproduced exactly. */
+
+.uni-home-test .rl-feature { padding: 7px 0 5px; }
+/* The air around the calculator is set by its neighbours, not by itself: the
+   section above ends on 44px of padding and the one below opens on 40px, so
+   .rl-feature's own padding was twelve of the eighty-four pixels above the
+   card. Halved where it actually comes from. */
+.uni-home-test.rl-page section:has(+ .rl-feature) { padding-bottom: 4px; }
+.uni-home-test.rl-page .rl-feature + section { padding-top: 4px; }
+
+.uni-home-test .rl-feature-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  /* stretch, not center: the copy column and the calculator card are always
+     the same height, whichever of the two is taller. */
+  align-items: stretch;
+  padding: 32px;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius, 20px);
+  /* The same ink raster the hero and the calculator use, at a third of their
+     opacity: enough to read as a surface rather than as blank card. */
+  background-image: radial-gradient(circle, rgba(25, 23, 23, 0.025) 1px, transparent 1.3px);
+  background-size: 12px 12px;
+}
+/* The card stacks: pitch on top, calculator full width underneath. Beside
+   each other the form was a column of a sidebar, and the two-column split it
+   really wants is inside the calculator rather than around it. */
+@media (min-width: 1024px) {
+  .uni-home-test .rl-feature-card { gap: 26px; }
+  .uni-home-test .rl-calc { padding: 26px; }
+  .uni-home-test .rl-calc-input { font-size: 19px; }
+  .uni-home-test.rl-page { --rl-control-h: 54px; }
+  .uni-home-test .rl-calc-rank { font-size: 21px; line-height: 27px; }
+}
+@media (max-width: 640px) {
+  .uni-home-test .rl-feature-card { padding: 22px 18px; gap: 26px; }
+}
+
+/* The column still stretches to the calculator's height, but its content is
+   centred in that height rather than pushed to the ends. space-between put a
+   hundred-odd pixels between the lead and the checklist, which read as a
+   missing element rather than as spacing. */
+.uni-home-test .rl-feature-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.uni-home-test .rl-feature-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The outline badge. Same shape as the reference's Badge variant="outline":
+   pill, hairline border, small semibold type. The asset mark sits inside it,
+   sized to the badge's own line box, so the pill keeps its height and the
+   left padding tightens to sit flush around a round icon. */
+.uni-home-test .rl-eyebrow-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius-pill, 999px);
+  padding: 3px 12px 3px 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-eyebrow-badge img,
+.uni-home-test .rl-eyebrow-badge svg {
+  flex: none;
+  border-radius: 50%;
+  display: block;
+}
+
+.uni-home-test .rl-calc-title {
+  margin: 0;
+  max-width: none;
+  font-family: var(--display);
+  font-size: clamp(28px, 3.2vw, 44px);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.022em;
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-calc-pitch-sub { margin: 0; }
+
+/* The checklist. One column, because the calculator already owns the other
+   half of the card; the reference goes three-across only when its right
+   column is absent. */
+.uni-home-test .rl-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 22px;
+}
+/* Full width now, so the checklist runs across instead of down a column. */
+@media (min-width: 640px) {
+  .uni-home-test .rl-checklist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 18px 32px;
+  }
+}
+.uni-home-test .rl-checklist li {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: flex-start;
+}
+.uni-home-test .rl-check {
+  flex: none;
+  margin-top: 5px;
+  color: var(--uni-gold, #ffb936);
+}
+.uni-home-test .rl-checklist p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 23px;
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-checklist .rl-checklist-sub {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--uni-ink-3);
+}
+
+/* ---- calculator ------------------------------------------------------- */
+
+/* Input on the left, result on the right. Stacked, a result pushed the whole
+   card taller and the field it came from scrolled off the top, so the number
+   a visitor asked for arrived where they were no longer looking. */
+.uni-home-test .rl-calc-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+/* A grid item will not shrink below its min-content width by default, and the
+   number field carries a browser default around 20 characters. That put the
+   input pane 10px past the viewport on a 390px screen. */
+.uni-home-test .rl-calc-panes > * { min-width: 0; }
+.uni-home-test .rl-calc-input { min-width: 0; }
+@media (min-width: 900px) {
+  .uni-home-test .rl-calc-panes {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 34px;
+    align-items: start;
+  }
+  .uni-home-test .rl-calc-res {
+    border-left: 1px solid rgba(25, 23, 23, 0.16);
+    padding-left: 34px;
+    min-height: 168px;
+  }
+}
+/* The resting line holds the right pane open so a result lands in a place the
+   eye already knows. It has no job in the stacked layout, where an empty
+   panel is just a gap. */
+.uni-home-test .rl-calc-rest {
+  display: none;
+  margin: 0;
+  font-size: 14px;
+  line-height: 21px;
+  color: color-mix(in srgb, var(--uni-ink) 62%, transparent);
+}
+@media (min-width: 900px) {
+  .uni-home-test .rl-calc-rest { display: block; }
+}
+
+/* The same three layers as .uni-home-hero (home.css:71): a warm radial glow
+   in the top right, the ink dot raster, and the flat gold under both. The
+   calculator is the one thing on this page a visitor is meant to touch, and
+   on white it read as another card among cards. */
+.uni-home-test .rl-calc {
+  background-color: var(--uni-gold, #ffb936);
+  background-image:
+    radial-gradient(
+      circle at 88% 18%,
+      rgba(255, 145, 30, 0.42) 0%,
+      rgba(255, 185, 54, 0) 55%
+    ),
+    radial-gradient(circle, rgba(25, 23, 23, 0.07) 1px, transparent 1.3px);
+  background-size: auto, 12px 12px;
+  background-position: 0 0, 0 0;
+  background-repeat: no-repeat, repeat;
+  border: 1px solid color-mix(in srgb, var(--uni-ink) 12%, transparent);
+  box-shadow: 0 6px 24px rgba(25, 23, 23, 0.10);
+  border-radius: var(--uni-radius, 20px);
+  padding: 26px 26px 24px;
+}
+
+/* On gold, the fields need to be the light surface rather than take one. */
+.uni-home-test .rl-calc .rl-calc-field {
+  background: var(--uni-bg, #fff);
+  border-color: color-mix(in srgb, var(--uni-ink) 14%, transparent);
+}
+.uni-home-test .rl-calc .rl-calc-field:focus-within {
+  border-color: var(--uni-ink);
+}
+/* --rl-dim is ink at 82%, which is fine on white and muddy on gold. The
+   secondary text inside the calculator goes to solid ink at reduced weight. */
+.uni-home-test .rl-calc .rl-calc-h,
+.uni-home-test .rl-calc .rl-calc-label,
+.uni-home-test .rl-calc .rl-calc-idle,
+.uni-home-test .rl-calc .rl-calc-privacy,
+.uni-home-test .rl-calc .rl-calc-facts li {
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-calc .rl-calc-out {
+  border-top-color: color-mix(in srgb, var(--uni-ink) 16%, transparent);
+}
+/* The padlock and the result bullets were gold, which is invisible now. */
+.uni-home-test .rl-calc .rl-lock { color: var(--uni-ink); }
+.uni-home-test .rl-calc .rl-calc-facts li::before { background: var(--uni-ink); }
+.uni-home-test .rl-calc .rl-check-bar {
+  background: color-mix(in srgb, var(--uni-ink) 14%, transparent);
+}
+.uni-home-test .rl-calc .rl-check-bar span { background: var(--uni-ink); }
+.uni-home-test .rl-calc .rl-check-stages li { color: color-mix(in srgb, var(--uni-ink) 72%, transparent); }
+.uni-home-test .rl-calc .rl-check-stages li.is-on { color: var(--uni-ink); }
+.uni-home-test .rl-calc .rl-check-stages li.is-on::before {
+  background: var(--uni-ink);
+  border-color: var(--uni-ink);
+}
+.uni-home-test .rl-calc .rl-calc-share {
+  background: var(--uni-bg, #fff);
+  border-color: color-mix(in srgb, var(--uni-ink) 16%, transparent);
+}
+
+.uni-home-test .rl-calc-h {
+  margin: 0 0 18px;
+  font-size: 16.5px;
+  line-height: 23px;
+  font-weight: 700;
+  max-width: 34ch;
+}
+
+.uni-home-test .rl-calc-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rl-dim);
+  margin-bottom: 7px;
+}
+
+.uni-home-test .rl-calc-field {
+  display: flex;
+  align-items: center;
+  min-height: var(--rl-control-h);
+  gap: 8px;
+  background: var(--uni-card, #f1f5f4);
+  border: 1.5px solid var(--rl-hair);
+  border-radius: var(--uni-radius-sm, 14px);
+  padding: 0 14px;
+  transition: border-color 0.15s ease;
+}
+.uni-home-test .rl-calc-field:focus-within {
+  border-color: var(--uni-gold, #ffb936);
+}
+.uni-home-test .rl-calc-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  /* No vertical padding: the field's height comes from --rl-control-h alone,
+     so it and the button underneath cannot drift apart. */
+  padding: 0;
+  line-height: 1.3;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--uni-ink);
+  font-variant-numeric: tabular-nums;
+}
+.uni-home-test .rl-calc-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--rl-dim);
+  flex: none;
+}
+.uni-home-test .rl-calc-unit img,
+.uni-home-test .rl-calc-unit svg {
+  flex: none;
+  border-radius: 50%;
+  display: block;
+}
+
+/* The privacy notice is the single most load-bearing sentence in the form: a
+   balance field on a page about the largest holders looks like phishing until
+   this line is read. The padlock is there to get it read. */
+.uni-home-test .rl-calc-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .rl-lock {
+  flex: none;
+  margin-top: 2px;
+  color: var(--uni-gold, #ffb936);
+}
+
+/* Empty at idle, so it takes no height and draws no divider: the card ends at
+   the privacy notice until a check has something to show. :empty is exact
+   here because React renders no whitespace when the branch returns null. */
+.uni-home-test .rl-calc-out {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rl-hair);
+}
+.uni-home-test .rl-calc-out:empty {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Expanding rather than appearing. The result is the payoff for a three
+   second wait, and a block that pops in full-height reads as a page jump. */
+.uni-home-test .rl-calc-out:not(:empty) {
+  animation: rl-expand 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes rl-expand {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-home-test .rl-calc-out:not(:empty) { animation: none; }
+}
+.uni-home-test .rl-calc-rank {
+  margin: 0 0 8px;
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 780;
+  letter-spacing: -0.01em;
+}
+.uni-home-test .rl-calc-detail {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 21px;
+}
+.rl-calc-dim { color: var(--rl-dim); }
+
+/* The two counts either side of the entered balance. Split out of the detail
+   paragraph because "how many are above me" and "how many are below me" are
+   the two things a reader came for, and both were buried mid-sentence. */
+.uni-home-test .rl-calc-facts {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+.uni-home-test .rl-calc-facts li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .rl-calc-facts li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--uni-gold, #ffb936);
+}
+.uni-home-test .rl-calc-facts strong { color: var(--uni-ink); }
+
+.uni-home-test .rl-calc-share {
+  margin-top: 12px;
+  border: 1px solid var(--rl-hair);
+  background: var(--uni-bg, #fff);
+  border-radius: var(--uni-radius-pill, 999px);
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--uni-ink);
+  cursor: pointer;
+}
+.rl-calc-share:hover { border-color: var(--uni-ink); }
+
+/* Primary action. The result is gated behind it deliberately: a rank that
+   appears while the user is still typing reads as a guess. */
+/* Sized and shaped to the input above it: same height, same corner radius,
+   same full width. The two read as one control the eye moves straight down. */
+.uni-home-test .rl-calc-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--rl-control-h);
+  margin-top: 10px;
+  border: 0;
+  border-radius: var(--uni-radius-sm, 14px);
+  background: var(--uni-ink);
+  color: var(--uni-bg, #fff);
+  padding: 0 20px;
+  font: inherit;
+  font-size: 16.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+/* Never dimmed. A greyed-out primary action on the one control this page
+   exists for reads as broken, and the button has something useful to do at
+   every moment: with no balance typed it puts the cursor in the field. */
+.uni-home-test .rl-calc-go {
+  box-shadow: 0 4px 14px rgba(25, 23, 23, 0.22);
+}
+.uni-home-test .rl-calc-go:hover { opacity: 0.9; }
+.uni-home-test .rl-calc-go:active { transform: translateY(1px); }
+.uni-home-test .rl-calc-go[aria-disabled="true"] { cursor: default; }
+
+.uni-home-test .rl-check-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rl-hair) 80%, transparent);
+  overflow: hidden;
+}
+.uni-home-test .rl-check-bar span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--uni-gold, #ffb936);
+  transform-origin: left center;
+  animation: rl-fill linear forwards;
+}
+@keyframes rl-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+/* Reduced motion still needs the wait to be legible, so the bar stops moving
+   and the stage list carries the progress on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .uni-home-test .rl-check-bar span { animation: none; transform: scaleX(1); opacity: 0.35; }
+}
+
+.uni-home-test .rl-check-stages {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+.uni-home-test .rl-check-stages li {
+  font-size: 13.5px;
+  line-height: 19px;
+  color: var(--rl-dim);
+  padding-left: 20px;
+  position: relative;
+  transition: color 0.2s ease;
+}
+.uni-home-test .rl-check-stages li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+}
+.uni-home-test .rl-check-stages li.is-on {
+  color: var(--uni-ink);
+  font-weight: 600;
+}
+.uni-home-test .rl-check-stages li.is-on::before {
+  background: var(--uni-gold, #ffb936);
+  border-color: var(--uni-gold, #ffb936);
+}
+
+/* ---- tables ----------------------------------------------------------- */
+
+/* The reference's framed variant: the table sits in a rounded, bordered box
+   with the corners clipped, rather than floating on the page. */
+.uni-home-test .rl-dtable-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 30px 0 0;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius, 20px);
+}
+.uni-home-test .rl-dtable-wrap .rl-dtable { margin: 0; }
+.uni-home-test .rl-dtable th:first-child,
+.uni-home-test .rl-dtable td:first-child { padding-left: 20px; }
+.uni-home-test .rl-dtable th:last-child,
+.uni-home-test .rl-dtable td:last-child { padding-right: 20px; }
+/* The caption is outside the frame, under it, as caption-bottom implies. */
+.uni-home-test .rl-dtable-cap { caption-side: bottom; padding: 12px 20px 14px; }
+
+.uni-home-test .rl-dtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+  line-height: 20px;
+}
+.uni-home-test .rl-dtable-cap {
+  caption-side: top;
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--rl-dim);
+  padding-bottom: 10px;
+}
+/* Header labels are muted and normal weight, which is the reference table's
+   signature: the column names step back and the figures carry the row. */
+.uni-home-test .rl-dtable thead th {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--uni-ink-3);
+  height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--uni-line, #dddee0);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: var(--uni-bg, #fff);
+}
+.uni-home-test .rl-dtable tbody th {
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.uni-home-test .rl-dtable tbody th,
+.uni-home-test .rl-dtable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--uni-line, #dddee0) 55%, transparent);
+  vertical-align: middle;
+}
+.uni-home-test .rl-dtable tbody tr { transition: background-color 0.12s ease; }
+.uni-home-test .rl-dtable tbody tr:hover { background: rgba(255, 185, 54, 0.08); }
+.uni-home-test .rl-dtable tbody tr:last-child th,
+.rl-dtable tbody tr:last-child td { border-bottom: 0; }
+
+.uni-home-test .rl-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rl-dtable thead th:not(:first-child) { text-align: right; }
+/* The headers were right-aligned and the figures under them were not, so
+   every column read as two columns. Guarded above the phone breakpoint,
+   where the table stops being a grid and becomes label-and-value rows. */
+@media (min-width: 641px) {
+  .uni-home-test .rl-dtable tbody td {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.uni-home-test .rl-addr {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  word-break: break-all;
+}
+.rl-dim { color: var(--rl-dim); }
+
+.rl-tiers tbody th { font-size: 15px; }
+
+/* ---- FAQ ---------------------------------------------------------------
+   The faq3 layout: a centred header over a narrower accordion column, items
+   divided by a hairline, the question at reading size with a chevron that
+   turns on open, and the answer in muted type under it. */
+.uni-home-test .rl-faq-section { padding: 64px 0 56px; }
+.uni-home-test .rl-faq-head { max-width: none; margin: 0 0 40px; }
+@media (min-width: 768px) {
+  .uni-home-test .rl-faq-head { text-align: center; }
+  /* The shared 72ch cap would pin the description to the left of the centred
+     header block, so it centres itself inside it. */
+  .uni-home-test.rp-page.rl-page .rl-faq-desc { margin-left: auto; margin-right: auto; }
+}
+.uni-home-test .rl-faq-desc { margin: 12px 0 0; }
+
+.uni-home-test .rl-faq { width: 100%; }
+.uni-home-test .rl-faq-item { border-bottom: 1px solid var(--uni-line, #dddee0); }
+
+.uni-home-test .rl-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  padding: 20px 0;
+  font-size: 17.5px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  cursor: pointer;
+  list-style: none;
+  transition: opacity 0.2s ease;
+}
+/* The default disclosure triangle would sit beside the chevron. */
+.uni-home-test .rl-faq-q::-webkit-details-marker { display: none; }
+.uni-home-test .rl-faq-q::marker { content: ""; }
+.uni-home-test .rl-faq-q:hover { opacity: 0.6; }
+.uni-home-test .rl-faq-chev {
+  flex: none;
+  color: var(--uni-ink-3);
+  transition: transform 0.2s ease;
+}
+.uni-home-test .rl-faq-item[open] .rl-faq-chev { transform: rotate(180deg); }
+
+.uni-home-test .rl-faq-a { margin: 0; padding: 0 0 22px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .uni-home-test .rl-faq-chev,
+  .uni-home-test .rl-faq-q { transition: none; }
+}
+@media (max-width: 640px) {
+  .uni-home-test .rl-faq-section { padding: 44px 0 40px; }
+  .uni-home-test .rl-faq-head { margin-bottom: 30px; }
+  .uni-home-test .rl-faq-q { font-size: 16px; line-height: 23px; padding: 17px 0; }
+  .uni-home-test .rl-faq-a { padding-bottom: 18px; }
+}
+
+/* ---- chart card --------------------------------------------------------
+   The shadcn chart shape: a bordered, rounded card with a header carrying the
+   title and a one-line description, the plot in the body, hairline grid, and
+   axis type small and muted. Written against --uni-* rather than pulling in
+   shadcn and recharts for one figure. */
+.uni-home-test .rl-chart-card {
+  margin: 30px 0 0;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius, 20px);
+  overflow: hidden;
+}
+.uni-home-test .rl-chart-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--uni-line, #dddee0);
+}
+.uni-home-test .rl-chart-card-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-chart-card-desc {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  line-height: 19px;
+  color: var(--uni-ink-3);
+}
+.uni-home-test .rl-chart-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--uni-ink-2);
+  white-space: nowrap;
+}
+.uni-home-test .rl-chart-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--uni-gold, #ffb936);
+  flex: none;
+}
+.uni-home-test .rl-chart-card-body { padding: 22px 22px 20px; }
+@media (max-width: 640px) {
+  .uni-home-test .rl-chart-card-head { padding: 14px 16px; }
+  .uni-home-test .rl-chart-card-body { padding: 14px 16px 4px; }
+}
+
+/* Hairlines, at roughly half the border colour, which is what the shadcn
+   chart container strokes its cartesian grid at. */
+.uni-home-test .rl-chart-grid {
+  stroke: color-mix(in srgb, var(--uni-line, #dddee0) 60%, transparent);
+  stroke-width: 1;
+}
+
+/* ---- chart ------------------------------------------------------------ */
+
+.rl-chart-fig { margin: 0; }
+.rl-chart { display: block; width: 100%; height: auto; }
+.rl-chart-bar { fill: var(--uni-gold, #ffb936); }
+/* Sized in viewBox units. The chart is 720 wide and renders to roughly 930px
+   of column, a factor of about 1.29, so 12.5 units lands at the 16px the
+   report uses for body copy and 10 units at the 13px it uses for fine print. */
+.uni-home-test .rl-chart-val {
+  font-size: 12.5px;
+  font-weight: 700;
+  fill: var(--uni-ink);
+  font-variant-numeric: tabular-nums;
+}
+.uni-home-test .rl-chart-tick {
+  font-size: 12.5px;
+  fill: var(--uni-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+/* Needs the same prefix as .rl-chart-tick or it loses on specificity and the
+   second row draws at full size, which is what made "smaller line" false. */
+.uni-home-test .rl-chart-tick-dim { font-size: 10px; fill: var(--uni-ink-3); }
+.uni-home-test .rl-chart-axis-title {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--uni-ink);
+  letter-spacing: 0.01em;
+}
+.uni-home-test .rl-chart-axis-sub {
+  font-size: 10.5px;
+  fill: var(--uni-ink-3);
+}
+.rl-chart-axis { stroke: var(--rl-hair); stroke-width: 1; }
+/* The figure's own caption sits inside the card, under the plot, divided
+   from it rather than resting on the axis labels. */
+.uni-home-test .rl-chart-cap {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--uni-line, #dddee0) 60%, transparent);
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--uni-ink-3);
+}
+
+/* ---- yield sources -----------------------------------------------------
+   The draggable-priority-list row: a mono rank in a divided left rail, title
+   and meta in the body, rounded and bordered, lit on hover. The drag handle
+   and the reorder behaviour are left out on purpose; these are four kinds of
+   venue rather than a list a reader ranks, and an affordance that cannot be
+   used is worse than none. */
+/* Nested inside the bridge panel, so it takes that panel's padding rather
+   than the page margin. Its own clearance is set here instead of in the
+   shared box rule, which would have measured against the wrong edge. */
+.uni-home-test .rl-sources {
+  list-style: none;
+  margin: 24px 0 30px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.uni-home-test .rl-source {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius-sm, 14px);
+  background: var(--uni-bg, #fff);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.uni-home-test .rl-source:hover {
+  background: rgba(255, 185, 54, 0.10);
+  border-color: color-mix(in srgb, var(--uni-gold, #ffb936) 60%, transparent);
+}
+/* A gold bullet rather than a numbered rail. Four kinds of venue have no
+   rank, and a rail numbered 1 to 4 asserted one. */
+.uni-home-test .rl-source::before {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin: 20px 0 0 18px;
+  border-radius: 50%;
+  background: var(--uni-gold, #ffb936);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--uni-gold, #ffb936) 22%, transparent);
+}
+.uni-home-test .rl-source-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 14px 18px;
+}
+.uni-home-test .rl-source-title {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-source-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--uni-ink-3);
+}
+.uni-home-test .rl-source-note-line {
+  margin: 18px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--uni-ink-3);
+}
+@media (max-width: 560px) {
+  .uni-home-test .rl-source::before { margin-left: 14px; margin-top: 18px; }
+  .uni-home-test .rl-source-body { padding: 12px 14px; }
+  .uni-home-test .rl-source-title { font-size: 15px; }
+  .uni-home-test .rl-source-meta { font-size: 13.5px; }
+}
+
+/* ---- top products ------------------------------------------------------
+   The card-12 shape: rounded, bordered, a header row with the name on the
+   left and an outline badge on the right, a rule under it, one large figure,
+   then a small meta grid. Two by two, one card per venue kind. No action
+   inside a card; the section carries a single CTA underneath. */
+.uni-home-test .rl-picks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0 26px;
+}
+@media (max-width: 640px) {
+  .uni-home-test .rl-picks { grid-template-columns: minmax(0, 1fr); }
+}
+.uni-home-test .rl-pick {
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius-sm, 14px);
+  background: var(--uni-bg, #fff);
+  padding: 16px 18px 14px;
+  box-shadow: 0 1px 3px rgba(25, 23, 23, 0.05);
+}
+.uni-home-test .rl-pick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--uni-line, #dddee0) 70%, transparent);
+}
+.uni-home-test .rl-pick-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.uni-home-test .rl-pick-name img,
+.uni-home-test .rl-pick-name svg {
+  flex: none;
+  border-radius: 50%;
+  display: block;
+}
+.uni-home-test .rl-pick-platform {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-home-test .rl-pick-badge {
+  flex: none;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius-pill, 999px);
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  color: var(--uni-ink-3);
+  white-space: nowrap;
+}
+.uni-home-test .rl-pick-rate {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-feature-settings: "tnum";
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-pick-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+}
+.uni-home-test .rl-pick-meta div { min-width: 0; }
+.uni-home-test .rl-pick-meta dt {
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--uni-ink-3);
+}
+.uni-home-test .rl-pick-meta dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--uni-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- bridge ----------------------------------------------------------- */
+
+.uni-home-test .rl-bridge {
+  /* No fill. The grey made a long section read as one big inert block, and
+     the frame alone is enough to say where it starts and stops. */
+  background: none;
+  border: 1px solid var(--rl-hair);
+  border-radius: var(--uni-radius, 20px);
+  padding: 26px 28px;
+}
+.rl-bridge h2 { margin: 0 0 10px; font-size: 22px; line-height: 28px; }
+.rl-bridge p { margin: 0 0 16px; max-width: 68ch; }
+.uni-home-test .uni-home-content a.rl-bridge-cta,
+.uni-home-test a.rl-bridge-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--uni-gold, #ffb936);
+  color: var(--uni-ink);
+  border: 1px solid #e0a018;
+  border-radius: var(--uni-radius-pill, 999px);
+  padding: 13px 24px;
+  font-size: 15px;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(25, 23, 23, 0.1);
+}
+.uni-home-test .uni-home-content a.rl-bridge-cta:hover { background: #ffc44d; }
+.rl-bridge-cta:active { transform: translateY(1px); }
+/* The first one sits under the opening paragraph, where a reader who is
+   already sold does not have to read four venue types first. */
+.uni-home-test .rl-bridge-cta-top { margin: 0 0 20px; }
+
+/* ---- methodology ------------------------------------------------------ */
+
+.rl-method { margin: 12px 0 0; }
+.uni-home-test .rl-method dt {
+  font-weight: 750;
+  margin-top: 16px;
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-method dd {
+  margin: 5px 0 0;
+  color: var(--uni-ink);
+  max-width: 78ch;
+  line-height: 22px;
+}
+
+
+
+/* Screen-reader-only heading for the jump-links section: the nav needs a
+   labelled section to sit in, but a visible "On this page" would duplicate the
+   label already inside the nav. */
+.uni-home-test .rl-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Nine bands squeezed into a phone render their labels at about six pixels,
+   because the SVG scales as one unit. Give the chart a floor and let it scroll,
+   which keeps it readable and keeps the crawler-visible SVG intact. */
+.uni-home-test .rl-chart-scroll { width: 100%; }
+@media (max-width: 720px) {
+  .uni-home-test .rl-chart-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .uni-home-test .rl-chart-scroll .rl-chart { min-width: 620px; }
+}
+
+/* The jump-links row is navigation between the hero and the first section, so
+   it gets breathing room without the section border that separates content. */
+.uni-home-test .rl-jump { padding: 40px 0 8px; }
+
+/* ---- concentration stats + filter -------------------------------------- */
+
+.uni-home-test .rl-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 30px 0 0;
+}
+@media (max-width: 760px) {
+  .uni-home-test .rl-stats { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}
+/* The animated-card treatment: rounded surface, a coloured rule across the
+   top, a resting shadow that deepens on hover, and a pointer-driven tilt with
+   the content lifted onto its own Z plane. The tilt values arrive from the
+   component as two custom properties. */
+.uni-home-test .rl-stats { perspective: 900px; }
+.uni-home-test .rl-stat {
+  --rl-tilt-x: 0deg;
+  --rl-tilt-y: 0deg;
+  background: var(--uni-bg, #fff);
+  border: 1px solid var(--uni-line, #dddee0);
+  border-top: 4px solid var(--uni-gold, #ffb936);
+  border-radius: var(--uni-radius-sm, 14px);
+  padding: 22px 22px 20px;
+  box-shadow: 0 2px 8px rgba(25, 23, 23, 0.06);
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rl-tilt-x)) rotateY(var(--rl-tilt-y));
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 0.3s ease;
+  will-change: transform;
+}
+.uni-home-test .rl-stat:hover { box-shadow: 0 16px 40px rgba(25, 23, 23, 0.16); }
+.uni-home-test .rl-stat-inner { transform: translateZ(20px); }
+.uni-home-test .rl-stat-num {
+  display: block;
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--uni-ink);
+  margin-bottom: 6px;
+}
+.uni-home-test .rl-stat-lab {
+  display: block;
+  font-size: 13.5px;
+  line-height: 19px;
+  color: var(--uni-ink-3);
+}
+/* No hover to drive it on a touch screen, and nothing to gain from a tilting
+   statistic if motion is unwelcome. */
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .uni-home-test .rl-stat {
+    transform: none;
+    transition: box-shadow 0.3s ease;
+  }
+  .uni-home-test .rl-stat-inner { transform: none; }
+}
+
+/* The one sentence on this page most likely to be quoted, so it reads as a
+   pulled statement rather than as another paragraph. */
+/* A gold fill behind a left rule is the shape every generated page uses for
+   "here is an interesting fact", and this is a sourced finding rather than a
+   callout. It takes the frame the tables on this page already use, so it
+   reads as another piece of the same report. */
+.uni-home-test .rl-highlight {
+  margin: 26px 0 0;
+  padding: 22px 24px;
+  border: 1px solid var(--uni-line, #dddee0);
+  background: var(--uni-bg, #fff);
+  border-radius: var(--uni-radius, 20px);
+}
+
+/* ---- who-holds-what breakdown ------------------------------------------
+   Same object as the tier and band tables: same frame, same muted header,
+   same cell rhythm, same hover. It was its own thing before and read as a
+   different kind of table on a page that has three of them. */
+.uni-home-test .rl-breakdown {
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius, 20px);
+  overflow: hidden;
+}
+.uni-home-test .rl-breakdown-head,
+.uni-home-test .rl-breakdown-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) 86px 104px 128px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+}
+.uni-home-test .rl-breakdown-head {
+  height: 40px;
+  border-bottom: 1px solid var(--uni-line, #dddee0);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--uni-ink-3);
+}
+.uni-home-test .rl-breakdown-row {
+  min-height: 46px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--uni-line, #dddee0) 55%, transparent);
+  font-size: 14.5px;
+  line-height: 20px;
+  transition: background-color 0.12s ease;
+}
+.uni-home-test .rl-breakdown-row:hover { background: rgba(255, 185, 54, 0.08); }
+.uni-home-test .rl-breakdown-row:last-child { border-bottom: 0; }
+.uni-home-test .rl-breakdown-row .rl-rank-n {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-feature-settings: "tnum";
+  color: var(--uni-ink);
+}
+/* The narrow step for this table lives in one place, at max-width: 720px
+   further down. There used to be a second block here at 640px with different
+   tracks, and because both match on a phone the later one won every property
+   it declared. Two rules describing the same layout, one of them dead. */
+
+/* ---- ranking grid ------------------------------------------------------
+   The asset hubs' .uni-hub-row pattern: a header defining the column track and
+   rows repeating it, so cells align without a <table> deciding widths for us.
+   Every cell is one line at one size, which is the whole point. A hundred rows
+   only read as a ranking if all hundred are the same height. */
+
+/* Under the table, so the spacing flips: the controls get the smaller gap to
+   what they act on and the table takes the section's own top margin. */
+.uni-home-test .rl-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+.uni-home-test .rl-filters-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  margin-right: 2px;
+}
+.uni-home-test .rl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius-pill, 999px);
+  background: var(--uni-bg, #fff);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--uni-ink);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.uni-home-test .rl-chip:hover {
+  border-color: color-mix(in srgb, var(--uni-ink) 35%, transparent);
+}
+.uni-home-test .rl-chip:has(input:checked) {
+  background: rgba(255, 185, 54, 0.14);
+  border-color: color-mix(in srgb, var(--uni-gold, #ffb936) 70%, transparent);
+}
+.uni-home-test .rl-chip input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--uni-ink);
+  cursor: pointer;
+  flex: none;
+}
+.uni-home-test .rl-chip em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--uni-ink-3);
+}
+/* Prefixed with all three page classes: .uni-home-test .uni-home-content p
+   carries an element in its selector and outranks a two-class rule. */
+.uni-home-test.rp-page.rl-page .rl-filters-read {
+  margin: 22px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--uni-ink-3);
+}
+
+/* The table sits in a bordered, rounded, overflow-hidden box, which is the
+   shell the reference ranking uses (`overflow-hidden rounded-lg border`
+   around the table, toolbar above, status row below). The row treatment
+   inside it was already the same: border-b per row, none on the last, hover
+   tint, header divided from the body. */
+.uni-home-test .rl-rank-box {
+  margin: 30px 0 0;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius, 20px);
+  overflow: hidden;
+}
+.uni-home-test .rl-rank {
+  max-height: 660px;
+  overflow: auto;
+}
+/* Status and controls below the box, the way the reference puts its row count
+   and pager under the table. */
+/* The controls and their readout are one block, and what follows them is a
+   paragraph, so it gets the clearance a paragraph after a box gets. */
+.uni-home-test .rl-rank-foot { margin: 0 0 34px; }
+.uni-home-test .rl-rank-head,
+.uni-home-test .rl-rank-row {
+  display: grid;
+  /* The address is fixed rather than flexible: it is truncated to a constant
+     length, so giving it a share of the slack just opened a gap between it and
+     the first figure. The slack goes to the numeric tracks instead, which
+     spreads them evenly the way the asset hubs' ranking does. */
+  grid-template-columns:
+    30px 268px minmax(66px, 1fr) minmax(66px, 1fr) minmax(66px, 1fr)
+    minmax(100px, 1fr) minmax(58px, 0.7fr);
+  align-items: center;
+  gap: 10px;
+}
+.uni-home-test .rl-rank-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 12px 16px;
+  background: var(--uni-bg, #fff);
+  border-bottom: 1px solid var(--uni-line, #dddee0);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .rl-rank-row {
+  padding: 15px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--uni-line, #dddee0) 55%, transparent);
+  transition: background-color 0.12s ease;
+}
+.uni-home-test .rl-rank-row:hover { background: rgba(255, 185, 54, 0.08); }
+.uni-home-test .rl-rank-body > .rl-rank-row:last-child { border-bottom: 0; }
+
+/* One line, one size, in every cell. Anything that would wrap is truncated
+   instead, because a wrapped cell is the thing that makes rows uneven. */
+.uni-home-test .rl-rank-row > span {
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-home-test .rl-rank-n { text-align: right; }
+.uni-home-test .rl-rank-i {
+  font-family: var(--display);
+  font-weight: 500;
+  color: var(--uni-ink-3);
+  font-feature-settings: "tnum";
+}
+.uni-home-test .rl-rank-addr {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px !important;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .rl-rank-row .rl-rank-n {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-feature-settings: "tnum";
+  color: var(--uni-ink);
+}
+.uni-home-test .rl-rank-row .rl-rank-esc,
+.uni-home-test .rl-rank-row .rl-rank-share {
+  font-weight: 500;
+  color: var(--uni-ink-2);
+}
+.uni-home-test .rl-rank-none { color: var(--uni-ink-3); }
+
+/* Name badges. Colour carries the kind of holder, which is the distinction the
+   filters act on and the one a reader needs: an exchange row is customer money
+   pooled, a company row is a treasury, an individual row is one person. The
+   evidence behind every name used to sit under it as a second line; it is now
+   one sentence under the table, because forty-nine of those lines set the row
+   heights of the whole ranking. */
+.uni-home-test .rl-badge {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 7px;
+  border-radius: var(--uni-radius-pill, 999px);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 15px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  vertical-align: middle;
+}
+/* White fill, darker edge. The tinted fills read as four different kinds of
+   object stacked down one column, which is loud in a hundred-row table and
+   louder still now that most badges carry a logo. The type still separates
+   on the edge and the text, which is enough to tell them apart without the
+   column turning into a colour chart. */
+.uni-home-test .rl-badge-exchange {
+  background: var(--rl-badge-bg, #fff);
+  border-color: #9cbbe6;
+  color: #1d4e89;
+}
+.uni-home-test .rl-badge-company {
+  background: var(--rl-badge-bg, #fff);
+  border-color: #e0b458;
+  color: #7a5205;
+}
+.uni-home-test .rl-badge-individual {
+  background: var(--rl-badge-bg, #fff);
+  border-color: #83c7a0;
+  color: #1c6b3f;
+}
+.uni-home-test .rl-badge-protocol,
+.uni-home-test .rl-badge-domain,
+.uni-home-test .rl-badge-unknown {
+  background: var(--rl-badge-bg, #fff);
+  border-color: #bcbec3;
+  color: var(--uni-ink);
+}
+
+/* The calculator's surface is gold in both themes, so its contents must stay
+   dark ink in both. Without this the dark palette handed it near-white text on
+   a gold card, which measured 2.4:1. Redefining the ink tokens on the card
+   itself covers everything inside it, including anything added later. */
+:root[data-theme="dark"] .uni-home-test .rl-calc,
+:root[data-theme="dark"] .uni-home-test .rl-feature-card .rl-eyebrow-badge {
+  --uni-ink: #191717;
+  --uni-ink-2: #262521;
+  --uni-ink-3: #4b4944;
+  /* The controls inside read --uni-bg: the field paints with it and the
+     button uses it for its label against an ink fill. Left on the page's dark
+     value it gave a black field on a gold card and a button whose text was
+     the same colour as its own background. */
+  --uni-bg: #ffffff;
+  --uni-card: #ffffff;
+  --uni-card-2: #ffffff;
+  --rl-dim: color-mix(in srgb, #191717 82%, transparent);
+  color: #191717;
+}
+@media (prefers-color-scheme: dark) {
+  .uni-home-test .rl-calc,
+  .uni-home-test .rl-feature-card .rl-eyebrow-badge {
+    --uni-ink: #191717;
+    --uni-ink-2: #262521;
+    --uni-ink-3: #4b4944;
+    --uni-bg: #ffffff;
+    --uni-card: #ffffff;
+    --uni-card-2: #ffffff;
+    --rl-dim: color-mix(in srgb, #191717 82%, transparent);
+    color: #191717;
+  }
+}
+
+/* Badge text in dark. The light hues are mid-tone by design, which is right on
+   white and 2.4:1 on a dark pill, so each type gets a lifted version of its
+   own colour rather than all of them collapsing to one grey. */
+:root[data-theme="dark"] .uni-home-test .rl-badge-exchange { color: #9dc3f2; border-color: #3a5a80; }
+:root[data-theme="dark"] .uni-home-test .rl-badge-company { color: #f0c069; border-color: #7a5a1c; }
+:root[data-theme="dark"] .uni-home-test .rl-badge-individual { color: #8fd7ae; border-color: #2f6a48; }
+:root[data-theme="dark"] .uni-home-test .rl-badge-protocol,
+:root[data-theme="dark"] .uni-home-test .rl-badge-domain,
+:root[data-theme="dark"] .uni-home-test .rl-badge-unknown { color: var(--uni-ink); border-color: #4a4742; }
+@media (prefers-color-scheme: dark) {
+  .uni-home-test .rl-badge-exchange { color: #9dc3f2; border-color: #3a5a80; }
+  .uni-home-test .rl-badge-company { color: #f0c069; border-color: #7a5a1c; }
+  .uni-home-test .rl-badge-individual { color: #8fd7ae; border-color: #2f6a48; }
+  .uni-home-test .rl-badge-protocol,
+  .uni-home-test .rl-badge-domain,
+  .uni-home-test .rl-badge-unknown { color: var(--uni-ink); border-color: #4a4742; }
+}
+/* …and back to the light hues whenever the toggle says light, which has to
+   outrank the media query above. */
+:root[data-theme="light"] .uni-home-test .rl-badge-exchange { color: #1d4e89; border-color: #9cbbe6; }
+:root[data-theme="light"] .uni-home-test .rl-badge-company { color: #7a5205; border-color: #e0b458; }
+:root[data-theme="light"] .uni-home-test .rl-badge-individual { color: #1c6b3f; border-color: #83c7a0; }
+:root[data-theme="light"] .uni-home-test .rl-badge-protocol,
+:root[data-theme="light"] .uni-home-test .rl-badge-domain,
+:root[data-theme="light"] .uni-home-test .rl-badge-unknown { color: var(--uni-ink); border-color: #bcbec3; }
+:root[data-theme="light"] .uni-home-test .rl-calc { color: #191717; }
+
+/* ---- overlapping marks beside a breakdown group ------------------------
+   row-reverse so the first mark in the list paints on top without giving
+   every item its own z-index, which is the version that breaks the moment
+   somebody adds one. */
+.uni-home-test .rl-breakdown-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.uni-home-test .rl-avstack {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  flex: none;
+}
+.uni-home-test .rl-avstack-img {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--rl-avatar-ring, #fff);
+  /* The ring is what separates one mark from the one it covers. */
+  box-shadow: 0 0 0 1.5px var(--rl-avatar-ring, #fff);
+}
+/* Every mark except the last in the DOM, which is the leftmost on screen,
+   slides under its neighbour by about a fifth of its width. */
+.uni-home-test .rl-avstack-img:not(:last-child) { margin-left: -3px; }
+.uni-home-test .rl-avstack-more {
+  order: -1;
+  margin-left: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+}
+@media (max-width: 720px) {
+  /* The group cell shares a narrow row with two numeric columns, so the
+     stack gives up its width before the label does. */
+  .uni-home-test .rl-avstack { display: none; }
+}
+
+/* ---- holder avatars -----------------------------------------------------
+   A square logo rendered as a circle inside the pill. The badge is an
+   inline-block of text, so it becomes a flex row to put the mark on the
+   text's centre line rather than its baseline, and the left padding tightens
+   so the circle sits flush inside the rounded end. */
+.uni-home-test .rl-badge.has-avatar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 2px;
+}
+.uni-home-test .rl-badge-avatar {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  /* The uploads are square and some run to the edge, so the circle is a crop
+     rather than a fit: letterboxing a logo inside a 15px disc leaves it
+     smaller than the text beside it. */
+  object-fit: cover;
+  /* A logo the same colour as the pill behind it would otherwise have no
+     edge of its own, in either theme. */
+  box-shadow: 0 0 0 1px var(--rl-hair, rgba(25, 23, 23, 0.08));
+  background: var(--rl-avatar-ring, #fff);
+}
+/* The name has to keep truncating: it is the cell that decides whether all
+   hundred rows stay the same height. */
+.uni-home-test .rl-badge.has-avatar > :not(.rl-badge-avatar) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Escrow is the first column to go when the track no longer fits: it is a
+   subset of the XRP column beside it, so dropping it loses the least. */
+/* The escrow column is a subset of the XRP column beside it, so it is the
+   first to go when the track no longer fits the shared measure. */
+@media (max-width: 920px) {
+  .uni-home-test .rl-rank-head,
+  .uni-home-test .rl-rank-row {
+    grid-template-columns: 30px 268px minmax(66px, 1fr) minmax(66px, 1fr) minmax(96px, 1fr) minmax(58px, 0.7fr);
+  }
+  .uni-home-test .rl-rank-esc { display: none; }
+}
+@media (max-width: 720px) {
+  .uni-home-test .rl-breakdown-head,
+  .uni-home-test .rl-breakdown-row {
+    grid-template-columns: minmax(0, 1fr) 62px 92px;
+    gap: 10px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+  }
+  .uni-home-test .rl-breakdown-head > span:nth-child(3),
+  .uni-home-test .rl-breakdown-row > span:nth-child(3) { display: none; }
+  /* One line per body row, like every other ranked row on this page. "Known
+     exchanges" and "Unnamed accounts" were wrapping to two while "Ripple
+     founders" stayed on one, so the four rows came out 46, 65, 46 and 64
+     pixels tall. The numeric tracks give up the width that makes them fit.
+     The header is exempt: it appears once, so a second line there costs
+     nothing, and clipping "Share of all XRP" to "Share of ..." would have
+     been the fix creating a worse problem than the one it solved. */
+  .uni-home-test .rl-breakdown-row > span {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .uni-home-test .rl-breakdown-head {
+    height: auto;
+    min-height: 40px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    line-height: 17px;
+  }
+  .uni-home-test .rl-breakdown-head > span { min-width: 0; }
+}
+
+/* The phone step, applied to the same list, so paragraphs and FAQ answers
+   stay identical at every width rather than only on desktop. */
+@media (max-width: 640px) {
+  .uni-home-test.rp-page.rl-page .rp-lead,
+  .uni-home-test.rp-page.rl-page .rl-section-intro,
+  .uni-home-test.rp-page.rl-page .rl-highlight,
+  .uni-home-test.rp-page.rl-page .rl-calc-pitch-sub,
+  .uni-home-test.rp-page.rl-page .rl-faq-desc,
+  .uni-home-test.rp-page.rl-page .rl-faq-a,
+  .uni-home-test.rp-page.rl-page .rp-article p,
+  .uni-home-test.rp-page.rl-page .rp-source-note,
+  .uni-home-test.rp-page.rl-page .rl-bridge p,
+  .uni-home-test.rp-page.rl-page .rl-method dd {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+}
+
+/* ---- pager + result CTAs ------------------------------------------------ */
+.uni-home-test .rl-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+.uni-home-test .rl-pager-at {
+  font-size: 13px;
+  color: var(--uni-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.uni-home-test .rl-pager-btn {
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: var(--uni-radius-pill, 999px);
+  background: var(--uni-bg, #fff);
+  padding: 7px 15px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  cursor: pointer;
+}
+.uni-home-test .rl-pager-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--uni-ink) 35%, transparent);
+}
+.uni-home-test .rl-pager-btn:disabled { opacity: 0.35; cursor: default; }
+
+.uni-home-test .rl-calc-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.uni-home-test .rl-calc-cta a {
+  flex: 1 1 auto;
+  text-align: center;
+  border-radius: var(--uni-radius-pill, 999px);
+  padding: 11px 18px;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.uni-home-test .rl-calc .rl-calc-cta a { color: var(--uni-ink); }
+.uni-home-test .rl-calc-cta .rl-calc-cta-a {
+  background: var(--uni-bg, #fff);
+  border: 1px solid color-mix(in srgb, var(--uni-ink) 16%, transparent);
+}
+.uni-home-test .rl-calc .rl-calc-cta .rl-calc-cta-b {
+  background: var(--uni-ink);
+  color: var(--uni-bg, #fff);
+  border: 1px solid var(--uni-ink);
+}
+
+/* ---- mobile ------------------------------------------------------------
+   The house pattern for a wide table on a phone is to reflow it into stacked
+   rows, not to scroll it sideways: see .rp-ref-table at report.css:1218. A
+   six-column table carrying a 34-character base58 address is unusable at
+   390px either way, so these follow the same shape. Each cell carries its
+   column name from a data-label, so a stacked row still says what its numbers
+   mean once the header row is gone. */
+@media (max-width: 640px) {
+  .uni-home-test .rl-summary-h { font-size: 17px; line-height: 23px; }
+  /* home.css centres hero content on a phone, which is right for the report's
+     prose hero and wrong here: it leaves the bullet markers pinned to the left
+     of a centred column, and a form reads as broken when its label is centred
+     over a left-aligned input. Headline and subhead keep the house centring;
+     the list and the calculator go back to left. */
+  .uni-home-test .rl-keyfind { max-width: none; gap: 10px; text-align: left; }
+  .uni-home-test .rl-calc,
+  .uni-home-test .rl-calc-h,
+  .uni-home-test .rl-calc-privacy,
+  .uni-home-test .rl-calc-out { text-align: left; }
+  .uni-home-test .rl-keyfind li { font-size: 15px; line-height: 23px; }
+
+  .uni-home-test .rl-calc { padding: 18px 16px 16px; }
+  .uni-home-test .rl-calc-h { font-size: 16px; }
+  .uni-home-test .rl-calc-input { font-size: 19px; }
+  .uni-home-test .rl-calc-rank { font-size: 20px; line-height: 26px; }
+
+  /* Stacked rows. thead goes, each row becomes a card-ish block, and each cell
+     prints its own label. */
+  .uni-home-test .rl-dtable,
+  .uni-home-test .rl-dtable tbody,
+  .uni-home-test .rl-dtable tr { display: block; width: 100%; }
+  .uni-home-test .rl-dtable thead { display: none; }
+  /* A caption in a table switched to display:block collapses to its longest
+     word and wraps one word per line. It has to become a block of its own. */
+  .uni-home-test .rl-dtable-cap { display: block; width: 100%; padding: 14px 18px 16px; }
+  .uni-home-test .rl-dtable-wrap { overflow-x: visible; }
+  /* Stacked, every cell is a block, so `th:first-child { padding-left: 20px }`
+     and its last-child twin no longer describe an edge of the table. They also
+     still won on specificity, which is why the band label sat 20px in while
+     every figure under it ran flush into the frame. The inset moves to the row
+     and the cells give theirs up. */
+  .uni-home-test .rl-dtable tr {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--rl-hair);
+  }
+  .uni-home-test .rl-dtable th:first-child,
+  .uni-home-test .rl-dtable td:first-child,
+  .uni-home-test .rl-dtable th:last-child,
+  .uni-home-test .rl-dtable td:last-child {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .uni-home-test .rl-dtable tbody tr:last-child { border-bottom: 0; }
+  .uni-home-test .rl-dtable tbody th {
+    display: block;
+    padding: 0 0 7px;
+    border: 0;
+    font-size: 14px;
+    white-space: normal;
+  }
+  .uni-home-test .rl-dtable td {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 3px 0;
+    border: 0;
+    font-size: 13px;
+    line-height: 19px;
+    text-align: left;
+    white-space: normal;
+  }
+  .uni-home-test .rl-dtable td::before {
+    content: attr(data-label);
+    color: var(--rl-dim);
+    flex: none;
+  }
+  .uni-home-test .rl-num { text-align: right; }
+  .uni-home-test .rl-addr { font-size: 11.5px; }
+  /* ---- ranking grid on a phone ---------------------------------------
+     Seven columns cannot survive at 390px, and horizontal scroll on the one
+     artifact the page is named for is worse than dropping columns. Rank,
+     address, XRP and name stay; escrow, value and share come out, and all
+     three are stated in the prose and the dataset export. Rows keep their
+     single-line rule, so they all stay the same height here too. */
+  .uni-home-test .rl-rank { max-height: none; overflow: visible; }
+  /* 2px of side padding put the rank digit and the XRP figure three pixels
+     off the frame. Sixteen, the same inset the row uses on a desktop. */
+  .uni-home-test .rl-rank-head,
+  .uni-home-test .rl-rank-row {
+    grid-template-columns: 24px minmax(0, 1fr) 78px;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+  .uni-home-test .rl-rank-head > span:nth-child(n + 4),
+  .uni-home-test .rl-rank-row > span:nth-child(n + 4) { display: none; }
+  /* The name would be the fourth surviving cell, so it is put back on its own
+     line under the address rather than dropped: it is what makes a row worth
+     reading. */
+  /* The name line is a flex box with a fixed height rather than a block that
+     sizes to whatever is in it. A badge is an inline-block and sits on the
+     text baseline, so it built a taller line box than the plain "Unnamed"
+     next to it and named rows came out a pixel prouder than unnamed ones.
+     Fixed here so every row is the same height whatever the account is. */
+  .uni-home-test .rl-rank-row > span.rl-rank-name {
+    display: flex;
+    align-items: center;
+    grid-column: 2 / -1;
+    height: 26px;
+    margin-top: 4px;
+    padding-top: 0;
+    overflow: visible;
+  }
+  .uni-home-test .rl-rank-row > span { font-size: 13px; line-height: 19px; }
+  .uni-home-test .rl-rank-addr { font-size: 11.5px !important; }
+
+  .uni-home-test .rl-filters { gap: 8px; }
+  .uni-home-test .rl-chip { font-size: 12.5px; padding: 7px 12px; }
+}
+
+/* ---- overrides that must come last -------------------------------------
+   .rl-bridge is declared further up at the same specificity, so a mobile
+   rule written earlier in the file loses on source order and the panel
+   survives on a phone. This block is last for that reason. */
+@media (max-width: 640px) {
+  /* A box nested inside an already narrow column is chrome a phone does not
+     need. The section keeps its rhythm and loses the panel. */
+  .uni-home-test .rl-bridge {
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+}

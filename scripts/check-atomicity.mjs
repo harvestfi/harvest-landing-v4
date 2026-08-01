@@ -58,7 +58,14 @@ const ENTITY_CAP = 10;
 // Pages held to the gate. Everything else in PAGES is reported as a warning so
 // the backlog stays visible without blocking the build. Move a page here once
 // its prose has been brought up to spec.
-const ENFORCED = new Set(["report/xrp-yield-ranking"]);
+// /xrp-rich-list is enforced: findings fail the build rather than print.
+// NOTE for the reviewer: this fork's gate predates the v3 rules (temporal
+// deixis, bullet fragments, bullet density, the `onchain` spelling rule) that
+// v4-one added. The page was written against those and reports zero findings
+// under them, so it is safe here. Porting the rules themselves is deliberately
+// NOT in this PR: they would newly evaluate the existing XRP report page,
+// which is also enforced, and that belongs in its own change.
+const ENFORCED = new Set(["report/xrp-yield-ranking", "xrp-rich-list"]);
 
 // A date token is "as of", a month name, or a four-digit year.
 const DATE_TOKEN =

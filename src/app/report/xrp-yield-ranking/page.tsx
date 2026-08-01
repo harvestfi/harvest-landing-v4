@@ -1014,6 +1014,13 @@ export default function XrpYieldRankingPage() {
               like stXRP, and supplied to a lending market, a vault, a
               fixed-rate Principal Token, or a liquidity pool.
             </p>
+            <p>
+              This report covers what an XRP balance can earn. For how XRP is
+              distributed in the first place, which accounts hold the most and
+              what balance any given percentile takes, see the{" "}
+              <Link href="/xrp-rich-list">XRP rich list</Link>, read from the
+              same ledger.
+            </p>
           </div>
           <nav className="rp-toc" aria-label="On this page">
             <span className="rp-toc-label">On this page</span>

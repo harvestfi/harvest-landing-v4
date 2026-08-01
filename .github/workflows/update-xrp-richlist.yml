@@ -1,0 +1,81 @@
+name: Update XRP Rich List
+
+# Rebuilds the XRP Ledger holder distribution behind /xrp-rich-list.
+#
+# Freshness is the ranking argument on that page rather than housekeeping:
+# roughly 830 US searches a month carry a recency modifier ("today", "current",
+# "latest"), and the incumbents update irregularly. So this runs four times a
+# day and the page prints the ledger close time it used.
+#
+# No API keys. The walk reads AccountRoot objects from public XRP Ledger nodes
+# over JSON-RPC. Roughly 125 requests at a 200,000-entry page size, about 15
+# minutes, and the walk checkpoints so a failed run resumes rather than
+# restarting.
+
+on:
+  schedule:
+    - cron: "20 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # A second walk starting while the first is mid-ledger would race on the
+  # snapshot file and on the checkpoint. Queue instead.
+  group: xrp-richlist
+  cancel-in-progress: false
+
+jobs:
+  update-richlist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Verifies the streaming aggregator against a brute-force sort before it
+      # is trusted with 8.5 million balances. Cheap, and it fails loudly rather
+      # than shipping a distribution that is quietly wrong.
+      - name: Verify the distribution aggregator
+        run: node scripts/check-richlist-distribution.mjs
+
+      - name: Walk the ledger
+        run: node --max-old-space-size=4096 scripts/fetch-xrpl-richlist.mjs
+        continue-on-error: true
+
+      # One retry from the checkpoint. Public nodes shed load, and resuming
+      # costs the remaining pages rather than the whole walk.
+      - name: Resume if the walk did not finish
+        run: node --max-old-space-size=4096 scripts/fetch-xrpl-richlist.mjs --resume
+        continue-on-error: true
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/xrp-richlist.json
+          if git diff --cached --quiet; then
+            echo "No rich list changes detected."
+            exit 0
+          fi
+          git commit -m "chore: update XRP rich list $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, rebasing on origin/main."
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "Failed to push after retries."
+          exit 1

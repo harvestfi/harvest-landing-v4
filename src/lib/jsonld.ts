@@ -157,6 +157,10 @@ export function reportWebPageSchema(o: {
   url: string;
   description: string;
   dateModified: string;
+  /** First publication. Optional, and deliberately separate from
+   *  dateModified: a page whose two dates always match looks republished
+   *  rather than maintained, and never builds a history. */
+  datePublished?: string;
 }): object {
   return {
     "@context": "https://schema.org",
@@ -164,6 +168,7 @@ export function reportWebPageSchema(o: {
     name: o.name,
     url: o.url,
     description: o.description,
+    ...(o.datePublished ? { datePublished: o.datePublished } : {}),
     dateModified: o.dateModified,
     isBasedOn: `${SITE_URL}/methodology`,
     publisher: {
