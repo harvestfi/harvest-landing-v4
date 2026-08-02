@@ -8,6 +8,7 @@ import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
 import { LpBadge } from "./lp-badge";
 import { readHiddenSlugs, HIDDEN_CHANGED_EVENT } from "@/lib/hidden-products-client";
+import { harvestAppUrl } from "@/lib/harvest-app";
 
 type SortKey = "apy24h";
 type SortDir = "asc" | "desc";
@@ -22,6 +23,10 @@ interface Props {
   // Vault) with a smaller chain icon. Network is the key differentiator
   // when one venue spans many chains.
   networkFirst?: boolean;
+  // Adds a trailing "Link" column whose cell opens the strategy in the Harvest
+  // app in a new tab. Off by default: it restructures the row markup (see the
+  // comment in Row) and every other call site keeps the plain wrapping anchor.
+  openLinks?: boolean;
 }
 
 function buildSparklinePath(values: number[]): string {
@@ -70,6 +75,7 @@ export function HubTable({
   showAssetFilter = false,
   scopeLabel,
   networkFirst = false,
+  openLinks = false,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("apy24h");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -216,7 +222,9 @@ export function HubTable({
       </div>
 
       <div
-        className={`hub-table${networkFirst ? " hub-table--net-first" : ""}`}
+        className={`hub-table${networkFirst ? " hub-table--net-first" : ""}${
+          openLinks ? " hub-table--links" : ""
+        }`}
         role="table"
         aria-label="Ranking"
       >
@@ -235,6 +243,7 @@ export function HubTable({
             <span className="hub-th hub-th-center">Network</span>
           )}
           <span className="hub-th hub-th-num">30d APY trend</span>
+          {openLinks && <span className="hub-th hub-th-center">Link</span>}
         </div>
         <div className="hub-tbody" role="rowgroup">
           {visible.length === 0 ? (
@@ -247,6 +256,7 @@ export function HubTable({
                 vault={v}
                 sparkline={sparklineFor(v, sparklines)}
                 networkFirst={networkFirst}
+                openLinks={openLinks}
               />
             ))
           )}
@@ -331,11 +341,13 @@ function Row({
   vault,
   sparkline,
   networkFirst = false,
+  openLinks = false,
 }: {
   rank: number;
   vault: YieldVault;
   sparkline: number[] | undefined;
   networkFirst?: boolean;
+  openLinks?: boolean;
 }) {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   // If upstream history is missing for this vault but we have a live
@@ -364,8 +376,8 @@ function Row({
     </span>
   );
 
-  return (
-    <Link href={`/${vault.slug}`} className="hub-row">
+  const cells = (
+    <>
       <span className="hub-cell hub-rank">{rank}</span>
       {networkFirst && networkCell}
       <span className="hub-cell hub-vault">
@@ -400,10 +412,49 @@ function Row({
             />
           </svg>
         ) : (
-          <span className="hub-spark-empty">—</span>
+          // Hyphen, not an em dash. check-banned-words fails the build on an
+          // em dash anywhere in the scanned page text, and this placeholder is
+          // one missing history series away from rendering on /usdc, which
+          // joins that gate in this change. No hub page emits it today, so
+          // nothing visible moves.
+          <span className="hub-spark-empty">-</span>
         )}
       </span>
-    </Link>
+    </>
+  );
+
+  // Without the Link column the whole row stays one anchor, which is what
+  // every other call site renders and what the CSS has always assumed.
+  if (!openLinks) {
+    return (
+      <Link href={`/${vault.slug}`} className="hub-row">
+        {cells}
+      </Link>
+    );
+  }
+
+  // With it, the row cannot be an anchor: an <a> for the app link would be
+  // nested inside the row's own <a>, which is invalid and which browsers
+  // recover from by splitting the markup. The row becomes a div, the vault
+  // name carries the internal link, and that link's ::after stretches over
+  // the row so the whole row still navigates. The app link sits above it on
+  // the stacking order so its own click wins.
+  return (
+    <div className="hub-row" role="row">
+      <Link href={`/${vault.slug}`} className="hub-rowlink" aria-label={getCanonicalDisplayName(vault)} />
+      {cells}
+      <span className="hub-cell hub-linkcell">
+        <a
+          className="hub-open"
+          href={harvestAppUrl(vault.chain, vault.contractAddress)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Open ${getCanonicalDisplayName(vault)} in the Harvest app, opens in a new tab`}
+        >
+          Open
+        </a>
+      </span>
+    </div>
   );
 }
 

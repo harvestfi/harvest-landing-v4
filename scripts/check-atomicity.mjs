@@ -65,11 +65,29 @@ const ENTITY_CAP = 10;
 // under them, so it is safe here. Porting the rules themselves is deliberately
 // NOT in this PR: they would newly evaluate the existing XRP report page,
 // which is also enforced, and that belongs in its own change.
-const ENFORCED = new Set(["report/xrp-yield-ranking", "xrp-rich-list"]);
+const ENFORCED = new Set(["report/xrp-yield-ranking", "xrp-rich-list", "usdc"]);
 
 // A date token is "as of", a month name, or a four-digit year.
 const DATE_TOKEN =
   /\bas of\b|\b(January|February|March|April|May|June|July|August|September|October|November|December)\b|\b20\d{2}\b/i;
+
+// A section may carry its date once, on a dateline, instead of on every
+// sentence inside it.
+//
+// The per-sentence form of rule 1 is right for a sentence that gets lifted
+// alone, and wrong applied across a whole long-form page: /usdc reached 29
+// separate renderings of "as of August 2, 2026" in running prose, which reads
+// as templated filler and wastes embedding capacity on a chunker that already
+// carries the section heading with the chunk.
+//
+// So a digit-bearing sentence is satisfied by a date of its own OR by a date
+// on its enclosing section. Opt-in and self-enforcing: the dateline element
+// must print a real date, checked with the same DATE_TOKEN, so marking a
+// section dated without dating it does nothing.
+//
+// This only ever relaxes the rule, so it cannot introduce a finding on the
+// XRP report page, which is the other enforced page here.
+const DATELINE_EL = /<([a-z]+)\b[^>]*\sdata-dateline(?:=["'][^"']*["'])?[^>]*>([\s\S]*?)<\/\1>/gi;
 
 // Digits that are not measurements: contract addresses, ratios, version
 // strings, protocol names that contain numerals, and standard token/licence
@@ -127,14 +145,37 @@ function sentences(t) {
     .filter(Boolean);
 }
 
+/**
+ * Split the page into section-sized chunks and say which are dated.
+ *
+ * Lookahead split rather than a matched tag pair: a backreference regex
+ * mis-terminates on nesting, and these pages hold sections as flat siblings.
+ * Chunk 0 is everything before the first <section>, which is the hero, and it
+ * keeps the per-sentence rule.
+ */
+function sections(html) {
+  return html.split(/(?=<section\b)/i).map((chunk) => {
+    let dated = false;
+    for (const m of chunk.matchAll(DATELINE_EL)) {
+      if (DATE_TOKEN.test(text(m[2]))) {
+        dated = true;
+        break;
+      }
+    }
+    return { html: chunk, dated };
+  });
+}
+
 function blocks(html) {
   const out = [];
-  for (const m of html.matchAll(/<(p|li|dd|summary)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
-    const inner = m[2];
-    // Skip wrappers that contain other blocks; the inner ones are matched too.
-    if (/<(p|li|dd)\b/i.test(inner)) continue;
-    const t = text(inner);
-    if (t.length > 2) out.push({ tag: m[1].toLowerCase(), text: t });
+  for (const sec of sections(html)) {
+    for (const m of sec.html.matchAll(/<(p|li|dd|summary)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
+      const inner = m[2];
+      // Skip wrappers that contain other blocks; the inner ones are matched too.
+      if (/<(p|li|dd)\b/i.test(inner)) continue;
+      const t = text(inner);
+      if (t.length > 2) out.push({ tag: m[1].toLowerCase(), text: t, sectionDated: sec.dated });
+    }
   }
   return out;
 }
@@ -149,7 +190,16 @@ export function lint(html, { entityCap = ENTITY_CAP } = {}) {
     ss.forEach((s, i) => {
       // Rule 1: undated figures. Fires on any digit, not just % or $, because
       // "5 of the 14" carries neither and is exactly the case this catches.
-      if (/\d/.test(s) && !DATE_TOKEN.test(s)) {
+      // Questions are exempt: an interrogative asserts nothing, so there is
+      // no measurement to date, and the FAQ headings that carry a figure are
+      // verbatim from the People Also Ask block. The answer beneath still has
+      // to pass, which is where the claim actually lives.
+      if (
+        /\d/.test(s) &&
+        !DATE_TOKEN.test(s) &&
+        !b.sectionDated &&
+        !s.trimEnd().endsWith("?")
+      ) {
         const money = /[%$]/.test(s);
         if (money || !ALLOW_DIGIT.test(s)) {
           findings.push({ rule: "undated-figure", where: b.tag, text: s });
@@ -194,6 +244,26 @@ function selfTest() {
     ["<p>Both are wrapped XRP, but the trust model differs.</p>", "orphan-opener", true],
     [`<p>${"Harvest ".repeat(12)}</p>`, "entity-density", true],
     ["<p>Harvest tracks these products.</p>", "entity-density", false],
+    // Rule 1, section-dateline form. A dated section covers its own prose, a
+    // dateline with no date covers nothing, and prose outside every section is
+    // never covered.
+    [
+      '<section><p data-dateline>August 2, 2026</p><p>The median was 4.13%.</p></section>',
+      "undated-figure",
+      false,
+    ],
+    [
+      '<section><p data-dateline>Composition</p><p>The median was 4.13%.</p></section>',
+      "undated-figure",
+      true,
+    ],
+    [
+      '<p>The median was 4.13%.</p><section><p data-dateline>August 2, 2026</p></section>',
+      "undated-figure",
+      true,
+    ],
+    // A question asserts nothing, so there is nothing to date.
+    ["<summary>How many hold 10,000 or more?</summary>", "undated-figure", false],
   ];
   let failed = 0;
   for (const [html, rule, shouldFire] of cases) {

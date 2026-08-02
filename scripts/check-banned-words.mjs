@@ -74,14 +74,21 @@ const PHRASE_ALLOWLIST = [
   /liquidity returns/gi, // verb usage in withdrawal-availability clause
 ];
 
+// /usdc is hand-written long-form prose rather than the shared template body,
+// which makes it the one hub carrying the copy register this gate exists for,
+// and it was the only page carrying it that no word gate covered. /eth, /btc
+// and /usdt still render the shared template body and stay out.
+const ASSET_HUB_SLUGS = ["usdc"];
+
 async function loadProductSlugs() {
   const raw = await fs.readFile(VAULTS_JSON, "utf8");
   const vaults = JSON.parse(raw);
-  return new Set(
-    vaults
+  return new Set([
+    ...vaults
       .map((v) => v.slug)
       .filter((s) => typeof s === "string" && s.length > 0),
-  );
+    ...ASSET_HUB_SLUGS,
+  ]);
 }
 
 // Strip <script> and <style> blocks, then the footer (universal

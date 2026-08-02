@@ -1,0 +1,674 @@
+/* Additions specific to the /usdc rebuild. The page shell (crumbs, stats,
+   CTA rail, data note) comes from asset-hub.css and the ranking table from
+   globals.css, unchanged: /usdc renders the same HubTable every other asset
+   hub does.
+
+   This file covers what is unique to a linear answer-first document: the
+   title row, the summary card, the section rhythm, and the collapsible FAQ.
+   Section headings deliberately reuse .rp-eyebrow + h2 sizing from the XRP
+   report so the two long-form pages read as one house style.
+
+   Everything is scoped under .uh-page so it cannot reach /eth, /btc or /usdt,
+   which are the control group for this change. */
+
+/* === Hero ==========================================================
+   Icon and H1 on one line, then the answer at full width. Nothing sits
+   between the heading and the claim: the two stat tiles that used to live
+   here published an undated, unscoped figure ahead of the sentence that
+   qualifies it, so they were removed rather than restyled. */
+.uni-hub-test.uh-page .uh-hero {
+  display: block;
+  padding: 8px 0 28px;
+}
+.uni-hub-test.uh-page .uh-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.uni-hub-test.uh-page .uh-titlerow .uni-hub-h1 {
+  margin: 0;
+}
+
+/* The answer sentence. Body prose rather than a stat card on purpose: an
+   engine lifting the opening chunk should get a sentence with a subject, a
+   scope clause and a date, not a number in a box. Full width, no measure cap. */
+.uni-hub-test.uh-page .uh-answer {
+  font-size: 19px;
+  line-height: 1.66;
+  color: var(--uni-ink-2);
+  margin: 16px 0 0;
+  max-width: none;
+}
+
+
+/* === Summary =======================================================
+   Gold panel, black type. The block most likely to be read on its own and
+   the one an answer engine is most likely to lift, so it is the one thing on
+   the page that looks like nothing else on it. */
+.uni-hub-test.uh-page .uh-summary {
+  margin: 8px 0 0;
+  padding: 22px 26px 24px;
+  border-radius: var(--uni-radius, 20px);
+  background: var(--hub-gold, #ffb936);
+  color: #1a1a1a;
+}
+.uni-hub-test.uh-page .uh-summary-h {
+  margin: 0 0 14px;
+  font-family: var(--display);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: #1a1a1a;
+}
+/* The summary's dateline. It sits on the yellow panel rather than in the
+   eyebrow row, because this section has no eyebrow, and it carries the date
+   for all five findings so none of them has to repeat it. */
+.uni-hub-test.uh-page .uh-summary-date {
+  margin: -6px 0 14px !important;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+  color: rgba(26, 26, 26, 0.62) !important;
+}
+.uni-hub-test.uh-page .uh-findings {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 11px;
+}
+.uni-hub-test.uh-page .uh-findings li {
+  position: relative;
+  padding-left: 19px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  max-width: none;
+}
+.uni-hub-test.uh-page .uh-findings li::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1a1a1a;
+}
+
+/* === Section rhythm ================================================
+   Mirrors report.css: sentence-case gold eyebrow at 16/600, then a 35px
+   heading. The nine-card grid this page used to render could only produce
+   H3s inside cards, and the rate-vocabulary headings the rebuild adds have
+   to be page-level H2s to carry the heading match they exist for. */
+.uni-hub-test.uh-page .uh-block {
+  margin: 56px 0 0;
+}
+.uni-hub-test.uh-page .rp-eyebrow {
+  display: block;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--hub-gold, #ffb936);
+  margin: 0 0 12px;
+  max-width: none;
+}
+/* The section dateline rides the eyebrow rather than taking a line of its own.
+   Muted and lighter than the label so it reads as metadata: the eye learns the
+   position after two sections and stops stopping on it, which is the whole
+   point of moving the date out of the prose. */
+.uni-hub-test.uh-page .uh-eyebrow-sep,
+.uni-hub-test.uh-page .uh-eyebrow-date {
+  color: var(--uni-ink-3);
+  font-weight: 500;
+}
+.uni-hub-test.uh-page .uh-eyebrow-date {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.uni-hub-test.uh-page .uh-block h2 {
+  font-family: var(--display);
+  font-size: 35px;
+  font-weight: 650;
+  letter-spacing: -0.018em;
+  line-height: 1.2;
+  color: var(--uni-ink);
+  margin: 0 0 16px;
+  scroll-margin-top: 72px;
+}
+
+/* Prose runs the full content width. It previously capped at 78ch, which on a
+   wide viewport wrapped at roughly 70% of the available column and read as a
+   broken measure against the full-width tables above and below it. */
+.uni-hub-test.uh-page .uh-block p {
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--uni-ink-2);
+  margin: 0 0 16px;
+  max-width: none;
+}
+.uni-hub-test.uh-page .uh-block p:last-child {
+  margin-bottom: 0;
+}
+/* The atomic opening sentence of each block, one step up so the liftable
+   claim reads as the claim. */
+.uni-hub-test.uh-page .uh-lead {
+  font-size: 19px !important;
+  line-height: 1.66 !important;
+  color: var(--uni-ink) !important;
+}
+/* Inline prose links only. This must NOT be a descendant selector: every row
+   of the ranking table is an <a> living inside .uh-block, so `.uh-block a`
+   painted the gold underline band across all ten rows and read as a broken
+   table. Child combinators keep it to anchors that are actually inline in a
+   sentence. */
+.uni-hub-test.uh-page .uh-block > p > a,
+.uni-hub-test.uh-page .uh-venues > li > a,
+.uni-hub-test.uh-page .uh-risks > li > a,
+.uni-hub-test.uh-page .uh-cols > dd > a,
+.uni-hub-test.uh-page .uh-faq-a > a {
+  color: var(--uni-ink);
+  font-weight: 500;
+  background: linear-gradient(transparent 70%, rgba(255, 185, 54, 0.45) 70%);
+  padding: 0 1px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.uni-hub-test.uh-page .uh-block > p > a:hover,
+.uni-hub-test.uh-page .uh-venues > li > a:hover,
+.uni-hub-test.uh-page .uh-risks > li > a:hover,
+.uni-hub-test.uh-page .uh-cols > dd > a:hover,
+.uni-hub-test.uh-page .uh-faq-a > a:hover {
+  background: linear-gradient(transparent 0, rgba(255, 185, 54, 0.55) 0);
+}
+
+/* Venue lines: one dated sentence per family. */
+.uni-hub-test.uh-page .uh-venues {
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  max-width: none;
+}
+.uni-hub-test.uh-page .uh-venues li {
+  position: relative;
+  padding-left: 19px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test.uh-page .uh-venues li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.7em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--uni-ink-3);
+}
+
+/* Risk surfaces. One item per exposure, separated by a rule rather than a
+   bullet: these are seven distinct things that fail independently, and a
+   dotted list makes them read as a checklist of equivalent items. The
+   separator gives each one room without numbering them, since they are not
+   ranked. */
+.uni-hub-test.uh-page .uh-risks {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0;
+  max-width: none;
+}
+.uni-hub-test.uh-page .uh-risks > li {
+  padding: 15px 0;
+  font-size: 16.5px;
+  line-height: 1.72;
+  color: var(--uni-ink-2);
+  border-top: 1px solid var(--uni-line);
+}
+.uni-hub-test.uh-page .uh-risks > li:first-child { border-top: none; padding-top: 4px; }
+.uni-hub-test.uh-page .uh-risks > li:last-child { padding-bottom: 4px; }
+.uni-hub-test.uh-page .uh-risks strong {
+  font-weight: 600;
+  color: var(--uni-ink);
+}
+
+/* Column guide. A definition list because that is what it is: the term is the
+   column header exactly as the table prints it, so a reader can match the two
+   without translating. */
+.uni-hub-test.uh-page .uh-cols {
+  margin: 0 0 20px;
+  display: grid;
+  gap: 0;
+}
+.uni-hub-test.uh-page .uh-cols > dt {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--uni-ink);
+  padding: 16px 0 5px;
+  border-top: 1px solid var(--uni-line);
+}
+.uni-hub-test.uh-page .uh-cols > dt:first-child { border-top: none; padding-top: 2px; }
+.uni-hub-test.uh-page .uh-cols > dd {
+  margin: 0;
+  font-size: 16.5px;
+  line-height: 1.72;
+  color: var(--uni-ink-2);
+}
+@media (min-width: 820px) {
+  /* Term in a fixed left rail so the definitions align into one column and the
+     list scans as a table without being one. */
+  .uni-hub-test.uh-page .uh-cols {
+    grid-template-columns: 168px minmax(0, 1fr);
+    column-gap: 26px;
+  }
+  .uni-hub-test.uh-page .uh-cols > dt { padding: 17px 0 0; }
+  .uni-hub-test.uh-page .uh-cols > dd {
+    padding: 16px 0;
+    border-top: 1px solid var(--uni-line);
+  }
+  .uni-hub-test.uh-page .uh-cols > dd:first-of-type { border-top: none; padding-top: 0; }
+}
+
+/* Caveat line under the top-ten table. Smaller and muted so it reads as a
+   footnote to the ranking rather than a competing claim. */
+.uni-hub-test.uh-page .uh-note {
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  color: var(--uni-ink-3) !important;
+  margin-top: 16px !important;
+}
+
+/* === FAQ ===========================================================
+   <details> rows, same shape as /xrp-rich-list. Every answer ships in the
+   HTML whether or not its row is open, so nothing is hidden from a parser. */
+.uni-hub-test.uh-page .uh-faq {
+  width: 100%;
+  border-top: 1px solid var(--uni-line, #dddee0);
+}
+.uni-hub-test.uh-page .uh-faq-item {
+  border-bottom: 1px solid var(--uni-line, #dddee0);
+}
+.uni-hub-test.uh-page .uh-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  padding: 18px 0;
+  font-size: 17.5px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--uni-ink);
+  cursor: pointer;
+  list-style: none;
+}
+.uni-hub-test.uh-page .uh-faq-q::-webkit-details-marker { display: none; }
+.uni-hub-test.uh-page .uh-faq-q::marker { content: ""; }
+.uni-hub-test.uh-page .uh-faq-q:hover { opacity: 0.6; }
+.uni-hub-test.uh-page .uh-faq-chev {
+  flex: none;
+  color: var(--uni-ink-3);
+  transition: transform 0.2s ease;
+}
+.uni-hub-test.uh-page .uh-faq-item[open] .uh-faq-chev {
+  transform: rotate(180deg);
+}
+.uni-hub-test.uh-page .uh-faq-a {
+  margin: 0;
+  padding: 0 0 22px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--uni-ink-2);
+  max-width: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-hub-test.uh-page .uh-faq-chev,
+  .uni-hub-test.uh-page .uh-faq-q { transition: none; }
+}
+
+@media (max-width: 800px) {
+  .uni-hub-test.uh-page .uh-block { margin-top: 40px; }
+  .uni-hub-test.uh-page .uh-block h2 { font-size: 25px; }
+  .uni-hub-test.uh-page .rp-eyebrow { font-size: 14.5px; margin-bottom: 8px; }
+  .uni-hub-test.uh-page .uh-answer { font-size: 16px; margin-top: 16px; }
+  .uni-hub-test.uh-page .uh-lead { font-size: 16.5px !important; }
+  .uni-hub-test.uh-page .uh-block p { font-size: 15.5px; }
+  .uni-hub-test.uh-page .uh-summary { padding: 18px 18px 20px; }
+  .uni-hub-test.uh-page .uh-findings li { font-size: 15px; }
+  .uni-hub-test.uh-page .uh-venues li { font-size: 15.5px; }
+  .uni-hub-test.uh-page .uh-faq-q { font-size: 16px; line-height: 23px; padding: 16px 0; }
+  .uni-hub-test.uh-page .uh-faq-a { font-size: 15.5px; padding-bottom: 18px; }
+
+}
+
+/* Dark mode. The gold summary panel keeps black type in both themes: it is a
+   solid accent surface, not a tinted one, so it does not invert. */
+:root[data-theme="dark"] .uni-hub-test.uh-page .uh-block h2 {
+  color: var(--uni-ink);
+}
+
+/* === Earnings calculator ===========================================
+   Two panes: inputs left, results right, stacking below 900px. Same shape
+   as the /xrp-rich-list calculator so the two tools read as one family,
+   but on a neutral card rather than the gold panel, because the Summary
+   above already owns the gold on this page. */
+.uni-hub-test.uh-page .uh-calc {
+  margin: 4px 0 0;
+  padding: 26px 28px 28px;
+  border: 1px solid var(--uni-line);
+  border-radius: var(--uni-radius, 20px);
+  background: var(--uni-card, transparent);
+}
+.uni-hub-test.uh-page .uh-calc-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+/* A grid item will not shrink below its min-content width, and a text input
+   carries a browser default around 20 characters. Without this the input pane
+   pushes past the viewport on a narrow phone. */
+.uni-hub-test.uh-page .uh-calc-panes > * { min-width: 0; }
+@media (min-width: 900px) {
+  .uni-hub-test.uh-page .uh-calc-panes {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  /* Centred inside the pane rather than pinned to the top. The results pane
+     holds nothing but the placeholder until the reader calculates, and a line
+     of muted text hanging off the top of a 210px column beside a full input
+     form reads as a rendering fault. Once results exist they overflow the
+     min-height, so the centring stops applying on its own. */
+  .uni-hub-test.uh-page .uh-calc-res {
+    border-left: 1px solid var(--uni-line);
+    padding-left: 34px;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.uni-hub-test.uh-page .uh-calc-h {
+  margin: 0 0 18px !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--uni-ink) !important;
+  font-weight: 600;
+}
+.uni-hub-test.uh-page .uh-calc-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--uni-ink-2);
+  margin: 0 0 7px;
+}
+.uni-hub-test.uh-page .uh-calc-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--uni-bg, #fff);
+  border: 1px solid var(--uni-line);
+  border-radius: 12px;
+  padding: 0 14px;
+  margin: 0 0 16px;
+}
+.uni-hub-test.uh-page .uh-calc-field:focus-within {
+  border-color: var(--uni-ink);
+}
+.uni-hub-test.uh-page .uh-calc-input,
+.uni-hub-test.uh-page .uh-calc-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  padding: 13px 0;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.uni-hub-test.uh-page .uh-calc-field--select { padding-right: 8px; }
+.uni-hub-test.uh-page .uh-calc-select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 22px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 8px center, right 3px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.uni-hub-test.uh-page .uh-calc-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test.uh-page .uh-calc-go {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 18px;
+  background: var(--uni-ink);
+  color: var(--uni-bg, #fff);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.uni-hub-test.uh-page .uh-calc-go:hover { opacity: 0.85; }
+.uni-hub-test.uh-page .uh-calc-note {
+  margin: 16px 0 0 !important;
+  font-size: 12.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
+}
+
+.uni-hub-test.uh-page .uh-calc-rest {
+  display: none;
+  margin: 0 !important;
+  font-size: 14px !important;
+  color: var(--uni-ink-3) !important;
+  text-align: center;
+}
+@media (min-width: 900px) {
+  .uni-hub-test.uh-page .uh-calc-rest { display: block; }
+}
+.uni-hub-test.uh-page .uh-calc-headline {
+  margin: 0 0 6px !important;
+  font-family: var(--display);
+  font-size: 19px !important;
+  line-height: 1.35 !important;
+  color: var(--uni-ink) !important;
+  font-feature-settings: "tnum";
+}
+.uni-hub-test.uh-page .uh-calc-headline strong { font-weight: 650; }
+.uni-hub-test.uh-page .uh-calc-detail {
+  margin: 0 0 16px !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
+}
+.uni-hub-test.uh-page .uh-calc-facts {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 11px;
+}
+.uni-hub-test.uh-page .uh-calc-facts li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+}
+.uni-hub-test.uh-page .uh-calc-facts li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.66em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--hub-gold, #ffb936);
+}
+.uni-hub-test.uh-page .uh-calc-facts strong {
+  color: var(--uni-ink);
+  font-weight: 650;
+  font-feature-settings: "tnum";
+}
+.uni-hub-test.uh-page .uh-calc-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: var(--hub-gold, #ffb936);
+  color: #1a1a1a !important;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background-image: none !important;
+  transition: opacity 0.15s ease;
+}
+.uni-hub-test.uh-page .uh-calc-cta:hover {
+  opacity: 0.88;
+  background-image: none !important;
+}
+
+@media (max-width: 800px) {
+  .uni-hub-test.uh-page .uh-calc { padding: 20px 18px 22px; }
+  .uni-hub-test.uh-page .uh-calc-headline { font-size: 17px !important; }
+  .uni-hub-test.uh-page .uh-calc-facts li { font-size: 14.5px; }
+}
+
+:root[data-theme="dark"] .uni-hub-test.uh-page .uh-calc-field {
+  background: rgba(255, 255, 255, 0.04);
+}
+:root[data-theme="dark"] .uni-hub-test.uh-page .uh-calc-go {
+  background: var(--uni-ink);
+  color: #12141a;
+}
+
+/* === Top-ten "Link" column =========================================
+   A seventh track carrying an Open button per row. Only /usdc's top-ten
+   table opts in (openLinks on HubTable), so the six-column grid every
+   other call site uses is untouched.
+
+   The existing responsive rules in globals.css already hide Strategy at
+   1100, Network at 800 and the trend at 540 by nth-child, and those apply
+   here too. Each breakpoint below just restates the track list with one
+   fewer column plus the Link track, which stays visible at every width:
+   it is the row's reason for existing on a phone. */
+.hub-table--links .hub-thead,
+.hub-table--links .hub-row {
+  grid-template-columns: 50px minmax(190px, 2fr) 1fr 1fr 0.5fr 130px 78px;
+}
+.hub-table--links .hub-row { position: relative; }
+/* Stretched link: the whole row navigates to the product page, while the
+   Open anchor keeps its own click because it sits above this layer. */
+.hub-table--links .hub-rowlink {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hub-table--links .hub-cell { position: relative; z-index: 1; pointer-events: none; }
+.hub-table--links .hub-linkcell {
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+.hub-table--links .hub-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 6px 14px;
+  border: 1px solid var(--hub-line, #e6e7e4);
+  border-radius: 999px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.hub-table--links .hub-open:hover {
+  border-color: #1a1a1a;
+  box-shadow: 0 1px 4px rgba(16, 18, 22, 0.12);
+}
+@media (max-width: 1100px) {
+  .hub-table--links .hub-thead,
+  .hub-table--links .hub-row {
+    grid-template-columns: 40px minmax(140px, 1.6fr) 100px 48px 110px 74px;
+  }
+}
+@media (max-width: 800px) {
+  .hub-table--links .hub-thead,
+  .hub-table--links .hub-row {
+    grid-template-columns: 32px minmax(110px, 1.6fr) 90px 100px 70px;
+  }
+}
+@media (max-width: 540px) {
+  .hub-table--links .hub-thead,
+  .hub-table--links .hub-row {
+    grid-template-columns: 22px minmax(0, 1fr) 60px 66px;
+  }
+  .hub-table--links .hub-open {
+    min-width: 0;
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+:root[data-theme="dark"] .hub-table--links .hub-open {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #f3f4f6;
+}
+:root[data-theme="dark"] .hub-table--links .hub-open:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Freshness stamp under the answer sentence. Small and muted: it substantiates
+   the hourly-update claim the footer already makes, without competing with the
+   claim above it. */
+.uni-hub-test.uh-page .uh-updated {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--uni-ink-3);
+}
+
+/* Second note in the calculator carries the fee position. Same register as the
+   first, with the link readable against it. */
+.uni-hub-test.uh-page .uh-calc-note + .uh-calc-note {
+  margin-top: 10px !important;
+}
+.uni-hub-test.uh-page .uh-calc-note a {
+  color: var(--uni-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.uni-hub-test.uh-page .uh-calc-note a:hover { color: var(--uni-ink); }
