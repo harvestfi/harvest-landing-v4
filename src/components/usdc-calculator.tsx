@@ -159,18 +159,12 @@ export function UsdcCalculator({
             enough amount can move the rate it earns. Nothing here is advice, an
             offer, or a forecast.
           </p>
-          {/* Fees. The card quantifies a year of earnings, so leaving the
-              deduction unquantified is the weakest disclosure on the page. No
-              fee figure is published anywhere on the site, so this names that a
-              performance fee applies and which vaults it covers rather than
-              inventing a rate, and points at where the model is described. */}
-          <p className="uh-calc-note">
-            Every figure here is gross of fees. Harvest charges a performance fee
-            on the vaults it operates, which is every strategy in this index, so
-            a realised amount is lower than the one shown. How that model works
-            is set out on the{" "}
-            <a href="/about#how-we-operate">about page</a>.
-          </p>
+          {/* A fee disclaimer used to sit here saying these figures were gross
+              of fees and a realised amount would be lower. That was wrong: the
+              published APY is already net of the performance fee, so the
+              paragraph was warning about a deduction that has already been
+              taken. Removed rather than reworded, because nothing needs
+              disclosing when the figure shown is the figure earned. */}
         </div>
 
         <div className="uh-calc-res">
