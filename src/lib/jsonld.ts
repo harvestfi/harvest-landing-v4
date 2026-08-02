@@ -79,14 +79,23 @@ export function financialProductSchema(vault: YieldVault): object {
   };
 
   if (vault.apy30d > 0) {
-    schema.interestRate = {
-      "@type": "QuantitativeValue",
-      value: (vault.apy30d / 100).toFixed(4),
-      unitText: "PERCENT",
-    };
+    schema.interestRate = interestRateValue(vault.apy30d);
   }
 
   return schema;
+}
+
+// unitText "PERCENT" means the value IS the percentage: a 11.24% rate is
+// 11.24, not 0.1124. We previously divided by 100 while keeping the unit,
+// so every rate on the site was declared a hundred times too small in the
+// layer answer engines read most readily - the top USDC strategy published
+// as paying 0.11%. Single helper so the two emitters cannot drift apart again.
+function interestRateValue(apyPercent: number): object {
+  return {
+    "@type": "QuantitativeValue",
+    value: apyPercent.toFixed(2),
+    unitText: "PERCENT",
+  };
 }
 
 export function itemListSchema(vaults: YieldVault[], hubUrl: string): object {
@@ -102,15 +111,7 @@ export function itemListSchema(vaults: YieldVault[], hubUrl: string): object {
         name: v.productName,
         url: `${SITE_URL}/${v.slug}`,
         provider: { "@type": "Organization", name: v.protocol.name },
-        ...(v.apy30d > 0
-          ? {
-              interestRate: {
-                "@type": "QuantitativeValue",
-                value: (v.apy30d / 100).toFixed(4),
-                unitText: "PERCENT",
-              },
-            }
-          : {}),
+        ...(v.apy30d > 0 ? { interestRate: interestRateValue(v.apy30d) } : {}),
       },
     })),
   };
@@ -190,6 +191,10 @@ export function reportDatasetSchema(o: {
   numberOfItems?: number;
   keywords?: string[];
   sources?: string[];
+  // ISO 8601 instant or interval. /usdc passes a single instant, because every
+  // rate on it is one day's reading; without this a consumer can read
+  // dateModified as "sometime before now" and treat the figures as a period.
+  temporalCoverage?: string;
   // Downloadable machine-readable distributions (JSON index + CSV), emitted at
   // build time by scripts/build-xrp-history.mjs, so Google's Dataset crawler
   // and agents get a real, parseable file rather than only the HTML table.
@@ -212,6 +217,7 @@ export function reportDatasetSchema(o: {
       url: SITE_URL,
     },
     dateModified: o.dateModified,
+    ...(o.temporalCoverage ? { temporalCoverage: o.temporalCoverage } : {}),
     isBasedOn: (o.sources ?? []).map((s) => s),
     ...(o.numberOfItems ? { size: `${o.numberOfItems} venues` } : {}),
     keywords: o.keywords ?? ["XRP", "DeFi", "yield", "APY", "TVL"],
