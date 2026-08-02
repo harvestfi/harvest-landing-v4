@@ -31,6 +31,7 @@ const RESOURCES = [
 // Research reports: standalone, data-backed pages. Kept separate from
 // Resources so each report is discoverable as its own destination.
 const REPORTS = [
+  { label: "XRP Rich List", href: "/xrp-rich-list" },
   { label: "XRP Yield Ranking", href: "/report/xrp-yield-ranking" },
 ];
 

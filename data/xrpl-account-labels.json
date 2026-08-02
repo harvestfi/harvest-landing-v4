@@ -1,0 +1,557 @@
+{
+  "note": "Account labels for the /xrp-rich-list top-100 table. Every entry is a claim about who controls an address, so every entry carries the evidence it rests on. See scripts/lib/xrpl-labels.mjs for the tier definitions and scripts/check-xrpl-labels.mjs for what the build enforces.",
+  "tiers": {
+    "account-domain": "The account publishes a Domain onchain matching the operator. Re-verified against the ledger on every run.",
+    "xrpl-toml": "The operator's domain publishes /.well-known/xrp-ledger.toml listing this address, which is the XRP Ledger standard for making exactly this claim.",
+    "published": "The operator published the address on an official page. Requires evidenceUrl and verifiedOn.",
+    "third-party": "An explorer or data provider attributes the address. Requires evidenceUrl, verifiedOn and attribution, and the page names the provider rather than presenting the label as its own finding."
+  },
+  "rejected": "Inference from transaction behaviour, address clustering, or 'this wallet moves like an exchange'. The validator rejects the tier name so it cannot be added quietly. Wrong labels on this page are found within the hour and cost more than the missing label saves.",
+  "labels": [
+    {
+      "address": "ragKXjY7cBTXUus32sYHZVfkY46Nt2Q829",
+      "name": "ahbritto",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/ragKXjY7cBTXUus32sYHZVfkY46Nt2Q829",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rG2eEaeiJou6cVQ3KtX7XMNwGhuW99xmHP",
+      "name": "ahbritto",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rG2eEaeiJou6cVQ3KtX7XMNwGhuW99xmHP",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rJ5EJYsW6Vkeruj1LAmQYq3VP7QUQKBH1W",
+      "name": "ahbritto",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rJ5EJYsW6Vkeruj1LAmQYq3VP7QUQKBH1W",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rQKZSMgmBJvv3FvWj1vuGjUXnegTqJc25z",
+      "name": "ahbritto",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rQKZSMgmBJvv3FvWj1vuGjUXnegTqJc25z",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rsF9cc6gniHLTR2Jng29ng21ez7L9PpmPt",
+      "name": "ahbritto",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rsF9cc6gniHLTR2Jng29ng21ez7L9PpmPt",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rsXNUCJkXeyFuGHyfRnuWPita2ns32upBD",
+      "name": "ahbritto",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rsXNUCJkXeyFuGHyfRnuWPita2ns32upBD",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rEbXa31msPbPDZgmLMKH7CaKaf7VipoLBo",
+      "name": "Binance",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rEbXa31msPbPDZgmLMKH7CaKaf7VipoLBo",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rP3mUZyCDzZkTSd1VHoBbFt8HGm8fyq8qV",
+      "name": "Binance",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rP3mUZyCDzZkTSd1VHoBbFt8HGm8fyq8qV",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rs8ZPbYqgecRcDzQpJYAMhSxSi5htsjnza",
+      "name": "Binance",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rs8ZPbYqgecRcDzQpJYAMhSxSi5htsjnza",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rJpj1Mv21gJzsbsVnkp1U4nqchZbmZ9pM5",
+      "name": "Binance (XRP-BF2 Reserve)",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rJpj1Mv21gJzsbsVnkp1U4nqchZbmZ9pM5",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rw7m3CtVHwGSdhFjV4MyJozmZJv3DYQnsA",
+      "name": "bitbank",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rw7m3CtVHwGSdhFjV4MyJozmZJv3DYQnsA",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rhWVCsCXrkwTeLBg6DyDr7abDaHz3zAKmn",
+      "name": "bitFlyer",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rhWVCsCXrkwTeLBg6DyDr7abDaHz3zAKmn",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rwTTsHVUDF8Ub2nzV2oAeWxfJzUvobXLEf",
+      "name": "Bitget Global",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rwTTsHVUDF8Ub2nzV2oAeWxfJzUvobXLEf",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rPyCQm8E5j78PDbrfKF24fRC7qUAk1kDMZ",
+      "name": "Bithumb",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rPyCQm8E5j78PDbrfKF24fRC7qUAk1kDMZ",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "r44CNwMWyJf4MEA1eHVMLPTkZ1LSv4Bzrv",
+      "name": "chrislarsen",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/r44CNwMWyJf4MEA1eHVMLPTkZ1LSv4Bzrv",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "r476293LUcDqtjiSGJ5Dh44J1xBCDWeX3",
+      "name": "chrislarsen",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/r476293LUcDqtjiSGJ5Dh44J1xBCDWeX3",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rD6tdgGHG7hwGTA6P39aE7W89fbqxXRjzk",
+      "name": "chrislarsen",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rD6tdgGHG7hwGTA6P39aE7W89fbqxXRjzk",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
+      "name": "chrislarsen",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rhREXVHV938ToGkdJQ9NCYEY4x8kSEtjna",
+      "name": "chrislarsen",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rhREXVHV938ToGkdJQ9NCYEY4x8kSEtjna",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "rPoJNiCk7XSFLR28nH2hAbkYqjtMC3hK2k",
+      "name": "chrislarsen",
+      "type": "individual",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rPoJNiCk7XSFLR28nH2hAbkYqjtMC3hK2k",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple-founder"
+    },
+    {
+      "address": "r99QSej32nAcjQAri65vE5ZXjw6xpUQ2Eh",
+      "name": "Coincheck",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/r99QSej32nAcjQAri65vE5ZXjw6xpUQ2Eh",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rDKw32dPXHfoeGoD3kVtm76ia1WbxYtU7D",
+      "name": "Coinone",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rDKw32dPXHfoeGoD3kVtm76ia1WbxYtU7D",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rKNwXQh9GMjaU8uTqKLECsqyib47g5dMvo",
+      "name": "Crypto.com",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rKNwXQh9GMjaU8uTqKLECsqyib47g5dMvo",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rEvwSpejhGTbdAXbxRTpGAzPBQkBRZxN5s",
+      "name": "eToro",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rEvwSpejhGTbdAXbxRTpGAzPBQkBRZxN5s",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rMLNvZR9dascY5jtCfCv3whAp8HdUSZAQ",
+      "name": "Flare Core Vault",
+      "type": "protocol",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rMLNvZR9dascY5jtCfCv3whAp8HdUSZAQ",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "r9NpyVfLfUG8hatuCCHKzosyDtKnBdsEN3",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/r9NpyVfLfUG8hatuCCHKzosyDtKnBdsEN3",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "r9UUEXn3cx2seufBkDa8F86usfjWM6HiYp",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/r9UUEXn3cx2seufBkDa8F86usfjWM6HiYp",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rB3WNZc45gxzW31zxfXdkx8HusAhoqscPn",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rB3WNZc45gxzW31zxfXdkx8HusAhoqscPn",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rDdXiA3M4mYTQ4cFpWkVXfc2UaAXCFWeCK",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rDdXiA3M4mYTQ4cFpWkVXfc2UaAXCFWeCK",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rDqGA2GfveHypDguQ1KXrJzYymFZmKxEsF",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rDqGA2GfveHypDguQ1KXrJzYymFZmKxEsF",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rGKHDyj4L6pc7DzRB6LWCR4YfZfzXj2Bdh",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rGKHDyj4L6pc7DzRB6LWCR4YfZfzXj2Bdh",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rHGfmgv54kpc3QCZGRXEQKUhLPndbasbQr",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rHGfmgv54kpc3QCZGRXEQKUhLPndbasbQr",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rhtufNsYfrozs4GvSq4HMYcR9y3dg8FWdC",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rhtufNsYfrozs4GvSq4HMYcR9y3dg8FWdC",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rKDvgGUsNPZxsgmoemfrgXPS2Not4co2op",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rKDvgGUsNPZxsgmoemfrgXPS2Not4co2op",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rKveEyR1SrkWbJX214xcfH43ZsoGMb3PEv",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rKveEyR1SrkWbJX214xcfH43ZsoGMb3PEv",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rKwJaGmB5Hz24Qs2iyCaTdUuL1WsEXUWy5",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rKwJaGmB5Hz24Qs2iyCaTdUuL1WsEXUWy5",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rMhkqz3DeU7GUUJKGZofusbrTwZe6bDyb1",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rMhkqz3DeU7GUUJKGZofusbrTwZe6bDyb1",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rMQ98K56yXJbDGv49ZSmW51sLn94Xe1mu1",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rMQ98K56yXJbDGv49ZSmW51sLn94Xe1mu1",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rN8pqRwLYuuvY7pUHurybPC8P6rLqVsu6o",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rN8pqRwLYuuvY7pUHurybPC8P6rLqVsu6o",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rNASJdZjY9dToHnNURi3HAUku3duPwbtD1",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rNASJdZjY9dToHnNURi3HAUku3duPwbtD1",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rp6aTJmW3nq1aKt3Jmuz4DPRxksT5PBjpH",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rp6aTJmW3nq1aKt3Jmuz4DPRxksT5PBjpH",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rsjFB8mPWqiZgPUaVh8XYqdfa59PE2d5LG",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rsjFB8mPWqiZgPUaVh8XYqdfa59PE2d5LG",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "rw2hzLZgiQ9q62KCuaTWuFHWfiX7JWg3wY",
+      "name": "Ripple",
+      "type": "company",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rw2hzLZgiQ9q62KCuaTWuFHWfiX7JWg3wY",
+      "verifiedOn": "2026-07-31",
+      "affiliation": "ripple"
+    },
+    {
+      "address": "r38a3PtqW3M7LRESgaR4dyHjg3AxAmiZCt",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/r38a3PtqW3M7LRESgaR4dyHjg3AxAmiZCt",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "r4G689g4KePYLKkyyumM1iUppTP4nhZwVC",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/r4G689g4KePYLKkyyumM1iUppTP4nhZwVC",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rDxJNbV23mu9xsWoQHoBqZQvc77YcbJXwb",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rDxJNbV23mu9xsWoQHoBqZQvc77YcbJXwb",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rfL1mn4VTCoHdhHhHMwqpShCFUaDBRk6Z5",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rfL1mn4VTCoHdhHhHMwqpShCFUaDBRk6Z5",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rJo4m69u9Wd1F8fN2RbgAsJEF6a4hW1nSi",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rJo4m69u9Wd1F8fN2RbgAsJEF6a4hW1nSi",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rJWbw1u3oDDRcYLFqiWFjhGWRKVcBAWdgp",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rJWbw1u3oDDRcYLFqiWFjhGWRKVcBAWdgp",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rLgn612WAgRoZ285YmsQ4t7kb8Ui3csdoU",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rLgn612WAgRoZ285YmsQ4t7kb8Ui3csdoU",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rMNUAfSz2spLEbaBwPnGtxTzZCajJifnzH",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rMNUAfSz2spLEbaBwPnGtxTzZCajJifnzH",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rNcAdhSLXBrJ3aZUq22HaNtNEPpB5fR8Ri",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rNcAdhSLXBrJ3aZUq22HaNtNEPpB5fR8Ri",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rs48xReB6gjKtTnTfii93iwUhjhTJsW78B",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rs48xReB6gjKtTnTfii93iwUhjhTJsW78B",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rwa7YXssGVAL9yPKw6QJtCen2UqZbRQqpM",
+      "name": "UPbit",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rwa7YXssGVAL9yPKw6QJtCen2UqZbRQqpM",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rBEc94rUFfLfTDwwGN7rQGBHc883c2QHhx",
+      "name": "Uphold",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rBEc94rUFfLfTDwwGN7rQGBHc883c2QHhx",
+      "verifiedOn": "2026-07-31"
+    },
+    {
+      "address": "rsXT3AQqhHDusFs3nQQuwcA1yXRLZJAXKw",
+      "name": "Uphold",
+      "type": "exchange",
+      "evidence": "third-party",
+      "attribution": "XRPSCAN",
+      "evidenceUrl": "https://xrpscan.com/account/rsXT3AQqhHDusFs3nQQuwcA1yXRLZJAXKw",
+      "verifiedOn": "2026-07-31"
+    }
+  ],
+  "types": {
+    "exchange": "A centralised trading venue. Balances here belong to its customers, not to the venue.",
+    "company": "A company treasury or programme wallet.",
+    "protocol": "A contract or bridge vault operated by a protocol.",
+    "individual": "A wallet the source attributes to a named person.",
+    "unknown": "Named, but the kind of holder is not established."
+  },
+  "affiliations": {
+    "ripple": "A wallet Ripple itself controls: company treasury and the monthly escrow releases.",
+    "ripple-founder": "A personal wallet attributed to a Ripple co-founder. Held by the individual, not by the company."
+  }
+}
