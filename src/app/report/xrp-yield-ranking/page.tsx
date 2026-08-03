@@ -1693,7 +1693,7 @@ export default function XrpYieldRankingPage() {
             <p className="rp-lead">
               {rhHi != null && rhLo != null && rhTop ? (
                 <>
-                  Over the last 30 days, headline rates across the{" "}
+                  Over the 30 days to {updated}, headline rates across the{" "}
                   {venueCharts.length} larger charted venues sat between{" "}
                   <strong>{pct(rhLo)}</strong> and <strong>{pct(rhHi)}</strong>,
                   topped by {rhTop.name} at {pct(rhHi)}.
@@ -1704,10 +1704,10 @@ export default function XrpYieldRankingPage() {
                     : " "}
                 </>
               ) : null}
-              How the rate has moved over the last 30 days for a selection of
-              the larger venues, from DeFiLlama&rsquo;s daily record. Useful for
-              telling a steady rate apart from one riding a short-lived incentive
-              spike.
+              How the rate has moved over the 30 days to {updated} for a
+              selection of the larger venues, from DeFiLlama&rsquo;s daily
+              record. Useful for telling a steady rate apart from one riding a
+              short-lived incentive spike.
             </p>
             <div className="rp-charts">
               {venueCharts.map((p) => (
