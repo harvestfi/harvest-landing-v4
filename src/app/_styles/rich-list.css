@@ -1657,9 +1657,16 @@
 /* The calculator's surface is gold in both themes, so its contents must stay
    dark ink in both. Without this the dark palette handed it near-white text on
    a gold card, which measured 2.4:1. Redefining the ink tokens on the card
-   itself covers everything inside it, including anything added later. */
-:root[data-theme="dark"] .uni-home-test .rl-calc,
-:root[data-theme="dark"] .uni-home-test .rl-feature-card .rl-eyebrow-badge {
+   itself covers everything inside it, including anything added later.
+
+   Scoped to .rl-calc alone. It used to also catch the "Calculator" badge via
+   .rl-feature-card .rl-eyebrow-badge, which was wrong: the badge sits on
+   .rl-feature-card, and that element has no background at all, only a border
+   and a dot raster. The gold is .rl-calc, a sibling further down the card. So
+   in dark mode the badge was painting #191717 text straight onto the page's
+   dark background. It now inherits the page's dark ink like every other label
+   outside the gold surface. */
+:root[data-theme="dark"] .uni-home-test .rl-calc {
   --uni-ink: #191717;
   --uni-ink-2: #262521;
   --uni-ink-3: #4b4944;
@@ -1674,8 +1681,7 @@
   color: #191717;
 }
 @media (prefers-color-scheme: dark) {
-  .uni-home-test .rl-calc,
-  .uni-home-test .rl-feature-card .rl-eyebrow-badge {
+  .uni-home-test .rl-calc {
     --uni-ink: #191717;
     --uni-ink-2: #262521;
     --uni-ink-3: #4b4944;
