@@ -22,6 +22,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AssetIcon } from "@/components/token-icons";
 import { trackCalculator, calculatorTier } from "@/lib/richlist-tracking";
 
+/** Top XRP rate and where it is paid, for the box under a result. */
+export interface TopYield {
+  apy: number;
+  platform: string;
+}
+
 export interface LadderPoint {
   xrp: number;
   atOrAbove: number;
@@ -82,15 +88,15 @@ const STAGES = [
 export function PercentileCalculator({
   ladder,
   accounts,
-  ranked,
   snapshotDate,
+  topYield,
 }: {
   ladder: LadderPoint[];
   accounts: number;
-  /** How many accounts the ranking below actually lists, so the button that
-   *  sends a visitor there names the same number the section heading does. */
-  ranked: number;
   snapshotDate: string;
+  /** Highest rate across the yield picks below, and where it is paid. The
+   *  box under a result does not render without it. */
+  topYield?: TopYield | null;
 }) {
   const [raw, setRaw] = useState("");
   const [phase, setPhase] = useState<"idle" | "checking" | "done">("idle");
@@ -238,15 +244,16 @@ export function PercentileCalculator({
           />
           <rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" />
         </svg>
-        {/* The full guarantee, because this build carries no calculator
-            analytics. The v4-one fork records that a check ran and which
-            percentile band it landed in, and drops the last clause there for
-            that reason. If a tracker is ever added here, this sentence has to
-            change in the same commit. */}
+        {/* The last clause used to read "and nothing you type is sent
+            anywhere". It is gone because the page now records that a check
+            ran and which percentile band it landed in. What is left is still
+            exactly true: the lookup is a binary search over a build-time
+            ladder and runs entirely in the browser, and the balance itself is
+            never part of any payload. */}
         <span>
           No wallet connection. No address. Just a number, and an approximation
-          is fine. The calculation runs in your browser against XRP Ledger data
-          and nothing you type is sent anywhere.
+          is fine. The calculation runs in your browser against XRP Ledger
+          data.
         </span>
       </p>
 
@@ -299,25 +306,25 @@ export function PercentileCalculator({
                 accounts holding less.
               </li>
             </ul>
-            {/* Two ways on from a result: the ranking the balance was measured
-                against, and the thing to do about it. */}
-            <div className="rl-calc-cta">
+            {/* One way on from a result rather than two.
+                A rank is a "so what" moment, and the two buttons split it: one
+                sent the reader back up the same page to the table they had
+                already scrolled past, the other was a bare verb. A single box
+                the width of the panel asks the question the rank raises and
+                answers it with the best rate on the page. */}
+            {topYield ? (
               <a
-                className="rl-calc-cta-a"
-                href="#top-accounts"
-                onClick={() =>
-                  trackCalculator({
-                    event: "cta",
-                    cta: "top-accounts",
-                    targetUrl: "#top-accounts",
-                  })
-                }
-              >
-                View top {ranked}
-              </a>
-              <a
-                className="rl-calc-cta-b"
+                className="rl-calc-earn"
                 href="#bridge"
+                // Same event and same destination as the button it replaced,
+                // deliberately. The two buttons carried "earn-on-xrp" and
+                // "top-accounts"; only the first one survives, and it still
+                // goes to #bridge, so the result -> onward-click series in the
+                // control room continues across this change rather than
+                // restarting under a new name. The retired button simply stops
+                // appearing, which is the honest way to read one box beating
+                // two. Same-page anchor, so the insert is never racing an
+                // unload.
                 onClick={() =>
                   trackCalculator({
                     event: "cta",
@@ -326,9 +333,13 @@ export function PercentileCalculator({
                   })
                 }
               >
-                Earn on XRP
+                <span className="rl-calc-earn-q">Where people earn on XRP?</span>
+                <span className="rl-calc-earn-a">
+                  Up to {topYield.apy.toFixed(2)}% on {topYield.platform}
+                  <span className="rl-calc-earn-arrow" aria-hidden="true">&rarr;</span>
+                </span>
               </a>
-            </div>
+            ) : null}
           </>
         ) : null}
       </div>

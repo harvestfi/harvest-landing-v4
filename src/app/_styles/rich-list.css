@@ -1256,6 +1256,70 @@
   text-overflow: ellipsis;
 }
 
+/* A card that is itself the link. The whole tile is the target, so it needs to
+   look pressable without turning into a button: the lift on hover and the
+   focus ring are the affordance, and the "Open on X" line only appears on
+   hover and on keyboard focus so the resting grid stays as quiet as it was.
+
+   background-image is reset at anchor specificity, and the hover rule below
+   re-asserts it, because ".uni-home-test .uni-home-content a" paints every
+   content link with a gold underline gradient. On an inline word that is the
+   house link style; on a card-sized anchor the 70% stop becomes a gold band
+   across the bottom third of the tile, and the hover state fills the whole
+   card. The report hit exactly this when its Discover control became a real
+   anchor and carries the same guard on .rp-discover. */
+.uni-home-test a.rl-pick--link,
+.uni-home-test .uni-home-content a.rl-pick--link {
+  display: block;
+  padding: 16px 18px 14px;
+  color: inherit;
+  text-decoration: none;
+  font-weight: inherit;
+  background: var(--uni-bg, #fff);
+  background-image: none;
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
+    transform 0.14s ease;
+}
+.uni-home-test a.rl-pick--link:hover,
+.uni-home-test .uni-home-content a.rl-pick--link:hover {
+  background: var(--uni-bg, #fff);
+  background-image: none;
+  border-color: color-mix(in srgb, var(--uni-gold, #e0a33e) 55%, var(--uni-line, #dddee0));
+  box-shadow: 0 4px 14px rgba(25, 23, 23, 0.09);
+  transform: translateY(-1px);
+}
+.uni-home-test a.rl-pick--link:focus-visible {
+  outline: 2px solid var(--uni-gold, #e0a33e);
+  outline-offset: 2px;
+}
+.uni-home-test .rl-pick-go {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  opacity: 0;
+  transition: opacity 0.14s ease, color 0.14s ease;
+}
+.uni-home-test a.rl-pick--link:hover .rl-pick-go,
+.uni-home-test a.rl-pick--link:focus-visible .rl-pick-go {
+  opacity: 1;
+  color: var(--uni-ink);
+}
+/* Touch has no hover, so the line is simply always on there rather than
+   leaving a phone with no sign the card goes anywhere. */
+@media (hover: none) {
+  .uni-home-test .rl-pick-go { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-home-test a.rl-pick--link { transition: none; }
+  .uni-home-test a.rl-pick--link:hover { transform: none; }
+}
+
 /* ---- bridge ----------------------------------------------------------- */
 
 .uni-home-test .rl-bridge {
@@ -1657,16 +1721,9 @@
 /* The calculator's surface is gold in both themes, so its contents must stay
    dark ink in both. Without this the dark palette handed it near-white text on
    a gold card, which measured 2.4:1. Redefining the ink tokens on the card
-   itself covers everything inside it, including anything added later.
-
-   Scoped to .rl-calc alone. It used to also catch the "Calculator" badge via
-   .rl-feature-card .rl-eyebrow-badge, which was wrong: the badge sits on
-   .rl-feature-card, and that element has no background at all, only a border
-   and a dot raster. The gold is .rl-calc, a sibling further down the card. So
-   in dark mode the badge was painting #191717 text straight onto the page's
-   dark background. It now inherits the page's dark ink like every other label
-   outside the gold surface. */
-:root[data-theme="dark"] .uni-home-test .rl-calc {
+   itself covers everything inside it, including anything added later. */
+:root[data-theme="dark"] .uni-home-test .rl-calc,
+:root[data-theme="dark"] .uni-home-test .rl-feature-card .rl-eyebrow-badge {
   --uni-ink: #191717;
   --uni-ink-2: #262521;
   --uni-ink-3: #4b4944;
@@ -1681,7 +1738,8 @@
   color: #191717;
 }
 @media (prefers-color-scheme: dark) {
-  .uni-home-test .rl-calc {
+  .uni-home-test .rl-calc,
+  .uni-home-test .rl-feature-card .rl-eyebrow-badge {
     --uni-ink: #191717;
     --uni-ink-2: #262521;
     --uni-ink-3: #4b4944;
@@ -1885,31 +1943,44 @@
 }
 .uni-home-test .rl-pager-btn:disabled { opacity: 0.35; cursor: default; }
 
-.uni-home-test .rl-calc-cta {
+/* The single box under a result, replacing the two pill buttons.
+   Full width of the results pane and the same vertical weight the pair had,
+   so the panel's rhythm does not change. Two lines: the question the rank
+   raises, then the answer as the figure. Ink fill because it is now the only
+   thing to do from here and should read that way. */
+.uni-home-test .rl-calc .rl-calc-earn {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
   margin-top: 16px;
-}
-.uni-home-test .rl-calc-cta a {
-  flex: 1 1 auto;
-  text-align: center;
-  border-radius: var(--uni-radius-pill, 999px);
-  padding: 11px 18px;
-  font-size: 14.5px;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.uni-home-test .rl-calc .rl-calc-cta a { color: var(--uni-ink); }
-.uni-home-test .rl-calc-cta .rl-calc-cta-a {
-  background: var(--uni-bg, #fff);
-  border: 1px solid color-mix(in srgb, var(--uni-ink) 16%, transparent);
-}
-.uni-home-test .rl-calc .rl-calc-cta .rl-calc-cta-b {
+  padding: 13px 18px;
+  border-radius: var(--uni-radius, 20px);
   background: var(--uni-ink);
-  color: var(--uni-bg, #fff);
   border: 1px solid var(--uni-ink);
+  color: var(--uni-bg, #fff);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+.uni-home-test .rl-calc .rl-calc-earn:hover { opacity: 0.9; }
+.uni-home-test .rl-calc .rl-calc-earn-q {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0.72;
+}
+.uni-home-test .rl-calc .rl-calc-earn-a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.uni-home-test .rl-calc .rl-calc-earn-arrow {
+  margin-left: auto;
+  font-weight: 400;
+  opacity: 0.8;
 }
 
 /* ---- mobile ------------------------------------------------------------
@@ -2043,4 +2114,56 @@
     border: 0;
     padding: 0;
   }
+}
+
+/* ---- "Download as image" under the band table --------------------------
+   The band-table format circulates on X constantly and the versions that go
+   around carry no ledger number and no date. The generated PNG stamps both,
+   plus the domain, so a shared screenshot stays attributable and checkable.
+   This is the action only: the table above it is the crawlable twin and there
+   is exactly one of those. */
+.uni-home-test .rl-share {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 18px 0 0;
+}
+.uni-home-test .rl-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: 999px;
+  background: var(--uni-bg, #fff);
+  color: var(--uni-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-home-test .rl-share-btn:hover:not(:disabled) {
+  border-color: var(--uni-ink);
+  box-shadow: 0 1px 5px rgba(16, 18, 22, 0.1);
+}
+.uni-home-test .rl-share-btn:disabled { opacity: 0.6; cursor: default; }
+.uni-home-test .rl-share-btn svg { flex: none; }
+.uni-home-test .rl-share-hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--uni-ink-3);
+  max-width: 46ch;
+}
+@media (max-width: 640px) {
+  .uni-home-test .rl-share { gap: 10px; }
+  .uni-home-test .rl-share-hint { font-size: 12.5px; max-width: none; }
+}
+:root[data-theme="dark"] .uni-home-test .rl-share-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+:root[data-theme="dark"] .uni-home-test .rl-share-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.5);
 }

@@ -15,10 +15,9 @@
 // Three events, which is the smallest set that answers both questions:
 //   - "start"   the visitor pressed Start check with a balance typed
 //   - "result"  a rank was shown
-//   - "cta"     the visitor clicked one of the two buttons under the result
+//   - "cta"     the visitor clicked the box under the result
 //
-// start -> result is the completion rate. result -> cta, split by which
-// button, is the click-through.
+// start -> result is the completion rate. result -> cta is the click-through.
 //
 // WHAT IS DELIBERATELY NOT SENT: the balance. The visitor types a number that
 // is nobody's business, the lookup runs entirely in the browser against a
@@ -83,13 +82,26 @@ import {
   getConsent,
 } from "@/lib/analytics";
 
+/**
+ * Which onward click a "cta" event was.
+ *
+ * `top-accounts` is retired: it was the second button under a result, sending
+ * the reader back up the same page to the table they had already scrolled
+ * past, and it went when the two buttons became one box. The value stays in
+ * the union because rows carrying it are already in the table and the control
+ * room still has to name them.
+ *
+ * `earn-on-xrp` is the surviving one. The box that replaced the buttons points
+ * at the same `#bridge` anchor the old button did, so it keeps the same value
+ * and the click-through series does not restart.
+ */
 export type CalculatorCta = "top-accounts" | "earn-on-xrp";
 
 export interface RichListCalculatorEvent {
   event: "start" | "result" | "cta";
   /** Coarse percentile band the result fell into. Only on "result". */
   tier?: string | null;
-  /** Which of the two buttons under a result. Only on "cta". */
+  /** Which onward click. Only on "cta". */
   cta?: CalculatorCta | null;
   targetUrl?: string | null;
 }
