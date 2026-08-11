@@ -48,6 +48,26 @@ const xrpShort = (n: number): string => {
   return String(n);
 };
 
+/**
+ * The community's name for a balance band.
+ *
+ * Whale, dolphin and fish are the vocabulary holders actually use, and the
+ * tier matrices that circulate are built on them with counts less precise than
+ * the ones here. Naming the bands costs nothing and matches the page's own
+ * whale FAQ, which already answers with the distribution rather than with an
+ * invented threshold. No claim of an official cutoff: these are labels for
+ * bands the ledger defines, which is why the column header says so.
+ */
+export const bandNickname = (b: Band): string => {
+  if (b.min >= 10_000_000) return "Grand whale";
+  if (b.min >= 1_000_000) return "Whale";
+  if (b.min >= 100_000) return "Shark";
+  if (b.min >= 10_000) return "Dolphin";
+  if (b.min >= 1_000) return "Fish";
+  if (b.min >= 100) return "Crab";
+  return "Shrimp";
+};
+
 export const bandName = (b: Band): string =>
   b.max == null ? `${xrpShort(b.min)}+` : `${xrpShort(b.min)}-${xrpShort(b.max)}`;
 
@@ -92,7 +112,7 @@ export function DistributionChart({
   // for and the SVG's aria-label was the only place it could go without
   // padding the visible copy.
   const caption =
-    `XRP rich list chart: funded XRP Ledger accounts by balance band as of ${snapshotDate}. ` +
+    `XRP holders percentage chart: the percentage of funded XRP Ledger accounts in each balance band as of ${snapshotDate}. ` +
     rows
       .map((b) => `${bandName(b)} XRP: ${compact(b.accounts)} accounts`)
       .join(". ") +
@@ -230,6 +250,7 @@ export function DistributionTable({
         <thead>
           <tr>
             <th scope="col">Band (XRP)</th>
+            <th scope="col">Community name</th>
             <th scope="col">Accounts</th>
             <th scope="col">Percentage of accounts</th>
             <th scope="col">XRP held</th>
@@ -240,6 +261,7 @@ export function DistributionTable({
           {rows.map((b) => (
             <tr key={bandName(b)}>
               <th scope="row">{bandName(b)}</th>
+              <td data-label="Community name">{bandNickname(b)}</td>
               <td data-label="Accounts">{b.accounts.toLocaleString("en-US")}</td>
               <td data-label="Share of accounts">
                 {b.pctOfAccounts >= 0.01 ? `${b.pctOfAccounts.toFixed(2)}%` : "under 0.01%"}
