@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-13T14:19:15.543Z",
+  "generatedAt": "2026-08-13T19:56:19.403Z",
   "source": "xrpl-ledger-walk",
-  "ledgerIndex": 106267176,
-  "ledgerCloseIso": "2026-08-13T13:47:40.000Z",
+  "ledgerIndex": 106272323,
+  "ledgerCloseIso": "2026-08-13T19:22:11.000Z",
   "method": {
     "description": "One pass over every AccountRoot object in a single validated XRP Ledger, read from public XRPL nodes over JSON-RPC. Balances are aggregated into a log-spaced histogram as they stream, so no third-party rich list or explorer dataset is involved.",
     "bucketsPerDecade": 2000,
@@ -10,215 +10,215 @@
     "fundedAccountDefinition": "Every AccountRoot in the ledger. An XRP Ledger account cannot exist without meeting the base reserve, which validators lowered to 1 XRP in December 2024, so the count of AccountRoot objects is the count of funded accounts.",
     "labelPolicy": "Top accounts are labelled only from the AccountRoot Domain field, which the account holder sets on itself onchain. Accounts with no Domain are shown unlabelled. No identity is inferred from transaction behaviour."
   },
-  "accounts": 8058050,
-  "xrpHeld": 99985541023,
-  "escrowedXrp": 32144936139,
-  "spendableXrp": 67840604885,
+  "accounts": 8058769,
+  "xrpHeld": 99985540936,
+  "escrowedXrp": 32144936208,
+  "spendableXrp": 67840604728,
   "escrowAccounts": 1680,
-  "escrowObjects": 14404,
-  "totalSupplyXrp": 99985628583,
+  "escrowObjects": 14406,
+  "totalSupplyXrp": 99985628496,
   "supplyReconciliation": {
-    "ledgerTotalCoinsXrp": 99985628583,
-    "walkedXrp": 99985541023,
+    "ledgerTotalCoinsXrp": 99985628496,
+    "walkedXrp": 99985540936,
     "differenceXrp": 87560,
     "differencePct": 0.000088
   },
   "tiers": [
     {
       "pct": 0.01,
-      "minXrp": 3832657,
+      "minXrp": 3828247,
       "accounts": 806,
-      "xrpHeld": 80217047976,
-      "pctOfXrp": 80.2286
+      "xrpHeld": 80213737739,
+      "pctOfXrp": 80.2253
     },
     {
       "pct": 0.1,
       "minXrp": 275106,
       "accounts": 8102,
-      "xrpHeld": 85183116001,
-      "pctOfXrp": 85.1954
+      "xrpHeld": 85182969382,
+      "pctOfXrp": 85.1953
     },
     {
       "pct": 1,
       "minXrp": 44771,
-      "accounts": 80622,
-      "xrpHeld": 91802765578,
-      "pctOfXrp": 91.816
+      "accounts": 80610,
+      "xrpHeld": 91801608770,
+      "pctOfXrp": 91.8149
     },
     {
       "pct": 5,
       "minXrp": 7499,
-      "accounts": 403153,
-      "xrpHeld": 97363677477,
-      "pctOfXrp": 97.3778
+      "accounts": 403170,
+      "xrpHeld": 97363278361,
+      "pctOfXrp": 97.3774
     },
     {
       "pct": 10,
       "minXrp": 2140,
-      "accounts": 806174,
-      "xrpHeld": 99036712652,
-      "pctOfXrp": 99.051
+      "accounts": 806203,
+      "xrpHeld": 99036379760,
+      "pctOfXrp": 99.0507
     },
     {
       "pct": 25,
       "minXrp": 108.8,
-      "accounts": 2014748,
-      "xrpHeld": 99890376537,
-      "pctOfXrp": 99.9048
+      "accounts": 2014897,
+      "xrpHeld": 99890121067,
+      "pctOfXrp": 99.9046
     },
     {
       "pct": 50,
       "minXrp": 20,
-      "accounts": 4225598,
-      "xrpHeld": 99965953803,
-      "pctOfXrp": 99.9804
+      "accounts": 4225703,
+      "xrpHeld": 99965691914,
+      "pctOfXrp": 99.9801
     }
   ],
   "exactCounts": {
-    "1": 7842095,
-    "10": 5485704,
-    "20": 3984737,
-    "50": 2416415,
-    "100": 2089821,
-    "500": 1427096,
-    "1000": 1162101,
-    "5000": 529998,
-    "10000": 339228,
-    "20000": 183857,
-    "50000": 72803,
-    "100000": 32304,
+    "1": 7842729,
+    "10": 5485898,
+    "20": 3984844,
+    "50": 2416514,
+    "100": 2089877,
+    "500": 1427190,
+    "1000": 1162155,
+    "5000": 530028,
+    "10000": 339258,
+    "20000": 183864,
+    "50000": 72792,
+    "100000": 32300,
     "500000": 4060,
-    "1000000": 2038,
-    "10000000": 519
+    "1000000": 2039,
+    "10000000": 520
   },
   "bands": [
     {
       "min": 0,
       "max": 1,
-      "accounts": 9792,
+      "accounts": 9794,
       "pctOfAccounts": 0.1215,
-      "xrpHeld": 7557,
+      "xrpHeld": 7553,
       "pctOfXrp": 0
     },
     {
       "min": 1,
       "max": 10,
-      "accounts": 2424740,
-      "pctOfAccounts": 30.0909,
-      "xrpHeld": 3836810,
+      "accounts": 2425257,
+      "pctOfAccounts": 30.0946,
+      "xrpHeld": 3837675,
       "pctOfXrp": 0.0038
     },
     {
       "min": 10,
       "max": 100,
-      "accounts": 3514047,
-      "pctOfAccounts": 43.6091,
-      "xrpHeld": 82391239,
+      "accounts": 3514157,
+      "pctOfAccounts": 43.6066,
+      "xrpHeld": 82395003,
       "pctOfXrp": 0.0824
     },
     {
       "min": 100,
       "max": 500,
-      "accounts": 669638,
-      "pctOfAccounts": 8.3102,
-      "xrpHeld": 157161505,
+      "accounts": 669601,
+      "pctOfAccounts": 8.309,
+      "xrpHeld": 157161227,
       "pctOfXrp": 0.1572
     },
     {
       "min": 500,
       "max": 1000,
-      "accounts": 263238,
-      "pctOfAccounts": 3.2668,
-      "xrpHeld": 185099347,
-      "pctOfXrp": 0.1851
+      "accounts": 263280,
+      "pctOfAccounts": 3.267,
+      "xrpHeld": 185125292,
+      "pctOfXrp": 0.1852
     },
     {
       "min": 1000,
       "max": 5000,
-      "accounts": 635036,
-      "pctOfAccounts": 7.8808,
-      "xrpHeld": 1428888521,
+      "accounts": 635059,
+      "pctOfAccounts": 7.8803,
+      "xrpHeld": 1428917087,
       "pctOfXrp": 1.4291
     },
     {
       "min": 5000,
       "max": 10000,
-      "accounts": 190863,
-      "pctOfAccounts": 2.3686,
-      "xrpHeld": 1301887260,
-      "pctOfXrp": 1.3021
+      "accounts": 190862,
+      "pctOfAccounts": 2.3684,
+      "xrpHeld": 1301854348,
+      "pctOfXrp": 1.302
     },
     {
       "min": 10000,
       "max": 25000,
-      "accounts": 195725,
-      "pctOfAccounts": 2.4289,
-      "xrpHeld": 2919215144,
-      "pctOfXrp": 2.9196
+      "accounts": 195750,
+      "pctOfAccounts": 2.429,
+      "xrpHeld": 2919529248,
+      "pctOfXrp": 2.92
     },
     {
       "min": 25000,
       "max": 50000,
-      "accounts": 71805,
-      "pctOfAccounts": 0.8911,
-      "xrpHeld": 2452652241,
-      "pctOfXrp": 2.453
+      "accounts": 71821,
+      "pctOfAccounts": 0.8912,
+      "xrpHeld": 2453183849,
+      "pctOfXrp": 2.4535
     },
     {
       "min": 50000,
       "max": 100000,
-      "accounts": 40735,
-      "pctOfAccounts": 0.5055,
-      "xrpHeld": 2680780289,
-      "pctOfXrp": 2.6812
+      "accounts": 40729,
+      "pctOfAccounts": 0.5054,
+      "xrpHeld": 2680386747,
+      "pctOfXrp": 2.6808
     },
     {
       "min": 100000,
       "max": 500000,
-      "accounts": 28411,
-      "pctOfAccounts": 0.3526,
-      "xrpHeld": 5030596840,
-      "pctOfXrp": 5.0313
+      "accounts": 28406,
+      "pctOfAccounts": 0.3525,
+      "xrpHeld": 5030411126,
+      "pctOfXrp": 5.0311
     },
     {
       "min": 500000,
       "max": 1000000,
-      "accounts": 2023,
+      "accounts": 2022,
       "pctOfAccounts": 0.0251,
-      "xrpHeld": 1350096915,
-      "pctOfXrp": 1.3503
+      "xrpHeld": 1350280171,
+      "pctOfXrp": 1.3505
     },
     {
       "min": 1000000,
       "max": 5000000,
-      "accounts": 1364,
+      "accounts": 1365,
       "pctOfAccounts": 0.0169,
-      "xrpHeld": 2686366043,
-      "pctOfXrp": 2.6868
+      "xrpHeld": 2688738243,
+      "pctOfXrp": 2.6891
     },
     {
       "min": 5000000,
       "max": 10000000,
-      "accounts": 164,
+      "accounts": 163,
       "pctOfAccounts": 0.002,
-      "xrpHeld": 1152777398,
-      "pctOfXrp": 1.1529
+      "xrpHeld": 1140885162,
+      "pctOfXrp": 1.1411
     },
     {
       "min": 10000000,
       "max": 100000000,
-      "accounts": 423,
-      "pctOfAccounts": 0.0052,
-      "xrpHeld": 14609750336,
-      "pctOfXrp": 14.6119
+      "accounts": 424,
+      "pctOfAccounts": 0.0053,
+      "xrpHeld": 14617222071,
+      "pctOfXrp": 14.6193
     },
     {
       "min": 100000000,
       "max": 1000000000,
       "accounts": 84,
       "pctOfAccounts": 0.001,
-      "xrpHeld": 22430889885,
-      "pctOfXrp": 22.4341
+      "xrpHeld": 22432202264,
+      "pctOfXrp": 22.4354
     },
     {
       "min": 1000000000,
@@ -232,1723 +232,1723 @@
   "ladder": [
     {
       "xrp": 0.000001,
-      "atOrAbove": 8048102
+      "atOrAbove": 8048788
     },
     {
       "xrp": 0.00000105925,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000112202,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.0000011885,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000125893,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000133352,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000141254,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000149624,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000158489,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.0000016788,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000177828,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000188365,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000199526,
-      "atOrAbove": 8047911
+      "atOrAbove": 8048597
     },
     {
       "xrp": 0.00000211349,
-      "atOrAbove": 8047725
+      "atOrAbove": 8048411
     },
     {
       "xrp": 0.00000223872,
-      "atOrAbove": 8047725
+      "atOrAbove": 8048411
     },
     {
       "xrp": 0.00000237137,
-      "atOrAbove": 8047725
+      "atOrAbove": 8048411
     },
     {
       "xrp": 0.00000251189,
-      "atOrAbove": 8047725
+      "atOrAbove": 8048411
     },
     {
       "xrp": 0.00000266073,
-      "atOrAbove": 8047725
+      "atOrAbove": 8048411
     },
     {
       "xrp": 0.00000281838,
-      "atOrAbove": 8047725
+      "atOrAbove": 8048411
     },
     {
       "xrp": 0.00000298538,
-      "atOrAbove": 8047725
+      "atOrAbove": 8048411
     },
     {
       "xrp": 0.00000316228,
-      "atOrAbove": 8047667
+      "atOrAbove": 8048353
     },
     {
       "xrp": 0.00000334965,
-      "atOrAbove": 8047667
+      "atOrAbove": 8048353
     },
     {
       "xrp": 0.00000354813,
-      "atOrAbove": 8047667
+      "atOrAbove": 8048353
     },
     {
       "xrp": 0.00000375837,
-      "atOrAbove": 8047667
+      "atOrAbove": 8048353
     },
     {
       "xrp": 0.00000398107,
-      "atOrAbove": 8047667
+      "atOrAbove": 8048353
     },
     {
       "xrp": 0.00000421697,
-      "atOrAbove": 8047588
+      "atOrAbove": 8048274
     },
     {
       "xrp": 0.00000446684,
-      "atOrAbove": 8047588
+      "atOrAbove": 8048274
     },
     {
       "xrp": 0.00000473151,
-      "atOrAbove": 8047588
+      "atOrAbove": 8048274
     },
     {
       "xrp": 0.00000501187,
-      "atOrAbove": 8047534
+      "atOrAbove": 8048220
     },
     {
       "xrp": 0.00000530884,
-      "atOrAbove": 8047534
+      "atOrAbove": 8048220
     },
     {
       "xrp": 0.00000562341,
-      "atOrAbove": 8047534
+      "atOrAbove": 8048220
     },
     {
       "xrp": 0.00000595662,
-      "atOrAbove": 8047534
+      "atOrAbove": 8048220
     },
     {
       "xrp": 0.00000630957,
-      "atOrAbove": 8047497
+      "atOrAbove": 8048183
     },
     {
       "xrp": 0.00000668344,
-      "atOrAbove": 8047497
+      "atOrAbove": 8048183
     },
     {
       "xrp": 0.00000707946,
-      "atOrAbove": 8047462
+      "atOrAbove": 8048148
     },
     {
       "xrp": 0.00000749894,
-      "atOrAbove": 8047462
+      "atOrAbove": 8048148
     },
     {
       "xrp": 0.00000794328,
-      "atOrAbove": 8047462
+      "atOrAbove": 8048148
     },
     {
       "xrp": 0.00000841395,
-      "atOrAbove": 8047419
+      "atOrAbove": 8048105
     },
     {
       "xrp": 0.00000891251,
-      "atOrAbove": 8047419
+      "atOrAbove": 8048105
     },
     {
       "xrp": 0.00000944061,
-      "atOrAbove": 8047366
+      "atOrAbove": 8048052
     },
     {
       "xrp": 0.00001,
-      "atOrAbove": 8047366
+      "atOrAbove": 8048052
     },
     {
       "xrp": 0.0000105925,
-      "atOrAbove": 8047339
+      "atOrAbove": 8048025
     },
     {
       "xrp": 0.0000112202,
-      "atOrAbove": 8047316
+      "atOrAbove": 8048002
     },
     {
       "xrp": 0.000011885,
-      "atOrAbove": 8047316
+      "atOrAbove": 8048002
     },
     {
       "xrp": 0.0000125893,
-      "atOrAbove": 8047303
+      "atOrAbove": 8047989
     },
     {
       "xrp": 0.0000133352,
-      "atOrAbove": 8047280
+      "atOrAbove": 8047966
     },
     {
       "xrp": 0.0000141254,
-      "atOrAbove": 8047265
+      "atOrAbove": 8047951
     },
     {
       "xrp": 0.0000149624,
-      "atOrAbove": 8047265
+      "atOrAbove": 8047951
     },
     {
       "xrp": 0.0000158489,
-      "atOrAbove": 8047261
+      "atOrAbove": 8047947
     },
     {
       "xrp": 0.000016788,
-      "atOrAbove": 8047259
+      "atOrAbove": 8047945
     },
     {
       "xrp": 0.0000177828,
-      "atOrAbove": 8047257
+      "atOrAbove": 8047943
     },
     {
       "xrp": 0.0000188365,
-      "atOrAbove": 8047256
+      "atOrAbove": 8047942
     },
     {
       "xrp": 0.0000199526,
-      "atOrAbove": 8047254
+      "atOrAbove": 8047940
     },
     {
       "xrp": 0.0000211349,
-      "atOrAbove": 8047246
+      "atOrAbove": 8047932
     },
     {
       "xrp": 0.0000223872,
-      "atOrAbove": 8047244
+      "atOrAbove": 8047930
     },
     {
       "xrp": 0.0000237137,
-      "atOrAbove": 8047235
+      "atOrAbove": 8047921
     },
     {
       "xrp": 0.0000251189,
-      "atOrAbove": 8047233
+      "atOrAbove": 8047919
     },
     {
       "xrp": 0.0000266073,
-      "atOrAbove": 8047231
+      "atOrAbove": 8047917
     },
     {
       "xrp": 0.0000281838,
-      "atOrAbove": 8047229
+      "atOrAbove": 8047915
     },
     {
       "xrp": 0.0000298538,
-      "atOrAbove": 8047228
+      "atOrAbove": 8047914
     },
     {
       "xrp": 0.0000316228,
-      "atOrAbove": 8047224
+      "atOrAbove": 8047910
     },
     {
       "xrp": 0.0000334965,
-      "atOrAbove": 8047222
+      "atOrAbove": 8047908
     },
     {
       "xrp": 0.0000354813,
-      "atOrAbove": 8047222
+      "atOrAbove": 8047908
     },
     {
       "xrp": 0.0000375837,
-      "atOrAbove": 8047222
+      "atOrAbove": 8047907
     },
     {
       "xrp": 0.0000398107,
-      "atOrAbove": 8047220
+      "atOrAbove": 8047906
     },
     {
       "xrp": 0.0000421697,
-      "atOrAbove": 8047218
+      "atOrAbove": 8047904
     },
     {
       "xrp": 0.0000446684,
-      "atOrAbove": 8047218
+      "atOrAbove": 8047904
     },
     {
       "xrp": 0.0000473151,
-      "atOrAbove": 8047215
+      "atOrAbove": 8047901
     },
     {
       "xrp": 0.0000501187,
-      "atOrAbove": 8047208
+      "atOrAbove": 8047894
     },
     {
       "xrp": 0.0000530884,
-      "atOrAbove": 8047205
+      "atOrAbove": 8047891
     },
     {
       "xrp": 0.0000562341,
-      "atOrAbove": 8047204
+      "atOrAbove": 8047890
     },
     {
       "xrp": 0.0000595662,
-      "atOrAbove": 8047202
+      "atOrAbove": 8047888
     },
     {
       "xrp": 0.0000630957,
-      "atOrAbove": 8047200
+      "atOrAbove": 8047886
     },
     {
       "xrp": 0.0000668344,
-      "atOrAbove": 8047200
+      "atOrAbove": 8047886
     },
     {
       "xrp": 0.0000707946,
-      "atOrAbove": 8047198
+      "atOrAbove": 8047884
     },
     {
       "xrp": 0.0000749894,
-      "atOrAbove": 8047196
+      "atOrAbove": 8047882
     },
     {
       "xrp": 0.0000794328,
-      "atOrAbove": 8047195
+      "atOrAbove": 8047881
     },
     {
       "xrp": 0.0000841395,
-      "atOrAbove": 8047192
+      "atOrAbove": 8047878
     },
     {
       "xrp": 0.0000891251,
-      "atOrAbove": 8047187
+      "atOrAbove": 8047873
     },
     {
       "xrp": 0.0000944061,
-      "atOrAbove": 8047184
+      "atOrAbove": 8047870
     },
     {
       "xrp": 0.0001,
-      "atOrAbove": 8047183
+      "atOrAbove": 8047869
     },
     {
       "xrp": 0.000105925,
-      "atOrAbove": 8047178
+      "atOrAbove": 8047864
     },
     {
       "xrp": 0.000112202,
-      "atOrAbove": 8047176
+      "atOrAbove": 8047862
     },
     {
       "xrp": 0.00011885,
-      "atOrAbove": 8047172
+      "atOrAbove": 8047858
     },
     {
       "xrp": 0.000125893,
-      "atOrAbove": 8047169
+      "atOrAbove": 8047855
     },
     {
       "xrp": 0.000133352,
-      "atOrAbove": 8047168
+      "atOrAbove": 8047854
     },
     {
       "xrp": 0.000141254,
-      "atOrAbove": 8047168
+      "atOrAbove": 8047854
     },
     {
       "xrp": 0.000149624,
-      "atOrAbove": 8047166
+      "atOrAbove": 8047852
     },
     {
       "xrp": 0.000158489,
-      "atOrAbove": 8047164
+      "atOrAbove": 8047850
     },
     {
       "xrp": 0.00016788,
-      "atOrAbove": 8047163
+      "atOrAbove": 8047849
     },
     {
       "xrp": 0.000177828,
-      "atOrAbove": 8047162
+      "atOrAbove": 8047848
     },
     {
       "xrp": 0.000188365,
-      "atOrAbove": 8047161
+      "atOrAbove": 8047847
     },
     {
       "xrp": 0.000199526,
-      "atOrAbove": 8047160
+      "atOrAbove": 8047846
     },
     {
       "xrp": 0.000211349,
-      "atOrAbove": 8047156
+      "atOrAbove": 8047842
     },
     {
       "xrp": 0.000223872,
-      "atOrAbove": 8047155
+      "atOrAbove": 8047841
     },
     {
       "xrp": 0.000237137,
-      "atOrAbove": 8047145
+      "atOrAbove": 8047831
     },
     {
       "xrp": 0.000251189,
-      "atOrAbove": 8047144
+      "atOrAbove": 8047830
     },
     {
       "xrp": 0.000266073,
-      "atOrAbove": 8047142
+      "atOrAbove": 8047828
     },
     {
       "xrp": 0.000281838,
-      "atOrAbove": 8047142
+      "atOrAbove": 8047828
     },
     {
       "xrp": 0.000298538,
-      "atOrAbove": 8047142
+      "atOrAbove": 8047828
     },
     {
       "xrp": 0.000316228,
-      "atOrAbove": 8047140
+      "atOrAbove": 8047826
     },
     {
       "xrp": 0.000334965,
-      "atOrAbove": 8047138
+      "atOrAbove": 8047824
     },
     {
       "xrp": 0.000354813,
-      "atOrAbove": 8047135
+      "atOrAbove": 8047821
     },
     {
       "xrp": 0.000375837,
-      "atOrAbove": 8047133
+      "atOrAbove": 8047819
     },
     {
       "xrp": 0.000398107,
-      "atOrAbove": 8047131
+      "atOrAbove": 8047817
     },
     {
       "xrp": 0.000421697,
-      "atOrAbove": 8047129
+      "atOrAbove": 8047815
     },
     {
       "xrp": 0.000446684,
-      "atOrAbove": 8047129
+      "atOrAbove": 8047815
     },
     {
       "xrp": 0.000473151,
-      "atOrAbove": 8047128
+      "atOrAbove": 8047814
     },
     {
       "xrp": 0.000501187,
-      "atOrAbove": 8047127
+      "atOrAbove": 8047813
     },
     {
       "xrp": 0.000530884,
-      "atOrAbove": 8047120
+      "atOrAbove": 8047806
     },
     {
       "xrp": 0.000562341,
-      "atOrAbove": 8047120
+      "atOrAbove": 8047806
     },
     {
       "xrp": 0.000595662,
-      "atOrAbove": 8047120
+      "atOrAbove": 8047806
     },
     {
       "xrp": 0.000630957,
-      "atOrAbove": 8047120
+      "atOrAbove": 8047806
     },
     {
       "xrp": 0.000668344,
-      "atOrAbove": 8047120
+      "atOrAbove": 8047806
     },
     {
       "xrp": 0.000707946,
-      "atOrAbove": 8047120
+      "atOrAbove": 8047806
     },
     {
       "xrp": 0.000749894,
-      "atOrAbove": 8047118
+      "atOrAbove": 8047804
     },
     {
       "xrp": 0.000794328,
-      "atOrAbove": 8047117
+      "atOrAbove": 8047803
     },
     {
       "xrp": 0.000841395,
-      "atOrAbove": 8047117
+      "atOrAbove": 8047803
     },
     {
       "xrp": 0.000891251,
-      "atOrAbove": 8047114
+      "atOrAbove": 8047800
     },
     {
       "xrp": 0.000944061,
-      "atOrAbove": 8047114
+      "atOrAbove": 8047800
     },
     {
       "xrp": 0.001,
-      "atOrAbove": 8047111
+      "atOrAbove": 8047797
     },
     {
       "xrp": 0.00105925,
-      "atOrAbove": 8047070
+      "atOrAbove": 8047757
     },
     {
       "xrp": 0.00112202,
-      "atOrAbove": 8047064
+      "atOrAbove": 8047751
     },
     {
       "xrp": 0.0011885,
-      "atOrAbove": 8047063
+      "atOrAbove": 8047750
     },
     {
       "xrp": 0.00125893,
-      "atOrAbove": 8047061
+      "atOrAbove": 8047748
     },
     {
       "xrp": 0.00133352,
-      "atOrAbove": 8047057
+      "atOrAbove": 8047744
     },
     {
       "xrp": 0.00141254,
-      "atOrAbove": 8047057
+      "atOrAbove": 8047744
     },
     {
       "xrp": 0.00149624,
-      "atOrAbove": 8047056
+      "atOrAbove": 8047743
     },
     {
       "xrp": 0.00158489,
-      "atOrAbove": 8047053
+      "atOrAbove": 8047740
     },
     {
       "xrp": 0.0016788,
-      "atOrAbove": 8047049
+      "atOrAbove": 8047736
     },
     {
       "xrp": 0.00177828,
-      "atOrAbove": 8047046
+      "atOrAbove": 8047733
     },
     {
       "xrp": 0.00188365,
-      "atOrAbove": 8047045
+      "atOrAbove": 8047732
     },
     {
       "xrp": 0.00199526,
-      "atOrAbove": 8047042
+      "atOrAbove": 8047729
     },
     {
       "xrp": 0.00211349,
-      "atOrAbove": 8047040
+      "atOrAbove": 8047726
     },
     {
       "xrp": 0.00223872,
-      "atOrAbove": 8047038
+      "atOrAbove": 8047724
     },
     {
       "xrp": 0.00237137,
-      "atOrAbove": 8047031
+      "atOrAbove": 8047717
     },
     {
       "xrp": 0.00251189,
-      "atOrAbove": 8047030
+      "atOrAbove": 8047716
     },
     {
       "xrp": 0.00266073,
-      "atOrAbove": 8047029
+      "atOrAbove": 8047715
     },
     {
       "xrp": 0.00281838,
-      "atOrAbove": 8047026
+      "atOrAbove": 8047712
     },
     {
       "xrp": 0.00298538,
-      "atOrAbove": 8047026
+      "atOrAbove": 8047712
     },
     {
       "xrp": 0.00316228,
-      "atOrAbove": 8047020
+      "atOrAbove": 8047706
     },
     {
       "xrp": 0.00334965,
-      "atOrAbove": 8047019
+      "atOrAbove": 8047705
     },
     {
       "xrp": 0.00354813,
-      "atOrAbove": 8047018
+      "atOrAbove": 8047704
     },
     {
       "xrp": 0.00375837,
-      "atOrAbove": 8047016
+      "atOrAbove": 8047702
     },
     {
       "xrp": 0.00398107,
-      "atOrAbove": 8047012
+      "atOrAbove": 8047698
     },
     {
       "xrp": 0.00421697,
-      "atOrAbove": 8047009
+      "atOrAbove": 8047695
     },
     {
       "xrp": 0.00446684,
-      "atOrAbove": 8047008
+      "atOrAbove": 8047694
     },
     {
       "xrp": 0.00473151,
-      "atOrAbove": 8047006
+      "atOrAbove": 8047692
     },
     {
       "xrp": 0.00501187,
-      "atOrAbove": 8047000
+      "atOrAbove": 8047686
     },
     {
       "xrp": 0.00530884,
-      "atOrAbove": 8046996
+      "atOrAbove": 8047682
     },
     {
       "xrp": 0.00562341,
-      "atOrAbove": 8046995
+      "atOrAbove": 8047681
     },
     {
       "xrp": 0.00595662,
-      "atOrAbove": 8046995
+      "atOrAbove": 8047681
     },
     {
       "xrp": 0.00630957,
-      "atOrAbove": 8046758
+      "atOrAbove": 8047444
     },
     {
       "xrp": 0.00668344,
-      "atOrAbove": 8046745
+      "atOrAbove": 8047431
     },
     {
       "xrp": 0.00707946,
-      "atOrAbove": 8046740
+      "atOrAbove": 8047426
     },
     {
       "xrp": 0.00749894,
-      "atOrAbove": 8046737
+      "atOrAbove": 8047422
     },
     {
       "xrp": 0.00794328,
-      "atOrAbove": 8046735
+      "atOrAbove": 8047421
     },
     {
       "xrp": 0.00841395,
-      "atOrAbove": 8046729
+      "atOrAbove": 8047414
     },
     {
       "xrp": 0.00891251,
-      "atOrAbove": 8046728
+      "atOrAbove": 8047413
     },
     {
       "xrp": 0.00944061,
-      "atOrAbove": 8046727
+      "atOrAbove": 8047412
     },
     {
       "xrp": 0.01,
-      "atOrAbove": 8046722
+      "atOrAbove": 8047407
     },
     {
       "xrp": 0.0105925,
-      "atOrAbove": 8046715
+      "atOrAbove": 8047399
     },
     {
       "xrp": 0.0112202,
-      "atOrAbove": 8046713
+      "atOrAbove": 8047397
     },
     {
       "xrp": 0.011885,
-      "atOrAbove": 8046711
+      "atOrAbove": 8047395
     },
     {
       "xrp": 0.0125893,
-      "atOrAbove": 8046709
+      "atOrAbove": 8047392
     },
     {
       "xrp": 0.0133352,
-      "atOrAbove": 8046706
+      "atOrAbove": 8047388
     },
     {
       "xrp": 0.0141254,
-      "atOrAbove": 8046706
+      "atOrAbove": 8047388
     },
     {
       "xrp": 0.0149624,
-      "atOrAbove": 8046704
+      "atOrAbove": 8047386
     },
     {
       "xrp": 0.0158489,
-      "atOrAbove": 8046702
+      "atOrAbove": 8047384
     },
     {
       "xrp": 0.016788,
-      "atOrAbove": 8046698
+      "atOrAbove": 8047380
     },
     {
       "xrp": 0.0177828,
-      "atOrAbove": 8046696
+      "atOrAbove": 8047378
     },
     {
       "xrp": 0.0188365,
-      "atOrAbove": 8046692
+      "atOrAbove": 8047373
     },
     {
       "xrp": 0.0199526,
-      "atOrAbove": 8046691
+      "atOrAbove": 8047371
     },
     {
       "xrp": 0.0211349,
-      "atOrAbove": 8046677
+      "atOrAbove": 8047357
     },
     {
       "xrp": 0.0223872,
-      "atOrAbove": 8046674
+      "atOrAbove": 8047354
     },
     {
       "xrp": 0.0237137,
-      "atOrAbove": 8046673
+      "atOrAbove": 8047353
     },
     {
       "xrp": 0.0251189,
-      "atOrAbove": 8046667
+      "atOrAbove": 8047347
     },
     {
       "xrp": 0.0266073,
-      "atOrAbove": 8046667
+      "atOrAbove": 8047347
     },
     {
       "xrp": 0.0281838,
-      "atOrAbove": 8046667
+      "atOrAbove": 8047345
     },
     {
       "xrp": 0.0298538,
-      "atOrAbove": 8046664
+      "atOrAbove": 8047342
     },
     {
       "xrp": 0.0316228,
-      "atOrAbove": 8046655
+      "atOrAbove": 8047333
     },
     {
       "xrp": 0.0334965,
-      "atOrAbove": 8046652
+      "atOrAbove": 8047330
     },
     {
       "xrp": 0.0354813,
-      "atOrAbove": 8046651
+      "atOrAbove": 8047329
     },
     {
       "xrp": 0.0375837,
-      "atOrAbove": 8046645
+      "atOrAbove": 8047322
     },
     {
       "xrp": 0.0398107,
-      "atOrAbove": 8046642
+      "atOrAbove": 8047319
     },
     {
       "xrp": 0.0421697,
-      "atOrAbove": 8046634
+      "atOrAbove": 8047310
     },
     {
       "xrp": 0.0446684,
-      "atOrAbove": 8046630
+      "atOrAbove": 8047305
     },
     {
       "xrp": 0.0473151,
-      "atOrAbove": 8046627
+      "atOrAbove": 8047302
     },
     {
       "xrp": 0.0501187,
-      "atOrAbove": 8046609
+      "atOrAbove": 8047284
     },
     {
       "xrp": 0.0530884,
-      "atOrAbove": 8046594
+      "atOrAbove": 8047269
     },
     {
       "xrp": 0.0562341,
-      "atOrAbove": 8046585
+      "atOrAbove": 8047260
     },
     {
       "xrp": 0.0595662,
-      "atOrAbove": 8046581
+      "atOrAbove": 8047256
     },
     {
       "xrp": 0.0630957,
-      "atOrAbove": 8046578
+      "atOrAbove": 8047254
     },
     {
       "xrp": 0.0668344,
-      "atOrAbove": 8046568
+      "atOrAbove": 8047243
     },
     {
       "xrp": 0.0707946,
-      "atOrAbove": 8046565
+      "atOrAbove": 8047240
     },
     {
       "xrp": 0.0749894,
-      "atOrAbove": 8046556
+      "atOrAbove": 8047231
     },
     {
       "xrp": 0.0794328,
-      "atOrAbove": 8046552
+      "atOrAbove": 8047227
     },
     {
       "xrp": 0.0841395,
-      "atOrAbove": 8046548
+      "atOrAbove": 8047223
     },
     {
       "xrp": 0.0891251,
-      "atOrAbove": 8046548
+      "atOrAbove": 8047223
     },
     {
       "xrp": 0.0944061,
-      "atOrAbove": 8046539
+      "atOrAbove": 8047214
     },
     {
       "xrp": 0.1,
-      "atOrAbove": 8046521
+      "atOrAbove": 8047195
     },
     {
       "xrp": 0.105925,
-      "atOrAbove": 8046475
+      "atOrAbove": 8047148
     },
     {
       "xrp": 0.112202,
-      "atOrAbove": 8046434
+      "atOrAbove": 8047107
     },
     {
       "xrp": 0.11885,
-      "atOrAbove": 8046428
+      "atOrAbove": 8047101
     },
     {
       "xrp": 0.125893,
-      "atOrAbove": 8046413
+      "atOrAbove": 8047086
     },
     {
       "xrp": 0.133352,
-      "atOrAbove": 8046407
+      "atOrAbove": 8047079
     },
     {
       "xrp": 0.141254,
-      "atOrAbove": 8046394
+      "atOrAbove": 8047066
     },
     {
       "xrp": 0.149624,
-      "atOrAbove": 8046373
+      "atOrAbove": 8047045
     },
     {
       "xrp": 0.158489,
-      "atOrAbove": 8046357
+      "atOrAbove": 8047029
     },
     {
       "xrp": 0.16788,
-      "atOrAbove": 8046338
+      "atOrAbove": 8047010
     },
     {
       "xrp": 0.177828,
-      "atOrAbove": 8046320
+      "atOrAbove": 8046992
     },
     {
       "xrp": 0.188365,
-      "atOrAbove": 8046295
+      "atOrAbove": 8046966
     },
     {
       "xrp": 0.199526,
-      "atOrAbove": 8046284
+      "atOrAbove": 8046955
     },
     {
       "xrp": 0.211349,
-      "atOrAbove": 8046200
+      "atOrAbove": 8046873
     },
     {
       "xrp": 0.223872,
-      "atOrAbove": 8046194
+      "atOrAbove": 8046867
     },
     {
       "xrp": 0.237137,
-      "atOrAbove": 8046187
+      "atOrAbove": 8046860
     },
     {
       "xrp": 0.251189,
-      "atOrAbove": 8046180
+      "atOrAbove": 8046853
     },
     {
       "xrp": 0.266073,
-      "atOrAbove": 8046168
+      "atOrAbove": 8046841
     },
     {
       "xrp": 0.281838,
-      "atOrAbove": 8046163
+      "atOrAbove": 8046836
     },
     {
       "xrp": 0.298538,
-      "atOrAbove": 8046156
+      "atOrAbove": 8046830
     },
     {
       "xrp": 0.316228,
-      "atOrAbove": 8046148
+      "atOrAbove": 8046823
     },
     {
       "xrp": 0.334965,
-      "atOrAbove": 8046140
+      "atOrAbove": 8046815
     },
     {
       "xrp": 0.354813,
-      "atOrAbove": 8046131
+      "atOrAbove": 8046806
     },
     {
       "xrp": 0.375837,
-      "atOrAbove": 8046125
+      "atOrAbove": 8046802
     },
     {
       "xrp": 0.398107,
-      "atOrAbove": 8046115
+      "atOrAbove": 8046792
     },
     {
       "xrp": 0.421697,
-      "atOrAbove": 8046053
+      "atOrAbove": 8046734
     },
     {
       "xrp": 0.446684,
-      "atOrAbove": 8046026
+      "atOrAbove": 8046710
     },
     {
       "xrp": 0.473151,
-      "atOrAbove": 8046009
+      "atOrAbove": 8046693
     },
     {
       "xrp": 0.501187,
-      "atOrAbove": 8045983
+      "atOrAbove": 8046667
     },
     {
       "xrp": 0.530884,
-      "atOrAbove": 8045958
+      "atOrAbove": 8046642
     },
     {
       "xrp": 0.562341,
-      "atOrAbove": 8045945
+      "atOrAbove": 8046629
     },
     {
       "xrp": 0.595662,
-      "atOrAbove": 8045925
+      "atOrAbove": 8046609
     },
     {
       "xrp": 0.630957,
-      "atOrAbove": 8045822
+      "atOrAbove": 8046504
     },
     {
       "xrp": 0.668344,
-      "atOrAbove": 8045795
+      "atOrAbove": 8046478
     },
     {
       "xrp": 0.707946,
-      "atOrAbove": 8045680
+      "atOrAbove": 8046364
     },
     {
       "xrp": 0.749894,
-      "atOrAbove": 8045654
+      "atOrAbove": 8046339
     },
     {
       "xrp": 0.794328,
-      "atOrAbove": 8045615
+      "atOrAbove": 8046300
     },
     {
       "xrp": 0.841395,
-      "atOrAbove": 8045285
+      "atOrAbove": 8045970
     },
     {
       "xrp": 0.891251,
-      "atOrAbove": 8045250
+      "atOrAbove": 8045935
     },
     {
       "xrp": 0.944061,
-      "atOrAbove": 8044994
+      "atOrAbove": 8045679
     },
     {
       "xrp": 1,
-      "atOrAbove": 8038310
+      "atOrAbove": 8038994
     },
     {
       "xrp": 1.05925,
-      "atOrAbove": 6452699
+      "atOrAbove": 6453049
     },
     {
       "xrp": 1.12202,
-      "atOrAbove": 6413027
+      "atOrAbove": 6413360
     },
     {
       "xrp": 1.1885,
-      "atOrAbove": 6400740
+      "atOrAbove": 6401100
     },
     {
       "xrp": 1.25893,
-      "atOrAbove": 6229639
+      "atOrAbove": 6229965
     },
     {
       "xrp": 1.33352,
-      "atOrAbove": 6207932
+      "atOrAbove": 6208253
     },
     {
       "xrp": 1.41254,
-      "atOrAbove": 6162156
+      "atOrAbove": 6162474
     },
     {
       "xrp": 1.49624,
-      "atOrAbove": 6144428
+      "atOrAbove": 6144739
     },
     {
       "xrp": 1.58489,
-      "atOrAbove": 6122058
+      "atOrAbove": 6122319
     },
     {
       "xrp": 1.6788,
-      "atOrAbove": 6083691
+      "atOrAbove": 6083944
     },
     {
       "xrp": 1.77828,
-      "atOrAbove": 6067618
+      "atOrAbove": 6067868
     },
     {
       "xrp": 1.88365,
-      "atOrAbove": 5984904
+      "atOrAbove": 5985145
     },
     {
       "xrp": 1.99526,
-      "atOrAbove": 5965702
+      "atOrAbove": 5965944
     },
     {
       "xrp": 2.11349,
-      "atOrAbove": 5891764
+      "atOrAbove": 5891996
     },
     {
       "xrp": 2.23872,
-      "atOrAbove": 5877247
+      "atOrAbove": 5877481
     },
     {
       "xrp": 2.37137,
-      "atOrAbove": 5868986
+      "atOrAbove": 5869216
     },
     {
       "xrp": 2.51189,
-      "atOrAbove": 5856019
+      "atOrAbove": 5856251
     },
     {
       "xrp": 2.66073,
-      "atOrAbove": 5844524
+      "atOrAbove": 5844753
     },
     {
       "xrp": 2.81838,
-      "atOrAbove": 5833371
+      "atOrAbove": 5833601
     },
     {
       "xrp": 2.98538,
-      "atOrAbove": 5825327
+      "atOrAbove": 5825550
     },
     {
       "xrp": 3.16228,
-      "atOrAbove": 5804616
+      "atOrAbove": 5804837
     },
     {
       "xrp": 3.34965,
-      "atOrAbove": 5795156
+      "atOrAbove": 5795372
     },
     {
       "xrp": 3.54813,
-      "atOrAbove": 5786861
+      "atOrAbove": 5787081
     },
     {
       "xrp": 3.75837,
-      "atOrAbove": 5778716
+      "atOrAbove": 5778936
     },
     {
       "xrp": 3.98107,
-      "atOrAbove": 5770184
+      "atOrAbove": 5770393
     },
     {
       "xrp": 4.21697,
-      "atOrAbove": 5755057
+      "atOrAbove": 5755258
     },
     {
       "xrp": 4.46684,
-      "atOrAbove": 5748030
+      "atOrAbove": 5748227
     },
     {
       "xrp": 4.73151,
-      "atOrAbove": 5740881
+      "atOrAbove": 5741085
     },
     {
       "xrp": 5.01187,
-      "atOrAbove": 5722391
+      "atOrAbove": 5722582
     },
     {
       "xrp": 5.30884,
-      "atOrAbove": 5715271
+      "atOrAbove": 5715458
     },
     {
       "xrp": 5.62341,
-      "atOrAbove": 5708689
+      "atOrAbove": 5708872
     },
     {
       "xrp": 5.95662,
-      "atOrAbove": 5701457
+      "atOrAbove": 5701639
     },
     {
       "xrp": 6.30957,
-      "atOrAbove": 5692450
+      "atOrAbove": 5692620
     },
     {
       "xrp": 6.68344,
-      "atOrAbove": 5686324
+      "atOrAbove": 5686502
     },
     {
       "xrp": 7.07946,
-      "atOrAbove": 5678498
+      "atOrAbove": 5678678
     },
     {
       "xrp": 7.49894,
-      "atOrAbove": 5672799
+      "atOrAbove": 5672982
     },
     {
       "xrp": 7.94328,
-      "atOrAbove": 5665940
+      "atOrAbove": 5666121
     },
     {
       "xrp": 8.41395,
-      "atOrAbove": 5657746
+      "atOrAbove": 5657923
     },
     {
       "xrp": 8.91251,
-      "atOrAbove": 5651101
+      "atOrAbove": 5651287
     },
     {
       "xrp": 9.44061,
-      "atOrAbove": 5639274
+      "atOrAbove": 5639458
     },
     {
       "xrp": 10,
-      "atOrAbove": 5613570
+      "atOrAbove": 5613737
     },
     {
       "xrp": 10.5925,
-      "atOrAbove": 4623152
+      "atOrAbove": 4623280
     },
     {
       "xrp": 11.2202,
-      "atOrAbove": 4547299
+      "atOrAbove": 4547428
     },
     {
       "xrp": 11.885,
-      "atOrAbove": 4529465
+      "atOrAbove": 4529598
     },
     {
       "xrp": 12.5893,
-      "atOrAbove": 4436740
+      "atOrAbove": 4436873
     },
     {
       "xrp": 13.3352,
-      "atOrAbove": 4412465
+      "atOrAbove": 4412594
     },
     {
       "xrp": 14.1254,
-      "atOrAbove": 4370458
+      "atOrAbove": 4370574
     },
     {
       "xrp": 14.9624,
-      "atOrAbove": 4352460
+      "atOrAbove": 4352585
     },
     {
       "xrp": 15.8489,
-      "atOrAbove": 4324827
+      "atOrAbove": 4324941
     },
     {
       "xrp": 16.788,
-      "atOrAbove": 4299805
+      "atOrAbove": 4299913
     },
     {
       "xrp": 17.7828,
-      "atOrAbove": 4286103
+      "atOrAbove": 4286214
     },
     {
       "xrp": 18.8365,
-      "atOrAbove": 4265932
+      "atOrAbove": 4266040
     },
     {
       "xrp": 19.9526,
-      "atOrAbove": 4241306
+      "atOrAbove": 4241413
     },
     {
       "xrp": 21.1349,
-      "atOrAbove": 3094332
+      "atOrAbove": 3094459
     },
     {
       "xrp": 22.3872,
-      "atOrAbove": 3037840
+      "atOrAbove": 3037967
     },
     {
       "xrp": 23.7137,
-      "atOrAbove": 3006333
+      "atOrAbove": 3006460
     },
     {
       "xrp": 25.1189,
-      "atOrAbove": 2899517
+      "atOrAbove": 2899637
     },
     {
       "xrp": 26.6073,
-      "atOrAbove": 2846810
+      "atOrAbove": 2846927
     },
     {
       "xrp": 28.1838,
-      "atOrAbove": 2817439
+      "atOrAbove": 2817560
     },
     {
       "xrp": 29.8538,
-      "atOrAbove": 2785010
+      "atOrAbove": 2785129
     },
     {
       "xrp": 31.6228,
-      "atOrAbove": 2697989
+      "atOrAbove": 2698104
     },
     {
       "xrp": 33.4965,
-      "atOrAbove": 2669033
+      "atOrAbove": 2669156
     },
     {
       "xrp": 35.4813,
-      "atOrAbove": 2633189
+      "atOrAbove": 2633316
     },
     {
       "xrp": 37.5837,
-      "atOrAbove": 2608130
+      "atOrAbove": 2608253
     },
     {
       "xrp": 39.8107,
-      "atOrAbove": 2582785
+      "atOrAbove": 2582913
     },
     {
       "xrp": 42.1697,
-      "atOrAbove": 2534169
+      "atOrAbove": 2534292
     },
     {
       "xrp": 44.6684,
-      "atOrAbove": 2511848
+      "atOrAbove": 2511969
     },
     {
       "xrp": 47.3151,
-      "atOrAbove": 2475249
+      "atOrAbove": 2475362
     },
     {
       "xrp": 50.1187,
-      "atOrAbove": 2397059
+      "atOrAbove": 2397154
     },
     {
       "xrp": 53.0884,
-      "atOrAbove": 2360226
+      "atOrAbove": 2360318
     },
     {
       "xrp": 56.2341,
-      "atOrAbove": 2335452
+      "atOrAbove": 2335534
     },
     {
       "xrp": 59.5662,
-      "atOrAbove": 2315374
+      "atOrAbove": 2315437
     },
     {
       "xrp": 63.0957,
-      "atOrAbove": 2286516
+      "atOrAbove": 2286563
     },
     {
       "xrp": 66.8344,
-      "atOrAbove": 2264868
+      "atOrAbove": 2264913
     },
     {
       "xrp": 70.7946,
-      "atOrAbove": 2240300
+      "atOrAbove": 2240349
     },
     {
       "xrp": 74.9894,
-      "atOrAbove": 2217826
+      "atOrAbove": 2217888
     },
     {
       "xrp": 79.4328,
-      "atOrAbove": 2195369
+      "atOrAbove": 2195426
     },
     {
       "xrp": 84.1395,
-      "atOrAbove": 2171841
+      "atOrAbove": 2171898
     },
     {
       "xrp": 89.1251,
-      "atOrAbove": 2151019
+      "atOrAbove": 2151069
     },
     {
       "xrp": 94.4061,
-      "atOrAbove": 2128694
+      "atOrAbove": 2128746
     },
     {
       "xrp": 100,
-      "atOrAbove": 2099523
+      "atOrAbove": 2099580
     },
     {
       "xrp": 105.925,
-      "atOrAbove": 2025241
+      "atOrAbove": 2025382
     },
     {
       "xrp": 112.202,
-      "atOrAbove": 1998615
+      "atOrAbove": 1998760
     },
     {
       "xrp": 118.85,
-      "atOrAbove": 1977688
+      "atOrAbove": 1977837
     },
     {
       "xrp": 125.893,
-      "atOrAbove": 1952571
+      "atOrAbove": 1952727
     },
     {
       "xrp": 133.352,
-      "atOrAbove": 1931731
+      "atOrAbove": 1931885
     },
     {
       "xrp": 141.254,
-      "atOrAbove": 1911881
+      "atOrAbove": 1912033
     },
     {
       "xrp": 149.624,
-      "atOrAbove": 1892471
+      "atOrAbove": 1892620
     },
     {
       "xrp": 158.489,
-      "atOrAbove": 1867790
+      "atOrAbove": 1867933
     },
     {
       "xrp": 167.88,
-      "atOrAbove": 1848008
+      "atOrAbove": 1848141
     },
     {
       "xrp": 177.828,
-      "atOrAbove": 1828473
+      "atOrAbove": 1828604
     },
     {
       "xrp": 188.365,
-      "atOrAbove": 1809115
+      "atOrAbove": 1809247
     },
     {
       "xrp": 199.526,
-      "atOrAbove": 1788242
+      "atOrAbove": 1788376
     },
     {
       "xrp": 211.349,
-      "atOrAbove": 1751112
+      "atOrAbove": 1751209
     },
     {
       "xrp": 223.872,
-      "atOrAbove": 1729579
+      "atOrAbove": 1729669
     },
     {
       "xrp": 237.137,
-      "atOrAbove": 1709208
+      "atOrAbove": 1709294
     },
     {
       "xrp": 251.189,
-      "atOrAbove": 1685464
+      "atOrAbove": 1685550
     },
     {
       "xrp": 266.073,
-      "atOrAbove": 1664789
+      "atOrAbove": 1664871
     },
     {
       "xrp": 281.838,
-      "atOrAbove": 1645491
+      "atOrAbove": 1645580
     },
     {
       "xrp": 298.538,
-      "atOrAbove": 1626867
+      "atOrAbove": 1626953
     },
     {
       "xrp": 316.228,
-      "atOrAbove": 1597625
+      "atOrAbove": 1597711
     },
     {
       "xrp": 334.965,
-      "atOrAbove": 1576708
+      "atOrAbove": 1576788
     },
     {
       "xrp": 354.813,
-      "atOrAbove": 1555678
+      "atOrAbove": 1555758
     },
     {
       "xrp": 375.837,
-      "atOrAbove": 1536326
+      "atOrAbove": 1536424
     },
     {
       "xrp": 398.107,
-      "atOrAbove": 1517589
+      "atOrAbove": 1517685
     },
     {
       "xrp": 421.697,
-      "atOrAbove": 1490791
+      "atOrAbove": 1490885
     },
     {
       "xrp": 446.684,
-      "atOrAbove": 1470911
+      "atOrAbove": 1470999
     },
     {
       "xrp": 473.151,
-      "atOrAbove": 1450456
+      "atOrAbove": 1450553
     },
     {
       "xrp": 501.187,
-      "atOrAbove": 1419534
+      "atOrAbove": 1419626
     },
     {
       "xrp": 530.884,
-      "atOrAbove": 1387732
+      "atOrAbove": 1387799
     },
     {
       "xrp": 562.341,
-      "atOrAbove": 1366696
+      "atOrAbove": 1366749
     },
     {
       "xrp": 595.662,
-      "atOrAbove": 1348339
+      "atOrAbove": 1348401
     },
     {
       "xrp": 630.957,
-      "atOrAbove": 1325299
+      "atOrAbove": 1325361
     },
     {
       "xrp": 668.344,
-      "atOrAbove": 1306080
+      "atOrAbove": 1306144
     },
     {
       "xrp": 707.946,
-      "atOrAbove": 1285576
+      "atOrAbove": 1285645
     },
     {
       "xrp": 749.894,
-      "atOrAbove": 1266628
+      "atOrAbove": 1266694
     },
     {
       "xrp": 794.328,
-      "atOrAbove": 1247322
+      "atOrAbove": 1247391
     },
     {
       "xrp": 841.395,
-      "atOrAbove": 1226471
+      "atOrAbove": 1226537
     },
     {
       "xrp": 891.251,
-      "atOrAbove": 1208172
+      "atOrAbove": 1208231
     },
     {
       "xrp": 944.061,
-      "atOrAbove": 1188422
+      "atOrAbove": 1188479
     },
     {
       "xrp": 1000,
-      "atOrAbove": 1166647
+      "atOrAbove": 1166699
     },
     {
       "xrp": 1059.25,
-      "atOrAbove": 1093461
+      "atOrAbove": 1093504
     },
     {
       "xrp": 1122.02,
-      "atOrAbove": 1066829
+      "atOrAbove": 1066871
     },
     {
       "xrp": 1188.5,
-      "atOrAbove": 1045414
+      "atOrAbove": 1045451
     },
     {
       "xrp": 1258.93,
-      "atOrAbove": 1020959
+      "atOrAbove": 1021000
     },
     {
       "xrp": 1333.52,
-      "atOrAbove": 999195
+      "atOrAbove": 999237
     },
     {
       "xrp": 1412.54,
-      "atOrAbove": 978320
+      "atOrAbove": 978364
     },
     {
       "xrp": 1496.24,
-      "atOrAbove": 959253
+      "atOrAbove": 959296
     },
     {
       "xrp": 1584.89,
-      "atOrAbove": 931810
+      "atOrAbove": 931875
     },
     {
       "xrp": 1678.8,
-      "atOrAbove": 910828
+      "atOrAbove": 910888
     },
     {
       "xrp": 1778.28,
-      "atOrAbove": 890826
+      "atOrAbove": 890887
     },
     {
       "xrp": 1883.65,
-      "atOrAbove": 872387
+      "atOrAbove": 872430
     },
     {
       "xrp": 1995.26,
-      "atOrAbove": 854276
+      "atOrAbove": 854328
     },
     {
       "xrp": 2113.49,
-      "atOrAbove": 810627
+      "atOrAbove": 810658
     },
     {
       "xrp": 2238.72,
-      "atOrAbove": 790827
+      "atOrAbove": 790838
     },
     {
       "xrp": 2371.37,
-      "atOrAbove": 772537
+      "atOrAbove": 772554
     },
     {
       "xrp": 2511.89,
-      "atOrAbove": 750435
+      "atOrAbove": 750458
     },
     {
       "xrp": 2660.73,
-      "atOrAbove": 731426
+      "atOrAbove": 731448
     },
     {
       "xrp": 2818.38,
-      "atOrAbove": 715142
+      "atOrAbove": 715148
     },
     {
       "xrp": 2985.38,
-      "atOrAbove": 700001
+      "atOrAbove": 700010
     },
     {
       "xrp": 3162.28,
-      "atOrAbove": 668433
+      "atOrAbove": 668453
     },
     {
       "xrp": 3349.65,
-      "atOrAbove": 650705
+      "atOrAbove": 650725
     },
     {
       "xrp": 3548.13,
-      "atOrAbove": 632558
+      "atOrAbove": 632586
     },
     {
       "xrp": 3758.37,
-      "atOrAbove": 616767
+      "atOrAbove": 616801
     },
     {
       "xrp": 3981.07,
-      "atOrAbove": 602686
+      "atOrAbove": 602714
     },
     {
       "xrp": 4216.97,
-      "atOrAbove": 577221
+      "atOrAbove": 577251
     },
     {
       "xrp": 4466.84,
-      "atOrAbove": 562019
+      "atOrAbove": 562048
     },
     {
       "xrp": 4731.51,
-      "atOrAbove": 545568
+      "atOrAbove": 545604
     },
     {
       "xrp": 5011.87,
-      "atOrAbove": 519077
+      "atOrAbove": 519106
     },
     {
       "xrp": 5308.84,
-      "atOrAbove": 494041
+      "atOrAbove": 494070
     },
     {
       "xrp": 5623.41,
-      "atOrAbove": 477935
+      "atOrAbove": 477963
     },
     {
       "xrp": 5956.62,
-      "atOrAbove": 464962
+      "atOrAbove": 464994
     },
     {
       "xrp": 6309.57,
-      "atOrAbove": 445583
+      "atOrAbove": 445612
     },
     {
       "xrp": 6683.44,
-      "atOrAbove": 432032
+      "atOrAbove": 432050
     },
     {
       "xrp": 7079.46,
-      "atOrAbove": 416024
+      "atOrAbove": 416039
     },
     {
       "xrp": 7498.94,
-      "atOrAbove": 403153
+      "atOrAbove": 403170
     },
     {
       "xrp": 7943.28,
-      "atOrAbove": 390668
+      "atOrAbove": 390688
     },
     {
       "xrp": 8413.95,
-      "atOrAbove": 375149
+      "atOrAbove": 375171
     },
     {
       "xrp": 8912.51,
-      "atOrAbove": 364376
+      "atOrAbove": 364399
     },
     {
       "xrp": 9440.61,
-      "atOrAbove": 351679
+      "atOrAbove": 351701
     },
     {
       "xrp": 10000,
-      "atOrAbove": 340748
+      "atOrAbove": 340778
     },
     {
       "xrp": 10592.5,
-      "atOrAbove": 299805
+      "atOrAbove": 299819
     },
     {
       "xrp": 11220.2,
-      "atOrAbove": 285158
+      "atOrAbove": 285177
     },
     {
       "xrp": 11885,
-      "atOrAbove": 274367
+      "atOrAbove": 274386
     },
     {
       "xrp": 12589.3,
-      "atOrAbove": 261255
+      "atOrAbove": 261276
     },
     {
       "xrp": 13335.2,
-      "atOrAbove": 250551
+      "atOrAbove": 250555
     },
     {
       "xrp": 14125.4,
-      "atOrAbove": 240510
+      "atOrAbove": 240521
     },
     {
       "xrp": 14962.4,
-      "atOrAbove": 232040
+      "atOrAbove": 232050
     },
     {
       "xrp": 15848.9,
-      "atOrAbove": 217569
+      "atOrAbove": 217568
     },
     {
       "xrp": 16788,
-      "atOrAbove": 208343
+      "atOrAbove": 208347
     },
     {
       "xrp": 17782.8,
-      "atOrAbove": 199955
+      "atOrAbove": 199970
     },
     {
       "xrp": 18836.5,
-      "atOrAbove": 191918
+      "atOrAbove": 191922
     },
     {
       "xrp": 19952.6,
-      "atOrAbove": 184843
+      "atOrAbove": 184848
     },
     {
       "xrp": 21134.9,
-      "atOrAbove": 165477
+      "atOrAbove": 165487
     },
     {
       "xrp": 22387.2,
-      "atOrAbove": 157646
+      "atOrAbove": 157645
     },
     {
       "xrp": 23713.7,
-      "atOrAbove": 150671
+      "atOrAbove": 150674
     },
     {
       "xrp": 25118.9,
-      "atOrAbove": 141208
+      "atOrAbove": 141209
     },
     {
       "xrp": 26607.3,
-      "atOrAbove": 133967
+      "atOrAbove": 133971
     },
     {
       "xrp": 28183.8,
-      "atOrAbove": 128021
+      "atOrAbove": 128018
     },
     {
       "xrp": 29853.8,
-      "atOrAbove": 123031
+      "atOrAbove": 123023
     },
     {
       "xrp": 31622.8,
-      "atOrAbove": 111847
+      "atOrAbove": 111846
     },
     {
       "xrp": 33496.5,
-      "atOrAbove": 106511
+      "atOrAbove": 106514
     },
     {
       "xrp": 35481.3,
-      "atOrAbove": 100655
+      "atOrAbove": 100654
     },
     {
       "xrp": 37583.7,
-      "atOrAbove": 96085
+      "atOrAbove": 96082
     },
     {
       "xrp": 39810.7,
-      "atOrAbove": 92166
+      "atOrAbove": 92154
     },
     {
       "xrp": 42169.7,
-      "atOrAbove": 84679
+      "atOrAbove": 84662
     },
     {
       "xrp": 44668.4,
-      "atOrAbove": 80751
+      "atOrAbove": 80739
     },
     {
       "xrp": 47315.1,
-      "atOrAbove": 76498
+      "atOrAbove": 76492
     },
     {
       "xrp": 50118.7,
-      "atOrAbove": 68618
+      "atOrAbove": 68611
     },
     {
       "xrp": 53088.4,
-      "atOrAbove": 62772
+      "atOrAbove": 62769
     },
     {
       "xrp": 56234.1,
@@ -1956,135 +1956,135 @@
     },
     {
       "xrp": 59566.2,
-      "atOrAbove": 56098
+      "atOrAbove": 56092
     },
     {
       "xrp": 63095.7,
-      "atOrAbove": 51960
+      "atOrAbove": 51953
     },
     {
       "xrp": 66834.4,
-      "atOrAbove": 49154
+      "atOrAbove": 49145
     },
     {
       "xrp": 70794.6,
-      "atOrAbove": 45918
+      "atOrAbove": 45913
     },
     {
       "xrp": 74989.4,
-      "atOrAbove": 43605
+      "atOrAbove": 43598
     },
     {
       "xrp": 79432.8,
-      "atOrAbove": 41045
+      "atOrAbove": 41040
     },
     {
       "xrp": 84139.5,
-      "atOrAbove": 38272
+      "atOrAbove": 38263
     },
     {
       "xrp": 89125.1,
-      "atOrAbove": 36344
+      "atOrAbove": 36334
     },
     {
       "xrp": 94406.1,
-      "atOrAbove": 34188
+      "atOrAbove": 34176
     },
     {
       "xrp": 100000,
-      "atOrAbove": 32483
+      "atOrAbove": 32478
     },
     {
       "xrp": 105925,
-      "atOrAbove": 26527
+      "atOrAbove": 26530
     },
     {
       "xrp": 112202,
-      "atOrAbove": 24633
+      "atOrAbove": 24632
     },
     {
       "xrp": 118850,
-      "atOrAbove": 23085
+      "atOrAbove": 23087
     },
     {
       "xrp": 125893,
-      "atOrAbove": 21371
+      "atOrAbove": 21373
     },
     {
       "xrp": 133352,
-      "atOrAbove": 20020
+      "atOrAbove": 20019
     },
     {
       "xrp": 141254,
-      "atOrAbove": 18837
+      "atOrAbove": 18833
     },
     {
       "xrp": 149624,
-      "atOrAbove": 17823
+      "atOrAbove": 17821
     },
     {
       "xrp": 158489,
-      "atOrAbove": 16139
+      "atOrAbove": 16136
     },
     {
       "xrp": 167880,
-      "atOrAbove": 15133
+      "atOrAbove": 15134
     },
     {
       "xrp": 177828,
-      "atOrAbove": 14239
+      "atOrAbove": 14243
     },
     {
       "xrp": 188365,
-      "atOrAbove": 13380
+      "atOrAbove": 13382
     },
     {
       "xrp": 199526,
-      "atOrAbove": 12721
+      "atOrAbove": 12720
     },
     {
       "xrp": 211349,
-      "atOrAbove": 11075
+      "atOrAbove": 11070
     },
     {
       "xrp": 223872,
-      "atOrAbove": 10377
+      "atOrAbove": 10361
     },
     {
       "xrp": 237137,
-      "atOrAbove": 9757
+      "atOrAbove": 9760
     },
     {
       "xrp": 251189,
-      "atOrAbove": 8938
+      "atOrAbove": 8941
     },
     {
       "xrp": 266073,
-      "atOrAbove": 8387
+      "atOrAbove": 8388
     },
     {
       "xrp": 281838,
-      "atOrAbove": 7869
+      "atOrAbove": 7871
     },
     {
       "xrp": 298538,
-      "atOrAbove": 7500
+      "atOrAbove": 7504
     },
     {
       "xrp": 316228,
-      "atOrAbove": 6710
+      "atOrAbove": 6712
     },
     {
       "xrp": 334965,
-      "atOrAbove": 6297
+      "atOrAbove": 6296
     },
     {
       "xrp": 354813,
-      "atOrAbove": 5867
+      "atOrAbove": 5866
     },
     {
       "xrp": 375837,
-      "atOrAbove": 5536
+      "atOrAbove": 5537
     },
     {
       "xrp": 398107,
@@ -2092,11 +2092,11 @@
     },
     {
       "xrp": 421697,
-      "atOrAbove": 4757
+      "atOrAbove": 4762
     },
     {
       "xrp": 446684,
-      "atOrAbove": 4522
+      "atOrAbove": 4526
     },
     {
       "xrp": 473151,
@@ -2108,15 +2108,15 @@
     },
     {
       "xrp": 530884,
-      "atOrAbove": 3617
+      "atOrAbove": 3619
     },
     {
       "xrp": 562341,
-      "atOrAbove": 3436
+      "atOrAbove": 3439
     },
     {
       "xrp": 595662,
-      "atOrAbove": 3307
+      "atOrAbove": 3308
     },
     {
       "xrp": 630957,
@@ -2124,35 +2124,35 @@
     },
     {
       "xrp": 668344,
-      "atOrAbove": 2945
+      "atOrAbove": 2947
     },
     {
       "xrp": 707946,
-      "atOrAbove": 2797
+      "atOrAbove": 2798
     },
     {
       "xrp": 749894,
-      "atOrAbove": 2630
+      "atOrAbove": 2632
     },
     {
       "xrp": 794328,
-      "atOrAbove": 2483
+      "atOrAbove": 2486
     },
     {
       "xrp": 841395,
-      "atOrAbove": 2343
+      "atOrAbove": 2346
     },
     {
       "xrp": 891251,
-      "atOrAbove": 2245
+      "atOrAbove": 2250
     },
     {
       "xrp": 944061,
-      "atOrAbove": 2134
+      "atOrAbove": 2137
     },
     {
       "xrp": 1000000,
-      "atOrAbove": 2049
+      "atOrAbove": 2050
     },
     {
       "xrp": 1059250,
@@ -2160,7 +2160,7 @@
     },
     {
       "xrp": 1122020,
-      "atOrAbove": 1719
+      "atOrAbove": 1721
     },
     {
       "xrp": 1188500,
@@ -2168,51 +2168,51 @@
     },
     {
       "xrp": 1258930,
-      "atOrAbove": 1588
+      "atOrAbove": 1587
     },
     {
       "xrp": 1333520,
-      "atOrAbove": 1533
+      "atOrAbove": 1534
     },
     {
       "xrp": 1412540,
-      "atOrAbove": 1494
+      "atOrAbove": 1496
     },
     {
       "xrp": 1496240,
-      "atOrAbove": 1450
+      "atOrAbove": 1451
     },
     {
       "xrp": 1584890,
-      "atOrAbove": 1393
+      "atOrAbove": 1395
     },
     {
       "xrp": 1678800,
-      "atOrAbove": 1349
+      "atOrAbove": 1351
     },
     {
       "xrp": 1778280,
-      "atOrAbove": 1279
+      "atOrAbove": 1282
     },
     {
       "xrp": 1883650,
-      "atOrAbove": 1244
+      "atOrAbove": 1247
     },
     {
       "xrp": 1995260,
-      "atOrAbove": 1205
+      "atOrAbove": 1207
     },
     {
       "xrp": 2113490,
-      "atOrAbove": 1127
+      "atOrAbove": 1130
     },
     {
       "xrp": 2238720,
-      "atOrAbove": 1099
+      "atOrAbove": 1100
     },
     {
       "xrp": 2371370,
-      "atOrAbove": 1069
+      "atOrAbove": 1070
     },
     {
       "xrp": 2511890,
@@ -2236,23 +2236,23 @@
     },
     {
       "xrp": 3349650,
-      "atOrAbove": 863
+      "atOrAbove": 862
     },
     {
       "xrp": 3548130,
-      "atOrAbove": 826
+      "atOrAbove": 825
     },
     {
       "xrp": 3758370,
-      "atOrAbove": 811
+      "atOrAbove": 810
     },
     {
       "xrp": 3981070,
-      "atOrAbove": 761
+      "atOrAbove": 760
     },
     {
       "xrp": 4216970,
-      "atOrAbove": 739
+      "atOrAbove": 738
     },
     {
       "xrp": 4466840,
@@ -2264,15 +2264,15 @@
     },
     {
       "xrp": 5011870,
-      "atOrAbove": 668
+      "atOrAbove": 667
     },
     {
       "xrp": 5308840,
-      "atOrAbove": 651
+      "atOrAbove": 650
     },
     {
       "xrp": 5623410,
-      "atOrAbove": 639
+      "atOrAbove": 638
     },
     {
       "xrp": 5956620,
@@ -2280,7 +2280,7 @@
     },
     {
       "xrp": 6309570,
-      "atOrAbove": 610
+      "atOrAbove": 609
     },
     {
       "xrp": 6683440,
@@ -2288,7 +2288,7 @@
     },
     {
       "xrp": 7079460,
-      "atOrAbove": 593
+      "atOrAbove": 592
     },
     {
       "xrp": 7498940,
@@ -2300,7 +2300,7 @@
     },
     {
       "xrp": 8413950,
-      "atOrAbove": 567
+      "atOrAbove": 565
     },
     {
       "xrp": 8912510,
@@ -2312,7 +2312,7 @@
     },
     {
       "xrp": 10000000,
-      "atOrAbove": 521
+      "atOrAbove": 522
     },
     {
       "xrp": 10592500,
@@ -2332,7 +2332,7 @@
     },
     {
       "xrp": 13335200,
-      "atOrAbove": 468
+      "atOrAbove": 467
     },
     {
       "xrp": 14125400,
@@ -2348,7 +2348,7 @@
     },
     {
       "xrp": 16788000,
-      "atOrAbove": 398
+      "atOrAbove": 397
     },
     {
       "xrp": 17782800,
@@ -2364,7 +2364,7 @@
     },
     {
       "xrp": 21134900,
-      "atOrAbove": 327
+      "atOrAbove": 326
     },
     {
       "xrp": 22387200,
@@ -2448,7 +2448,7 @@
     },
     {
       "xrp": 70794600,
-      "atOrAbove": 152
+      "atOrAbove": 151
     },
     {
       "xrp": 74989400,
@@ -2867,11 +2867,11 @@
     {
       "rank": 7,
       "address": "rPyCQm8E5j78PDbrfKF24fRC7qUAk1kDMZ",
-      "xrp": 1836483426,
-      "spendableXrp": 1836483426,
+      "xrp": 1836978796,
+      "spendableXrp": 1836978796,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 1.8367,
+      "pctOfSupply": 1.8372,
       "domain": null,
       "label": {
         "name": "Bithumb",
@@ -3039,8 +3039,8 @@
     {
       "rank": 16,
       "address": "rw7m3CtVHwGSdhFjV4MyJozmZJv3DYQnsA",
-      "xrp": 577663951,
-      "spendableXrp": 577663951,
+      "xrp": 577579406,
+      "spendableXrp": 577579406,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.5777,
@@ -3459,8 +3459,8 @@
     {
       "rank": 39,
       "address": "rB1kVfLSxpXCw7sLCBcm5LFZYzkS6xmwSK",
-      "xrp": 335221889,
-      "spendableXrp": 335221889,
+      "xrp": 335234013,
+      "spendableXrp": 335234013,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.3353,
@@ -3483,11 +3483,11 @@
     {
       "rank": 41,
       "address": "rKNwXQh9GMjaU8uTqKLECsqyib47g5dMvo",
-      "xrp": 331371186,
-      "spendableXrp": 331371186,
+      "xrp": 331851401,
+      "spendableXrp": 331851401,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.3314,
+      "pctOfSupply": 0.3319,
       "domain": null,
       "label": {
         "name": "Crypto.com",
@@ -3607,8 +3607,8 @@
     {
       "rank": 48,
       "address": "rstryhbE73v18SnJ3R8j1FSNYFWCSdELEd",
-      "xrp": 243640008,
-      "spendableXrp": 243640008,
+      "xrp": 243642781,
+      "spendableXrp": 243642781,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.2437,
@@ -3795,8 +3795,8 @@
     {
       "rank": 59,
       "address": "rhWVCsCXrkwTeLBg6DyDr7abDaHz3zAKmn",
-      "xrp": 191692112,
-      "spendableXrp": 191692112,
+      "xrp": 191705426,
+      "spendableXrp": 191705426,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.1917,
@@ -3839,8 +3839,8 @@
     {
       "rank": 62,
       "address": "rpLru1mHkBEgmE6zw2gXP2HcSyHg3hCt69",
-      "xrp": 174496319,
-      "spendableXrp": 174496319,
+      "xrp": 174484861,
+      "spendableXrp": 174484861,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.1745,
@@ -3899,8 +3899,8 @@
     {
       "rank": 67,
       "address": "rJqiMb94hyz41SBTNr2AyPNW8AzELa8nE",
-      "xrp": 158009763,
-      "spendableXrp": 158009763,
+      "xrp": 157930863,
+      "spendableXrp": 157930863,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.158,
@@ -3979,8 +3979,8 @@
     {
       "rank": 73,
       "address": "rfkXSaCZKTg1EZzec2rLDyrWHxRVJdtVXj",
-      "xrp": 147629106,
-      "spendableXrp": 7629106,
+      "xrp": 147638998,
+      "spendableXrp": 7638998,
       "escrowedXrp": 140000000,
       "escrows": 1,
       "pctOfSupply": 0.1477,
@@ -4103,11 +4103,11 @@
     {
       "rank": 82,
       "address": "rLwSuYoPbDU3Y58tfXbuqFTq6Fmsx4f3KZ",
-      "xrp": 112532452,
-      "spendableXrp": 112532452,
+      "xrp": 113285384,
+      "spendableXrp": 113285384,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.1125,
+      "pctOfSupply": 0.1133,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -4698,6 +4698,18 @@
     },
     {
       "rank": 131,
+      "address": "rBB8peCvJcSbkmuQSe6ct6cujqNzz465cB",
+      "xrp": 97928953,
+      "spendableXrp": 97928953,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0979,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 132,
       "address": "r9BkS92kmSkseH8axTh8puDFZf2GKJsqyK",
       "xrp": 97446543,
       "spendableXrp": 97446543,
@@ -4709,22 +4721,10 @@
       "labelDropped": null
     },
     {
-      "rank": 132,
-      "address": "rBB8peCvJcSbkmuQSe6ct6cujqNzz465cB",
-      "xrp": 97392143,
-      "spendableXrp": 97392143,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0974,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
       "rank": 133,
       "address": "rpNF4938Y8zCrqFP2owDHjMUdpAxMs49JD",
-      "xrp": 97379223,
-      "spendableXrp": 97379223,
+      "xrp": 97382371,
+      "spendableXrp": 97382371,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0974,
@@ -4735,11 +4735,11 @@
     {
       "rank": 134,
       "address": "rMdvagR3K78g6hDZ8Wc65BKXjfMgMGtr2q",
-      "xrp": 97022293,
-      "spendableXrp": 97022293,
+      "xrp": 96823545,
+      "spendableXrp": 96823545,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.097,
+      "pctOfSupply": 0.0968,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -4747,8 +4747,8 @@
     {
       "rank": 135,
       "address": "rL8db2YDnYvCrrJmi5wjuwLRBF5fC7n9VD",
-      "xrp": 95252830,
-      "spendableXrp": 95252830,
+      "xrp": 95252821,
+      "spendableXrp": 95252821,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0953,
@@ -4819,8 +4819,8 @@
     {
       "rank": 141,
       "address": "rNRc2S2GSefSkTkAiyjE6LDzMonpeHp6jS",
-      "xrp": 88452511,
-      "spendableXrp": 88452511,
+      "xrp": 88458568,
+      "spendableXrp": 88458568,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0885,
@@ -4914,6 +4914,18 @@
     },
     {
       "rank": 149,
+      "address": "rnPpiykzCFkievFjCdx7xLKb2KGA1is3ew",
+      "xrp": 71544925,
+      "spendableXrp": 71544925,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0716,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 150,
       "address": "r9C3MfuUnfTNWrXaWSuyRamGrzN6hN4dac",
       "xrp": 71541867,
       "spendableXrp": 71541867,
@@ -4925,7 +4937,7 @@
       "labelDropped": null
     },
     {
-      "rank": 150,
+      "rank": 151,
       "address": "rLuQnupL8NQJX9Ywc59cxNrNPHsCHU1XK6",
       "xrp": 71285212,
       "spendableXrp": 71285212,
@@ -4937,37 +4949,25 @@
       "labelDropped": null
     },
     {
-      "rank": 151,
-      "address": "rnPpiykzCFkievFjCdx7xLKb2KGA1is3ew",
-      "xrp": 71104925,
-      "spendableXrp": 71104925,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0711,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
       "rank": 152,
-      "address": "r4nydGjxDBn2VDMqmDxx2oZQGCcEWKPs8F",
-      "xrp": 71064471,
-      "spendableXrp": 71064471,
+      "address": "rhDTe4SW6Tg4g3uWy66xJUuitsNYaRGgHZ",
+      "xrp": 69740558,
+      "spendableXrp": 69740558,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.0711,
+      "pctOfSupply": 0.0698,
       "domain": null,
       "label": null,
       "labelDropped": null
     },
     {
       "rank": 153,
-      "address": "rhDTe4SW6Tg4g3uWy66xJUuitsNYaRGgHZ",
-      "xrp": 70490558,
-      "spendableXrp": 70490558,
+      "address": "r4nydGjxDBn2VDMqmDxx2oZQGCcEWKPs8F",
+      "xrp": 69454907,
+      "spendableXrp": 69454907,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.0705,
+      "pctOfSupply": 0.0695,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -5035,11 +5035,11 @@
     {
       "rank": 159,
       "address": "rDAE53VfMvftPB4ogpWGWvzkQxfht6JPxr",
-      "xrp": 66164323,
-      "spendableXrp": 66164323,
+      "xrp": 64752983,
+      "spendableXrp": 64752983,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.0662,
+      "pctOfSupply": 0.0648,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -5047,8 +5047,8 @@
     {
       "rank": 160,
       "address": "rfwXrbGfk7muA1SbG965GyWL2bxnwcAB5E",
-      "xrp": 64561018,
-      "spendableXrp": 64561018,
+      "xrp": 64625532,
+      "spendableXrp": 64625532,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0646,
@@ -5202,6 +5202,18 @@
     },
     {
       "rank": 173,
+      "address": "rBuZfn1m4tA6znziHsRp9AyC1M3qg6rgbF",
+      "xrp": 55297631,
+      "spendableXrp": 55297631,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0553,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 174,
       "address": "rZoUED3ArDip7MmoEanJ6pRd7jziw3aer",
       "xrp": 55185926,
       "spendableXrp": 55185926,
@@ -5213,22 +5225,10 @@
       "labelDropped": null
     },
     {
-      "rank": 174,
+      "rank": 175,
       "address": "rDWcsE1oaEvYkgQ6ADmCeYTtjjoRyvLLqk",
       "xrp": 55098869,
       "spendableXrp": 55098869,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0551,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 175,
-      "address": "rBuZfn1m4tA6znziHsRp9AyC1M3qg6rgbF",
-      "xrp": 55089704,
-      "spendableXrp": 55089704,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0551,
@@ -5574,18 +5574,6 @@
     },
     {
       "rank": 204,
-      "address": "rMvCasZ9cohYrSZRNYPTZfoaaSUQMfgQ8G",
-      "xrp": 45298410,
-      "spendableXrp": 45298410,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0453,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 205,
       "address": "rEdEnMp4aM8eyEK3xXhbf87Qg5yDY9YATp",
       "xrp": 45000112,
       "spendableXrp": 45000112,
@@ -5597,7 +5585,7 @@
       "labelDropped": null
     },
     {
-      "rank": 206,
+      "rank": 205,
       "address": "rhfe1JCcu2hCqvXTuJQCyZsvhhEXBsFfDj",
       "xrp": 45000091,
       "spendableXrp": 45000091,
@@ -5609,7 +5597,7 @@
       "labelDropped": null
     },
     {
-      "rank": 207,
+      "rank": 206,
       "address": "rUtds6aDg5cKqGwXSMbL7Xv9yrePkhKaam",
       "xrp": 45000002,
       "spendableXrp": 45000002,
@@ -5621,10 +5609,22 @@
       "labelDropped": null
     },
     {
-      "rank": 208,
+      "rank": 207,
       "address": "rAnqRGVpsS6XaUbQjwpQmoE4y1MthZhT9",
       "xrp": 44665259,
       "spendableXrp": 44665259,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0447,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 208,
+      "address": "rMvCasZ9cohYrSZRNYPTZfoaaSUQMfgQ8G",
+      "xrp": 44648564,
+      "spendableXrp": 44648564,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0447,
@@ -5683,8 +5683,8 @@
     {
       "rank": 213,
       "address": "rwh2r5ESARRSymmKhxhaXb8Eae7aTWvYwc",
-      "xrp": 42901203,
-      "spendableXrp": 42901203,
+      "xrp": 42901266,
+      "spendableXrp": 42901266,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0429,
@@ -5707,8 +5707,8 @@
     {
       "rank": 215,
       "address": "rEENamLrBTUw52GMUjwaogKzonHScXTGyy",
-      "xrp": 42582670,
-      "spendableXrp": 42582670,
+      "xrp": 42583773,
+      "spendableXrp": 42583773,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0426,
@@ -5791,8 +5791,8 @@
     {
       "rank": 222,
       "address": "rKryEVqD7SUZ9SJYRgeESZDQeJ9EkkA1sg",
-      "xrp": 41991668,
-      "spendableXrp": 41991668,
+      "xrp": 41983962,
+      "spendableXrp": 41983962,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.042,
@@ -5922,6 +5922,18 @@
     },
     {
       "rank": 233,
+      "address": "rnJrjec2vrTJAAQUTMTjj7U6xdXrk9N4mT",
+      "xrp": 39589458,
+      "spendableXrp": 39589458,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0396,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 234,
       "address": "rwdVkp9Bb7sJ2bQ8fhtfvJgGLxUzQ5fyfy",
       "xrp": 39521471,
       "spendableXrp": 39521471,
@@ -5933,25 +5945,13 @@
       "labelDropped": null
     },
     {
-      "rank": 234,
+      "rank": 235,
       "address": "rKeWg9FHDpk5FGbd4vdoVRCbHy1TbqdTCc",
       "xrp": 39477577,
       "spendableXrp": 39477577,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0395,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 235,
-      "address": "rnJrjec2vrTJAAQUTMTjj7U6xdXrk9N4mT",
-      "xrp": 39086805,
-      "spendableXrp": 39086805,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0391,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -6415,8 +6415,8 @@
     {
       "rank": 274,
       "address": "rPvKH3CoiKnne5wAYphhsWgqAEMf1tRAE7",
-      "xrp": 27304732,
-      "spendableXrp": 27304732,
+      "xrp": 27304881,
+      "spendableXrp": 27304881,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0273,
@@ -6619,8 +6619,8 @@
     {
       "rank": 291,
       "address": "rUWUJ2F3aZknSd8PVutoMnxowMK792maTD",
-      "xrp": 23668534,
-      "spendableXrp": 23668534,
+      "xrp": 23668444,
+      "spendableXrp": 23668444,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0237,
@@ -6883,11 +6883,11 @@
     {
       "rank": 313,
       "address": "rGDhPiBmiB3NJPPg6WTPC5x1eNnXxh8xf4",
-      "xrp": 22755020,
-      "spendableXrp": 22755020,
+      "xrp": 22655020,
+      "spendableXrp": 22655020,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.0228,
+      "pctOfSupply": 0.0227,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -6978,6 +6978,18 @@
     },
     {
       "rank": 321,
+      "address": "rLdAgd8PnE8rwPv1YM3iPCfvTvYe9jDLAJ",
+      "xrp": 21761672,
+      "spendableXrp": 21761672,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0218,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 322,
       "address": "r3quBqvxEq9LvH6AjrMzSszuAuAx5WpaJq",
       "xrp": 21696646,
       "spendableXrp": 21696646,
@@ -6989,7 +7001,7 @@
       "labelDropped": null
     },
     {
-      "rank": 322,
+      "rank": 323,
       "address": "rLUpiBeLhUyEzVtBkYE4S9t4zhdybSSARw",
       "xrp": 21633514,
       "spendableXrp": 21633514,
@@ -7001,7 +7013,7 @@
       "labelDropped": null
     },
     {
-      "rank": 323,
+      "rank": 324,
       "address": "rJJJfFtMFg4T64oLsJBRHKUNx8ynFocbaJ",
       "xrp": 21624978,
       "spendableXrp": 21624978,
@@ -7013,25 +7025,13 @@
       "labelDropped": null
     },
     {
-      "rank": 324,
+      "rank": 325,
       "address": "rPmu958m6DTNZ6qfTJbLisHSv3w6BaJrgh",
       "xrp": 21606660,
       "spendableXrp": 21606660,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0216,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 325,
-      "address": "rLdAgd8PnE8rwPv1YM3iPCfvTvYe9jDLAJ",
-      "xrp": 21376712,
-      "spendableXrp": 21376712,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0214,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -7050,18 +7050,6 @@
     },
     {
       "rank": 327,
-      "address": "rHcFoo6a9qT5NHiVn1THQRhsEGcxtYCV4d",
-      "xrp": 21125752,
-      "spendableXrp": 21125752,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0211,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 328,
       "address": "rM4Yo4nap3TGFQWVrZNp6XeLzneEu3wPV3",
       "xrp": 20868573,
       "spendableXrp": 20868573,
@@ -7073,13 +7061,25 @@
       "labelDropped": null
     },
     {
-      "rank": 329,
+      "rank": 328,
       "address": "rkr3j4qcCTqgHKdwHpohC4ZPLqFWSZRH8",
       "xrp": 20861516,
       "spendableXrp": 20861516,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0209,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 329,
+      "address": "rHcFoo6a9qT5NHiVn1THQRhsEGcxtYCV4d",
+      "xrp": 20820892,
+      "spendableXrp": 20820892,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0208,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -7278,21 +7278,21 @@
     },
     {
       "rank": 346,
-      "address": "r3YqptFz6Ex5mDkxqYL6gdz8sDzyBevuNA",
-      "xrp": 19521290,
-      "spendableXrp": 19521290,
+      "address": "rLNmmcNEizWaygypRVTKaWoZG6RrqfsJpi",
+      "xrp": 19547787,
+      "spendableXrp": 19547787,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.0195,
+      "pctOfSupply": 0.0196,
       "domain": null,
       "label": null,
       "labelDropped": null
     },
     {
       "rank": 347,
-      "address": "rLNmmcNEizWaygypRVTKaWoZG6RrqfsJpi",
-      "xrp": 19476518,
-      "spendableXrp": 19476518,
+      "address": "r3YqptFz6Ex5mDkxqYL6gdz8sDzyBevuNA",
+      "xrp": 19521290,
+      "spendableXrp": 19521290,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0195,
@@ -7411,11 +7411,11 @@
     {
       "rank": 357,
       "address": "rJnUXy7x3RW58Kien2eFtZEY2Pa3HBvpQ2",
-      "xrp": 18960372,
-      "spendableXrp": 18960372,
+      "xrp": 18936470,
+      "spendableXrp": 18936470,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.019,
+      "pctOfSupply": 0.0189,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -7602,18 +7602,6 @@
     },
     {
       "rank": 373,
-      "address": "rUrYCcn3UkgC2ZXDWDvWT1D8VmM2X5Yiws",
-      "xrp": 16823100,
-      "spendableXrp": 16823100,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0168,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 374,
       "address": "rwEhsCF9McDb57LbURfkFDJ467VW4BXKd5",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7625,7 +7613,7 @@
       "labelDropped": null
     },
     {
-      "rank": 375,
+      "rank": 374,
       "address": "rBvUD2nFdaLskYkd9YekHy5rNrNfTHL2U9",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7637,7 +7625,7 @@
       "labelDropped": null
     },
     {
-      "rank": 376,
+      "rank": 375,
       "address": "rEyVPcUeXJ32VzKk5oqPC6XjrbDN6SFbxf",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7649,7 +7637,7 @@
       "labelDropped": null
     },
     {
-      "rank": 377,
+      "rank": 376,
       "address": "rpx772KKeXg56jRLNByS9DEtpKmcZ1C95o",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7661,7 +7649,7 @@
       "labelDropped": null
     },
     {
-      "rank": 378,
+      "rank": 377,
       "address": "rNU99AEpAwyYPn8WTNqCgMskYror7LZ6dZ",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7673,7 +7661,7 @@
       "labelDropped": null
     },
     {
-      "rank": 379,
+      "rank": 378,
       "address": "rLWW7qJgJomDVo83vAAP1a77bmnfxcQsjC",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7685,7 +7673,7 @@
       "labelDropped": null
     },
     {
-      "rank": 380,
+      "rank": 379,
       "address": "rNm4qH6xpdfMwsLr1rJUB59LbeF2unfR3v",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7697,7 +7685,7 @@
       "labelDropped": null
     },
     {
-      "rank": 381,
+      "rank": 380,
       "address": "r3LdQ2sxTww6MrGN2CN5NDv29F3iPv531G",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7709,7 +7697,7 @@
       "labelDropped": null
     },
     {
-      "rank": 382,
+      "rank": 381,
       "address": "rHZiqa4tUf2eHyntrKnNBE6AWJeqB2Zs6s",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7721,7 +7709,7 @@
       "labelDropped": null
     },
     {
-      "rank": 383,
+      "rank": 382,
       "address": "rJPNmDVF8cXT3UC2GL7X3pvmUxmCjMWVLQ",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7733,7 +7721,7 @@
       "labelDropped": null
     },
     {
-      "rank": 384,
+      "rank": 383,
       "address": "ra7QTgrEVBDx6jZShbriEnzRB2AL7VAi9k",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7745,7 +7733,7 @@
       "labelDropped": null
     },
     {
-      "rank": 385,
+      "rank": 384,
       "address": "rKsF3FN7iqABkYs985BgPYBb6qQCK9iEdU",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7757,7 +7745,7 @@
       "labelDropped": null
     },
     {
-      "rank": 386,
+      "rank": 385,
       "address": "rGbYrekqKKk62uUcWbU57y5pMvMb8syhNJ",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7769,7 +7757,7 @@
       "labelDropped": null
     },
     {
-      "rank": 387,
+      "rank": 386,
       "address": "rPMtNyZrPJct8r4zpVENwaZNeFtxpoCqiu",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7781,7 +7769,7 @@
       "labelDropped": null
     },
     {
-      "rank": 388,
+      "rank": 387,
       "address": "rMasCuSTVncegPrdnJusDWCiUFzqTnCD6K",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7793,7 +7781,7 @@
       "labelDropped": null
     },
     {
-      "rank": 389,
+      "rank": 388,
       "address": "ranQuxfxqEiCz1ALXCLaXLWerKGYXgoY4N",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7805,7 +7793,7 @@
       "labelDropped": null
     },
     {
-      "rank": 390,
+      "rank": 389,
       "address": "rPewAsKthZvhKHSvqt5sPxeXjL2CSgjRDH",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7817,7 +7805,7 @@
       "labelDropped": null
     },
     {
-      "rank": 391,
+      "rank": 390,
       "address": "r4gVQgbktcm5TAghS74V9w8F9cDNCscSAY",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7829,7 +7817,7 @@
       "labelDropped": null
     },
     {
-      "rank": 392,
+      "rank": 391,
       "address": "r3CzRxiHRmctUeku8imYMB2415v3u4w1CE",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7841,7 +7829,7 @@
       "labelDropped": null
     },
     {
-      "rank": 393,
+      "rank": 392,
       "address": "rrhdRLMo2ZjGQDqMP5NNxu2eRgbfrRd47i",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7853,7 +7841,7 @@
       "labelDropped": null
     },
     {
-      "rank": 394,
+      "rank": 393,
       "address": "rLmQQmHRQR4uTcdj8xQd6XziYkpqMdixhP",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7865,7 +7853,7 @@
       "labelDropped": null
     },
     {
-      "rank": 395,
+      "rank": 394,
       "address": "rarYE2CBjESHGDAg9pH2MYyopKLBacJPtL",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7877,7 +7865,7 @@
       "labelDropped": null
     },
     {
-      "rank": 396,
+      "rank": 395,
       "address": "rBR4DRhAZtG9CfPpFmzVJ79aNLDnzR7dQP",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7889,7 +7877,7 @@
       "labelDropped": null
     },
     {
-      "rank": 397,
+      "rank": 396,
       "address": "rapCF1VDQP7aRUUKoLfaU9Supcp3cTcG2L",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7901,7 +7889,7 @@
       "labelDropped": null
     },
     {
-      "rank": 398,
+      "rank": 397,
       "address": "r3ZWSK6S3nmneLTzmB9NUSnbuaGBg465VY",
       "xrp": 16778803,
       "spendableXrp": 16778803,
@@ -7913,7 +7901,7 @@
       "labelDropped": null
     },
     {
-      "rank": 399,
+      "rank": 398,
       "address": "rhvGY1ZKF12pAz3ujt2f9kQdVVimjJKNDn",
       "xrp": 16741317,
       "spendableXrp": 16741317,
@@ -7925,7 +7913,7 @@
       "labelDropped": null
     },
     {
-      "rank": 400,
+      "rank": 399,
       "address": "r9vV1SnRQ5Yui5Fzh1Dhc8c7wszLtPV9MS",
       "xrp": 16672865,
       "spendableXrp": 16672865,
@@ -7937,7 +7925,7 @@
       "labelDropped": null
     },
     {
-      "rank": 401,
+      "rank": 400,
       "address": "rpRhAjjvRKrLv7kZfy9YCFK35A6SNQrjF8",
       "xrp": 16672865,
       "spendableXrp": 16672865,
@@ -7949,7 +7937,7 @@
       "labelDropped": null
     },
     {
-      "rank": 402,
+      "rank": 401,
       "address": "rPuV1j3R2Gp14H35H4cfb9LZKGo7z9nNH9",
       "xrp": 16672865,
       "spendableXrp": 16672865,
@@ -7961,7 +7949,7 @@
       "labelDropped": null
     },
     {
-      "rank": 403,
+      "rank": 402,
       "address": "rDJzqDnscv359mEeQGHWuFQNZqHUFiJhA",
       "xrp": 16672865,
       "spendableXrp": 16672865,
@@ -7973,7 +7961,7 @@
       "labelDropped": null
     },
     {
-      "rank": 404,
+      "rank": 403,
       "address": "rLk11c22pV6SZ97yRRGChVvzDtNS5QEHhi",
       "xrp": 16672865,
       "spendableXrp": 16672865,
@@ -7985,10 +7973,22 @@
       "labelDropped": null
     },
     {
-      "rank": 405,
+      "rank": 404,
       "address": "rLoZMLDzPnmRUcLFdCGQnYMf9THm15M841",
       "xrp": 16665971,
       "spendableXrp": 16665971,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0167,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 405,
+      "address": "rUrYCcn3UkgC2ZXDWDvWT1D8VmM2X5Yiws",
+      "xrp": 16650769,
+      "spendableXrp": 16650769,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0167,
@@ -8035,8 +8035,8 @@
     {
       "rank": 409,
       "address": "rMkJJ4HHHBRdeHvE2UXx1xPDh4hnuRW9TZ",
-      "xrp": 16248437,
-      "spendableXrp": 16248437,
+      "xrp": 16248557,
+      "spendableXrp": 16248557,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0163,
@@ -8107,8 +8107,8 @@
     {
       "rank": 415,
       "address": "rUcPodpLjJpsKrJAm982t7VK6dXNXyGM3g",
-      "xrp": 15781524,
-      "spendableXrp": 15781524,
+      "xrp": 15783147,
+      "spendableXrp": 15783147,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0158,
@@ -8502,6 +8502,18 @@
     },
     {
       "rank": 448,
+      "address": "r3ZVNKgkkT3A7hbEZ8HxnNnLDCCmZiZECV",
+      "xrp": 14869271,
+      "spendableXrp": 14869271,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0149,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 449,
       "address": "rQfxZ8c12uByDtLVnT1a56aXkcBFdDMwhq",
       "xrp": 14851754,
       "spendableXrp": 14851754,
@@ -8513,7 +8525,7 @@
       "labelDropped": null
     },
     {
-      "rank": 449,
+      "rank": 450,
       "address": "rPz2qA93PeRCyHyFCqyNggnyycJR1N4iNf",
       "xrp": 14805619,
       "spendableXrp": 14805619,
@@ -8525,22 +8537,10 @@
       "labelDropped": null
     },
     {
-      "rank": 450,
+      "rank": 451,
       "address": "rHpmLokR3S5DVvHDDrKzGmhy73USWAV82R",
       "xrp": 14710016,
       "spendableXrp": 14710016,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0147,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 451,
-      "address": "r3ZVNKgkkT3A7hbEZ8HxnNnLDCCmZiZECV",
-      "xrp": 14683482,
-      "spendableXrp": 14683482,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0147,
@@ -8563,11 +8563,11 @@
     {
       "rank": 453,
       "address": "rhuCPEoLFYbpbwyhXioSumPKrnfCi3AXJZ",
-      "xrp": 14660134,
-      "spendableXrp": 14660134,
+      "xrp": 14641789,
+      "spendableXrp": 14641789,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.0147,
+      "pctOfSupply": 0.0146,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -8599,8 +8599,8 @@
     {
       "rank": 456,
       "address": "rPBMDP7CGiKzMvPx6SsCGgeDsrsUyv1K1b",
-      "xrp": 14587150,
-      "spendableXrp": 14587150,
+      "xrp": 14589449,
+      "spendableXrp": 14589449,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0146,
@@ -8742,18 +8742,6 @@
     },
     {
       "rank": 468,
-      "address": "r4DymtkgUAh2wqRxVfdd3Xtswzim6eC6c5",
-      "xrp": 13471419,
-      "spendableXrp": 13471419,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0135,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 469,
       "address": "rUBr375TnpyCzFHeUUmG3rskgw33AkXf9M",
       "xrp": 13205469,
       "spendableXrp": 13205469,
@@ -8765,7 +8753,7 @@
       "labelDropped": null
     },
     {
-      "rank": 470,
+      "rank": 469,
       "address": "rGxqCwFuN8w89ECUxmeY61oFfuskssLPnd",
       "xrp": 13081438,
       "spendableXrp": 13081438,
@@ -8777,7 +8765,7 @@
       "labelDropped": null
     },
     {
-      "rank": 471,
+      "rank": 470,
       "address": "raWGy3hgGx9m4jrzYVar9mA1GqL3fHQCvX",
       "xrp": 13038073,
       "spendableXrp": 13038073,
@@ -8789,13 +8777,25 @@
       "labelDropped": null
     },
     {
-      "rank": 472,
+      "rank": 471,
       "address": "rKmCe5UQitrLfJu3tZPkWUW5yeYQmqthQd",
       "xrp": 13001000,
       "spendableXrp": 13001000,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.013,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 472,
+      "address": "r4DymtkgUAh2wqRxVfdd3Xtswzim6eC6c5",
+      "xrp": 12823806,
+      "spendableXrp": 12823806,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0128,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -8827,11 +8827,11 @@
     {
       "rank": 475,
       "address": "raY6iQwV9WBDJtMtfRuA2rwFxj6CMRQCdQ",
-      "xrp": 12344780,
-      "spendableXrp": 12344780,
+      "xrp": 12420213,
+      "spendableXrp": 12420213,
       "escrowedXrp": 0,
       "escrows": 0,
-      "pctOfSupply": 0.0123,
+      "pctOfSupply": 0.0124,
       "domain": null,
       "label": null,
       "labelDropped": null
@@ -8874,6 +8874,18 @@
     },
     {
       "rank": 479,
+      "address": "rDsbeomae4FXwgQTJp9Rs64Qg9vDiTCdBv",
+      "xrp": 12054908,
+      "spendableXrp": 12054908,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0121,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 480,
       "address": "rLaGqBWs3e7S9qBNGYW22FziPc5bkduvcq",
       "xrp": 12045769,
       "spendableXrp": 12045769,
@@ -8885,7 +8897,7 @@
       "labelDropped": null
     },
     {
-      "rank": 480,
+      "rank": 481,
       "address": "raQEfGaGweo9kg8k9Wz7FnmWqMPzVfsvC6",
       "xrp": 12025000,
       "spendableXrp": 12025000,
@@ -8897,7 +8909,7 @@
       "labelDropped": null
     },
     {
-      "rank": 481,
+      "rank": 482,
       "address": "rwNnKQKHPgkzY2Zop93PuSdA2p1Z6hTqTb",
       "xrp": 12000052,
       "spendableXrp": 12000052,
@@ -8909,22 +8921,10 @@
       "labelDropped": null
     },
     {
-      "rank": 482,
+      "rank": 483,
       "address": "rKF9MWacRnb6g87dCo88toHiSi2d1o8t9g",
       "xrp": 12000010,
       "spendableXrp": 12000010,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.012,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 483,
-      "address": "rDsbeomae4FXwgQTJp9Rs64Qg9vDiTCdBv",
-      "xrp": 11990256,
-      "spendableXrp": 11990256,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.012,
@@ -8970,6 +8970,18 @@
     },
     {
       "rank": 487,
+      "address": "r44AzNe4LSHQkB95qm6pQCauJ3Vz7Yx3iU",
+      "xrp": 11692614,
+      "spendableXrp": 11692614,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0117,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 488,
       "address": "rNcV1Kvu6YT4vCKvxb5235Mp8vnUtyzVb",
       "xrp": 11625050,
       "spendableXrp": 11625050,
@@ -8981,10 +8993,10 @@
       "labelDropped": null
     },
     {
-      "rank": 488,
-      "address": "rsbfd5ZYWqy6XXf6hndPbRjDAzfmWc1CeQ",
-      "xrp": 11549561,
-      "spendableXrp": 11549561,
+      "rank": 489,
+      "address": "rLW9gnQo7BQhU6igk5keqYnH3TVrCxGRzm",
+      "xrp": 11613981,
+      "spendableXrp": 11613981,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0116,
@@ -8993,7 +9005,19 @@
       "labelDropped": null
     },
     {
-      "rank": 489,
+      "rank": 490,
+      "address": "rsbfd5ZYWqy6XXf6hndPbRjDAzfmWc1CeQ",
+      "xrp": 11593021,
+      "spendableXrp": 11593021,
+      "escrowedXrp": 0,
+      "escrows": 0,
+      "pctOfSupply": 0.0116,
+      "domain": null,
+      "label": null,
+      "labelDropped": null
+    },
+    {
+      "rank": 491,
       "address": "rL2HmfwYuDXuWJwYTYqhr571S98USF5VUQ",
       "xrp": 11500000,
       "spendableXrp": 11500000,
@@ -9005,7 +9029,7 @@
       "labelDropped": null
     },
     {
-      "rank": 490,
+      "rank": 492,
       "address": "rEfzibkDALpEWbqQAbMXEWtBpueddvxXJ6",
       "xrp": 11441257,
       "spendableXrp": 11441257,
@@ -9017,7 +9041,7 @@
       "labelDropped": null
     },
     {
-      "rank": 491,
+      "rank": 493,
       "address": "rLWzHpda9UdBTar2wSL9QCeu7zaSQCcayr",
       "xrp": 11409302,
       "spendableXrp": 11409302,
@@ -9029,34 +9053,10 @@
       "labelDropped": null
     },
     {
-      "rank": 492,
-      "address": "rLW9gnQo7BQhU6igk5keqYnH3TVrCxGRzm",
-      "xrp": 11376552,
-      "spendableXrp": 11376552,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0114,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 493,
+      "rank": 494,
       "address": "rJqpXHzXeXHF8mt8Joo7LxqKvj6RqFwM2H",
       "xrp": 11345207,
       "spendableXrp": 11345207,
-      "escrowedXrp": 0,
-      "escrows": 0,
-      "pctOfSupply": 0.0113,
-      "domain": null,
-      "label": null,
-      "labelDropped": null
-    },
-    {
-      "rank": 494,
-      "address": "r44AzNe4LSHQkB95qm6pQCauJ3Vz7Yx3iU",
-      "xrp": 11329453,
-      "spendableXrp": 11329453,
       "escrowedXrp": 0,
       "escrows": 0,
       "pctOfSupply": 0.0113,
@@ -9140,11 +9140,11 @@
   "topLabelled": 49,
   "topWithEscrow": 11,
   "concentration": {
-    "top100Xrp": 64142267297,
+    "top100Xrp": 64143859014,
     "top100PctOfXrp": 64.15,
     "exchangeAccounts": 25,
-    "exchangeXrp": 14672042914,
-    "exExchangeXrp": 49470224383,
+    "exchangeXrp": 14672947268,
+    "exExchangeXrp": 49470911746,
     "exExchangePctOfXrp": 49.48,
     "rippleAccounts": 12,
     "rippleXrp": 34836954902,
@@ -9154,7 +9154,7 @@
     "founderXrp": 3732688388,
     "founderPctOfXrp": 3.73,
     "residualAccounts": 51,
-    "residualXrp": 10900581093,
+    "residualXrp": 10901268456,
     "residualPctOfXrp": 10.9,
     "largestIndividual": {
       "rank": 30,
@@ -9166,7 +9166,7 @@
     "labelledAccounts": 49,
     "basis": "Shares are of all XRP in funded accounts, spendable and escrowed together. An exchange wallet holds balances for many customers, so excluding those is the closer read on how concentrated ownership is."
   },
-  "xrpUsd": 1.004313,
+  "xrpUsd": 1.008905,
   "xrpUsdSource": "Flare FTSOv2 XRP/USD oracle",
   "yieldComparison": {
     "receiptTokenHolders": 14356,
@@ -9348,15 +9348,15 @@
     },
     {
       "d": "2026-08-13",
-      "accounts": 8058050,
-      "xrpHeld": 99985541023,
+      "accounts": 8058769,
+      "xrpHeld": 99985540936,
       "tiers": {
         "1": 44771,
         "5": 7499,
         "10": 2140,
         "25": 108.8,
         "50": 20,
-        "0.01": 3832657,
+        "0.01": 3828247,
         "0.1": 275106
       }
     }
