@@ -361,6 +361,131 @@
     minmax(82px, 0.72fr) 88px 90px;
   gap: 14px;
 }
+
+/* ---- Aerodrome ranking: two APY columns side by side (Pool APR + Harvest 30d).
+   Reuses every .rp-rank cell style; only the grid and the two num-column tints
+   differ. Columns: # | Pool | Pool APR | Harvest 30d | Pair | Pool TVL | action */
+.ae-rank .hub-thead,
+.ae-rank .hub-row {
+  grid-template-columns: 34px minmax(150px, 1.6fr) 100px 100px 94px 90px 84px;
+  gap: 14px;
+}
+/* The Harvest lens reads a shade lighter than the ranked Pool APR beside it. */
+.rp-page .ae-rank .ae-harvest {
+  color: var(--uni-ink-2, #3e3e46);
+  font-weight: 500;
+}
+/* Thin-liquidity marker on a reward-driven APR. */
+.ae-rank .ae-thin {
+  margin-left: 3px;
+  font-weight: 600;
+  color: var(--rp-eyebrow, #b26a00);
+  cursor: help;
+}
+
+/* ---- Aerodrome TVL landscape: horizontal bars (name | bar | value). ---- */
+.ae-landscape {
+  margin: 18px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.ae-land-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 150px) 1fr 78px;
+  align-items: center;
+  gap: 12px;
+}
+.rp-page .ae-land-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--uni-ink, #1a1a1f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ae-land-bar-wrap {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--rp-card-border, #eeeef5);
+  overflow: hidden;
+}
+.ae-land-bar {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #ffb936, #ff9f1c);
+}
+.rp-page .ae-land-val {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--uni-ink-2, #3e3e46);
+}
+@media (max-width: 640px) {
+  .ae-land-row {
+    grid-template-columns: minmax(72px, 40%) 1fr 56px;
+    gap: 8px;
+  }
+  .rp-page .ae-land-name { font-size: 12px; }
+  .rp-page .ae-land-val { font-size: 11.5px; }
+}
+
+/* ---- Emissions-vs-fees: one aggregate split bar + per-pool composition bars. */
+.ae-splitbar {
+  display: flex;
+  height: 18px;
+  border-radius: 9px;
+  overflow: hidden;
+  margin: 16px 0 8px;
+  background: var(--rp-card-border, #eeeef5);
+}
+.ae-split-emit {
+  height: 100%;
+  background: linear-gradient(90deg, #ffb936, #ff9f1c);
+}
+.ae-split-fee {
+  height: 100%;
+  background: linear-gradient(90deg, #2dd4bf, #14b8a6);
+}
+.ae-split-legend {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--uni-ink-2, #3e3e46);
+  margin-bottom: 4px;
+}
+.ae-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.ae-dot-emit { background: #ff9f1c; }
+.ae-dot-fee { background: #14b8a6; }
+/* Per-pool composition bar: two segments inside the landscape bar track. */
+.ae-comp-wrap { display: flex; }
+/* Volume bars read teal (volume drives fees), distinct from the amber TVL bars. */
+.ae-bar-vol { background: linear-gradient(90deg, #2dd4bf, #14b8a6); }
+@media (max-width: 640px) {
+  .ae-rank .hub-thead,
+  .ae-rank .hub-row {
+    grid-template-columns: 18px minmax(0, 1fr) 62px 40px;
+    gap: 8px;
+  }
+  /* Show # (1), Pool (2), Pool APR (3), action (7); hide Harvest/Pair/TVL. */
+  .ae-rank .hub-thead > :nth-child(4),
+  .ae-rank .hub-row > :nth-child(4),
+  .ae-rank .hub-thead > :nth-child(5),
+  .ae-rank .hub-row > :nth-child(5),
+  .ae-rank .hub-thead > :nth-child(6),
+  .ae-rank .hub-row > :nth-child(6) {
+    display: none;
+  }
+}
 /* The Discover button shows its text label on desktop; the arrow is mobile. */
 .rp-discover-arrow { display: none; }
 /* SVG arrow (replaces the → glyph, which centred unreliably on Android). */
@@ -1129,8 +1254,14 @@
 }
 
 /* ---- Pill buttons (Figma): thin outline, white bg, icon + label. Applied to
-   the report's utility buttons (Discover/Open, data downloads). ---- */
+   the report's utility buttons (Discover/Open, data downloads).
+   Discover/Open is an <a> (it carries a real outbound href so crawlers and
+   no-JS visitors get a link), which means ".uni-home-content a" applies to it
+   too: that rule paints a transparent gradient background and a theme-driven
+   colour that goes light in dark mode. Re-assert at anchor specificity, the
+   same guard .rp-data-btn and .rp-modal-confirm already carry. ---- */
 .rp-page .rp-discover,
+.rp-page .uni-home-content a.rp-discover,
 .rp-page .uni-home-content a.rp-data-btn,
 .rp-page .rp-data-btn {
   display: inline-flex;
@@ -1152,6 +1283,7 @@
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 .rp-page .rp-discover:hover,
+.rp-page .uni-home-content a.rp-discover:hover,
 .rp-page .uni-home-content a.rp-data-btn:hover,
 .rp-page .rp-data-btn:hover {
   background: rgba(10, 10, 17, 0.03);
@@ -2023,4 +2155,383 @@
   .rp-page .rp-rank .hub-cell.hub-apy { font-size: 13.5px; }
   /* ~15% tighter vertical spacing between sections on mobile. */
   .rp-page .rp-doc-main > section { padding: 22px 0; }
+}
+
+/* ---- XRP staking calculator -------------------------------------------
+   Lifted from the /usdc hub's calculator (.uh-calc) and rescoped to
+   .rp-page, because the two are the same object: an amount, a product
+   picker, a result panel that carries its own caveats. Copying the rules
+   rather than sharing them is deliberate for now - the two pages sit on
+   different shells (.uni-hub-test vs .rp-page) with different tokens, and
+   a shared block would need a third selector layer to serve both. The
+   privacy line replaces the /usdc note, and it is not decoration: it is
+   the sentence that tells a reader on an XRP page that nothing is being
+   asked of their wallet. ---- */
+.rp-page .rp-calc {
+  margin: 4px 0 0;
+  padding: 26px 28px 28px;
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: var(--uni-radius, 20px);
+  background: var(--uni-card-2, #fff);
+}
+.rp-page .rp-calc-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+/* A grid item will not shrink below its min-content width, and a text input
+   carries a browser default around 20 characters. Without this the input pane
+   pushes past the viewport on a narrow phone. */
+.rp-page .rp-calc-panes > * { min-width: 0; }
+@media (min-width: 900px) {
+  .rp-page .rp-calc-panes {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  /* Centred inside the pane rather than pinned to the top. The results pane
+     holds nothing but the placeholder until the reader calculates, and a line
+     of muted text hanging off the top of a 210px column beside a full input
+     form reads as a rendering fault. Once results exist they overflow the
+     min-height, so the centring stops applying on its own. */
+  .rp-page .rp-calc-res {
+    border-left: 1px solid var(--uni-line);
+    padding-left: 34px;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.rp-page .rp-calc-h {
+  margin: 0 0 18px !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--uni-ink) !important;
+  font-weight: 600;
+}
+.rp-page .rp-calc-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--uni-ink-2);
+  margin: 0 0 7px;
+}
+.rp-page .rp-calc-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--uni-bg, #fff);
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: 12px;
+  padding: 0 14px;
+  margin: 0 0 16px;
+}
+.rp-page .rp-calc-field:focus-within {
+  border-color: var(--uni-ink);
+}
+.rp-page .rp-calc-input,
+.rp-page .rp-calc-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  padding: 13px 0;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.rp-page .rp-calc-field--select { padding-right: 8px; }
+.rp-page .rp-calc-select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 22px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 8px center, right 3px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.rp-page .rp-calc-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--uni-ink-2);
+}
+.rp-page .rp-calc-go {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 18px;
+  background: var(--uni-ink);
+  color: var(--uni-bg, #fff);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.rp-page .rp-calc-go:hover { opacity: 0.85; }
+.rp-page .rp-calc-privacy {
+  margin: 16px 0 0 !important;
+  font-size: 12.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
+}
+
+.rp-page .rp-calc-rest {
+  display: none;
+  margin: 0 !important;
+  font-size: 14px !important;
+  color: var(--uni-ink-3) !important;
+  text-align: center;
+}
+@media (min-width: 900px) {
+  .rp-page .rp-calc-rest { display: block; }
+}
+.rp-page .rp-calc-headline {
+  margin: 0 0 6px !important;
+  font-family: var(--display);
+  font-size: 19px !important;
+  line-height: 1.35 !important;
+  color: var(--uni-ink) !important;
+  font-feature-settings: "tnum";
+}
+.rp-page .rp-calc-headline strong { font-weight: 650; }
+.rp-page .rp-calc-detail {
+  margin: 0 0 16px !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
+}
+.rp-page .rp-calc-facts {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 11px;
+}
+.rp-page .rp-calc-facts li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+}
+.rp-page .rp-calc-facts li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.66em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--uni-gold, #ffb936);
+}
+.rp-page .rp-calc-facts strong {
+  color: var(--uni-ink);
+  font-weight: 650;
+  font-feature-settings: "tnum";
+}
+/* Anchor specificity, not class specificity. The calculator sits inside
+   .uni-home-content, where ".uni-home-test .uni-home-content a" paints every
+   link with the house gold-underline gradient and wins on the element
+   selector. Without the `a` here the pill renders as plain text, which is
+   what it did in both themes before this line. */
+.rp-page .uni-home-content a.rp-calc-cta,
+.rp-page .rp-calc-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: var(--uni-gold, #ffb936);
+  color: #1a1a1a !important;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background-image: none !important;
+  transition: opacity 0.15s ease;
+}
+.rp-page .uni-home-content a.rp-calc-cta:hover,
+.rp-page .rp-calc-cta:hover {
+  opacity: 0.88;
+  background-image: none !important;
+}
+
+@media (max-width: 800px) {
+  .rp-page .rp-calc { padding: 20px 18px 22px; }
+  .rp-page .rp-calc-headline { font-size: 17px !important; }
+  .rp-page .rp-calc-facts li { font-size: 14.5px; }
+}
+
+/* ---- Product picker ----------------------------------------------------
+   A listbox, not a <select>. The native control renders one flat truncated
+   line per option and, on a phone, takes the whole screen to do it, which
+   loses the rate, the venue and the type in the same grey run of text. The
+   rate leads at display size here because it is the only reason anyone opens
+   the list.
+
+   Two shapes, one component. Wide: a popover under the trigger, scrolled at
+   340px. Narrow: a sheet pinned to the bottom of the viewport with its own
+   scrim, because a popover anchored to a control halfway down the page either
+   runs past the fold or covers the field it belongs to. ---- */
+.rp-page .rp-pick {
+  position: relative;
+  margin: 0 0 16px;
+}
+.rp-page .rp-pick-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--uni-bg, #fff);
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font: inherit;
+  color: var(--uni-ink);
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.rp-page .rp-pick-btn:hover,
+.rp-page .rp-pick-btn.is-open { border-color: var(--uni-ink); }
+.rp-page .rp-pick-btn:focus-visible {
+  outline: 2px solid var(--uni-gold, #ffb936);
+  outline-offset: 2px;
+}
+.rp-page .rp-pick-rate {
+  flex: 0 0 auto;
+  min-width: 66px;
+  font-family: var(--display);
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-feature-settings: "tnum";
+  color: var(--uni-ink);
+}
+.rp-page .rp-pick-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.rp-page .rp-pick-venue {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--uni-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-page .rp-pick-meta {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--uni-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-page .rp-pick-caret {
+  flex: 0 0 auto;
+  color: var(--uni-ink-3);
+  display: inline-flex;
+  transition: transform 0.15s ease;
+}
+.rp-page .rp-pick-btn.is-open .rp-pick-caret { transform: rotate(180deg); }
+
+.rp-page .rp-pick-scrim { display: none; }
+.rp-page .rp-pick-pop {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--uni-card-2, #fff);
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: 14px;
+  box-shadow: 0 12px 34px rgba(10, 10, 17, 0.16);
+  overflow: hidden;
+}
+.rp-page .rp-pick-pop-h {
+  display: none;
+  margin: 0;
+}
+.rp-page .rp-pick-list {
+  max-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+}
+.rp-page .rp-pick-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.rp-page .rp-pick-opt.is-active { background: rgba(10, 10, 17, 0.05); }
+.rp-page .rp-pick-opt.is-sel .rp-pick-venue { font-weight: 700; }
+.rp-page .rp-pick-opt.is-sel { box-shadow: inset 0 0 0 1px var(--uni-gold, #ffb936); }
+:root[data-theme="dark"] .rp-page .rp-pick-opt.is-active {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Sheet, not popover. 640px rather than a phone width, because the calculator
+   stacks to one column well before that and a popover in a single-column
+   layout has the same fold problem a phone does. */
+@media (max-width: 640px) {
+  .rp-page .rp-pick-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(10, 10, 17, 0.45);
+  }
+  .rp-page .rp-pick-pop {
+    position: fixed;
+    z-index: 61;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -10px 40px rgba(10, 10, 17, 0.3);
+  }
+  .rp-page .rp-pick-pop-h {
+    display: block;
+    padding: 14px 16px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--uni-ink-3);
+    border-bottom: 1px solid var(--rp-card-border, #eeeef5);
+  }
+  .rp-page .rp-pick-list {
+    max-height: min(60vh, 420px);
+    padding: 8px;
+  }
+  .rp-page .rp-pick-opt { padding: 12px 12px; }
+}
+
+/* The line under the result bullets. Qualifies the whole panel rather than
+   adding a finding, so it reads as a footnote rather than as a third bullet. */
+.rp-page .rp-calc-foot {
+  margin: 0 0 18px !important;
+  font-size: 12.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
 }
