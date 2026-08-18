@@ -32,7 +32,11 @@ const RESOURCES = [
 // Resources so each report is discoverable as its own destination.
 const REPORTS = [
   { label: "XRP Rich List", href: "/xrp-rich-list" },
-  { label: "XRP Yield Ranking", href: "/report/xrp-yield-ranking" },
+  // "XRP Staking" rather than "XRP Yield Ranking": the page was repositioned
+  // on the staking cluster, its title and H1 both lead on the term, and a
+  // footer link naming the old thing sends a different signal than the page
+  // it points at.
+  { label: "XRP Staking", href: "/report/xrp-yield-ranking" },
 ];
 
 // Legitimacy-signal pages.

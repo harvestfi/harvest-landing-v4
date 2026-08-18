@@ -1,4 +1,16 @@
-// Calculator tracking for /xrp-rich-list, kept as its own channel.
+// Calculator tracking, kept as its own channel.
+//
+// TWO CALCULATORS, ONE TABLE. This started as the tracker for the percentile
+// calculator on /xrp-rich-list and now also carries the XRP staking calculator
+// on /report/xrp-yield-ranking. They are the same three events over the same
+// columns, and every row already records `source_page`, so a second table
+// would duplicate a schema to hold the same shape of interaction. The control
+// room scopes by `source_page`, which is what keeps one tool's completion rate
+// out of the other's.
+//
+// On the staking calculator `tier` carries the selected product's venue slug
+// rather than a percentile band. It is the same kind of value: a coarse label
+// for which answer the visitor was shown, not anything about the visitor.
 //
 // The build spec asked for two numbers before launch: the calculator's
 // completion rate, and the click-through from a result into the XRP yield
@@ -94,8 +106,12 @@ import {
  * `earn-on-xrp` is the surviving one. The box that replaced the buttons points
  * at the same `#bridge` anchor the old button did, so it keeps the same value
  * and the click-through series does not restart.
+ *
+ * `see-ranking` belongs to the staking calculator on the XRP yield report: the
+ * link from a result down to the ranking table. It is a different page and a
+ * different destination, so it gets its own value rather than borrowing one.
  */
-export type CalculatorCta = "top-accounts" | "earn-on-xrp";
+export type CalculatorCta = "top-accounts" | "earn-on-xrp" | "see-ranking";
 
 export interface RichListCalculatorEvent {
   event: "start" | "result" | "cta";
