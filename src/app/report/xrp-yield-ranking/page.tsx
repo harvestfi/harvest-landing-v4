@@ -4,6 +4,7 @@ import Link from "next/link";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { apyRangeClause } from "@/lib/format";
 import { AssetIcon } from "@/components/token-icons";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { DiscoverButton } from "@/components/report/discover-button";
@@ -302,10 +303,18 @@ export async function generateMetadata(): Promise<Metadata> {
   // No brand suffix, same rule as /xrp-rich-list: the suffix spends characters
   // that the head term and the calculator need.
   const title = "XRP Staking: 10+ Ways to Earn Yield & Calculator";
-  // The description opens on the definitive negative because that is the
-  // differentiator: the AI Overview on this term cites eight sources that all
-  // imply XRP can be staked.
-  const desc = `XRP has no native staking. This ranking tracks what the ${venues} XRP yield products across ${chains} networks actually pay, with a calculator to work out what any amount would earn. Updated from onchain data.`;
+  // The description used to open on the definitive negative, "XRP has no
+  // native staking", which is the right thing for the PAGE to say and the
+  // wrong thing for a SERP snippet to say. A searcher typing "xrp staking"
+  // reads it as "nothing here" and scrolls past, and Google was compounding it
+  // by stitching the negative onto the key-findings sentence behind it. The
+  // page still leads on the negative in its H1 and first paragraph, where a
+  // reader who has already arrived is owed the truth up front; the snippet's
+  // job is to say what is on the page.
+  //
+  // "10+" is a floor rather than a count, and the 1 to 5% band is a range
+  // rather than a live rate, so neither goes stale between hourly refreshes.
+  const desc = `Discover 10+ staking yield sources on XRP assets: vaults, lending venues, pools and fixed-term markets. Rates typically range between 1 and 5% for the asset.`;
   // Kept consistent across every head surface (page title, canonical, Open
   // Graph and Twitter) so the snippet renders the same everywhere.
   return {
@@ -757,7 +766,7 @@ export default function XrpYieldRankingPage() {
         // actually belongs to the product it names.
         `As of ${updated}, the highest variable single-exposure XRP rate among the ${ratedCount} rated products in this ranking, excluding fixed-rate Principal Tokens, was ${pct(histRate(topSingle))} on ${assetHead(topSingle)} at ${topSingle.platform}.${topPt ? ` Fixed-rate Principal Tokens on ${topPt.platform} offered ${pct(histRate(topPt))} as of ${updated}, locked to a set maturity rather than floating.` : ""} Two-asset liquidity pools posted far larger headline numbers${dHi != null && topDualPool ? `, up to ${pct(dHi)} as of ${updated}` : ""}, but those rates are reward emissions on very thin liquidity${topDualPool ? `; the top-rate pool held only ${usd(topDualPool.tvlUsd)} as of ${updated}` : ""}, and they carry impermanent loss and fade quickly, which makes them opportunistic rather than a comparable yield. Across the ${ratedCount} rated XRP products in this ranking, the capital-weighted average rate was ${pct(tvlWeightedApy)} as of ${updated}. The 30-day figure is a better guide than the spot number.`
       : FAQ.find((f) => f.q === "What is the highest APY for XRP?")!.a,
-    "What are current XRP staking rates?": `There is no XRP staking rate, because the XRP Ledger pays none: it has no validator set to delegate to and issues no new supply. The rates that do exist are lending, vault, liquidity-pool and fixed-rate returns on wrapped XRP. As of ${updated}, single-exposure rates across this ranking ran from ${pct(sLo)} to ${pct(sHi)} with a median of ${pct(sMedian)}, and the capital-weighted average across the ${ratedCount} rated products was ${pct(tvlWeightedApy)}. Rates are ranked here by their trailing 30-day average rather than by a spot reading, because ${stats.incentivized} of the ${stats.venues} products depended on reward emissions for most of their rate as of ${updated}.`,
+    "What are current XRP staking rates?": `There is no XRP staking rate, because the XRP Ledger pays none: it has no validator set to delegate to and issues no new supply. The rates that do exist are lending, vault, liquidity-pool and fixed-rate returns on wrapped XRP. As of ${updated}, single-exposure rates across this ranking ${apyRangeClause(sLo, sHi, { fmt: (v: number) => pct(v), past: true })}, with a median of ${pct(sMedian)}, and the capital-weighted average across the ${ratedCount} rated products was ${pct(tvlWeightedApy)}. Rates are ranked here by their trailing 30-day average rather than by a spot reading, because ${stats.incentivized} of the ${stats.venues} products depended on reward emissions for most of their rate as of ${updated}.`,
     "How much would 10,000 XRP earn?": `The answer depends on the product, which is what the calculator on this page works out: enter an amount, pick a product, and it applies that product's own published rate. As a worked example, 10,000 XRP in ${assetHead(topSingle)} at ${topSingle.platform} would earn about ${Math.round(10_000 * ((histRate(topSingle) ?? 0) / 100)).toLocaleString("en-US")} XRP over a year at the ${pct(histRate(topSingle))} rate recorded as of ${updated}, and at the median single-exposure rate of ${pct(sMedian)} it would earn about ${Math.round(10_000 * (sMedian / 100)).toLocaleString("en-US")} XRP. Neither figure is a staking reward, and both annualise one reading of a rate that moves.`,
     "What is impermanent loss in an XRP liquidity pool?": `Impermanent loss in an XRP liquidity pool is the gap between simply holding the two tokens and supplying them to a pool. In an XRP pool that pairs a wrapped XRP token such as cbXRP or FXRP with a second asset, if the two prices drift apart the pool rebalances against your position, so it can end up worth less than holding, even after the swap fees and rewards it earned. It is the main reason the dual-exposure XRP pools in the ranking above carry more risk than their headline rate suggests.`,
   };
@@ -1226,9 +1235,13 @@ export default function XrpYieldRankingPage() {
                 XRP Ledger has no validator set to delegate to.
               </li>
               <li>
-                Single-exposure XRP rates ranged from{" "}
-                <strong>{pct(sLo)}</strong> to <strong>{pct(sHi)}</strong> with
-                a median of <strong>{pct(sMedian)}</strong> as of {updated}.
+                {/* A range whose floor rounds to 0.00% leads the page with its
+                    worst row, and this is the sentence a snippet lifts. The
+                    median is right beside it either way; see apyRangeClause. */}
+                Single-exposure XRP rates{" "}
+                {apyRangeClause(sLo, sHi, { fmt: (v) => pct(v), past: true })},
+                with a median of <strong>{pct(sMedian)}</strong> as of{" "}
+                {updated}.
               </li>
               {negRow ? (
                 <li>
@@ -1395,9 +1408,9 @@ export default function XrpYieldRankingPage() {
               the numbers describe. The tables themselves are data-nosnippet. */}
           <p className="rp-lead">
             Across the {pools.length} XRP products in this ranking on{" "}
-            {joinAnd(stats.chains.map(chainLabel))}, 30-day rates ranged from{" "}
-            {pct(lo)} to {pct(hi)} with a median of {pct(stats.medianApy)} as of{" "}
-            {updated}. Products are ranked by rate and split by exposure:
+            {joinAnd(stats.chains.map(chainLabel))}, 30-day rates{" "}
+            {apyRangeClause(lo, hi, { fmt: (v) => pct(v), past: true })}, with a
+            median of {pct(stats.medianApy)} as of {updated}. Products are ranked by rate and split by exposure:
             single-exposure positions sit on one side of the market;
             dual-exposure positions pair an XRP token with a second asset. The
             Type column names each product.

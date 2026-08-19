@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { getLiveVaults, getAllSparklines } from "@/lib/data";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
-import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
+import { formatAPY, formatTVL, stripChainSuffix, apyRangeClause } from "@/lib/format";
 import { SITE_URL } from "@/lib/constants";
 import {
   assetHubH1,
@@ -26,7 +26,11 @@ interface AssetCopy {
   // Single-line lede shown in About {asset} yield
   lede: string;
   // Sub-articles for SEO body. Use {N}, {NETWORKS}, {WRAPPERS}, {TOP_PROTOS},
-  // {TOTAL_TVL}, {MIN_APY}, {MEDIAN_APY}, {MEAN_APY}, {MAX_APY} placeholders
+  // {TOTAL_TVL}, {APY_RANGE}, {MIN_APY}, {MEDIAN_APY}, {MEAN_APY}, {MAX_APY}
+  // placeholders. {APY_RANGE} renders the whole "run from X to Y" clause,
+  // because a cohort whose floor rounds to 0.00% is phrased "reach up to Y"
+  // instead and that decision belongs in one place rather than in every
+  // template that happens to quote a range.
   // in the prose to interpolate live cohort numbers.
   about: { h3: string; body: string }[];
   faq: { q: string; a: string }[];
@@ -49,7 +53,7 @@ const COPY: Record<string, AssetCopy> = {
       },
       {
         h3: "The cohort, in numbers",
-        body: "Right now we track {N} wrapped-BTC strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs run from {MIN_APY} at the floor to {MAX_APY} at the top. Median {MEDIAN_APY}, mean {MEAN_APY}. None of this represents the wider market, only what we follow.",
+        body: "Right now we track {N} wrapped-BTC strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs {APY_RANGE}. Median {MEDIAN_APY}, mean {MEAN_APY}. None of this represents the wider market, only what we follow.",
       },
       {
         h3: "Wrappers we currently follow",
@@ -101,7 +105,7 @@ const COPY: Record<string, AssetCopy> = {
       "Live ranking of {N} USDC strategies on {C} {C_WORD}.",
     about: [
       { h3: "Why USDC sits at the centre of DeFi yield", body: "Most onchain lending markets and yield products denominate in USDC. The strategies on this ranking are the supply side of that economy: deposit USDC, earn whatever borrowers and incentive programs are paying for it. Yield moves with utilisation, reward gauges, and onchain demand. Scope is the strategies we currently track." },
-      { h3: "The cohort, in numbers", body: "Right now we track {N} USDC strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs run from {MIN_APY} to {MAX_APY}. Median {MEDIAN_APY}, mean {MEAN_APY}. None of this represents the wider USDC market, only what we follow." },
+      { h3: "The cohort, in numbers", body: "Right now we track {N} USDC strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs {APY_RANGE}. Median {MEDIAN_APY}, mean {MEAN_APY}. None of this represents the wider USDC market, only what we follow." },
       { h3: "Where the yield lives, by network", body: "{NETWORK_BLOCK}. USDC liquidity concentrates on Ethereum, Base, and the major EVM rollups. We add networks as new strategies ship and remove them when products retire." },
       { h3: "Protocol families on the leaderboard", body: "Top families: {PROTO_BLOCK}. Most rows are either a single-asset money market like Aave or Morpho, or an autocompounder wrapping one. A smaller slice is real-world-asset credit and structured strategies." },
       { h3: "Lending vs. autocompounding vs. delta-neutral", body: "Three flavours cover almost everything on the list. Lending: deposit USDC, earn the supply rate. Autocompounding: same plus a contract that re-invests reward emissions for you. Delta-neutral: pair USDC with a short leg to capture funding or basis spread. Each trades complexity for smoother or higher yield." },
@@ -126,7 +130,7 @@ const COPY: Record<string, AssetCopy> = {
       "Live ranking of {N} USDT strategies on {C} {C_WORD}.",
     about: [
       { h3: "Why USDT shows up in every yield stack", body: "USDT carries the biggest stablecoin float in the market and is often the default unit of account on lending venues. The data on this page is the supply side of that picture, scoped to the strategies we currently track." },
-      { h3: "The cohort, in numbers", body: "Right now we track {N} USDT strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs run from {MIN_APY} to {MAX_APY}. Median {MEDIAN_APY}, mean {MEAN_APY}. Population is limited to what we follow." },
+      { h3: "The cohort, in numbers", body: "Right now we track {N} USDT strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs {APY_RANGE}. Median {MEDIAN_APY}, mean {MEAN_APY}. Population is limited to what we follow." },
       { h3: "Where the yield lives, by network", body: "{NETWORK_BLOCK}. USDT liquidity sits on Ethereum, Tron-bridged endpoints, and the major EVM rollups. The list shifts as deployments come and go." },
       { h3: "Protocol families on the leaderboard", body: "Top families: {PROTO_BLOCK}. Almost every row is a money market or an autocompounder wrapping one." },
       { h3: "Lending vs. autocompounding", body: "Lending: deposit USDT, earn the supply rate. Autocompounding: same plus a contract that re-invests reward emissions on a schedule. The autocompounder smooths the yield curve in exchange for additional smart-contract surface." },
@@ -150,7 +154,7 @@ const COPY: Record<string, AssetCopy> = {
       "Live ranking of {N} ETH strategies on {C} {C_WORD}.",
     about: [
       { h3: "What \"ETH yield\" actually means", body: "Three buckets cover almost everything in our index. Staking and LSTs tokenise validator rewards. Lending markets pay the supply rate that leveraged ETH demand drives. Restaking pays validators to also secure additional networks via EigenLayer. Many strategies on the page combine more than one." },
-      { h3: "The cohort, in numbers", body: "Right now we track {N} ETH strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs run from {MIN_APY} to {MAX_APY}. Median {MEDIAN_APY}, mean {MEAN_APY}. Numbers are scoped to our set, not the wider market." },
+      { h3: "The cohort, in numbers", body: "Right now we track {N} ETH strategies across {C} {C_WORD}, holding {TOTAL_TVL} in deposits. 24-hour APYs {APY_RANGE}. Median {MEDIAN_APY}, mean {MEAN_APY}. Numbers are scoped to our set, not the wider market." },
       { h3: "Where the yield lives, by network", body: "{NETWORK_BLOCK}. ETH yield concentrates on Ethereum mainnet plus the rollups with deep LST liquidity. We add networks as ETH strategies ship and remove them when products retire." },
       { h3: "LSTs, LRTs, and lending: the strategy mix", body: "Top primitives in the cohort: {PROTO_BLOCK}. LSTs (liquid staking tokens) tokenise validator rewards. LRTs (liquid restaking tokens) layer EigenLayer points and AVS rewards on top. Lending markets earn the supply rate paid by leveraged ETH demand. Open any vault to see how it fits together." },
       { h3: "Reading the APY columns", body: "24-hour APY: today's annualised rate. 30-day APY: trailing mean across the last month. ETH-denominated yield is the rate on the ETH balance, before any price move on ETH itself. Headline numbers look smaller than stablecoin yields for that reason." },
@@ -269,6 +273,7 @@ export async function AssetHubBody({ asset }: Props) {
           : subAssets.slice(0, -1).join(", ") + ", and " + subAssets[subAssets.length - 1],
       )
       .replace(/\{TOTAL_TVL\}/g, formatTVL(totalTvl))
+      .replace(/\{APY_RANGE\}/g, apyRangeClause(minApy, bestApy))
       .replace(/\{MIN_APY\}/g, formatAPY(minApy))
       .replace(/\{MAX_APY\}/g, formatAPY(bestApy))
       .replace(/\{MEDIAN_APY\}/g, formatAPY(medianApy))
@@ -434,6 +439,20 @@ export async function AssetHubBody({ asset }: Props) {
 
       {/* Bottom rail: bridge to per-network filtered views */}
       <section className="uni-hub-cta-row">
+        {/* Stablecoin hubs get a secondary, deliberately non-CTA pointer to the
+            market-wide comparison. This hub converts and the report does not, so
+            the report must never become the primary action here; it sits below
+            the network pills as a research link and a crawl path. */}
+        {(asset === "USDC" || asset === "USDT") && (
+          <p className="uni-hub-cta-meta">
+            Comparing against venues we do not operate? The{" "}
+            <Link href="/report/stablecoin-yield-ranking">
+              stablecoin rate comparison
+            </Link>{" "}
+            measures the leading products across the market from their own
+            onchain share-price history.
+          </p>
+        )}
         <p className="uni-hub-cta-meta">
           Looking for a specific chain? Network ranking pages cut the same
           data by network.

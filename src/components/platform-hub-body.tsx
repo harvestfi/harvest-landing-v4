@@ -8,7 +8,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { getLiveVaults, getAllSparklines } from "@/lib/data";
 import { ChainIcon } from "@/components/token-icons";
-import { formatAPY, formatTVL } from "@/lib/format";
+import { formatAPY, formatTVL, apyRangeClause } from "@/lib/format";
 import { SITE_URL } from "@/lib/constants";
 import { platformHubH1, platformHubCrumbs } from "@/lib/seo";
 import { breadcrumbSchema, itemListSchema } from "@/lib/jsonld";
@@ -252,8 +252,8 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
               <p>
                 Right now we track {vaults.length} {platform.display}{" "}
                 {vaults.length !== 1 ? "strategies" : "strategy"}, holding{" "}
-                {formatTVL(totalTvl)} in deposits. 24-hour APYs run from{" "}
-                {formatAPY(minApy)} to {formatAPY(bestApy)}. Median{" "}
+                {formatTVL(totalTvl)} in deposits. 24-hour APYs{" "}
+                {apyRangeClause(minApy, bestApy)}. Median{" "}
                 {formatAPY(medianApy)}, mean {formatAPY(avgApy)}. Numbers are
                 scoped to our index, not the wider {platform.display} market.
               </p>
