@@ -5,6 +5,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { apyRangeClause } from "@/lib/format";
+import { loadStakingCalcData } from "@/lib/xrp-staking-calc";
 import { AssetIcon } from "@/components/token-icons";
 import { HomeHeroPreview } from "@/components/home-hero-preview";
 import { DiscoverButton } from "@/components/report/discover-button";
@@ -29,6 +30,7 @@ import {
 } from "@/lib/jsonld";
 import "../../_styles/home.css";
 import "../../_styles/report.css";
+import "../../_styles/xrp-staking-calc.css";
 
 // /report/xrp-yield-ranking - a continuously updated, externally-fed report on
 // where XRP-denominated assets (XRP and its wrapped forms - FXRP, stXRP, cbXRP,
@@ -183,39 +185,6 @@ function loadData(): XrpYieldData | null {
     if (!existsSync(f)) return null;
     const d = JSON.parse(readFileSync(f, "utf-8")) as XrpYieldData;
     return Array.isArray(d.pools) && d.pools.length > 0 ? d : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * XRP price in dollars, for the calculator's dollar clause only.
- *
- * The one place this report reads outside data/xrp-yield.json, and it is kept
- * to a single number for a reason: an amount of XRP is what a reader types and
- * dollars are what they picture, so a calculator that cannot convert answers
- * half the question. The read is defensive rather than required. A missing
- * file, a missing field or a nonsense value drops the dollar clause and the
- * calculator still works in XRP, which is the unit that matters here anyway.
- */
-function loadXrpPrice(): { usd: number; asOf: string } | null {
-  try {
-    const f = join(process.cwd(), "data", "xrp-richlist.json");
-    if (!existsSync(f)) return null;
-    const d = JSON.parse(readFileSync(f, "utf-8")) as {
-      xrpUsd?: number;
-      generatedAt?: string;
-    };
-    if (typeof d.xrpUsd !== "number" || !(d.xrpUsd > 0)) return null;
-    const asOf = d.generatedAt
-      ? new Date(d.generatedAt).toLocaleString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          timeZone: "UTC",
-        })
-      : null;
-    return { usd: d.xrpUsd, asOf: asOf ?? "" };
   } catch {
     return null;
   }
@@ -640,71 +609,13 @@ export default function XrpYieldRankingPage() {
   // advertising a year that has passed.
   const snapYear = new Date(freshestTs).getUTCFullYear();
 
-  // Calculator inputs, built here so the tool cannot quote a rate the ranking
-  // does not show: `rate` is histRate, the same figure every row renders.
-  //
-  // The 30-day range comes from each product's own rate history rather than
-  // from range90d, because the sentence beside the result says "over the last
-  // 30 days" and a 90-day window under a 30-day label would be a wider range
-  // than the words claim. A product with too little history carries nulls and
-  // the calculator says so rather than inventing a band.
-  const rate30Range = (p: XrpPool): { min: number | null; max: number | null } => {
-    const cut = freshestTs - 30 * 86_400_000;
-    const vals = (p.history ?? [])
-      .filter(
-        (h) =>
-          Number.isFinite(h.apy) &&
-          new Date(`${h.d}T00:00:00Z`).getTime() >= cut,
-      )
-      .map((h) => h.apy as number);
-    if (vals.length < 2) return { min: null, max: null };
-    return { min: Math.min(...vals), max: Math.max(...vals) };
-  };
-  const calcProducts: CalcProduct[] = (() => {
-    const rated = pools.filter((p) => !p.rateNa && histRate(p) != null);
-    // Highest-rate single-asset product first, so the default selection is a
-    // position a reader could actually take with XRP alone. Everything else
-    // follows by rate, two-asset pools included but never defaulted to.
-    const rank = (p: XrpPool) =>
-      (p.exposure === "single" ? 1_000_000 : 0) + (histRate(p) ?? 0);
-    // Which third of the rated field each rate falls in, taken on rate alone
-    // rather than on the display order above, which puts single-asset products
-    // first regardless of rate. A reader asking "is 4.20% good" is asking
-    // about the rate, not about the sort.
-    const byRate = [...rated].sort((a, b) => (histRate(b) ?? 0) - (histRate(a) ?? 0));
-    const bandOf = (p: XrpPool): "top" | "mid" | "low" | null => {
-      const i = byRate.indexOf(p);
-      if (i < 0 || byRate.length < 3) return null;
-      return i < byRate.length / 3
-        ? "top"
-        : i < (byRate.length * 2) / 3
-          ? "mid"
-          : "low";
-    };
-    return [...rated]
-      .sort((a, b) => rank(b) - rank(a))
-      .map((p) => {
-        const r = rate30Range(p);
-        return {
-          slug: p.venueSlug ?? p.id,
-          // Asset and detail travel separately, because the picker lays them
-          // out on different lines: rate, then venue, then what the product
-          // actually is.
-          asset: assetHead(p),
-          detail: p.detail ?? null,
-          label: p.detail ? `${assetHead(p)} · ${p.detail}` : assetHead(p),
-          venue: p.platform,
-          chain: p.chain,
-          type: typeLabel(p),
-          rate: histRate(p) as number,
-          min30: r.min,
-          max30: r.max,
-          fixed: productTypeOf(p) === "Fixed-rate",
-          band: bandOf(p),
-        };
-      });
-  })();
-  const xrpPrice = loadXrpPrice();
+  // Calculator inputs come from lib/xrp-staking-calc, which is also what the
+  // switch on /xrp-rich-list reads. Built there rather than here because the
+  // same tool now renders on two pages, and a reader who sees one rate on one
+  // page and a different rate on the other has caught the site contradicting
+  // itself with no way to tell which figure is wrong.
+  const stakingCalc = loadStakingCalcData();
+  const calcProducts = stakingCalc?.products ?? [];
 
   // Best single-asset product denominated in stXRP, for the liquid-staking
   // section and its key finding.
@@ -1337,7 +1248,7 @@ export default function XrpYieldRankingPage() {
             <XrpStakingCalculator
               products={calcProducts}
               asOf={updated}
-              xrpUsd={xrpPrice?.usd ?? null}
+              xrpUsd={stakingCalc?.xrpUsd ?? null}
               total={calcProducts.length}
             />
           </section>

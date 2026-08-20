@@ -1,16 +1,20 @@
 // Calculator tracking, kept as its own channel.
 //
-// TWO CALCULATORS, ONE TABLE. This started as the tracker for the percentile
-// calculator on /xrp-rich-list and now also carries the XRP staking calculator
-// on /report/xrp-yield-ranking. They are the same three events over the same
-// columns, and every row already records `source_page`, so a second table
-// would duplicate a schema to hold the same shape of interaction. The control
-// room scopes by `source_page`, which is what keeps one tool's completion rate
-// out of the other's.
+// TWO CALCULATORS, THREE SURFACES, ONE TABLE. This started as the tracker for
+// the percentile calculator on /xrp-rich-list and now also carries the XRP
+// staking calculator, which renders on /report/xrp-yield-ranking and again
+// behind a switch on /xrp-rich-list. They are the same three events over the
+// same columns, and every row already records `source_page`, so a second
+// table would duplicate a schema to hold the same shape of interaction. Read
+// the rows scoped by `source_page` and no surface is ever counted inside
+// another; read them unscoped and a strong surface hides a weak one.
 //
 // On the staking calculator `tier` carries the selected product's venue slug
 // rather than a percentile band. It is the same kind of value: a coarse label
 // for which answer the visitor was shown, not anything about the visitor.
+//
+// A tool can override `source_page` when it is embedded somewhere other than
+// its own page; see `sourcePage` below.
 //
 // The build spec asked for two numbers before launch: the calculator's
 // completion rate, and the click-through from a result into the XRP yield
@@ -25,11 +29,12 @@
 // acquisition.
 //
 // Three events, which is the smallest set that answers both questions:
-//   - "start"   the visitor pressed Start check with a balance typed
-//   - "result"  a rank was shown
+//   - "start"   the visitor pressed the calculate button with an amount typed
+//   - "result"  an answer was shown
 //   - "cta"     the visitor clicked the box under the result
 //
 // start -> result is the completion rate. result -> cta is the click-through.
+// Both are read per tool, because `source_page` tells the tools apart.
 //
 // WHAT IS DELIBERATELY NOT SENT: the balance. The visitor types a number that
 // is nobody's business, the lookup runs entirely in the browser against a
@@ -115,11 +120,25 @@ export type CalculatorCta = "top-accounts" | "earn-on-xrp" | "see-ranking";
 
 export interface RichListCalculatorEvent {
   event: "start" | "result" | "cta";
-  /** Coarse percentile band the result fell into. Only on "result". */
+  /**
+   * What the answer was. A percentile band on the rich list calculator and
+   * the selected product's venue slug on the staking calculator.
+   */
   tier?: string | null;
   /** Which onward click. Only on "cta". */
   cta?: CalculatorCta | null;
   targetUrl?: string | null;
+  /**
+   * What to record as `source_page`, when the tool is not the page it sits on.
+   *
+   * The staking calculator also appears on /xrp-rich-list, behind a switch
+   * above the rich list calculator. Left to default, its events would report
+   * the rich list's path and land in the rich list's completion rate, which is
+   * the one number that page exists to measure. It reports
+   * "/xrp-rich-list#staking-calculator" instead: still the page it is on, but
+   * distinguishable, and no new column to add to a live table.
+   */
+  sourcePage?: string;
 }
 
 /**
@@ -159,7 +178,7 @@ export function trackCalculator(e: RichListCalculatorEvent): void {
       tier: e.tier ?? null,
       cta: e.cta ?? null,
       target_url: e.targetUrl ?? null,
-      source_page: window.location.pathname,
+      source_page: e.sourcePage ?? window.location.pathname,
       source: deriveSource(document.referrer || ""),
       country: geo.country ?? null,
       city: geo.city ?? null,

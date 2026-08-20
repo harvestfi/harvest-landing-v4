@@ -27,7 +27,7 @@
 // detail line and both bullets, which reads as templated filler rather than as
 // four separate attributions.
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AssetIcon } from "@/components/token-icons";
 import { trackCalculator } from "@/lib/richlist-tracking";
 import { ProductPicker } from "@/components/report/product-picker";
@@ -86,6 +86,9 @@ export function XrpStakingCalculator({
   asOf,
   xrpUsd,
   total,
+  sourcePage,
+  ctaHref = "#ranking",
+  ctaLabel = "See every product in the ranking",
 }: {
   products: CalcProduct[];
   asOf: string;
@@ -93,6 +96,13 @@ export function XrpStakingCalculator({
   xrpUsd: number | null;
   /** How many rated products the ranking holds, for the band sentence. */
   total: number;
+  /** Set when the calculator is embedded on a page that is not its own, so
+   *  its events do not land in the host page's funnel. */
+  sourcePage?: string;
+  /** Where the button under a result goes. On the ranking page that is the
+   *  table below; embedded elsewhere it has to be the report itself. */
+  ctaHref?: string;
+  ctaLabel?: string;
 }) {
   const [raw, setRaw] = useState("");
   const [slug, setSlug] = useState(products[0]?.slug ?? "");
@@ -105,6 +115,55 @@ export function XrpStakingCalculator({
     [products, slug],
   );
   const amount = parseAmount(raw);
+  const outRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Bring the answer on screen after a Calculate press on a phone.
+   *
+   * Above 900px the two panes sit side by side and the result appears beside
+   * the button that produced it, so there is nothing to scroll. Stacked, the
+   * result renders below the form, below the privacy note, and off the bottom
+   * of the viewport: the button visibly does nothing, and the reader is left
+   * to guess that the answer exists somewhere further down.
+   *
+   * Both ends of the panel when it fits, its top when it does not. The two
+   * things that have to be readable together are the sentence carrying the
+   * number and the button under it; when the panel is shorter than the
+   * viewport it is placed so both are on screen at once, and when it is
+   * taller the headline wins, because a reader who lands mid-sentence has to
+   * scroll up to find out what the number was.
+   *
+   * Smooth, and honouring prefers-reduced-motion. The scroll is the feedback
+   * that the press did something, so jumping there instantly loses the one
+   * thing the movement is for.
+   */
+  function revealResult() {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(min-width: 900px)").matches) return;
+    // Two frames: one for React to commit the result, one for layout to
+    // settle before anything is measured.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const el = outRef.current;
+        if (!el) return;
+        const box = el.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // Clear of the sticky site header, which is what a plain
+        // scrollIntoView({block:"start"}) puts the first line underneath.
+        const HEADROOM = 76;
+        const fits = box.height + HEADROOM + 16 <= vh;
+        const top = fits
+          ? window.scrollY + box.top - (vh - box.height) / 2
+          : window.scrollY + box.top - HEADROOM;
+        window.scrollTo({
+          top: Math.max(0, top),
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+        });
+      }),
+    );
+  }
 
   function calculate() {
     // Never gated on a parsed amount. The button is always live, so pressing
@@ -113,9 +172,10 @@ export function XrpStakingCalculator({
     const a = amount ?? 10_000;
     if (!raw.trim()) setRaw("10,000");
     if (!product) return;
-    trackCalculator({ event: "start" });
+    trackCalculator({ event: "start", sourcePage });
     setShown({ amount: a, product });
-    trackCalculator({ event: "result", tier: product.slug });
+    trackCalculator({ event: "result", tier: product.slug, sourcePage });
+    revealResult();
   }
 
   if (!products.length) return null;
@@ -180,7 +240,7 @@ export function XrpStakingCalculator({
             <p className="rp-calc-rest">Results appear here once you calculate.</p>
           ) : null}
 
-          <div className="rp-calc-out" role="status" aria-live="polite">
+          <div className="rp-calc-out" role="status" aria-live="polite" ref={outRef}>
             {shown ? (
               <>
                 {/* The date appears once in this panel, in the sentence that
@@ -230,17 +290,23 @@ export function XrpStakingCalculator({
                     the visit. */}
                 <a
                   className="rp-calc-cta"
-                  href="#ranking"
+                  href={ctaHref}
                   onClick={() =>
                     trackCalculator({
                       event: "cta",
                       cta: "see-ranking",
-                      targetUrl: "#ranking",
+                      targetUrl: ctaHref,
+                      sourcePage,
                     })
                   }
                 >
-                  See every product in the ranking
-                  <span aria-hidden="true">↓</span>
+                  {ctaLabel}
+                  {/* Down when the target is further down this page, right
+                      when it is another page. An arrow that points the wrong
+                      way is a small promise the click does not keep. */}
+                  <span aria-hidden="true">
+                    {ctaHref.startsWith("#") ? "↓" : "→"}
+                  </span>
                 </a>
               </>
             ) : null}
