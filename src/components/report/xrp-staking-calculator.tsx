@@ -118,39 +118,22 @@ export function XrpStakingCalculator({
   const outRef = useRef<HTMLDivElement | null>(null);
 
   /**
-   * Bring the answer on screen after a Calculate press on a phone.
-   *
-   * Above 900px the two panes sit side by side and the result appears beside
-   * the button that produced it, so there is nothing to scroll. Stacked, the
-   * result renders below the form, below the privacy note, and off the bottom
-   * of the viewport: the button visibly does nothing, and the reader is left
-   * to guess that the answer exists somewhere further down.
-   *
-   * Both ends of the panel when it fits, its top when it does not. The two
-   * things that have to be readable together are the sentence carrying the
-   * number and the button under it; when the panel is shorter than the
-   * viewport it is placed so both are on screen at once, and when it is
-   * taller the headline wins, because a reader who lands mid-sentence has to
-   * scroll up to find out what the number was.
-   *
-   * Smooth, and honouring prefers-reduced-motion. The scroll is the feedback
-   * that the press did something, so jumping there instantly loses the one
-   * thing the movement is for.
+   * Scroll to the answer after a Calculate press on a phone, where the result
+   * renders below the form and off screen. Centred when the panel fits, so
+   * the headline and the CTA are both visible; top-aligned when it does not.
    */
   function revealResult() {
     if (typeof window === "undefined") return;
     if (window.matchMedia("(min-width: 900px)").matches) return;
-    // Two frames: one for React to commit the result, one for layout to
-    // settle before anything is measured.
+    // Two frames: commit, then layout, before measuring.
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
         const el = outRef.current;
         if (!el) return;
         const box = el.getBoundingClientRect();
         const vh = window.innerHeight;
-        // Clear of the sticky site header, which is what a plain
-        // scrollIntoView({block:"start"}) puts the first line underneath.
-        const HEADROOM = 76;
+        const HEADROOM = 76; // clears the sticky header
+        
         const fits = box.height + HEADROOM + 16 <= vh;
         const top = fits
           ? window.scrollY + box.top - (vh - box.height) / 2

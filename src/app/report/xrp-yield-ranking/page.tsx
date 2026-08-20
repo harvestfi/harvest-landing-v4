@@ -1102,10 +1102,17 @@ export default function XrpYieldRankingPage() {
             {joinAnd(stats.chains.map(chainLabel))} as of {updated}.
           </p>
           <p className="rp-updated">Last updated {updated}</p>
-          <a href="#calculator" className="uni-home-cta-primary">
-            XRP Calculator
-            <span aria-hidden="true">↓</span>
-          </a>
+          {/* Both same-page anchors, so both land instantly. */}
+          <div className="uni-home-hero-actions">
+            <a href="#calculator" className="uni-home-cta-primary">
+              XRP Calculator
+              <span aria-hidden="true">↓</span>
+            </a>
+            <a href="#ranking" className="uni-home-cta-secondary">
+              View Opportunities
+              <span aria-hidden="true">↓</span>
+            </a>
+          </div>
         </div>
       </section>
 

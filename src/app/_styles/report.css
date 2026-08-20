@@ -42,6 +42,45 @@
   margin-top: 1px;
 }
 
+/* Hero CTAs. .uni-home-cta-secondary is gold, and so is this hero, so the
+   secondary needs a white fill. Literals, not tokens: the card is gold in
+   both themes. */
+.rp-page .rp-hero .uni-home-cta-secondary {
+  background: #ffffff;
+  border-color: rgba(25, 23, 23, 0.18);
+  color: #191717;
+}
+.rp-page .rp-hero .uni-home-cta-secondary:hover {
+  background: #f4f2ee;
+  border-color: rgba(25, 23, 23, 0.32);
+}
+/* Stacked on a phone: "View Opportunities" is nowrap and does not fit half
+   a 390px row. */
+@media (max-width: 560px) {
+  .rp-page .rp-hero .uni-home-hero-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+  }
+  .rp-page .rp-hero .uni-home-hero-actions > a {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 14.5px;
+  }
+}
+
+/* Jump targets clear the 53px sticky header. Without this the TOC, the hero
+   buttons and any deep link land the heading under the bar. */
+.rp-page .uni-home-content h2[id],
+.rp-page .uni-home-content h3[id],
+.rp-page [id="calculator"],
+.rp-page [id="ranking"] {
+  scroll-margin-top: 72px;
+}
+
 /* Discover button (opens the leaving-site modal) */
 .rp-discover {
   display: inline-block;
@@ -515,7 +554,8 @@
 @media (max-width: 640px) {
   .rp-rank .hub-thead,
   .rp-rank .hub-row {
-    grid-template-columns: 18px minmax(0, 1fr) 58px 38px;
+    /* Last track holds the "Open" pill; was 38px for the arrow circle. */
+    grid-template-columns: 18px minmax(0, 1fr) 58px 62px;
     gap: 8px;
   }
   /* Show # (1), Product (2), 30d APY (3), action (8). The position number sits
@@ -532,34 +572,31 @@
   }
   /* Position number sized down so it doesn't overpower the token icon. */
   .rp-page .rp-rank .hub-rank { font-size: 10.5px; }
-  /* Round flagship-yellow arrow CTA (far right) instead of the "Open" text.
-     Scoped to .rp-page .rp-rank so it beats the base .rp-page .rp-discover. */
-  .rp-page .rp-rank .rp-discover {
-    padding: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #ffb936;
-    border-color: #ffb936;
+  /* "Open", not a bare arrow in a circle. The second selector is needed
+     because `.rp-page .uni-home-content a.rp-discover` below outranks
+     `.rp-page .rp-rank .rp-discover` and was killing the gold fill. */
+  .rp-page .rp-rank .rp-discover,
+  .rp-page .uni-home-content .rp-rank a.rp-discover {
+    padding: 6px 11px;
+    width: auto;
+    height: auto;
+    border-radius: 999px;
+    background: var(--uni-gold, #ffb936);
+    border: 1px solid var(--uni-gold, #ffb936);
     color: #191717;
+    font-size: 13px;
+    font-weight: 650;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
-  .rp-page .rp-rank .rp-discover:hover {
+  .rp-page .rp-rank .rp-discover:hover,
+  .rp-page .uni-home-content .rp-rank a.rp-discover:hover {
     background: #f5a623;
     border-color: #f5a623;
+    color: #191717;
   }
-  .rp-rank .rp-discover-label { display: none; }
-  .rp-page .rp-rank .rp-discover-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    font-size: 16px;
-    line-height: 1;
-  }
+  .rp-page .rp-rank .rp-discover-arrow { display: none; }
   /* Tighten the row + product name so the three items fit one clean line. */
   .rp-rank .hub-row { padding: 14px 14px; }
   .rp-rank .hub-vault { gap: 9px; align-items: center; }

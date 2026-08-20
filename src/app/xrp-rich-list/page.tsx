@@ -846,6 +846,13 @@ export default function XrpRichListPage() {
           portrait of Brad Garlinghouse and the remaining portraits from X.
         </p>
 
+        {/* Phone only. Targets the section, not the calculator card, so the
+            badge and the heading land together. */}
+        <a href="#calculator-section" className="rl-figure-cta">
+          Go to Calculator
+          <span aria-hidden="true">↓</span>
+        </a>
+
         <h2 className="rl-summary-h">Summary</h2>
         <ul className="rl-keyfind">
           {/* Six bullets, one per query cluster, each carrying exactly one
@@ -933,7 +940,12 @@ export default function XrpRichListPage() {
 
           Written against this repo's own tokens rather than copied verbatim.
           See the note in _styles/rich-list.css for why. */}
-      <section className="rl-section rl-feature" aria-labelledby="calculator-title">
+      {/* id on the section, not the h2, so a jump brings the badge with it. */}
+      <section
+        id="calculator-section"
+        className="rl-section rl-feature"
+        aria-labelledby="calculator-title"
+      >
         <div className="rl-feature-card">
           <div className="rl-feature-copy">
             {/* The badge sits inside the heading block rather than above it,

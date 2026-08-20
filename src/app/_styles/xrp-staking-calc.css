@@ -425,10 +425,8 @@
   background: var(--uni-gold, #ffb936);
   color: #1a1a1a;
 }
-/* The "popular" badge on the staking tab.
-   Gold while the tab is off, so it reads as a flag on an unselected control;
-   ink-on-transparent once the tab is on, because a gold chip on the gold
-   selected pill is invisible. */
+/* "popular" badge: gold on the unselected tab, tinted ink once selected,
+   where a gold chip on the gold pill would vanish. */
 .rl-calcswitch-badge {
   display: inline-block;
   margin-left: 7px;
@@ -452,14 +450,8 @@
   outline-offset: 2px;
 }
 /* ---- The embedded calculator wears the rich list calculator's skin --------
-   Same card, same gold, same dot pattern, same CTA shape. The two tools swap
-   places inside one panel on one page, and a surface that changes colour when
-   a tab is pressed reads as a different page having loaded rather than as the
-   same card showing a second tool. The rules below are the ones from
-   rich-list.css `.rl-calc` and `.rl-calc-cta`, applied to the report page's
-   markup; they live here rather than there because .rl-calc-embed only ever
-   exists on the page this stylesheet is loaded for anyway, and splitting them
-   across two files is how the two skins drift apart. */
+   Same card as .rl-calc in rich-list.css, applied to the report page's
+   markup, so flipping the tab does not change the surface. */
 .rl-calc-embed .rp-calc {
   margin: 0;
   padding: 26px 26px 24px;
@@ -479,18 +471,10 @@
   border-radius: var(--uni-radius, 20px);
   color: #191717;
 }
-/* The palette is redefined ON THE CARD rather than element by element, which
-   is the trick rich-list.css uses for the same surface and the reason it has
-   not drifted: the gold is gold in both themes, so everything inside it needs
-   dark ink and light controls in both themes, and one token block covers
-   every child including any added later. Element-by-element overrides would
-   have to fight the `!important` colours the report page's own rules carry,
-   and would miss the next thing somebody puts in the panel.
-
-   --uni-bg is what the field and the picker paint themselves with and what
-   the buttons use for a label on an ink fill; left on the page's dark value
-   it gives a black field on a gold card and a button whose text matches its
-   own background. */
+/* Palette redefined on the card, as rich-list.css does for the same surface:
+   the gold is gold in both themes, so every child needs dark ink and light
+   controls in both. --uni-bg is what the fields and button labels paint
+   with, so it has to be white here even in dark mode. */
 .rl-calc-embed .rp-calc {
   --uni-ink: #191717;
   --uni-ink-2: #262521;
@@ -505,8 +489,7 @@
 .rl-calc-embed .rp-calc .rp-calc-facts li::before {
   background: var(--uni-ink);
 }
-/* The CTA takes the rich list's primary shape: an ink pill, not the gold one,
-   which on this background would be a button-shaped hole. */
+/* Ink pill, not the gold one, which on gold is a button-shaped hole. */
 .uni-home-test .uni-home-content .rl-calc-embed a.rp-calc-cta,
 .rl-calc-embed a.rp-calc-cta {
   border-radius: var(--uni-radius-pill, 999px);
@@ -517,14 +500,9 @@
   font-size: 14.5px;
   font-weight: 700;
 }
-/* Below ~560px the two labels plus the badge come to about 390px of content,
-   which is wider than the column on any phone. The row was already allowed to
-   scroll sideways, and that is the wrong answer here: a segmented control that
-   scrolls hides the option the visitor has not chosen, which on this page is
-   the entire point of having a switch. So it stops being a row of pills and
-   becomes two equal cells that fill the width and wrap their own text. The
-   badge goes onto its own line rather than being the thing that pushes a
-   label out of view. */
+/* Below 560px the two labels plus the badge are wider than the column, and a
+   segmented control that scrolls sideways hides the option not chosen. Two
+   equal cells that wrap instead, badge on its own line. */
 @media (max-width: 560px) {
   .rl-calcswitch {
     display: grid;
