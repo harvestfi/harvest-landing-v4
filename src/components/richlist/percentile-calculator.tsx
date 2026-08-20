@@ -171,7 +171,11 @@ export function PercentileCalculator({
   };
 
   return (
-    <div className="rl-calc" id="calculator">
+    // The #calculator anchor used to live here. It moved to the switch that
+    // wraps this component, because this component unmounts when the reader
+    // flips to the staking calculator and an anchor that disappears takes the
+    // page's own jump link with it.
+    <div className="rl-calc">
       <div className="rl-calc-panes">
       <div className="rl-calc-in">
       {/* Framed as the instruction rather than as a name. The card is already

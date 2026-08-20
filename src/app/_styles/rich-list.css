@@ -285,6 +285,12 @@
   color: color-mix(in srgb, var(--uni-ink) 52%, transparent);
 }
 
+/* "Go to Calculator" under the header image. Phone only: on a wide screen
+   the calculator is one screen down with the TOC beside it. */
+.uni-home-test .rl-figure-cta { display: none; }
+/* Clears the 53px sticky header so the badge lands with the heading. */
+.uni-home-test #calculator-section { scroll-margin-top: 64px; }
+
 .uni-home-test .rl-figure {
   display: block;
   width: 100%;
@@ -2003,6 +2009,25 @@
   .uni-home-test .rl-calc-privacy,
   .uni-home-test .rl-calc-out { text-align: left; }
   .uni-home-test .rl-keyfind li { font-size: 15px; line-height: 23px; }
+
+  .uni-home-test .rl-figure-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin: 16px 0 4px;
+    padding: 13px 18px;
+    border-radius: var(--uni-radius-pill, 999px);
+    background: var(--uni-gold, #ffb936);
+    border: 1px solid color-mix(in srgb, var(--uni-ink) 14%, transparent);
+    color: #191717;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    background-image: none;
+  }
+  .uni-home-test .rl-figure-cta:hover { background: var(--uni-gold-soft, #ffc75a); }
 
   .uni-home-test .rl-calc { padding: 18px 16px 16px; }
   .uni-home-test .rl-calc-h { font-size: 16px; }

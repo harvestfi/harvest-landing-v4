@@ -42,6 +42,45 @@
   margin-top: 1px;
 }
 
+/* Hero CTAs. .uni-home-cta-secondary is gold, and so is this hero, so the
+   secondary needs a white fill. Literals, not tokens: the card is gold in
+   both themes. */
+.rp-page .rp-hero .uni-home-cta-secondary {
+  background: #ffffff;
+  border-color: rgba(25, 23, 23, 0.18);
+  color: #191717;
+}
+.rp-page .rp-hero .uni-home-cta-secondary:hover {
+  background: #f4f2ee;
+  border-color: rgba(25, 23, 23, 0.32);
+}
+/* Stacked on a phone: "View Opportunities" is nowrap and does not fit half
+   a 390px row. */
+@media (max-width: 560px) {
+  .rp-page .rp-hero .uni-home-hero-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+  }
+  .rp-page .rp-hero .uni-home-hero-actions > a {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 14.5px;
+  }
+}
+
+/* Jump targets clear the 53px sticky header. Without this the TOC, the hero
+   buttons and any deep link land the heading under the bar. */
+.rp-page .uni-home-content h2[id],
+.rp-page .uni-home-content h3[id],
+.rp-page [id="calculator"],
+.rp-page [id="ranking"] {
+  scroll-margin-top: 72px;
+}
+
 /* Discover button (opens the leaving-site modal) */
 .rp-discover {
   display: inline-block;
@@ -515,7 +554,8 @@
 @media (max-width: 640px) {
   .rp-rank .hub-thead,
   .rp-rank .hub-row {
-    grid-template-columns: 18px minmax(0, 1fr) 58px 38px;
+    /* Last track holds the "Open" pill; was 38px for the arrow circle. */
+    grid-template-columns: 18px minmax(0, 1fr) 58px 62px;
     gap: 8px;
   }
   /* Show # (1), Product (2), 30d APY (3), action (8). The position number sits
@@ -532,34 +572,31 @@
   }
   /* Position number sized down so it doesn't overpower the token icon. */
   .rp-page .rp-rank .hub-rank { font-size: 10.5px; }
-  /* Round flagship-yellow arrow CTA (far right) instead of the "Open" text.
-     Scoped to .rp-page .rp-rank so it beats the base .rp-page .rp-discover. */
-  .rp-page .rp-rank .rp-discover {
-    padding: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #ffb936;
-    border-color: #ffb936;
+  /* "Open", not a bare arrow in a circle. The second selector is needed
+     because `.rp-page .uni-home-content a.rp-discover` below outranks
+     `.rp-page .rp-rank .rp-discover` and was killing the gold fill. */
+  .rp-page .rp-rank .rp-discover,
+  .rp-page .uni-home-content .rp-rank a.rp-discover {
+    padding: 6px 11px;
+    width: auto;
+    height: auto;
+    border-radius: 999px;
+    background: var(--uni-gold, #ffb936);
+    border: 1px solid var(--uni-gold, #ffb936);
     color: #191717;
+    font-size: 13px;
+    font-weight: 650;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
-  .rp-page .rp-rank .rp-discover:hover {
+  .rp-page .rp-rank .rp-discover:hover,
+  .rp-page .uni-home-content .rp-rank a.rp-discover:hover {
     background: #f5a623;
     border-color: #f5a623;
+    color: #191717;
   }
-  .rp-rank .rp-discover-label { display: none; }
-  .rp-page .rp-rank .rp-discover-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    font-size: 16px;
-    line-height: 1;
-  }
+  .rp-page .rp-rank .rp-discover-arrow { display: none; }
   /* Tighten the row + product name so the three items fit one clean line. */
   .rp-rank .hub-row { padding: 14px 14px; }
   .rp-rank .hub-vault { gap: 9px; align-items: center; }
@@ -2155,383 +2192,4 @@
   .rp-page .rp-rank .hub-cell.hub-apy { font-size: 13.5px; }
   /* ~15% tighter vertical spacing between sections on mobile. */
   .rp-page .rp-doc-main > section { padding: 22px 0; }
-}
-
-/* ---- XRP staking calculator -------------------------------------------
-   Lifted from the /usdc hub's calculator (.uh-calc) and rescoped to
-   .rp-page, because the two are the same object: an amount, a product
-   picker, a result panel that carries its own caveats. Copying the rules
-   rather than sharing them is deliberate for now - the two pages sit on
-   different shells (.uni-hub-test vs .rp-page) with different tokens, and
-   a shared block would need a third selector layer to serve both. The
-   privacy line replaces the /usdc note, and it is not decoration: it is
-   the sentence that tells a reader on an XRP page that nothing is being
-   asked of their wallet. ---- */
-.rp-page .rp-calc {
-  margin: 4px 0 0;
-  padding: 26px 28px 28px;
-  border: 1px solid var(--rp-card-border, #eeeef5);
-  border-radius: var(--uni-radius, 20px);
-  background: var(--uni-card-2, #fff);
-}
-.rp-page .rp-calc-panes {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-}
-/* A grid item will not shrink below its min-content width, and a text input
-   carries a browser default around 20 characters. Without this the input pane
-   pushes past the viewport on a narrow phone. */
-.rp-page .rp-calc-panes > * { min-width: 0; }
-@media (min-width: 900px) {
-  .rp-page .rp-calc-panes {
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: 34px;
-    align-items: start;
-  }
-  /* Centred inside the pane rather than pinned to the top. The results pane
-     holds nothing but the placeholder until the reader calculates, and a line
-     of muted text hanging off the top of a 210px column beside a full input
-     form reads as a rendering fault. Once results exist they overflow the
-     min-height, so the centring stops applying on its own. */
-  .rp-page .rp-calc-res {
-    border-left: 1px solid var(--uni-line);
-    padding-left: 34px;
-    min-height: 210px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-}
-
-.rp-page .rp-calc-h {
-  margin: 0 0 18px !important;
-  font-size: 15px !important;
-  line-height: 1.5 !important;
-  color: var(--uni-ink) !important;
-  font-weight: 600;
-}
-.rp-page .rp-calc-label {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--uni-ink-2);
-  margin: 0 0 7px;
-}
-.rp-page .rp-calc-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--uni-bg, #fff);
-  border: 1px solid var(--rp-card-border, #eeeef5);
-  border-radius: 12px;
-  padding: 0 14px;
-  margin: 0 0 16px;
-}
-.rp-page .rp-calc-field:focus-within {
-  border-color: var(--uni-ink);
-}
-.rp-page .rp-calc-input,
-.rp-page .rp-calc-select {
-  flex: 1 1 auto;
-  min-width: 0;
-  border: 0;
-  outline: none;
-  background: none;
-  padding: 13px 0;
-  font-family: inherit;
-  font-size: 16px;
-  color: var(--uni-ink);
-  font-feature-settings: "tnum";
-}
-.rp-page .rp-calc-field--select { padding-right: 8px; }
-.rp-page .rp-calc-select {
-  appearance: none;
-  cursor: pointer;
-  padding-right: 22px;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: right 8px center, right 3px center;
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-}
-.rp-page .rp-calc-unit {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--uni-ink-2);
-}
-.rp-page .rp-calc-go {
-  width: 100%;
-  border: 0;
-  border-radius: 12px;
-  padding: 13px 18px;
-  background: var(--uni-ink);
-  color: var(--uni-bg, #fff);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-.rp-page .rp-calc-go:hover { opacity: 0.85; }
-.rp-page .rp-calc-privacy {
-  margin: 16px 0 0 !important;
-  font-size: 12.5px !important;
-  line-height: 1.6 !important;
-  color: var(--uni-ink-3) !important;
-}
-
-.rp-page .rp-calc-rest {
-  display: none;
-  margin: 0 !important;
-  font-size: 14px !important;
-  color: var(--uni-ink-3) !important;
-  text-align: center;
-}
-@media (min-width: 900px) {
-  .rp-page .rp-calc-rest { display: block; }
-}
-.rp-page .rp-calc-headline {
-  margin: 0 0 6px !important;
-  font-family: var(--display);
-  font-size: 19px !important;
-  line-height: 1.35 !important;
-  color: var(--uni-ink) !important;
-  font-feature-settings: "tnum";
-}
-.rp-page .rp-calc-headline strong { font-weight: 650; }
-.rp-page .rp-calc-detail {
-  margin: 0 0 16px !important;
-  font-size: 13.5px !important;
-  line-height: 1.6 !important;
-  color: var(--uni-ink-3) !important;
-}
-.rp-page .rp-calc-facts {
-  margin: 0 0 20px;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 11px;
-}
-.rp-page .rp-calc-facts li {
-  position: relative;
-  padding-left: 18px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--uni-ink-2);
-}
-.rp-page .rp-calc-facts li::before {
-  content: "";
-  position: absolute;
-  left: 2px;
-  top: 0.66em;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--uni-gold, #ffb936);
-}
-.rp-page .rp-calc-facts strong {
-  color: var(--uni-ink);
-  font-weight: 650;
-  font-feature-settings: "tnum";
-}
-/* Anchor specificity, not class specificity. The calculator sits inside
-   .uni-home-content, where ".uni-home-test .uni-home-content a" paints every
-   link with the house gold-underline gradient and wins on the element
-   selector. Without the `a` here the pill renders as plain text, which is
-   what it did in both themes before this line. */
-.rp-page .uni-home-content a.rp-calc-cta,
-.rp-page .rp-calc-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 12px;
-  padding: 12px 18px;
-  background: var(--uni-gold, #ffb936);
-  color: #1a1a1a !important;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  background-image: none !important;
-  transition: opacity 0.15s ease;
-}
-.rp-page .uni-home-content a.rp-calc-cta:hover,
-.rp-page .rp-calc-cta:hover {
-  opacity: 0.88;
-  background-image: none !important;
-}
-
-@media (max-width: 800px) {
-  .rp-page .rp-calc { padding: 20px 18px 22px; }
-  .rp-page .rp-calc-headline { font-size: 17px !important; }
-  .rp-page .rp-calc-facts li { font-size: 14.5px; }
-}
-
-/* ---- Product picker ----------------------------------------------------
-   A listbox, not a <select>. The native control renders one flat truncated
-   line per option and, on a phone, takes the whole screen to do it, which
-   loses the rate, the venue and the type in the same grey run of text. The
-   rate leads at display size here because it is the only reason anyone opens
-   the list.
-
-   Two shapes, one component. Wide: a popover under the trigger, scrolled at
-   340px. Narrow: a sheet pinned to the bottom of the viewport with its own
-   scrim, because a popover anchored to a control halfway down the page either
-   runs past the fold or covers the field it belongs to. ---- */
-.rp-page .rp-pick {
-  position: relative;
-  margin: 0 0 16px;
-}
-.rp-page .rp-pick-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  text-align: left;
-  background: var(--uni-bg, #fff);
-  border: 1px solid var(--rp-card-border, #eeeef5);
-  border-radius: 12px;
-  padding: 11px 14px;
-  font: inherit;
-  color: var(--uni-ink);
-  cursor: pointer;
-  transition: border-color 0.12s ease;
-}
-.rp-page .rp-pick-btn:hover,
-.rp-page .rp-pick-btn.is-open { border-color: var(--uni-ink); }
-.rp-page .rp-pick-btn:focus-visible {
-  outline: 2px solid var(--uni-gold, #ffb936);
-  outline-offset: 2px;
-}
-.rp-page .rp-pick-rate {
-  flex: 0 0 auto;
-  min-width: 66px;
-  font-family: var(--display);
-  font-size: 19px;
-  font-weight: 650;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  font-feature-settings: "tnum";
-  color: var(--uni-ink);
-}
-.rp-page .rp-pick-txt {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-.rp-page .rp-pick-venue {
-  font-size: 14.5px;
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--uni-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.rp-page .rp-pick-meta {
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--uni-ink-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.rp-page .rp-pick-caret {
-  flex: 0 0 auto;
-  color: var(--uni-ink-3);
-  display: inline-flex;
-  transition: transform 0.15s ease;
-}
-.rp-page .rp-pick-btn.is-open .rp-pick-caret { transform: rotate(180deg); }
-
-.rp-page .rp-pick-scrim { display: none; }
-.rp-page .rp-pick-pop {
-  position: absolute;
-  z-index: 40;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  background: var(--uni-card-2, #fff);
-  border: 1px solid var(--rp-card-border, #eeeef5);
-  border-radius: 14px;
-  box-shadow: 0 12px 34px rgba(10, 10, 17, 0.16);
-  overflow: hidden;
-}
-.rp-page .rp-pick-pop-h {
-  display: none;
-  margin: 0;
-}
-.rp-page .rp-pick-list {
-  max-height: 340px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 6px;
-}
-.rp-page .rp-pick-opt {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.rp-page .rp-pick-opt.is-active { background: rgba(10, 10, 17, 0.05); }
-.rp-page .rp-pick-opt.is-sel .rp-pick-venue { font-weight: 700; }
-.rp-page .rp-pick-opt.is-sel { box-shadow: inset 0 0 0 1px var(--uni-gold, #ffb936); }
-:root[data-theme="dark"] .rp-page .rp-pick-opt.is-active {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-/* Sheet, not popover. 640px rather than a phone width, because the calculator
-   stacks to one column well before that and a popover in a single-column
-   layout has the same fold problem a phone does. */
-@media (max-width: 640px) {
-  .rp-page .rp-pick-scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    background: rgba(10, 10, 17, 0.45);
-  }
-  .rp-page .rp-pick-pop {
-    position: fixed;
-    z-index: 61;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    border-radius: 16px 16px 0 0;
-    border-bottom: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-shadow: 0 -10px 40px rgba(10, 10, 17, 0.3);
-  }
-  .rp-page .rp-pick-pop-h {
-    display: block;
-    padding: 14px 16px 10px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--uni-ink-3);
-    border-bottom: 1px solid var(--rp-card-border, #eeeef5);
-  }
-  .rp-page .rp-pick-list {
-    max-height: min(60vh, 420px);
-    padding: 8px;
-  }
-  .rp-page .rp-pick-opt { padding: 12px 12px; }
-}
-
-/* The line under the result bullets. Qualifies the whole panel rather than
-   adding a finding, so it reads as a footnote rather than as a third bullet. */
-.rp-page .rp-calc-foot {
-  margin: 0 0 18px !important;
-  font-size: 12.5px !important;
-  line-height: 1.6 !important;
-  color: var(--uni-ink-3) !important;
 }

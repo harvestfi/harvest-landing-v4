@@ -13,7 +13,8 @@ import {
   reportDatasetSchema,
   reportWebPageSchema,
 } from "@/lib/jsonld";
-import { PercentileCalculator } from "@/components/richlist/percentile-calculator";
+import { CalculatorSwitch } from "@/components/richlist/calculator-switch";
+import { loadStakingCalcData } from "@/lib/xrp-staking-calc";
 import { YieldPickCards } from "@/components/richlist/yield-pick-cards";
 import { TopAccountsTable } from "@/components/richlist/top-accounts-table";
 import { StatCards } from "@/components/richlist/stat-cards";
@@ -35,6 +36,7 @@ import {
   utcStamp,
 } from "@/lib/xrp-richlist";
 import "../_styles/home.css";
+import "../_styles/xrp-staking-calc.css";
 import "../_styles/report.css";
 import "../_styles/rich-list.css";
 
@@ -416,6 +418,9 @@ export default function XrpRichListPage() {
   const ycLive = loadYieldComparison();
   const yc = ycLive ?? data.yieldComparison;
   const yieldPicks = loadYieldPicks();
+  // Same builder the staking report uses, so the two pages cannot offer the
+  // same product at two different rates.
+  const stakingCalc = loadStakingCalcData();
   // Two counts of different kinds of object, so the ratio is presented as a
   // comparison rather than as a share. See the pipeline comment: an XRPL
   // account and a Flare or Base address holding a wrapped-XRP receipt token
@@ -841,6 +846,13 @@ export default function XrpRichListPage() {
           portrait of Brad Garlinghouse and the remaining portraits from X.
         </p>
 
+        {/* Phone only. Targets the section, not the calculator card, so the
+            badge and the heading land together. */}
+        <a href="#calculator-section" className="rl-figure-cta">
+          Go to Calculator
+          <span aria-hidden="true">↓</span>
+        </a>
+
         <h2 className="rl-summary-h">Summary</h2>
         <ul className="rl-keyfind">
           {/* Six bullets, one per query cluster, each carrying exactly one
@@ -928,7 +940,12 @@ export default function XrpRichListPage() {
 
           Written against this repo's own tokens rather than copied verbatim.
           See the note in _styles/rich-list.css for why. */}
-      <section className="rl-section rl-feature" aria-labelledby="calculator-title">
+      {/* id on the section, not the h2, so a jump brings the badge with it. */}
+      <section
+        id="calculator-section"
+        className="rl-section rl-feature"
+        aria-labelledby="calculator-title"
+      >
         <div className="rl-feature-card">
           <div className="rl-feature-copy">
             {/* The badge sits inside the heading block rather than above it,
@@ -986,7 +1003,7 @@ export default function XrpRichListPage() {
               best of the four cards below. Same figure, same basis and same
               venue as row one of the ranking's one-sided table, because both
               read data/xrp-yield.json through the same rate rule. */}
-          <PercentileCalculator
+          <CalculatorSwitch
             ladder={data.ladder}
             accounts={data.accounts}
             snapshotDate={snapDate}
@@ -998,6 +1015,7 @@ export default function XrpRichListPage() {
                   }
                 : null
             }
+            staking={stakingCalc}
           />
         </div>
       </section>

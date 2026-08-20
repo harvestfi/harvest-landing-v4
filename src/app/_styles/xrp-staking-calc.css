@@ -1,0 +1,528 @@
+/* XRP staking calculator and its product picker.
+   Lifted out of report.css when the calculator gained a second home: it now
+   sits on /report/xrp-yield-ranking, whose shell is .rp-page, and behind a
+   switch on /xrp-rich-list, whose shell is .uni-home-test. Scoping the rules
+   to either shell would have meant maintaining two copies, so they are scoped
+   to their own class names instead, which are unique to this tool. The one
+   place a shell still has to be named is the result button, because both
+   shells paint every content link with a gold underline gradient and only an
+   anchor-specificity selector beats it. */
+
+/* ---- XRP staking calculator -------------------------------------------
+   Lifted from the /usdc hub's calculator (.uh-calc) and rescoped to
+   .rp-page, because the two are the same object: an amount, a product
+   picker, a result panel that carries its own caveats. Copying the rules
+   rather than sharing them is deliberate for now - the two pages sit on
+   different shells (.uni-hub-test vs .rp-page) with different tokens, and
+   a shared block would need a third selector layer to serve both. The
+   privacy line replaces the /usdc note, and it is not decoration: it is
+   the sentence that tells a reader on an XRP page that nothing is being
+   asked of their wallet. ---- */
+.rp-calc {
+  margin: 4px 0 0;
+  padding: 26px 28px 28px;
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: var(--uni-radius, 20px);
+  background: var(--uni-card-2, #fff);
+}
+.rp-calc-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+/* A grid item will not shrink below its min-content width, and a text input
+   carries a browser default around 20 characters. Without this the input pane
+   pushes past the viewport on a narrow phone. */
+.rp-calc-panes > * { min-width: 0; }
+@media (min-width: 900px) {
+  .rp-calc-panes {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  /* Centred inside the pane rather than pinned to the top. The results pane
+     holds nothing but the placeholder until the reader calculates, and a line
+     of muted text hanging off the top of a 210px column beside a full input
+     form reads as a rendering fault. Once results exist they overflow the
+     min-height, so the centring stops applying on its own. */
+  .rp-calc-res {
+    border-left: 1px solid var(--uni-line);
+    padding-left: 34px;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.rp-calc-h {
+  margin: 0 0 18px !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--uni-ink) !important;
+  font-weight: 600;
+}
+.rp-calc-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--uni-ink-2);
+  margin: 0 0 7px;
+}
+.rp-calc-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--uni-bg, #fff);
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: 12px;
+  padding: 0 14px;
+  margin: 0 0 16px;
+}
+.rp-calc-field:focus-within {
+  border-color: var(--uni-ink);
+}
+.rp-calc-input,
+.rp-calc-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  padding: 13px 0;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--uni-ink);
+  font-feature-settings: "tnum";
+}
+.rp-calc-field--select { padding-right: 8px; }
+.rp-calc-select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 22px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 8px center, right 3px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.rp-calc-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--uni-ink-2);
+}
+.rp-calc-go {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 18px;
+  background: var(--uni-ink);
+  color: var(--uni-bg, #fff);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.rp-calc-go:hover { opacity: 0.85; }
+.rp-calc-privacy {
+  margin: 16px 0 0 !important;
+  font-size: 12.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
+}
+
+.rp-calc-rest {
+  display: none;
+  margin: 0 !important;
+  font-size: 14px !important;
+  color: var(--uni-ink-3) !important;
+  text-align: center;
+}
+@media (min-width: 900px) {
+  .rp-calc-rest { display: block; }
+}
+.rp-calc-headline {
+  margin: 0 0 6px !important;
+  font-family: var(--display);
+  font-size: 19px !important;
+  line-height: 1.35 !important;
+  color: var(--uni-ink) !important;
+  font-feature-settings: "tnum";
+}
+.rp-calc-headline strong { font-weight: 650; }
+.rp-calc-detail {
+  margin: 0 0 16px !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
+}
+.rp-calc-facts {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 11px;
+}
+.rp-calc-facts li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--uni-ink-2);
+}
+.rp-calc-facts li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.66em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--uni-gold, #ffb936);
+}
+.rp-calc-facts strong {
+  color: var(--uni-ink);
+  font-weight: 650;
+  font-feature-settings: "tnum";
+}
+/* Anchor specificity, not class specificity. The calculator sits inside
+   .uni-home-content, where ".uni-home-test .uni-home-content a" paints every
+   link with the house gold-underline gradient and wins on the element
+   selector. Without the `a` here the pill renders as plain text, which is
+   what it did in both themes before this line. */
+.rp-page .uni-home-content a.rp-calc-cta,
+.uni-home-test .uni-home-content a.rp-calc-cta,
+.rp-calc-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: var(--uni-gold, #ffb936);
+  color: #1a1a1a !important;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background-image: none !important;
+  transition: opacity 0.15s ease;
+}
+.rp-page .uni-home-content a.rp-calc-cta:hover,
+.uni-home-test .uni-home-content a.rp-calc-cta:hover,
+.rp-calc-cta:hover {
+  opacity: 0.88;
+  background-image: none !important;
+}
+
+@media (max-width: 800px) {
+  .rp-calc { padding: 20px 18px 22px; }
+  .rp-calc-headline { font-size: 17px !important; }
+  .rp-calc-facts li { font-size: 14.5px; }
+}
+
+/* ---- Product picker ----------------------------------------------------
+   A listbox, not a <select>. The native control renders one flat truncated
+   line per option and, on a phone, takes the whole screen to do it, which
+   loses the rate, the venue and the type in the same grey run of text. The
+   rate leads at display size here because it is the only reason anyone opens
+   the list.
+
+   Two shapes, one component. Wide: a popover under the trigger, scrolled at
+   340px. Narrow: a sheet pinned to the bottom of the viewport with its own
+   scrim, because a popover anchored to a control halfway down the page either
+   runs past the fold or covers the field it belongs to. ---- */
+.rp-pick {
+  position: relative;
+  margin: 0 0 16px;
+}
+.rp-pick-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--uni-bg, #fff);
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font: inherit;
+  color: var(--uni-ink);
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.rp-pick-btn:hover,
+.rp-pick-btn.is-open { border-color: var(--uni-ink); }
+.rp-pick-btn:focus-visible {
+  outline: 2px solid var(--uni-gold, #ffb936);
+  outline-offset: 2px;
+}
+.rp-pick-rate {
+  flex: 0 0 auto;
+  min-width: 66px;
+  font-family: var(--display);
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-feature-settings: "tnum";
+  color: var(--uni-ink);
+}
+.rp-pick-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.rp-pick-venue {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--uni-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-pick-meta {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--uni-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-pick-caret {
+  flex: 0 0 auto;
+  color: var(--uni-ink-3);
+  display: inline-flex;
+  transition: transform 0.15s ease;
+}
+.rp-pick-btn.is-open .rp-pick-caret { transform: rotate(180deg); }
+
+.rp-pick-scrim { display: none; }
+.rp-pick-pop {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--uni-card-2, #fff);
+  border: 1px solid var(--rp-card-border, #eeeef5);
+  border-radius: 14px;
+  box-shadow: 0 12px 34px rgba(10, 10, 17, 0.16);
+  overflow: hidden;
+}
+.rp-pick-pop-h {
+  display: none;
+  margin: 0;
+}
+.rp-pick-list {
+  max-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+}
+.rp-pick-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.rp-pick-opt.is-active { background: rgba(10, 10, 17, 0.05); }
+.rp-pick-opt.is-sel .rp-pick-venue { font-weight: 700; }
+.rp-pick-opt.is-sel { box-shadow: inset 0 0 0 1px var(--uni-gold, #ffb936); }
+:root[data-theme="dark"] .rp-pick-opt.is-active {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Sheet, not popover. 640px rather than a phone width, because the calculator
+   stacks to one column well before that and a popover in a single-column
+   layout has the same fold problem a phone does. */
+@media (max-width: 640px) {
+  .rp-pick-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(10, 10, 17, 0.45);
+  }
+  .rp-pick-pop {
+    position: fixed;
+    z-index: 61;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -10px 40px rgba(10, 10, 17, 0.3);
+  }
+  .rp-pick-pop-h {
+    display: block;
+    padding: 14px 16px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--uni-ink-3);
+    border-bottom: 1px solid var(--rp-card-border, #eeeef5);
+  }
+  .rp-pick-list {
+    max-height: min(60vh, 420px);
+    padding: 8px;
+  }
+  .rp-pick-opt { padding: 12px 12px; }
+}
+
+/* The line under the result bullets. Qualifies the whole panel rather than
+   adding a finding, so it reads as a footnote rather than as a third bullet. */
+.rp-calc-foot {
+  margin: 0 0 18px !important;
+  font-size: 12.5px !important;
+  line-height: 1.6 !important;
+  color: var(--uni-ink-3) !important;
+}
+
+/* ---- The switch between the two calculators on /xrp-rich-list -----------
+   A segmented control rather than a toggle, because the two options are
+   named things rather than on and off, and a reader has to be able to see
+   which tool they are about to get before they get it. ---- */
+.rl-calcswitch {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 0 14px;
+  padding: 4px;
+  border: 1px solid var(--uni-line, #dddee0);
+  border-radius: 999px;
+  background: var(--uni-bg, #fff);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.rl-calcswitch::-webkit-scrollbar { display: none; }
+.rl-calcswitch-tab {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uni-ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.14s ease, color 0.14s ease;
+}
+.rl-calcswitch-tab:hover { color: var(--uni-ink); }
+.rl-calcswitch-tab.is-on {
+  background: var(--uni-gold, #ffb936);
+  color: #1a1a1a;
+}
+/* "popular" badge: gold on the unselected tab, tinted ink once selected,
+   where a gold chip on the gold pill would vanish. */
+.rl-calcswitch-badge {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--uni-gold, #ffb936);
+  color: #1a1a1a;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+  line-height: 1.4;
+}
+.rl-calcswitch-tab.is-on .rl-calcswitch-badge {
+  background: rgba(26, 26, 26, 0.14);
+  color: #1a1a1a;
+}
+.rl-calcswitch-tab:focus-visible {
+  outline: 2px solid var(--uni-gold, #ffb936);
+  outline-offset: 2px;
+}
+/* ---- The embedded calculator wears the rich list calculator's skin --------
+   Same card as .rl-calc in rich-list.css, applied to the report page's
+   markup, so flipping the tab does not change the surface. */
+.rl-calc-embed .rp-calc {
+  margin: 0;
+  padding: 26px 26px 24px;
+  background-color: var(--uni-gold, #ffb936);
+  background-image:
+    radial-gradient(
+      circle at 88% 18%,
+      rgba(255, 145, 30, 0.42) 0%,
+      rgba(255, 185, 54, 0) 55%
+    ),
+    radial-gradient(circle, rgba(25, 23, 23, 0.07) 1px, transparent 1.3px);
+  background-size: auto, 12px 12px;
+  background-position: 0 0, 0 0;
+  background-repeat: no-repeat, repeat;
+  border: 1px solid color-mix(in srgb, var(--uni-ink) 12%, transparent);
+  box-shadow: 0 6px 24px rgba(25, 23, 23, 0.10);
+  border-radius: var(--uni-radius, 20px);
+  color: #191717;
+}
+/* Palette redefined on the card, as rich-list.css does for the same surface:
+   the gold is gold in both themes, so every child needs dark ink and light
+   controls in both. --uni-bg is what the fields and button labels paint
+   with, so it has to be white here even in dark mode. */
+.rl-calc-embed .rp-calc {
+  --uni-ink: #191717;
+  --uni-ink-2: #262521;
+  --uni-ink-3: #4b4944;
+  --uni-bg: #ffffff;
+  --uni-card: #ffffff;
+  --uni-card-2: #ffffff;
+  --uni-line: color-mix(in srgb, #191717 16%, transparent);
+  --rp-card-border: color-mix(in srgb, #191717 14%, transparent);
+}
+/* Gold bullets on a gold card are not bullets. */
+.rl-calc-embed .rp-calc .rp-calc-facts li::before {
+  background: var(--uni-ink);
+}
+/* Ink pill, not the gold one, which on gold is a button-shaped hole. */
+.uni-home-test .uni-home-content .rl-calc-embed a.rp-calc-cta,
+.rl-calc-embed a.rp-calc-cta {
+  border-radius: var(--uni-radius-pill, 999px);
+  padding: 11px 18px;
+  background: var(--uni-ink);
+  color: var(--uni-bg, #fff) !important;
+  border: 1px solid var(--uni-ink);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+/* Below 560px the two labels plus the badge are wider than the column, and a
+   segmented control that scrolls sideways hides the option not chosen. Two
+   equal cells that wrap instead, badge on its own line. */
+@media (max-width: 560px) {
+  .rl-calcswitch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    overflow-x: visible;
+    border-radius: 18px;
+  }
+  .rl-calcswitch-tab {
+    padding: 9px 8px;
+    font-size: 13px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.3;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .rl-calcswitch-badge { margin-left: 0; padding: 2px 6px; font-size: 9.5px; }
+}
