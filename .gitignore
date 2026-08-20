@@ -47,6 +47,12 @@ yarn-error.log*
 # history cache
 .history-cache.json
 
+# Local scraper state. scripts that page the XRP Ledger write a resume
+# checkpoint here so an interrupted run does not start over; it is machine
+# state, not repository content, and a stale one committed by accident would
+# make every other machine resume from somebody else's position.
+.cache/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
