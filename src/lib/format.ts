@@ -8,6 +8,11 @@ export function formatTVL(value: number): string {
   if (value >= 1_000) {
     return `$${(value / 1_000).toFixed(0)}K`;
   }
+  // A positive amount never prints as "$0". Anything under 50 cents rounds to
+  // zero, and on a drawdown line that reads as a total loss: "bottoming at $0
+  // ... currently stands at $1" is the copy the consistency gate rejects, on a
+  // vault holding real dust rather than nothing.
+  if (value > 0 && value < 0.5) return "<$1";
   return `$${value.toFixed(0)}`;
 }
 
