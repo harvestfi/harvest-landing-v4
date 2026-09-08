@@ -37,6 +37,7 @@ const PUBLIC = join(ROOT, "public");
 // generated from templates already covered by check-page-consistency, and the
 // date rule would fire on every generated rank sentence.
 const PAGES = [
+  "best-crypto-casino-bonus",
   "report/xrp-yield-ranking",
   "report/aerodrome",
   "polygon",

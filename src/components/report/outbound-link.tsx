@@ -46,6 +46,9 @@ export function OutboundLink({
   icon,
   className,
   ariaLabel,
+  rel = "noopener noreferrer nofollow",
+  keepHref = false,
+  body,
   children,
 }: {
   href: string;
@@ -59,10 +62,13 @@ export function OutboundLink({
   icon?: ReactNode;
   className?: string;
   ariaLabel?: string;
+  rel?: string;
+  keepHref?: boolean;
+  body?: ReactNode;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const outHref = withRef(href);
+  const outHref = keepHref ? href : withRef(href);
 
   useEffect(() => {
     if (!open) return;
@@ -112,7 +118,7 @@ export function OutboundLink({
         className={className}
         href={outHref}
         target="_blank"
-        rel="noopener noreferrer nofollow"
+        rel={rel}
         aria-label={ariaLabel}
         onClick={(e) => {
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
@@ -148,11 +154,16 @@ export function OutboundLink({
               </span>
             </h3>
             <p className="rp-modal-body">
-              This takes you to {platform ? platform : "an external platform"},
-              an independent platform we track for research but don&rsquo;t run
-              ourselves. Harvest doesn&rsquo;t control its contracts, rates or
-              security, so it&rsquo;s worth a quick look of your own before you
-              use it.
+              {body ?? (
+                <>
+                  This takes you to{" "}
+                  {platform ? platform : "an external platform"}, an independent
+                  platform we track for research but don&rsquo;t run ourselves.
+                  Harvest doesn&rsquo;t control its contracts, rates or
+                  security, so it&rsquo;s worth a quick look of your own before
+                  you use it.
+                </>
+              )}
             </p>
             <div className="rp-modal-actions">
               <button
@@ -166,7 +177,7 @@ export function OutboundLink({
                 className="rp-modal-confirm"
                 href={outHref}
                 target="_blank"
-                rel="noopener noreferrer nofollow"
+                rel={rel}
                 onClick={() => {
                   track("confirm");
                   setOpen(false);
