@@ -37,6 +37,7 @@ const REPORTS = [
   // footer link naming the old thing sends a different signal than the page
   // it points at.
   { label: "XRP Staking", href: "/report/xrp-yield-ranking" },
+  { label: "Best Crypto Casino Bonus", href: "/best-crypto-casino-bonus" },
 ];
 
 // Legitimacy-signal pages.

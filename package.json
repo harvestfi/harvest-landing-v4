@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf public/_next && node scripts/build-network-tvl.mjs && next build && rm -rf public && mv out public && node scripts/build-seo-static.mjs && node scripts/build-data-json.mjs && node scripts/build-search-index.mjs && node scripts/build-design-system.mjs && node scripts/build-master-config.mjs && node scripts/build-history-csv.mjs && node scripts/build-xrp-history.mjs && node scripts/build-richlist-export.mjs && npm run check-xrpl-labels && npm run check-banned-words && npm run check-consistency && npm run check-atomicity",
+    "build": "rm -rf public/_next && node scripts/build-network-tvl.mjs && next build && rm -rf public && mv out public && node scripts/build-seo-static.mjs && node scripts/build-data-json.mjs && node scripts/build-search-index.mjs && node scripts/build-design-system.mjs && node scripts/build-master-config.mjs && node scripts/build-history-csv.mjs && node scripts/build-xrp-history.mjs && node scripts/build-richlist-export.mjs && node scripts/build-casino-export.mjs && npm run check-xrpl-labels && npm run check-banned-words && npm run check-consistency && npm run check-atomicity && npm run check-evidence",
     "check-banned-words": "node scripts/check-banned-words.mjs",
     "check-consistency": "node scripts/check-page-consistency.mjs",
     "build-master-config": "node scripts/build-master-config.mjs",
     "start": "next start",
     "lint": "eslint",
     "check-atomicity": "node scripts/check-atomicity.mjs",
-    "check-xrpl-labels": "node scripts/check-xrpl-labels.mjs"
+    "check-xrpl-labels": "node scripts/check-xrpl-labels.mjs",
+    "check-evidence": "node scripts/check-evidence.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",

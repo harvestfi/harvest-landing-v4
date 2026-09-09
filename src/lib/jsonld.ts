@@ -241,12 +241,14 @@ export function articleSchema({
   url,
   dateModified,
   datePublished,
+  author,
 }: {
   title: string;
   description: string;
   url: string;
   dateModified: string;
   datePublished: string;
+  author?: { name: string; url: string };
 }): object {
   return {
     "@context": "https://schema.org",
@@ -256,11 +258,22 @@ export function articleSchema({
     url,
     datePublished,
     dateModified,
-    author: {
-      "@type": "Organization",
-      name: SITE_NAME,
-      url: SITE_URL,
-    },
+    author: author
+      ? {
+          "@type": "Organization",
+          name: author.name,
+          url: author.url,
+          parentOrganization: {
+            "@type": "Organization",
+            name: SITE_NAME,
+            url: SITE_URL,
+          },
+        }
+      : {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: SITE_URL,
+        },
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
