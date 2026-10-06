@@ -2,15 +2,21 @@ name: Update XRP Rich List
 
 # Rebuilds the XRP Ledger holder distribution behind /xrp-rich-list.
 #
-# Freshness is the ranking argument on that page rather than housekeeping:
-# roughly 830 US searches a month carry a recency modifier ("today", "current",
-# "latest"), and the incumbents update irregularly. So this runs four times a
-# day and the page prints the ledger close time it used.
+# No API keys. The walk reads every object in one validated ledger from
+# Ripple's public Clio nodes (s1/s2.ripple.com) in parallel shards: ~9,600
+# binary pages, about an hour and three quarters. scripts/lib/xrpl.mjs records
+# why it no longer pages through xrpl.ws.
 #
-# No API keys. The walk reads AccountRoot objects from public XRP Ledger nodes
-# over JSON-RPC. Roughly 125 requests at a 200,000-entry page size, about 15
-# minutes, and the walk checkpoints so a failed run resumes rather than
-# restarting.
+# Four times a day, which /xrp-rich-list states in its hero and FAQ, and the
+# page prints the ledger close time it used. Each walk holds 16 requests open on
+# a free public service for most of two hours; halving the cadence halves that,
+# but the page copy would have to change with it.
+#
+# A walk that reaches its time budget saves its shard markers to the Actions
+# cache, and the next run finishes the same ledger, so a slow day costs
+# freshness rather than the snapshot. The last step fails the job when the
+# published snapshot is more than 36 hours old: between 2026-09-16 and
+# 2026-10-06 every run reported success and none of them landed data.
 
 on:
   schedule:
@@ -29,53 +35,94 @@ concurrency:
 jobs:
   update-richlist:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 175
     steps:
+      # Depth 1: the full history of every branch took up to eight minutes to
+      # fetch, and this job only ever writes one file onto the tip of main.
       - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      # Verifies the streaming aggregator against a brute-force sort before it
-      # is trusted with 8.5 million balances. Cheap, and it fails loudly rather
-      # than shipping a distribution that is quietly wrong.
+      # These fail loudly rather than shipping a distribution that is quietly
+      # wrong: the streaming aggregator against a brute-force sort, the binary
+      # decoder against objects whose values the ledger's own JSON confirmed,
+      # and the shard partition against an in-memory ledger.
       - name: Verify the distribution aggregator
         run: node scripts/check-richlist-distribution.mjs
 
-      - name: Walk the ledger
-        run: node --max-old-space-size=4096 scripts/fetch-xrpl-richlist.mjs
-        continue-on-error: true
+      - name: Verify the binary decoder
+        run: node scripts/check-xrpl-binary.mjs
 
-      # One retry from the checkpoint. Public nodes shed load, and resuming
-      # costs the remaining pages rather than the whole walk.
-      - name: Resume if the walk did not finish
-        run: node --max-old-space-size=4096 scripts/fetch-xrpl-richlist.mjs --resume
-        continue-on-error: true
+      - name: Verify the sharded walk
+        run: node scripts/check-xrpl-walk.mjs
+
+      - name: Restore walk checkpoint
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/xrpl-richlist-checkpoint.json
+          key: xrpl-richlist-ckpt-${{ github.run_id }}
+          restore-keys: xrpl-richlist-ckpt-
+
+      # Stops picking up pages at the budget and saves its markers, well inside
+      # the job timeout, so the checkpoint is always written.
+      - name: Walk the ledger
+        run: node --max-old-space-size=4096 scripts/fetch-xrpl-richlist.mjs --concurrency=16 --budget-min=150
+
+      - name: Save walk checkpoint
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/xrpl-richlist-checkpoint.json
+          key: xrpl-richlist-ckpt-${{ github.run_id }}
 
       - name: Commit and push if changed
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/xrp-richlist.json
-          if git diff --cached --quiet; then
+          if git diff --quiet -- data/xrp-richlist.json; then
             echo "No rich list changes detected."
             exit 0
           fi
-          git commit -m "chore: update XRP rich list $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          for attempt in 1 2 3; do
+          cp data/xrp-richlist.json "$RUNNER_TEMP/xrp-richlist.json"
+          for attempt in 1 2 3 4; do
+            # Only this job writes the file, so landing it on whatever main is
+            # now is always correct, and a shallow clone has no history to
+            # rebase across.
+            git fetch --depth=1 origin main
+            git checkout -q -f -B main FETCH_HEAD
+            cp "$RUNNER_TEMP/xrp-richlist.json" data/xrp-richlist.json
+            git add data/xrp-richlist.json
+            if git diff --cached --quiet; then
+              echo "Snapshot already on main."
+              exit 0
+            fi
+            git commit -q -m "chore: update XRP rich list $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             if git push origin HEAD:main; then
               echo "Pushed on attempt $attempt."
               exit 0
             fi
-            echo "Push rejected on attempt $attempt, rebasing on origin/main."
-            git fetch origin main
-            git rebase origin/main
+            echo "Push rejected on attempt $attempt, retrying on the new tip."
+            sleep $((attempt * 5))
           done
           echo "Failed to push after retries."
           exit 1
+
+      - name: Fail if the published snapshot is stale
+        run: |
+          node -e '
+            const d = require("./data/xrp-richlist.json");
+            const h = (Date.now() - Date.parse(d.ledgerCloseIso)) / 3.6e6;
+            console.log(`Published: ledger ${d.ledgerIndex}, closed ${d.ledgerCloseIso}, ${h.toFixed(1)}h ago`);
+            if (!(h <= 36)) {
+              console.log(`::error::The XRP rich list snapshot is ${Math.round(h)} hours old.`);
+              process.exit(1);
+            }
+          '

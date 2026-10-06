@@ -141,6 +141,55 @@ ok(
   `worst ${worstPct.toFixed(3)}pp`,
 );
 
+// Escrow is folded in after the walk: an escrow holder is first counted at its
+// spendable balance, then raised to spendable plus locked. Counting a share of
+// the population low and raising it afterwards must land on exactly the same
+// distribution as counting it right the first time, including the whales that
+// only reach the top list once their escrow is added.
+{
+  const raised = new Distribution({ topN: 100 });
+  const late = [];
+  balances.forEach((b, i) => {
+    if (i % 97 === 0 || b > 1e8) {
+      const spendable = b * 0.01;
+      raised.add(spendable, { address: `r${i}` });
+      late.push([i, spendable, b]);
+    } else {
+      raised.add(b, { address: `r${i}` });
+    }
+  });
+  for (const [i, spendable, b] of late) {
+    raised.raise(spendable, b, (e) => e.address === `r${i}`, { address: `r${i}` });
+  }
+  ok("raise: total unchanged", raised.total === N, `${raised.total}`);
+  ok(
+    "raise: sum within 1e-9 relative",
+    Math.abs(raised.sumXrp - trueSum) / trueSum < 1e-9,
+    `${raised.sumXrp.toFixed(0)} vs ${trueSum.toFixed(0)}`,
+  );
+  ok(
+    "raise: histogram identical",
+    raised.counts.every((c, i) => c === dist.counts[i]),
+  );
+  ok(
+    "raise: exact counters identical",
+    JSON.stringify(raised.exactCounts()) === JSON.stringify(dist.exactCounts()),
+  );
+  const rTop = raised.topAccounts();
+  ok(
+    "raise: top list identical",
+    rTop.length === top.length && rTop.every((t, i) => t.address === top[i].address && t.xrp === top[i].xrp),
+    `${late.length} accounts raised`,
+  );
+  let threw = false;
+  try {
+    raised.raise(10, 5, () => false, {});
+  } catch {
+    threw = true;
+  }
+  ok("raise: refuses to lower a balance", threw);
+}
+
 if (failed) {
   console.error(`[FAIL] richlist distribution self-test: ${failed} failure(s)`);
   process.exit(1);

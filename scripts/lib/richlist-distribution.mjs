@@ -85,6 +85,32 @@ export class Distribution {
     }
   }
 
+  /**
+   * Replace one earlier add(oldXrp) with newXrp, for the same account.
+   *
+   * The walk reads AccountRoots and Escrows in one pass, in key order, so an
+   * account is usually counted before its escrow is found. Its escrow is then
+   * folded in afterwards with this.
+   *
+   * Only raising is supported. The top list discards entries below its floor as
+   * it goes; a value that only grows can never need one of them back, whereas a
+   * lowered one could.
+   *
+   * @param {(entry: object) => boolean} match  picks this account's top-list entry
+   */
+  raise(oldXrp, newXrp, match, meta) {
+    if (!(newXrp >= oldXrp)) throw new Error(`raise() cannot lower a balance: ${oldXrp} -> ${newXrp}`);
+    this.total--;
+    if (oldXrp > 0) {
+      this.sumXrp -= oldXrp;
+      this.counts[bucketOf(oldXrp)]--;
+      for (const t of EXACT_THRESHOLDS) if (oldXrp >= t) this.exact.set(t, this.exact.get(t) - 1);
+    }
+    const i = this.top.findIndex(match);
+    if (i !== -1) this.top.splice(i, 1);
+    this.add(newXrp, meta);
+  }
+
   #trimTop() {
     this.top.sort((a, b) => b.xrp - a.xrp);
     this.top.length = Math.min(this.top.length, this.topN);

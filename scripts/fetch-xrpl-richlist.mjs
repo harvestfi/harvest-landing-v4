@@ -1,34 +1,42 @@
 #!/usr/bin/env node
 // Builds data/xrp-richlist.json for /xrp-rich-list.
 //
-// One pass over every AccountRoot object in a single validated ledger,
-// streamed into a histogram rather than collected, then written out as tier
-// thresholds, a balance ladder the browser can interpolate, decade bands for
-// the chart, and the largest 100 accounts.
+// One pass over every object in a single validated ledger, streamed into a
+// histogram rather than collected, then written out as tier thresholds, a
+// balance ladder the browser can interpolate, decade bands for the chart, and
+// the largest accounts.
 //
 // Pinned to one ledger index for the whole walk. XRPL closes a ledger every
 // three to five seconds, so paging across closes would count accounts that
 // moved twice and miss others entirely, and the resulting "snapshot" would
 // describe no state that ever existed.
 //
-// Runtime is a few thousand requests against public clusters, so the walk
-// checkpoints its marker and its histogram every N pages. A run that dies at
-// 80% resumes instead of starting over.
+// The walk is ~10,000 pages read in parallel shards (see scripts/lib/xrpl.mjs
+// for why), so it checkpoints its shard markers and its totals. A run that
+// reaches its time budget saves the checkpoint and exits cleanly; the next run
+// picks up the same ledger where it stopped, so a slow day costs freshness
+// rather than the snapshot.
 //
 // Usage:
-//   node scripts/fetch-xrpl-richlist.mjs              full walk
-//   node scripts/fetch-xrpl-richlist.mjs --resume     continue from checkpoint
-//   node scripts/fetch-xrpl-richlist.mjs --max-pages=20 --dry   smoke test
+//   node scripts/fetch-xrpl-richlist.mjs                    walk, resuming a recent checkpoint
+//   node scripts/fetch-xrpl-richlist.mjs --fresh            ignore any checkpoint
+//   node scripts/fetch-xrpl-richlist.mjs --budget-min=90    stop picking up pages after 90 minutes
+//   node scripts/fetch-xrpl-richlist.mjs --budget-min=2 --dry   smoke test, writes nothing
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import {
   validatedLedger,
-  walkAccounts,
-  walkEscrows,
+  planShards,
+  walkLedger,
+  entryKind,
+  decodeAccountRoot,
+  decodeEscrow,
+  encodeAccountId,
+  accountRootKey,
   decodeDomain,
-  dropsToXrp,
   xrplRpc,
+  CLIO_ENDPOINTS,
   BASE_RESERVE_XRP,
 } from "./lib/xrpl.mjs";
 import { Distribution, BUCKETS_PER_DECADE } from "./lib/richlist-distribution.mjs";
@@ -41,55 +49,87 @@ const ROOT = process.cwd();
 const OUT_FILE = join(ROOT, "data", "xrp-richlist.json");
 const YIELD_FILE = join(ROOT, "data", "xrp-yield.json");
 const CKPT_FILE = join(ROOT, ".cache", "xrpl-richlist-checkpoint.json");
+const CKPT_VERSION = 2;
 
 const argVal = (n, d) => {
   const hit = process.argv.find((a) => a.startsWith(`--${n}=`));
   return hit ? hit.slice(n.length + 3) : d;
 };
-const RESUME = process.argv.includes("--resume");
+const FRESH = process.argv.includes("--fresh");
 // Re-runs only the top-account enrichment against the snapshot already on
-// disk. The walk is the expensive part and the enrichment is 100 calls, so
-// iterating on the column should not cost eleven minutes.
+// disk. The walk is the expensive part and the enrichment is local, so
+// iterating on the column should not cost an hour and a half.
 const ENRICH_ONLY = process.argv.includes("--enrich-only");
 const DRY = process.argv.includes("--dry");
-const MAX_PAGES = Number(argVal("max-pages", Infinity));
-const CKPT_EVERY = Number(argVal("checkpoint-every", 20));
-// Five pages of a hundred in the ranking. The hourly job passes no --top, so
-// this default is what the page actually renders; leaving it at 100 while the
-// page pages through 500 would have shipped a pager with nowhere to go.
+const BUDGET_MIN = Number(argVal("budget-min", Infinity));
+// Clio queues past ~20 concurrent requests per IP and throughput is flat from
+// 12 upward, so 12 leaves headroom for everyone else using the same nodes.
+const CONCURRENCY = Number(argVal("concurrency", 12));
+// More shards than streams, so one slow shard does not hold up the end of the
+// walk while the other streams sit idle.
+const SHARDS = Number(argVal("shards", 48));
+// A checkpoint older than this is discarded rather than finished: completing
+// it would publish a snapshot already a day old.
+const MAX_RESUME_HOURS = Number(argVal("max-resume-hours", 24));
+const CKPT_EVERY_MS = 60_000;
+// Five pages of a hundred in the ranking. The scheduled job passes no --top, so
+// this default is what the page actually renders.
 const TOP_N = Number(argVal("top", 500));
+
+const t0 = Date.now();
+const deadline = Number.isFinite(BUDGET_MIN) ? t0 + BUDGET_MIN * 60_000 : Infinity;
 
 // ---------------------------------------------------------------- checkpoint
 
-function saveCheckpoint(state) {
+function saveCheckpoint(s) {
   mkdirSync(dirname(CKPT_FILE), { recursive: true });
   writeFileSync(
     CKPT_FILE,
     JSON.stringify({
-      ledgerIndex: state.ledgerIndex,
-      closeIso: state.closeIso,
-      marker: state.marker,
-      pages: state.pages,
-      total: state.dist.total,
-      sumXrp: state.dist.sumXrp,
-      counts: Array.from(state.dist.counts),
-      exact: [...state.dist.exact],
-      // The ledger's own total_coins, read once when the walk pinned its
-      // ledger. It was not in the checkpoint and not restored on resume, so
-      // every --resume run published `totalSupplyXrp: null` and silently
-      // dropped the supply reconciliation from the artifact. The hourly job
-      // runs a resume pass after the first one, so in practice that was most
-      // snapshots. A BigInt does not survive JSON, hence the string.
-      totalSupplyDrops:
-        state.totalSupplyDrops != null ? String(state.totalSupplyDrops) : null,
-      top: state.dist.topBuffer(),
+      version: CKPT_VERSION,
+      ledgerIndex: s.ledgerIndex,
+      closeIso: s.closeIso,
+      // A BigInt does not survive JSON, hence the strings.
+      totalSupplyDrops: s.totalSupplyDrops != null ? String(s.totalSupplyDrops) : null,
+      shards: s.shards,
+      pages: s.pages,
+      total: s.dist.total,
+      sumXrp: s.dist.sumXrp,
+      counts: Array.from(s.dist.counts),
+      exact: [...s.dist.exact],
+      top: s.dist.topBuffer(),
+      escrow: [...s.escrow].map(([k, v]) => [k, String(v)]),
+      escrowObjects: s.escrowObjects,
     }),
   );
 }
 
 function loadCheckpoint(dist) {
-  if (!existsSync(CKPT_FILE)) return null;
-  const c = JSON.parse(readFileSync(CKPT_FILE, "utf-8"));
+  if (FRESH || !existsSync(CKPT_FILE)) return null;
+  let c;
+  try {
+    c = JSON.parse(readFileSync(CKPT_FILE, "utf-8"));
+  } catch {
+    console.error("[richlist] checkpoint unreadable, starting fresh");
+    return null;
+  }
+  if (c.version !== CKPT_VERSION) {
+    console.error(`[richlist] checkpoint is format ${c.version ?? 1}, starting fresh`);
+    return null;
+  }
+  const ageH = (Date.now() - Date.parse(c.closeIso)) / 3_600_000;
+  if (!(ageH <= MAX_RESUME_HOURS)) {
+    console.error(`[richlist] checkpoint ledger closed ${ageH.toFixed(1)}h ago, starting fresh`);
+    return null;
+  }
+  // The Actions cache hands back the newest checkpoint it holds, and a run that
+  // finished its walk has none to save, so the one restored can belong to a
+  // ledger a later run already published.
+  const published = existsSync(OUT_FILE) ? JSON.parse(readFileSync(OUT_FILE, "utf-8")).ledgerIndex : null;
+  if (published != null && c.ledgerIndex <= published) {
+    console.error(`[richlist] checkpoint ledger ${c.ledgerIndex} is already published, starting fresh`);
+    return null;
+  }
   dist.counts = Float64Array.from(c.counts);
   dist.total = c.total;
   dist.sumXrp = c.sumXrp;
@@ -141,108 +181,170 @@ const dist = new Distribution({ topN: TOP_N });
 let ledgerIndex;
 let closeIso;
 let totalSupplyDrops = null;
-let startMarker = null;
-let pagesDone = 0;
+let shards;
+let pages = 0;
+// Escrowed drops per owning AccountID. AccountRoot.Balance excludes escrow: the
+// ledger moves those drops out of the balance and into the Escrow object, so a
+// rich list on balances alone omits the largest positions on the network and
+// comes to ~68bn against a 100bn supply.
+let escrow = new Map();
+let escrowObjects = 0;
 
-const resumed = RESUME ? loadCheckpoint(dist) : null;
+const resumed = loadCheckpoint(dist);
 if (resumed) {
   ledgerIndex = resumed.ledgerIndex;
   closeIso = resumed.closeIso;
-  startMarker = resumed.marker;
-  pagesDone = resumed.pages;
-  totalSupplyDrops =
-    resumed.totalSupplyDrops != null ? BigInt(resumed.totalSupplyDrops) : null;
+  totalSupplyDrops = resumed.totalSupplyDrops != null ? BigInt(resumed.totalSupplyDrops) : null;
+  shards = resumed.shards;
+  pages = resumed.pages;
+  escrow = new Map(resumed.escrow.map(([k, v]) => [k, BigInt(v)]));
+  escrowObjects = resumed.escrowObjects;
   console.error(
-    `[richlist] resuming ledger ${ledgerIndex} at page ${pagesDone}, ${resumed.total.toLocaleString()} accounts so far`,
+    `[richlist] resuming ledger ${ledgerIndex} (closed ${closeIso}): ` +
+      `${shards.filter((s) => s.done).length}/${shards.length} shards done, ` +
+      `${pages} pages, ${dist.total.toLocaleString()} accounts so far`,
   );
 } else {
   const l = await validatedLedger();
   ledgerIndex = l.ledgerIndex;
   closeIso = l.closeIso;
   totalSupplyDrops = l.totalDrops;
-  console.error(`[richlist] ledger ${ledgerIndex} closed ${closeIso}`);
+  // Shard seeds: the AccountRoot keys of every account the last snapshot and
+  // the label registry name. Several hundred uniform hashes, so any shard
+  // count up to ~100 finds a seed near each boundary.
+  const known = new Set(loadLabels(ROOT).labels.map((l) => l.address));
+  if (existsSync(OUT_FILE)) {
+    for (const t of JSON.parse(readFileSync(OUT_FILE, "utf-8")).top ?? []) known.add(t.address);
+  }
+  const candidateKeys = [];
+  for (const a of known) {
+    try {
+      candidateKeys.push(accountRootKey(a));
+    } catch {
+      // Not a classic address; it cannot seed a shard.
+    }
+  }
+  shards = await planShards({ ledgerIndex, candidateKeys, shards: SHARDS });
+  console.error(`[richlist] ledger ${ledgerIndex} closed ${closeIso}, ${shards.length} shards`);
 }
 
-// Escrowed XRP, walked first so the account pass can add it to each balance.
-//
-// AccountRoot.Balance excludes escrowed drops: the ledger moves them out of the
-// balance and into the Escrow object. A rich list on balances alone therefore
-// omits the six largest XRP positions on the network, which each hold a couple
-// of hundred XRP in balance and five billion in escrow. It also fails to
-// reconcile: balances alone come to 67.5bn against a 100bn supply, and the
-// 32.4bn gap is exactly the escrow.
-//
-// Both walks are pinned to the same ledger index so the totals add up to the
-// ledger's own total_coins rather than to two different moments.
-console.error(`[richlist] walking escrows at ledger ${ledgerIndex}`);
-const esc = await walkEscrows({
-  ledgerIndex,
-  onProgress: ({ pages, objects }) => {
-    if (pages % 25 === 0) console.error(`[richlist] escrow page ${pages}, ${objects} objects`);
-  },
-});
-const escrowByAccount = esc.byAccount;
-const escrowedXrpTotal = Number(esc.totalDrops) / 1e6;
+const state = () => ({ ledgerIndex, closeIso, totalSupplyDrops, shards, pages, dist, escrow, escrowObjects });
+
+let lastCkpt = Date.now();
+let lastLog = Date.now();
+const pagesAtStart = pages;
+let walkError = null;
+let walk;
+try {
+  walk = await walkLedger({
+    ledgerIndex,
+    shards,
+    concurrency: CONCURRENCY,
+    deadline,
+    onEntries: (entries) => {
+      // Decode the whole page before applying any of it. A page that fails is
+      // retried, and one that had been half-applied would be counted twice.
+      const accounts = [];
+      const escrows = [];
+      for (const { data } of entries) {
+        const kind = entryKind(data);
+        if (kind === "account") accounts.push(decodeAccountRoot(data));
+        else if (kind === "escrow") {
+          const e = decodeEscrow(data);
+          if (e) escrows.push(e);
+        }
+      }
+      for (const a of accounts) {
+        const spendable = Number(a.drops) / 1e6;
+        dist.add(spendable, {
+          accountHex: a.accountHex,
+          spendableXrp: Math.round(spendable),
+          escrowedXrp: 0,
+          // Self-declared and onchain. Anything absent stays unlabelled rather
+          // than being guessed at from transaction behaviour.
+          domain: decodeDomain(a.domainHex),
+        });
+      }
+      for (const e of escrows) {
+        escrowObjects++;
+        escrow.set(e.accountHex, (escrow.get(e.accountHex) ?? 0n) + e.drops);
+      }
+    },
+    onPage: () => {
+      pages++;
+      const now = Date.now();
+      if (now - lastLog >= 30_000) {
+        lastLog = now;
+        const done = shards.filter((s) => s.done).length;
+        const rate = (pages - pagesAtStart) / ((now - t0) / 60_000);
+        console.error(
+          `[richlist] ${pages} pages, ${done}/${shards.length} shards done, ` +
+            `${dist.total.toLocaleString()} accounts, ${escrowObjects} escrows, ${rate.toFixed(0)} pages/min`,
+        );
+      }
+      if (now - lastCkpt >= CKPT_EVERY_MS) {
+        lastCkpt = now;
+        saveCheckpoint(state());
+      }
+    },
+  });
+} catch (e) {
+  walkError = e;
+}
+
+if (walkError || !walk.done) {
+  saveCheckpoint(state());
+  const open = shards.filter((s) => !s.done).length;
+  if (walkError) {
+    console.error(`[richlist] walk failed with ${open}/${shards.length} shards open; checkpoint saved: ${walkError.message}`);
+    process.exit(1);
+  }
+  console.error(
+    `[richlist] time budget reached with ${open}/${shards.length} shards open after ${pages} pages; ` +
+      `checkpoint saved, the next run resumes ledger ${ledgerIndex}`,
+  );
+  process.exit(0);
+}
+
 console.error(
-  `[richlist] ${esc.objects} escrow objects across ${escrowByAccount.size} accounts, ` +
-    `${Math.round(escrowedXrpTotal).toLocaleString()} XRP locked`,
+  `[richlist] walk complete: ${pages} pages, ${dist.total.toLocaleString()} accounts, ` +
+    `${escrowObjects} escrow objects across ${escrow.size} accounts`,
 );
 
-const t0 = Date.now();
-const result = await walkAccounts({
-  ledgerIndex,
-  startMarker,
-  maxPages: MAX_PAGES,
-  onPage: (accounts) => {
-    for (const a of accounts) {
-      const d = a.Balance;
-      if (d == null) continue;
-      const spendable = dropsToXrp(d);
-      const lockedDrops = escrowByAccount.get(a.Account) ?? 0n;
-      const locked = Number(lockedDrops) / 1e6;
-      // The ranked quantity is what the account controls: spendable plus
-      // escrowed. That is what "rich list" means, and it is the only definition
-      // under which the distribution reconciles against the ledger's supply.
-      dist.add(spendable + locked, {
-        address: a.Account,
-        spendableXrp: Math.round(spendable),
-        escrowedXrp: Math.round(locked),
-        // Self-declared and onchain. Anything absent stays unlabelled rather
-        // than being guessed at from transaction behaviour.
-        domain: decodeDomain(a.Domain),
-      });
-    }
-  },
-  onProgress: ({ pages, seen, marker }) => {
-    const n = pagesDone + pages;
-    if (n % 5 === 0) {
-      const rate = dist.total / ((Date.now() - t0) / 1000);
-      console.error(
-        `[richlist] page ${n}, ${dist.total.toLocaleString()} accounts, ${Math.round(rate).toLocaleString()}/s`,
-      );
-    }
-    if (n % CKPT_EVERY === 0) {
-      saveCheckpoint({ ledgerIndex, closeIso, marker, pages: n, dist, totalSupplyDrops });
-    }
-  },
-});
-
-pagesDone += result.pages;
-
-if (!result.done) {
-  saveCheckpoint({
-    ledgerIndex,
-    closeIso,
-    marker: result.marker,
-    pages: pagesDone,
-    dist,
-    totalSupplyDrops,
-  });
-  console.error(
-    `[richlist] stopped after ${pagesDone} pages with a marker outstanding; rerun with --resume`,
+// Fold escrow into each holder's balance. The ranked quantity is what an
+// account controls, spendable plus escrowed: that is what "rich list" means,
+// and it is the only definition under which the distribution reconciles
+// against the ledger's supply. The pass met most holders before their escrow,
+// so each is read back at the pinned ledger and raised to the full figure.
+{
+  const holders = [...escrow];
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      while (next < holders.length) {
+        const [hex, lockedDrops] = holders[next++];
+        const address = encodeAccountId(hex);
+        const info = await xrplRpc(
+          "account_info",
+          { account: address, ledger_index: ledgerIndex },
+          { endpoints: CLIO_ENDPOINTS },
+        );
+        const spendable = Number(info.account_data.Balance) / 1e6;
+        const locked = Number(lockedDrops) / 1e6;
+        dist.raise(spendable, spendable + locked, (t) => t.accountHex === hex, {
+          accountHex: hex,
+          spendableXrp: Math.round(spendable),
+          escrowedXrp: Math.round(locked),
+          domain: decodeDomain(info.account_data.Domain),
+        });
+      }
+    }),
   );
-  if (!DRY) process.exit(0);
 }
+const escrowedXrpTotal = Number([...escrow.values()].reduce((a, b) => a + b, 0n)) / 1e6;
+console.error(
+  `[richlist] ${escrow.size} escrow holders folded in, ${Math.round(escrowedXrpTotal).toLocaleString()} XRP locked`,
+);
 
 // ---------------------------------------------------------------- enrichment
 
@@ -339,7 +441,7 @@ const top = await enrichTop(
   ledgerIndex,
   dist.topAccounts().map((t) => ({
     rank: t.rank,
-    address: t.address,
+    address: encodeAccountId(t.accountHex),
     // `xrp` is the ranked quantity: spendable plus escrowed. Both parts are
     // carried separately so the table can show that an account holding two
     // hundred XRP and five billion in escrow is not the same as one holding
@@ -378,8 +480,8 @@ const payload = {
   xrpHeld: Math.round(dist.sumXrp),
   escrowedXrp: Math.round(escrowedXrpTotal),
   spendableXrp: Math.round(dist.sumXrp - escrowedXrpTotal),
-  escrowAccounts: escrowByAccount.size,
-  escrowObjects: esc.objects,
+  escrowAccounts: escrow.size,
+  escrowObjects,
   totalSupplyXrp: totalSupplyDrops != null ? Math.round(Number(totalSupplyDrops) / 1e6) : null,
   // The check that says the walk saw everything. Spendable plus escrowed, both
   // read at the same ledger, must equal the ledger's own total_coins. A walk
@@ -433,7 +535,7 @@ const payload = {
 
 if (DRY) {
   console.error(
-    `[richlist] DRY: ${dist.total.toLocaleString()} accounts over ${pagesDone} pages, ` +
+    `[richlist] DRY: ${dist.total.toLocaleString()} accounts over ${pages} pages, ` +
       `top1% ${tiers.find((t) => t.pct === 1)?.minXrp} XRP, ladder ${ladder.length} pts, ${labelled}/${top.length} labelled`,
   );
   process.exit(0);
@@ -446,6 +548,8 @@ const prev = existsSync(OUT_FILE) ? JSON.parse(readFileSync(OUT_FILE, "utf-8")) 
 const out = freezeStampIfUnchanged(prev, payload);
 
 writeFileSync(OUT_FILE, JSON.stringify(out, null, 2) + "\n");
+// The snapshot is published; the next run starts a new ledger.
+rmSync(CKPT_FILE, { force: true });
 console.error(
   `[richlist] ${dist.total.toLocaleString()} funded accounts, ` +
     `${Math.round(dist.sumXrp).toLocaleString()} XRP, ledger ${ledgerIndex} -> ${OUT_FILE}`,
