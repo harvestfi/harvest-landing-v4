@@ -35,7 +35,7 @@ concurrency:
 jobs:
   update-richlist:
     runs-on: ubuntu-latest
-    timeout-minutes: 175
+    timeout-minutes: 190
     steps:
       # Depth 1: the full history of every branch took up to eight minutes to
       # fetch, and this job only ever writes one file onto the tip of main.
@@ -73,7 +73,7 @@ jobs:
       # Stops picking up pages at the budget and saves its markers, well inside
       # the job timeout, so the checkpoint is always written.
       - name: Walk the ledger
-        run: node --max-old-space-size=4096 scripts/fetch-xrpl-richlist.mjs --concurrency=16 --budget-min=150
+        run: node --max-old-space-size=4096 scripts/fetch-xrpl-richlist.mjs --concurrency=20 --budget-min=170
 
       - name: Save walk checkpoint
         if: always()

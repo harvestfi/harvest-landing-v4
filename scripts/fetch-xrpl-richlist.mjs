@@ -62,9 +62,8 @@ const FRESH = process.argv.includes("--fresh");
 const ENRICH_ONLY = process.argv.includes("--enrich-only");
 const DRY = process.argv.includes("--dry");
 const BUDGET_MIN = Number(argVal("budget-min", Infinity));
-// Clio queues past ~20 concurrent requests per IP and throughput is flat from
-// 12 upward, so 12 leaves headroom for everyone else using the same nodes.
-const CONCURRENCY = Number(argVal("concurrency", 12));
+// Clio queues past ~20 concurrent requests per IP, so keep the walk at that limit.
+const CONCURRENCY = Number(argVal("concurrency", 20));
 // More shards than streams, so one slow shard does not hold up the end of the
 // walk while the other streams sit idle.
 const SHARDS = Number(argVal("shards", 48));
@@ -320,7 +319,7 @@ console.error(
   const holders = [...escrow];
   let next = 0;
   await Promise.all(
-    Array.from({ length: 8 }, async () => {
+    Array.from({ length: 20 }, async () => {
       while (next < holders.length) {
         const [hex, lockedDrops] = holders[next++];
         const address = encodeAccountId(hex);
