@@ -94,6 +94,9 @@ export function generateMetadata(): Metadata {
     title: TITLE,
     description: DESCRIPTION,
     alternates: { canonical: PAGE_URL },
+    // Hidden: reachable at its URL, kept out of search, the sitemap, the
+    // footer and llms.txt.
+    robots: { index: false, follow: true },
     openGraph: {
       title: TITLE,
       description: DESCRIPTION,
