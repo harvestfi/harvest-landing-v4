@@ -93,9 +93,10 @@ const DATELINE_EL = /<([a-z]+)\b[^>]*\sdata-dateline(?:=["'][^"']*["'])?[^>]*>([
 // Digits that are not measurements: contract addresses, ratios, version
 // strings, protocol names that contain numerals, and standard token/licence
 // identifiers. Sentences matching these are exempt unless they also carry a
-// currency or percentage figure.
+// currency or percentage figure. XLS-<n> is the XRP Ledger's spec numbering,
+// the same kind of name as ERC-<n>.
 const ALLOW_DIGIT =
-  /0x[0-9a-f]{6,}|\b1:1\b|\b\d+(\.\d+)?x\b|\bv\d+(\.\d+)?\b|ve\(3,3\)|\bERC-\d+\b|\bSPL\b|\bCC-BY-[\d.]+\b|\b\d+-day\b|\b\d+-hour\b|\bUniswap v\d\b/i;
+  /0x[0-9a-f]{6,}|\b1:1\b|\b\d+(\.\d+)?x\b|\bv\d+(\.\d+)?\b|ve\(3,3\)|\bERC-\d+\b|\bXLS-\d+\b|\bSPL\b|\bCC-BY-[\d.]+\b|\b\d+-day\b|\b\d+-hour\b|\bUniswap v\d\b/i;
 
 const ORPHAN_OPENER =
   /^(Those|These|This|That|It|They|Their|Its|Neither|Both|Each|Such|The former|The latter)\b/;
@@ -235,6 +236,9 @@ function selfTest() {
     ["<p>Rates ranged from 1% to 5% as of July 27, 2026.</p>", "undated-figure", false],
     ["<p>5 of the 14 products depended on emissions.</p>", "undated-figure", true],
     ["<p>FXRP is a 1:1 ERC-20 on Flare.</p>", "undated-figure", false],
+    ["<p>LendingProtocol is specified as XLS-66.</p>", "undated-figure", false],
+    // The spec name does not exempt a rate in the same sentence.
+    ["<p>XLS-66 loans paid 7% to lenders.</p>", "undated-figure", true],
     ["<p>Those figures are mostly reward emissions.</p>", "orphan-opener", true],
     ["<p>This report focuses on DeFi instead.</p>", "orphan-opener", false],
     ["<p>There are two ways to trade XRP yield.</p>", "orphan-opener", false],

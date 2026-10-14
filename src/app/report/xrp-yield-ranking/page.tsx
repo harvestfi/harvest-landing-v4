@@ -310,7 +310,10 @@ export default function XrpYieldRankingPage() {
         <Crumbs />
         <section className="uni-home-hero">
           <div className="uni-home-hero-inner">
-            <h1 className="uni-home-h1">XRP Yield Ranking</h1>
+            {/* Same lead term as the main H1 and the title. Without a snapshot
+                there is no count, so the "10+" floor is dropped rather than
+                printed unbacked. */}
+            <h1 className="uni-home-h1">XRP Staking: Ways to Earn Yield</h1>
             <p className="uni-home-sub">
               The first data snapshot is being generated. Check back shortly.
             </p>
@@ -1295,6 +1298,31 @@ export default function XrpYieldRankingPage() {
               process, and no such amendment was open as of {updated}. Anyone
               claiming a launch date for native XRP staking is describing a
               plan rather than a protocol.
+            </p>
+            {/* The vote that does exist. Yahoo Finance ranks above this page
+                for "can you stake xrp" with "No, but XRP Ledger Validators Are
+                Voting on...", and that vote is the lending amendment, not a
+                staking one. Naming it answers the follow-up question and keeps
+                the "no" above it from reading as stale.
+                Fixed date, not {updated}: this is a ledger fact checked by
+                hand, and the hourly refresh does not re-check it. Verified
+                2026-10-14 against validated ledger 107653736 (Amendments
+                object: neither ID enabled or in Majorities) and the entries on
+                xrpl.org/resources/known-amendments. Re-check the status and
+                move the date when either amendment gains a majority or
+                activates. */}
+            <p>
+              The amendment the XRP Ledger&rsquo;s validators were voting on in
+              October 2026 was about lending, not staking. LendingProtocol,
+              specified as XLS-66, would add fixed-term, uncollateralized loans
+              funded from pooled Single Asset Vaults, with underwriting done off
+              the ledger, and LendingProtocolV1_1 extends it with closed-ended
+              vaults. As of October 14, 2026, neither LendingProtocol nor
+              LendingProtocolV1_1 had reached the 80% validator majority an
+              amendment needs to activate, so no native lending was live. If
+              LendingProtocol activates, borrowers would pay the interest,
+              which makes it native XRP lending and still not native XRP
+              staking.
             </p>
             <p>
               So an advertised &ldquo;XRP staking&rdquo; rate is really describing
@@ -2563,6 +2591,13 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "Is XRP going to start staking?",
     a: "Whether XRP will start staking cannot be answered from onchain data, only from the amendment process. Native staking would be a change to the XRP Ledger's consensus mechanism, which requires an amendment to be proposed and to hold validator support before it activates. Anyone quoting a launch date for XRP staking is describing a plan rather than a protocol change that has happened.",
+  },
+  {
+    // Dated rather than evergreen, unlike most entries here: the amendment
+    // status is a ledger fact checked by hand. See the matching paragraph in
+    // "Can you stake XRP?" for the verification and when to re-check.
+    q: "Is the XRP Ledger getting native lending?",
+    a: "Possibly, but native lending is not staking. The LendingProtocol amendment, specified as XLS-66, would let the XRP Ledger run fixed-term, uncollateralized loans funded from pooled vaults, with the interest paid by borrowers. As of October 14, 2026, LendingProtocol was open to validator voting and had not reached the 80% majority an amendment needs to activate, so no native lending was live. Native lending would add a borrower-paid rate on XRP, not a staking reward.",
   },
   {
     q: "Where can I stake XRP?",
