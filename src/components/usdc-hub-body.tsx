@@ -189,9 +189,12 @@ function buildFaqs(c: UsdcCohort): { q: string; a: string }[] {
         `Rates move daily, so neither figure is a forecast.`,
     },
     {
-      q: "What is a good APY for USDC?",
+      // Worded as "USDC APY" because that exact string has its own demand
+      // (Ahrefs, 2026-10-14) and appeared nowhere else on the page; "APY for
+      // USDC" says the same thing to a reader but not to a phrase match.
+      q: "What is a good USDC APY?",
       a:
-        `The useful reference point is the median of whatever cohort you are comparing against. ` +
+        `A good USDC APY is best judged against the median of whatever cohort you are comparing against. ` +
         `Across the ${c.count} USDC strategies on this page the median was ${apy(c.medianApy)} ` +
         `as of ${c.asOf}, and half the index sat below it. A rate above the median is usually ` +
         `paying for something, most often reward emissions that can stop, a contract with a ` +
