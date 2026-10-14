@@ -68,14 +68,6 @@ const DATA_TOOLS = [
     desc: "XRP has no native staking. Vaults, lending venues, pools and fixed-term markets that pay a rate on XRP assets.",
     cta: "Compare XRP yields",
   },
-  {
-    href: "/report/stablecoin-yield-ranking",
-    icon: "USDC",
-    label: "Best Stablecoin Yields",
-    sub: "USDC, USDT, DAI & USDS",
-    desc: "Stablecoin rates measured from onchain share-price history, split into the highest paying and the steadiest.",
-    cta: "Compare stablecoin rates",
-  },
 ] as const;
 
 export default async function HomePage() {
