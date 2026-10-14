@@ -220,7 +220,7 @@ export default async function HomePage() {
                 Data &amp; tools
               </h2>
               <p className="uni-home-section-sub">
-                Standalone reports and calculators built on the same onchain data.
+                Reports and calculators on the same onchain data.
               </p>
             </div>
           </header>
