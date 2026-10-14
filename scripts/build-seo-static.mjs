@@ -22,6 +22,65 @@ const ROOT = process.cwd();
 const PUBLIC_DIR = join(ROOT, "public");
 const CONSTANTS_FILE = join(ROOT, "src", "lib", "constants.ts");
 
+// ---------------------------------------------------------- vercel.json
+//
+// Checked here because this script already runs after `mv out public` and
+// nothing else validates vercel.json: `npm run build` never reads it, so a
+// mistake there passes locally and only fails at deploy. vercel.json is
+// strict JSON with no comments, so its reasoning lives here too.
+//
+// WHY THE REDIRECTS EXIST: old app URLs (/faq, /work, /earn, /pool/*,
+// /breadtothepeople, /amplifarm) 404 but still carry about 150 referring
+// domains (Ahrefs, 2026-10-14). A 301 hands that equity to the closest live
+// page: /faq goes to /methodology (how the numbers work is closer to an
+// FAQ than the company history on /about), /work to /about, the two pools
+// with an obvious asset hub to /btc and /usdc, everything else to /. The
+// specific /pool rules sit above the /pool/:path* catch-all because Vercel
+// takes the first match.
+//
+// WHY THE COLLISION CHECK: Vercel applies redirects before the filesystem,
+// so a source that matches a page we build hides that page without any
+// error. That matters most for [slug], whose paths come from vault data
+// and can grow on any data refresh. This runs after `mv out public`, so
+// every built page is on disk to compare against.
+const VERCEL_REDIRECT_KEYS = new Set(["source", "destination", "permanent", "statusCode", "has", "missing"]);
+
+function checkVercelRedirects(doc) {
+  for (const [i, rule] of (doc.redirects ?? []).entries()) {
+    for (const k of Object.keys(rule)) {
+      if (!VERCEL_REDIRECT_KEYS.has(k)) {
+        throw new Error(
+          `vercel.json redirects[${i}] has unsupported key "${k}". Vercel rejects the whole deploy for this. Allowed: ${[...VERCEL_REDIRECT_KEYS].join(", ")}.`,
+        );
+      }
+    }
+    // Static prefix of the source, up to the first param or pattern.
+    const prefix = rule.source.split(/[:(]/)[0].replace(/\/$/, "");
+    const isPattern = prefix !== rule.source.replace(/\/$/, "");
+    const hits = isPattern
+      ? [join(PUBLIC_DIR, prefix)].filter((p) => prefix && existsSync(p))
+      : [join(PUBLIC_DIR, `${prefix}.html`), join(PUBLIC_DIR, prefix, "index.html")].filter(existsSync);
+    if (hits.length > 0) {
+      throw new Error(
+        `vercel.json redirects[${i}] source "${rule.source}" shadows a built page (${hits[0]}). Vercel would serve the redirect instead of the page.`,
+      );
+    }
+  }
+}
+
+function checkVercelJson() {
+  const f = join(ROOT, "vercel.json");
+  if (!existsSync(f)) return;
+  let doc;
+  try {
+    doc = JSON.parse(readFileSync(f, "utf-8"));
+  } catch (e) {
+    throw new Error(`vercel.json is not valid JSON: ${e.message}`);
+  }
+  checkVercelRedirects(doc);
+  console.error(`[seo-static] vercel.json ok (${(doc.redirects ?? []).length} redirect(s))`);
+}
+
 // Single source of truth for the canonical origin: read SITE_URL straight
 // out of constants.ts so robots/llms never drift from canonical links,
 // sitemap and JSON-LD (and from any future www/non-www switch).
@@ -56,6 +115,8 @@ if (!existsSync(PUBLIC_DIR)) {
   console.error("[seo-static] public/ not found; run after `mv out public`.");
   process.exit(1);
 }
+
+checkVercelJson();
 
 const SITE_URL = readSiteUrl();
 const TRACKED_LABEL = readTrackedLabel();
