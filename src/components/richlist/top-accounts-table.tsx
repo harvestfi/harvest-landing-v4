@@ -39,6 +39,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { holderAvatar } from "./holder-avatars";
+import { koName, koXrp } from "@/lib/xrp-richlist-ko";
 
 export interface TopRow {
   rank: number;
@@ -82,6 +83,55 @@ const pct = (v: number): string => {
   return "<0.01%";
 };
 
+// Won in a table cell: "11.5조", "4,312억", "891만". Short for the same reason
+// the dollar column is: the ranking is about relative size.
+const wonShort = (n: number): string => {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(1)}조`;
+  if (n >= 1e8) return `${Math.round(n / 1e8).toLocaleString("en-US")}억`;
+  if (n >= 1e4) return `${Math.round(n / 1e4).toLocaleString("en-US")}만`;
+  return `${Math.round(n)}`;
+};
+
+// Korean is the copy /ko/xrp-rich-list renders; English is unchanged.
+type Locale = "en" | "ko";
+
+const COPY = {
+  en: {
+    aria: (d: string) => `Largest XRP Ledger accounts as of ${d}`,
+    account: "Account",
+    escrow: "In escrow",
+    value: "Value",
+    name: "Name",
+    share: "Share",
+    unnamed: "Unnamed",
+    prev: "Previous",
+    next: "Next",
+    hide: "Hide",
+    filters: {
+      exchange: "Exchange wallets",
+      ripple: "Ripple-controlled wallets",
+      founder: "Ripple founder wallets",
+    },
+  },
+  ko: {
+    aria: (d: string) => `${d} 기준 XRP 보유량 상위 지갑`,
+    account: "지갑 주소",
+    escrow: "에스크로",
+    value: "원화 가치",
+    name: "보유자",
+    share: "비중",
+    unnamed: "미확인",
+    prev: "이전",
+    next: "다음",
+    hide: "숨기기",
+    filters: {
+      exchange: "거래소 지갑",
+      ripple: "리플사 지갑",
+      founder: "리플 창업자 지갑",
+    },
+  },
+} as const;
+
 type FilterKey = "exchange" | "ripple" | "founder";
 
 const FILTERS: { key: FilterKey; label: string; match: (r: TopRow) => boolean }[] = [
@@ -112,11 +162,24 @@ export function TopAccountsTable({
   rows,
   snapshotDate,
   xrpUsd,
+  locale = "en",
+  xrpKrw = null,
 }: {
   rows: TopRow[];
   snapshotDate: string;
   xrpUsd: number | null;
+  locale?: Locale;
+  /** Korean page only: the value column is in won when this is set. */
+  xrpKrw?: number | null;
 }) {
+  const c = COPY[locale];
+  const ko = locale === "ko";
+  // Won when the Korean page has a won price, dollars otherwise, so the
+  // column is never empty just because one feed failed.
+  // 억/만 on the Korean page: "50억", not "5.00bn".
+  const amount = (n: number): string => (ko ? koXrp(n) : xrpShort(n));
+  const value = (xrp: number): string =>
+    ko && xrpKrw ? wonShort(xrp * xrpKrw) : xrpUsd ? usd(xrp * xrpUsd) : "—";
   const [hidden, setHidden] = useState<Record<FilterKey, boolean>>({
     exchange: false,
     ripple: false,
@@ -156,15 +219,17 @@ export function TopAccountsTable({
   return (
     <>
       <div className="rl-rank-box">
-      <div className="rl-rank" role="table" aria-label={`Largest XRP Ledger accounts as of ${snapshotDate}`} data-nosnippet="">
+      <div className="rl-rank" role="table" aria-label={c.aria(snapshotDate)} data-nosnippet="">
         <div className="rl-rank-head" role="row">
           <span role="columnheader">#</span>
-          <span role="columnheader">Account</span>
+          <span role="columnheader">{c.account}</span>
           <span role="columnheader" className="rl-rank-n">XRP</span>
-          <span role="columnheader" className="rl-rank-n rl-rank-esc">In escrow</span>
-          <span role="columnheader" className="rl-rank-n">Value</span>
-          <span role="columnheader">Name</span>
-          <span role="columnheader" className="rl-rank-n">Share</span>
+          <span role="columnheader" className="rl-rank-n rl-rank-esc">{c.escrow}</span>
+          <span role="columnheader" className="rl-rank-n">
+            {ko && !xrpKrw ? "USD" : c.value}
+          </span>
+          <span role="columnheader">{c.name}</span>
+          <span role="columnheader" className="rl-rank-n">{c.share}</span>
         </div>
         {/* The rows sit in a wrapper so the header can be sticky against the
             scroll container, and a bare <div> between a table and its rows
@@ -177,13 +242,13 @@ export function TopAccountsTable({
                 {t.address}
               </span>
               <span className="rl-rank-n rl-rank-xrp" role="cell">
-                {xrpShort(t.xrp)}
+                {amount(t.xrp)}
               </span>
               <span className="rl-rank-n rl-rank-esc" role="cell">
-                {t.escrowedXrp ? xrpShort(t.escrowedXrp) : "—"}
+                {t.escrowedXrp ? amount(t.escrowedXrp) : "—"}
               </span>
               <span className="rl-rank-n" role="cell">
-                {xrpUsd ? usd(t.xrp * xrpUsd) : "—"}
+                {value(t.xrp)}
               </span>
               <span className="rl-rank-name" role="cell">
                 {t.label ? (
@@ -209,14 +274,14 @@ export function TopAccountsTable({
                             aria-hidden="true"
                           />
                         ) : null}
-                        {t.label.name}
+                        {ko ? koName(t.label.name) : t.label.name}
                       </span>
                     );
                   })()
                 ) : t.domain ? (
                   <span className="rl-badge rl-badge-domain">{t.domain}</span>
                 ) : (
-                  <span className="rl-rank-none">Unnamed</span>
+                  <span className="rl-rank-none">{c.unnamed}</span>
                 )}
               </span>
               <span className="rl-rank-n rl-rank-share" role="cell">
@@ -236,30 +301,38 @@ export function TopAccountsTable({
             onClick={() => setPage((n) => Math.max(0, n - 1))}
             disabled={page === 0}
           >
-            Previous
+            {c.prev}
           </button>
           {/* Positions in the list as filtered, not ledger ranks. Hiding the
               exchange rows shifts every position up, so "rank 401" would name
               a different account than the one on the row. */}
+          {ko ? (
+            <span className="rl-pager-at">
+              {shown.length.toLocaleString("en-US")}개 중{" "}
+              {(from + 1).toLocaleString("en-US")}~
+              {Math.min(from + PAGE_SIZE, shown.length).toLocaleString("en-US")}위
+            </span>
+          ) : (
           <span className="rl-pager-at">
             Accounts {(from + 1).toLocaleString("en-US")} to{" "}
             {Math.min(from + PAGE_SIZE, shown.length).toLocaleString("en-US")} of{" "}
             {shown.length.toLocaleString("en-US")}
           </span>
+          )}
           <button
             type="button"
             className="rl-pager-btn"
             onClick={() => setPage((n) => Math.min(pages - 1, n + 1))}
             disabled={page >= pages - 1}
           >
-            Next
+            {c.next}
           </button>
         </div>
       ) : null}
 
       <div className="rl-rank-foot">
       <div className="rl-filters">
-        <span className="rl-filters-label">Hide</span>
+        <span className="rl-filters-label">{c.hide}</span>
         {FILTERS.map((f) => (
           <label key={f.key} className="rl-chip">
             <input
@@ -270,17 +343,25 @@ export function TopAccountsTable({
               }
             />
             <span>
-              {f.label} <em>{counts[f.key]}</em>
+              {c.filters[f.key]} <em>{counts[f.key]}</em>
             </span>
           </label>
         ))}
       </div>
 
+      {ko ? (
+        <p className="rl-filters-read" role="status" aria-live="polite">
+          {rows.length}개 지갑 중 <strong>{shown.length}개</strong> 표시 중. 이 지갑들은{" "}
+          {snapshotDate} 기준 {koXrp(shownXrp)} XRP를 보유하고 있으며, 이는 전체 XRP의{" "}
+          {shownPct.toFixed(2)}%입니다.
+        </p>
+      ) : (
       <p className="rl-filters-read" role="status" aria-live="polite">
         Showing <strong>{shown.length}</strong> of {rows.length} accounts,
         holding {xrpShort(shownXrp)} XRP between them, or {shownPct.toFixed(2)}%
         of all XRP in funded accounts as of {snapshotDate}.
       </p>
+      )}
       </div>
     </>
   );

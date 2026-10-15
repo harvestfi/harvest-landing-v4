@@ -60,12 +60,26 @@ const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
 const compact = (n: number) =>
   n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)} million` : fmt(n);
 
+/** "823만", the Korean way to write a count this size. */
+const compactKo = (n: number) => (n >= 10_000 ? `${fmt(n / 10_000)}만` : fmt(n));
+
+/** Won for the result line: "약 891만 원", "약 1.8억 원". Coarse on purpose:
+ *  the price moves every second and the balance was an approximation. */
+const wonKo = (n: number) =>
+  n >= 1e8 ? `${(n / 1e8).toFixed(1)}억 원` : n >= 1e4 ? `${fmt(n / 1e4)}만 원` : `${fmt(n)}원`;
+
 /**
  * Top-percentage label. Rounded so the number reads as a position rather than
  * as a measurement: "top 23%" is shareable, "top 22.8371%" is not, and the
  * ladder's resolution does not support the extra digits anyway.
  */
-function topPctLabel(topPct: number): string {
+function topPctLabel(topPct: number, locale: Locale = "en"): string {
+  if (locale === "ko") {
+    if (topPct < 0.01) return "상위 0.01%";
+    if (topPct < 1) return `상위 ${topPct.toFixed(2)}%`;
+    if (topPct < 10) return `상위 ${topPct.toFixed(1)}%`;
+    return `상위 ${Math.round(topPct)}%`;
+  }
   if (topPct < 0.01) return "top 0.01%";
   if (topPct < 1) return `top ${topPct.toFixed(2)}%`;
   if (topPct < 10) return `top ${topPct.toFixed(1)}%`;
@@ -79,17 +93,56 @@ function topPctLabel(topPct: number): string {
 // the ladder actually represents at each step, so the wait describes real work
 // rather than inventing some.
 const CHECK_MS = 3000;
-const STAGES = [
-  "Reading the ledger snapshot",
-  "Placing your balance in the distribution",
-  "Counting accounts above and below",
-];
+
+// Every visible string, per locale. English is the original copy unchanged;
+// Korean is what /ko/xrp-rich-list renders. Held as one table so a string
+// added to one language without the other is a type error rather than a gap.
+type Locale = "en" | "ko";
+
+const COPY = {
+  en: {
+    stages: [
+      "Reading the ledger snapshot",
+      "Placing your balance in the distribution",
+      "Counting accounts above and below",
+    ],
+    instruction: <>Enter XRP, then click &ldquo;Start check&rdquo; to run the calculator.</>,
+    label: "Your XRP balance",
+    placeholder: "e.g. 5,000",
+    checking: "Checking",
+    again: "Check again",
+    start: "Start check",
+    privacy:
+      "No wallet connection. No address. Just a number, and an approximation is fine. The calculation runs in your browser against XRP Ledger data.",
+    rest: "Your position on the rich list appears here once the check runs.",
+    earnQ: "Where people earn on XRP?",
+  },
+  ko: {
+    stages: [
+      "XRP 레저 스냅샷 읽는 중",
+      "전체 분포에서 내 보유량 위치 찾는 중",
+      "나보다 많은 지갑과 적은 지갑 세는 중",
+    ],
+    instruction: <>보유한 XRP 수량을 입력하고 &ldquo;순위 확인&rdquo;을 누르세요.</>,
+    label: "내 XRP 보유량",
+    placeholder: "예: 5,000",
+    checking: "확인 중",
+    again: "다시 확인",
+    start: "순위 확인",
+    privacy:
+      "지갑 연결도, 지갑 주소도 필요 없습니다. 수량만 입력하면 되고 대략적인 숫자여도 괜찮습니다. 계산은 XRP 레저 데이터로 브라우저 안에서만 이루어집니다.",
+    rest: "확인을 누르면 리치리스트에서 내 순위가 여기에 표시됩니다.",
+    earnQ: "XRP로 이자를 받을 수 있는 곳은?",
+  },
+} as const;
 
 export function PercentileCalculator({
   ladder,
   accounts,
   snapshotDate,
   topYield,
+  locale = "en",
+  xrpKrw = null,
 }: {
   ladder: LadderPoint[];
   accounts: number;
@@ -97,7 +150,12 @@ export function PercentileCalculator({
   /** Highest rate across the yield picks below, and where it is paid. The
    *  box under a result does not render without it. */
   topYield?: TopYield | null;
+  locale?: Locale;
+  /** Upbit XRP/KRW, Korean page only: adds the balance's won value. */
+  xrpKrw?: number | null;
 }) {
+  const t = COPY[locale];
+  const STAGES = t.stages;
   const [raw, setRaw] = useState("");
   const [phase, setPhase] = useState<"idle" | "checking" | "done">("idle");
   const [stage, setStage] = useState(0);
@@ -182,12 +240,10 @@ export function PercentileCalculator({
           inside a section headed "The XRP Rich List Calculator", so repeating
           the name here spent the most-read line saying nothing. The sub that
           used to sit under it said the same thing a third time and is gone. */}
-      <p className="rl-calc-h">
-        Enter XRP, then click &ldquo;Start check&rdquo; to run the calculator.
-      </p>
+      <p className="rl-calc-h">{t.instruction}</p>
 
       <label className="rl-calc-label" htmlFor="rl-balance">
-        Your XRP balance
+        {t.label}
       </label>
       <div className="rl-calc-field">
         <input
@@ -197,7 +253,7 @@ export function PercentileCalculator({
           type="text"
           inputMode="decimal"
           autoComplete="off"
-          placeholder="e.g. 5,000"
+          placeholder={t.placeholder}
           value={raw}
           onChange={(e) => {
             setRaw(e.target.value);
@@ -227,7 +283,7 @@ export function PercentileCalculator({
         // disabled then would be a lie that also blocks the behaviour.
         aria-disabled={phase === "checking"}
       >
-        {phase === "checking" ? "Checking" : phase === "done" ? "Check again" : "Start check"}
+        {phase === "checking" ? t.checking : phase === "done" ? t.again : t.start}
       </button>
 
       <p className="rl-calc-privacy" id="rl-calc-privacy">
@@ -254,11 +310,7 @@ export function PercentileCalculator({
             exactly true: the lookup is a binary search over a build-time
             ladder and runs entirely in the browser, and the balance itself is
             never part of any payload. */}
-        <span>
-          No wallet connection. No address. Just a number, and an approximation
-          is fine. The calculation runs in your browser against XRP Ledger
-          data.
-        </span>
+        <span>{t.privacy}</span>
       </p>
 
       </div>
@@ -268,9 +320,7 @@ export function PercentileCalculator({
           right pane sits under the button and a placeholder there is a gap
           with words in it. */}
       {phase === "idle" ? (
-        <p className="rl-calc-rest">
-          Your position on the rich list appears here once the check runs.
-        </p>
+        <p className="rl-calc-rest">{t.rest}</p>
       ) : null}
 
       {/* The live region stays mounted so a result is announced when it lands,
@@ -291,6 +341,46 @@ export function PercentileCalculator({
               ))}
             </ol>
           </div>
+        ) : phase === "done" && result && locale === "ko" ? (
+          <>
+            <p className="rl-calc-rank">
+              전체 XRP 지갑 중 <strong>{topPctLabel(result.topPct, "ko")}</strong>입니다.
+            </p>
+            <p className="rl-calc-detail">
+              {fmt(parsed ?? 0)} XRP
+              {xrpKrw ? ` (업비트 시세 기준 약 ${wonKo((parsed ?? 0) * xrpKrw)})` : ""}를{" "}
+              {snapshotDate} 기준 XRP 레저의 전체 {compactKo(accounts)}개 지갑과 비교한
+              결과입니다.
+            </p>
+            <ul className="rl-calc-facts">
+              <li>
+                이보다 XRP를 많이 가진 지갑은 약 <strong>{compactKo(result.above)}개</strong>
+                입니다.
+              </li>
+              <li>
+                이보다 적게 가진 지갑은 약 <strong>{compactKo(result.below)}개</strong>입니다.
+              </li>
+            </ul>
+            {topYield ? (
+              <a
+                className="rl-calc-earn"
+                href="#bridge"
+                onClick={() =>
+                  trackCalculator({
+                    event: "cta",
+                    cta: "earn-on-xrp",
+                    targetUrl: "#bridge",
+                  })
+                }
+              >
+                <span className="rl-calc-earn-q">{t.earnQ}</span>
+                <span className="rl-calc-earn-a">
+                  {topYield.platform}에서 최대 연 {topYield.apy.toFixed(2)}%
+                  <span className="rl-calc-earn-arrow" aria-hidden="true">&rarr;</span>
+                </span>
+              </a>
+            ) : null}
+          </>
         ) : phase === "done" && result ? (
           <>
             <p className="rl-calc-rank">
@@ -337,7 +427,7 @@ export function PercentileCalculator({
                   })
                 }
               >
-                <span className="rl-calc-earn-q">Where people earn on XRP?</span>
+                <span className="rl-calc-earn-q">{t.earnQ}</span>
                 <span className="rl-calc-earn-a">
                   Up to {topYield.apy.toFixed(2)}% on {topYield.platform}
                   <span className="rl-calc-earn-arrow" aria-hidden="true">&rarr;</span>

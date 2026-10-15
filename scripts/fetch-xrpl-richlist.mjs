@@ -151,6 +151,26 @@ async function readXrpUsd() {
   }
 }
 
+// XRP/KRW for /ko/xrp-rich-list, read from Upbit's public ticker. Not derived
+// from the dollar price through an FX rate: Korean XRP trades at its own price
+// on Korean venues (the kimchi premium), and the won figure a Korean reader
+// checks against is the one on Upbit, the largest of them and the largest
+// exchange holder in this ranking. A failure leaves the won figures out of
+// the page rather than guessing, exactly as the dollar column does.
+async function readXrpKrw() {
+  try {
+    const res = await fetch("https://api.upbit.com/v1/ticker?markets=KRW-XRP", {
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const p = Number((await res.json())?.[0]?.trade_price);
+    return Number.isFinite(p) && p > 50 && p < 150_000 ? p : null;
+  } catch (e) {
+    console.error("[richlist] XRP/KRW unavailable:", e?.message ?? e);
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------- walk
 
 if (ENRICH_ONLY) {
@@ -163,6 +183,9 @@ if (ENRICH_ONLY) {
   const p = await readXrpUsd();
   cur.xrpUsd = p;
   cur.xrpUsdSource = p == null ? null : "Flare FTSOv2 XRP/USD oracle";
+  const krw = await readXrpKrw();
+  cur.xrpKrw = krw;
+  cur.xrpKrwSource = krw == null ? null : "Upbit KRW-XRP";
   writeFileSync(OUT_FILE, JSON.stringify(cur, null, 2) + "\n");
   console.error(
     `[richlist] enriched ${enriched.length} top accounts: ${cur.topLabelled} labelled, ` +
@@ -459,6 +482,7 @@ const withEscrow = top.filter((t) => t.escrows > 0).length;
 
 const concentration = concentrationOf(top.slice(0, CONCENTRATION_N), dist.sumXrp);
 const priceUsd = await readXrpUsd();
+const priceKrw = await readXrpKrw();
 
 const payload = {
   generatedAt: new Date().toISOString(),
@@ -509,6 +533,8 @@ const payload = {
   concentration,
   xrpUsd: priceUsd,
   xrpUsdSource: priceUsd == null ? null : "Flare FTSOv2 XRP/USD oracle",
+  xrpKrw: priceKrw,
+  xrpKrwSource: priceKrw == null ? null : "Upbit KRW-XRP",
   yieldComparison: yieldHolders(),
 };
 
