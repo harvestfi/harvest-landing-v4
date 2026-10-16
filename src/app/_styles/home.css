@@ -808,6 +808,28 @@ body:has(.uni-home-test) {
   transform: translateX(3px);
 }
 
+/* === Data & tools cards ============================================ */
+/* Same card as the featured assets, with a text line where the stats sit.
+   On desktop the grid takes one column per card, so it stays full width at
+   however many cards the block holds; the 2- and
+   1-column breakpoints below still apply. */
+@media (min-width: 1101px) {
+  .uni-home-test .uni-home-tool-grid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+}
+.uni-home-test .uni-home-tool-card-desc {
+  flex: 1;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--uni-line);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--uni-ink-2);
+}
+
 /* === Network shortcut row ========================================== */
 .uni-home-test .uni-home-network-row {
   display: flex;

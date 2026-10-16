@@ -1,6 +1,6 @@
 // Harvest homepage. Boxed Sunflower Gold hero, then a centered shell
-// with the top-yields ranking, featured asset tiles, network shortcuts,
-// and an SEO content section.
+// with the top-yields ranking, featured asset tiles, data & tools links,
+// network shortcuts, and an SEO content section.
 
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -41,6 +41,34 @@ const ASSET_HUB: Record<string, { href: string; label: string; sub: string }> = 
   ETH: { href: "/eth", label: "ETH", sub: "LSTs & restaking" },
   BTC: { href: "/btc", label: "Bitcoin", sub: "Wrapped & LRTs" },
 };
+
+// Body links to the standalone data pages. The homepage carries about 4,000
+// referring domains, but until this block it reached these pages only through
+// the footer, which search engines weigh as boilerplate. /xrp-rich-list ranks
+// #3 for "xrp rich list" (6,100 US searches/mo) on 10 referring domains, so
+// an in-content link from the strongest page on the site is the cheapest lift
+// available. Each label is the phrase the target page ranks for, so the
+// anchor tells a crawler what the page is about. The sub-lines restate each
+// page's own description and carry no live figures, so nothing here can
+// drift from the page it links to between refreshes.
+const DATA_TOOLS = [
+  {
+    href: "/xrp-rich-list",
+    icon: "XRP",
+    label: "XRP Rich List",
+    sub: "Holder distribution",
+    desc: "Top 1%, 5%, 10% and 25% thresholds read from the XRP Ledger, with a calculator for where a balance ranks.",
+    cta: "See the rich list",
+  },
+  {
+    href: "/report/xrp-yield-ranking",
+    icon: "XRP",
+    label: "XRP Staking & Yield",
+    sub: "10+ yield sources",
+    desc: "XRP has no native staking. Vaults, lending venues, pools and fixed-term markets that pay a rate on XRP assets.",
+    cta: "Compare XRP yields",
+  },
+] as const;
 
 export default async function HomePage() {
   const vaults = await getLiveVaults();
@@ -181,6 +209,38 @@ export default async function HomePage() {
                 </Link>
               );
             })}
+          </div>
+        </section>
+
+        {/* Data & tools */}
+        <section className="uni-home-section" aria-labelledby="tools-title">
+          <header className="uni-home-section-head">
+            <div>
+              <h2 id="tools-title" className="uni-home-section-title">
+                Data &amp; tools
+              </h2>
+              <p className="uni-home-section-sub">
+                Reports and calculators on the same onchain data.
+              </p>
+            </div>
+          </header>
+          <div className="uni-home-asset-grid uni-home-tool-grid">
+            {DATA_TOOLS.map((tool) => (
+              <Link key={tool.href} href={tool.href} className="uni-home-asset-card">
+                <div className="uni-home-asset-card-head">
+                  <AssetIcon asset={tool.icon} size={36} decorative />
+                  <div className="uni-home-asset-card-id">
+                    <div className="uni-home-asset-card-label">{tool.label}</div>
+                    <div className="uni-home-asset-card-sub">{tool.sub}</div>
+                  </div>
+                </div>
+                <p className="uni-home-tool-card-desc">{tool.desc}</p>
+                <div className="uni-home-asset-card-foot">
+                  <span>{tool.cta}</span>
+                  <span aria-hidden="true" className="uni-home-asset-card-arrow">→</span>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
