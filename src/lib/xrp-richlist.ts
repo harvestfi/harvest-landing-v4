@@ -118,6 +118,10 @@ export interface RichList {
   // with, so the two pages cannot disagree about what an XRP was worth.
   xrpUsd?: number | null;
   xrpUsdSource?: string | null;
+  // XRP/KRW from Upbit's ticker, for /ko/xrp-rich-list. Read at the same walk
+  // as the dollar price; absent on snapshots written before it existed.
+  xrpKrw?: number | null;
+  xrpKrwSource?: string | null;
   // Concentration read with and without exchange wallets, plus the largest
   // holding attributed to a person. Absent on snapshots written before it.
   concentration?: {

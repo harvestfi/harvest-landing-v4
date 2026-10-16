@@ -68,6 +68,18 @@ export const bandNickname = (b: Band): string => {
   return "Shrimp";
 };
 
+/** Korean names for the same bands. 대왕고래 is the blue whale, which is how
+ *  Korean holders already write the tier above an ordinary whale. */
+export const bandNicknameKo = (b: Band): string => {
+  if (b.min >= 10_000_000) return "대왕고래";
+  if (b.min >= 1_000_000) return "고래";
+  if (b.min >= 100_000) return "상어";
+  if (b.min >= 10_000) return "돌고래";
+  if (b.min >= 1_000) return "물고기";
+  if (b.min >= 100) return "게";
+  return "새우";
+};
+
 export const bandName = (b: Band): string =>
   b.max == null ? `${xrpShort(b.min)}+` : `${xrpShort(b.min)}-${xrpShort(b.max)}`;
 
@@ -86,11 +98,15 @@ export function DistributionChart({
   bands,
   snapshotDate,
   totalAccounts,
+  locale = "en",
 }: {
   bands: Band[];
   snapshotDate: string;
   totalAccounts: number;
+  /** "ko" on /ko/xrp-rich-list: Korean caption and axis titles. */
+  locale?: "en" | "ko";
 }) {
+  const ko = locale === "ko";
   // Drop leading empty bands so the axis starts where accounts actually are.
   const rows = bands.filter((b) => b.accounts > 0);
   if (rows.length < 2) return null;
@@ -111,7 +127,11 @@ export function DistributionChart({
   // "chart" leads the accessible name because it is the word people search
   // for and the SVG's aria-label was the only place it could go without
   // padding the visible copy.
-  const caption =
+  const caption = ko
+    ? `XRP 보유자 비율 차트: ${snapshotDate} 기준 보유량 구간별 XRP 지갑 비율. ` +
+      rows.map((b) => `${bandName(b)} XRP: ${compact(b.accounts)}개`).join(". ") +
+      "."
+    :
     `XRP holders percentage chart: the percentage of funded XRP Ledger accounts in each balance band as of ${snapshotDate}. ` +
     rows
       .map((b) => `${bandName(b)} XRP: ${compact(b.accounts)} accounts`)
@@ -217,10 +237,12 @@ export function DistributionChart({
             unlabelled, and a reader has to guess whether "1-10" is a count, a
             rank or a balance. */}
         <text aria-hidden="true" x={W / 2} y={axisY + 64} textAnchor="middle" className="rl-chart-axis-title">
-          XRP held in wallet
+          {ko ? "지갑당 XRP 보유량" : "XRP held in wallet"}
         </text>
         <text aria-hidden="true" x={W / 2} y={axisY + 79} textAnchor="middle" className="rl-chart-axis-sub">
-          second line under each band: its share of all funded accounts
+          {ko
+            ? "구간 아래 두 번째 줄: 전체 지갑 중 해당 구간의 비율"
+            : "second line under each band: its share of all funded accounts"}
         </text>
       </svg>
       {/* The caption used to live here, inside the figure. It reads as part
@@ -236,11 +258,47 @@ export function DistributionChart({
 export function DistributionTable({
   bands,
   snapshotDate,
+  locale = "en",
 }: {
   bands: Band[];
   snapshotDate: string;
+  locale?: "en" | "ko";
 }): ReactNode {
   const rows = bands.filter((b) => b.accounts > 0);
+  if (locale === "ko") {
+    const pct = (v: number) => (v >= 0.01 ? `${v.toFixed(2)}%` : "0.01% 미만");
+    return (
+      <div className="rl-dtable-wrap">
+        <table className="rl-dtable">
+          <caption className="rl-dtable-cap">
+            {snapshotDate} 기준 보유량 구간별 XRP 레저 지갑 분포
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">구간(XRP)</th>
+              <th scope="col">별칭</th>
+              <th scope="col">지갑 수</th>
+              <th scope="col">지갑 비율</th>
+              <th scope="col">보유 XRP</th>
+              <th scope="col">XRP 비율</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((b) => (
+              <tr key={bandName(b)}>
+                <th scope="row">{bandName(b)}</th>
+                <td data-label="별칭">{bandNicknameKo(b)}</td>
+                <td data-label="지갑 수">{b.accounts.toLocaleString("en-US")}</td>
+                <td data-label="지갑 비율">{pct(b.pctOfAccounts)}</td>
+                <td data-label="보유 XRP">{Math.round(b.xrpHeld).toLocaleString("en-US")}</td>
+                <td data-label="XRP 비율">{pct(b.pctOfXrp)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
   return (
     <div className="rl-dtable-wrap">
       <table className="rl-dtable">

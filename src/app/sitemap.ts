@@ -112,6 +112,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.9,
+      alternates: {
+        languages: {
+          en: `${SITE_URL}/xrp-rich-list`,
+          ko: `${SITE_URL}/ko/xrp-rich-list`,
+        },
+      },
+    },
+    {
+      url: `${SITE_URL}/ko/xrp-rich-list`,
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+      alternates: {
+        languages: {
+          en: `${SITE_URL}/xrp-rich-list`,
+          ko: `${SITE_URL}/ko/xrp-rich-list`,
+        },
+      },
     },
     ...assetHubPages,
     ...networkHubPages,

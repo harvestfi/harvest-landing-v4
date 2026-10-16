@@ -114,7 +114,17 @@ export async function generateMetadata(): Promise<Metadata> {
     // the intended trade, not an oversight.
     title: { absolute: TITLE },
     description: DESCRIPTION,
-    alternates: { canonical: PAGE_URL },
+    // hreflang pair with the Korean edition, declared identically on both
+    // pages, which is what makes Google treat them as one page in two
+    // languages rather than as near-duplicates. x-default stays here.
+    alternates: {
+      canonical: PAGE_URL,
+      languages: {
+        en: PAGE_URL,
+        ko: `${SITE_URL}/ko/xrp-rich-list`,
+        "x-default": PAGE_URL,
+      },
+    },
     openGraph: {
       // website, not article. This page is a tool, and on this SERP the tools
       // take the traffic while the high-authority articles above them take
@@ -818,7 +828,13 @@ export default function XrpRichListPage() {
         <h1 className="uni-home-h1 rl-h1">XRP Rich List &amp; Calculator</h1>
         <p className="rl-dateline">
           Live from the XRP Ledger, refreshed four times a day. Latest
-          snapshot: {dayMonthYear} at {utcTime} UTC.
+          snapshot: {dayMonthYear} at {utcTime} UTC.{" "}
+          {/* The Korean edition. A crawlable link as well as the hreflang
+              pair: this page carries the authority, and a link is how any
+              of it reaches the new one. */}
+          <Link href="/ko/xrp-rich-list" hrefLang="ko" lang="ko">
+            한국어
+          </Link>
         </p>
         {/* Featured image. Static import, so Next emits the intrinsic size and
             the slot reserves its own height before the file loads. `priority`
