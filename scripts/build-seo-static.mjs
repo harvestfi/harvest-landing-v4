@@ -206,6 +206,17 @@ writeFileSync(join(PUBLIC_DIR, "llms.txt"), llms, "utf-8");
 // served verbatim and dodges the cleanUrls `.txt` route-stripping trap.
 writeFileSync(join(PUBLIC_DIR, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY, "utf-8");
 
+// Naver Search Advisor ownership file, byte-for-byte what Naver issued. It
+// is an `.html` file, so cleanUrls 308s /<name>.html to /<name>, which
+// serves the same body; Naver's checker follows the redirect. Removing it
+// un-verifies the site in Naver Search Advisor.
+const NAVER_VERIFICATION = "navera9e5f1bf3beb353d64816a15e0625536.html";
+writeFileSync(
+  join(PUBLIC_DIR, NAVER_VERIFICATION),
+  `naver-site-verification: ${NAVER_VERIFICATION}`,
+  "utf-8",
+);
+
 console.log(
-  `[seo-static] wrote robots.txt + llms.txt + ${INDEXNOW_KEY}.txt (origin ${SITE_URL})`,
+  `[seo-static] wrote robots.txt + llms.txt + ${INDEXNOW_KEY}.txt + ${NAVER_VERIFICATION} (origin ${SITE_URL})`,
 );
