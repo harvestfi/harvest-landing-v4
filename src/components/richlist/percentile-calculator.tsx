@@ -348,7 +348,12 @@ export function PercentileCalculator({
             </p>
             <p className="rl-calc-detail">
               {fmt(parsed ?? 0)} XRP
-              {xrpKrw ? ` (업비트 시세 기준 약 ${wonKo((parsed ?? 0) * xrpKrw)})` : ""}를{" "}
+              {/* The unit price is spelled out: "업비트 시세 기준 약 904만 원" read as
+                  the price of one XRP to a native reader, not the holding's value. */}
+              {xrpKrw
+                ? ` (약 ${wonKo((parsed ?? 0) * xrpKrw)}어치, 업비트 1 XRP = ${Math.round(xrpKrw).toLocaleString("en-US")}원 기준)`
+                : ""}
+              를{" "}
               {snapshotDate} 기준 XRP 레저의 전체 {compactKo(accounts)}개 지갑과 비교한
               결과입니다.
             </p>
