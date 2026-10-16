@@ -105,8 +105,8 @@ const KO_NAMES: Record<string, string> = {
   Binance: "바이낸스",
   bitbank: "비트뱅크",
   Coincheck: "코인체크",
-  "Ripple company": "리플사",
-  Ripple: "리플사",
+  "Ripple company": "리플",
+  Ripple: "리플",
   chrislarsen: "크리스 라슨",
   ahbritto: "아서 브리토",
 };

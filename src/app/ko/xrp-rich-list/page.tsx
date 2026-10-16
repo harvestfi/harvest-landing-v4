@@ -293,12 +293,12 @@ export default function XrpRichListKoPage() {
       q: "지금까지 소각된 XRP는 얼마나 되나요?",
       a:
         burned != null && data.totalSupplyXrp
-          ? `${snapDate} 기준으로 ${koCount(burned)} XRP가 거래 수수료로 소각되었습니다. 출시 때 발행된 1,000억 XRP와 같은 날 레저가 보고한 총 공급량 ${koCount(data.totalSupplyXrp)} XRP의 차이입니다. XRP 레저의 모든 거래는 소량의 수수료를 소각하고 새 XRP를 만드는 장치는 없기 때문에, 총량은 줄어들기만 합니다.`
+          ? `${snapDate}까지 ${koCount(burned)} XRP가 거래 수수료로 소각되었습니다. 출시 때 발행된 1,000억 XRP와 현재 레저가 보고한 총 공급량 ${koCount(data.totalSupplyXrp)} XRP의 차이입니다. XRP 레저의 모든 거래는 소량의 수수료를 소각하도록 설계되어 있습니다. 반면에 새로운 XRP는 더 이상 발행되지 않기 때문에, 총량은 줄어들기만 합니다.`
           : "",
     },
     {
       q: "이 순위는 얼마나 자주 업데이트되나요?",
-      a: `하루 4번 업데이트됩니다. 지금 보이는 수치는 ${snapStamp}에 마감된 레저 ${koCount(data.ledgerIndex)}번에서 읽은 것이며, 다음 조회가 끝나면 모든 숫자가 새 레저 기준으로 바뀝니다. 매번 하나의 검증된 레저 전체를 한 번에 읽기 때문에, 서로 다른 시점의 데이터가 섞이지 않습니다.`,
+      a: `하루 4번 업데이트됩니다. 지금 보이는 수치는 ${snapStamp}에 마감된 블록 높이 ${koCount(data.ledgerIndex)}에서 읽은 것이며, 다음 조회가 끝나면 모든 숫자가 새 레저 기준으로 바뀝니다. 매번 하나의 검증된 레저 전체를 한 번에 읽기 때문에, 서로 다른 시점의 데이터가 섞이지 않습니다.`,
     },
   ].filter((f) => f.a);
 
@@ -385,7 +385,7 @@ export default function XrpRichListKoPage() {
           XRP 레저에서 직접 읽어 하루 4번 갱신합니다. 최신 스냅샷: {snapDate}{" "}
           {koTime(snap)}(한국시간).{" "}
           <Link href="/xrp-rich-list" hrefLang="en" lang="en">
-            English
+            영어
           </Link>
         </p>
         <Image src={richListHeader} alt="" className="rl-figure" sizes="100vw" priority />
@@ -524,8 +524,8 @@ export default function XrpRichListKoPage() {
         <p className="rp-eyebrow">고래 지갑</p>
         <h2 id="top-accounts">XRP 고래 지갑 순위: 보유량 상위 {koCount(ranked)}개 지갑</h2>
         <p className="rp-lead">
-          {snapDate} 기준 XRP 보유량이 가장 많은 지갑 {koCount(ranked)}개를 레저{" "}
-          {koCount(data.ledgerIndex)}번에서 읽어 순위를 매겼습니다
+          {snapDate} 기준 XRP 보유량이 가장 많은 지갑 {koCount(ranked)}개를 블록 높이{" "}
+          {koCount(data.ledgerIndex)}에서 읽어 순위를 매겼습니다
           {ranked > 100 ? ". 한 페이지에 100개씩 표시됩니다" : ""}.
         </p>
         <TopAccountsTable
@@ -539,8 +539,8 @@ export default function XrpRichListKoPage() {
           {labelled.length > 0
             ? `${snapDate} 기준 순위에 오른 ${data.top.length}개 지갑 중 ${labelled.length}개에 보유자 이름이 붙어 있습니다.`
             : `${snapDate} 기준 순위에 오른 ${data.top.length}개 지갑 중 이름이 확인된 지갑은 없습니다.`}{" "}
-          거래 패턴만으로 보유자를 추정하는 것은 추측에 불과하므로, 이 페이지는 출처를 보여 줄 수
-          있는 경우에만 이름을 표시합니다.
+          거래 패턴만으로 보유자를 특정하는 것에는 한계가 있습니다. 본 페이지에서는 출처를 확인할
+          수 있는 경우에 한정해서 표시하고 있습니다.
         </p>
         <p className="rl-note">
           순위는 바로 쓸 수 있는 잔액과 온체인 에스크로에 잠긴 수량을 합친 기준입니다. 그래서
@@ -548,7 +548,7 @@ export default function XrpRichListKoPage() {
         </p>
         {krw ? (
           <p className="rl-note">
-            원화 가치는 {snapDate} 업비트 KRW-XRP 시세 {koCount(krw)}원을 기준으로 계산했습니다.
+            원화 가치는 {snapDate} 업비트 원화시세 {koCount(krw)}원을 기준으로 계산했습니다.
             시세가 움직이면 원화 가치는 달라지지만 XRP 수량은 그대로입니다.
           </p>
         ) : data.xrpUsd ? (
@@ -604,8 +604,8 @@ export default function XrpRichListKoPage() {
           </table>
         </div>
         <p className="rl-note">
-          각 구간은 위 구간을 포함합니다. 예를 들어 상위 1%에는 상위 0.1%가 들어 있어서, 누적
-          비중은 아래로 갈수록 커집니다. 기준 수량은 모든 지갑 잔액의 히스토그램에서 읽으며,{" "}
+          각 구간은 위의 구간을 포함합니다. 예를 들어 상위 1%에는 상위 0.1%가 포함되어서, 누적된
+          비중은 아래로 내려갈수록 높아집니다. 기준 수량은 모든 지갑 잔액의 히스토그램에서 읽으며,{" "}
           {snapDate} 기준 오차는 최대 {data.method.thresholdRelativeErrorPct}%입니다.
         </p>
       </section>
@@ -663,7 +663,7 @@ export default function XrpRichListKoPage() {
             </table>
           </div>
           <p className="rl-note">
-            거래소 지갑은 거래소 자신의 재산이 아니라 고객들이 맡긴 XRP를 모아 둔 곳입니다. 그래서
+            거래소 지갑은 거래소 자신의 재산이 아니라 고객들이 맡긴 XRP 전체를 모아 둔 곳입니다. 그래서
             거래소 보유량이 많다는 것은 그 거래소에 XRP를 맡긴 사람이 많다는 뜻입니다. 이름은
             제3자 데이터 제공자의 지갑 식별을 따르며, {snapDate} 기준 상위 {koCount(ranked)}개
             지갑 안에서 확인된 거래소 지갑 {exchangeAccounts}개(합계 {koXrp(exchangeXrp)} XRP)만
@@ -721,7 +721,7 @@ export default function XrpRichListKoPage() {
         <p className="rp-eyebrow">보유자</p>
         <h2 id="how-many">리플(XRP) 보유자는 몇 명일까?</h2>
         <p className="rp-lead">
-          {`${snapDate} 기준 XRP 레저 활성 지갑은 ${koCount(data.accounts)}개지만, 이것이 XRP를 가진 사람 수는 아닙니다.`}
+          {`${snapDate} 기준 XRP 레저 활성 지갑은 ${koCount(data.accounts)}개지만, 이것이 XRP를 가진 사람 전체의 수는 아닙니다.`}
         </p>
         <p>
           한 사람이 여러 지갑을 만들 수 있으므로 지갑 수는 직접 XRP를 보관하는 사람 수보다
@@ -984,7 +984,7 @@ export default function XrpRichListKoPage() {
           <dt>원화 가치</dt>
           <dd>
             {krw
-              ? `업비트 KRW-XRP 시세(${snapDate} 레저 조회 시점 ${koCount(krw)}원)를 곱해 계산합니다. 달러 시세를 환율로 바꾸지 않는 이유는 국내 거래소 XRP 가격이 해외와 다를 수 있기 때문입니다(김치 프리미엄).`
+              ? `업비트 원화 시세(${snapDate} 레저 조회 시점 ${koCount(krw)}원)를 곱해 계산합니다. 달러 시세를 환율로 바꾸지 않는 이유는 국내 거래소 XRP 가격이 해외와 다를 수 있기 때문입니다(김치 프리미엄 등의 이유).`
               : "원화 시세를 읽지 못한 스냅샷에서는 원화 가치를 표시하지 않습니다."}
           </dd>
           <dt>한계</dt>
