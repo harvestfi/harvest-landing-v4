@@ -85,7 +85,7 @@ jobs:
             if git push origin HEAD:main; then
               echo "Pushed on attempt $attempt."
               echo "pushed=true" >> "$GITHUB_OUTPUT"
-              echo "stamp=$(node -p 'require("./data/xrp-yield.json").generatedAt')" >> "$GITHUB_OUTPUT"
+              echo "stamp=$(node scripts/xrp-report-stamp.mjs)" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Push rejected on attempt $attempt, rebasing on origin/main."
@@ -96,8 +96,9 @@ jobs:
           exit 1
 
   # Same as the rich list job: ping IndexNow for the report once the deploy
-  # carrying the new data is live. The report prints the dataset's
-  # generatedAt as its dateModified, so that is what the wait looks for. If
+  # carrying the new data is live. The report's dateModified is the newest of
+  # several stamps in the dataset, not the top-level generatedAt alone;
+  # scripts/xrp-report-stamp.mjs computes the same value for the wait. If
   # the page ends up showing a different stamp (it can cap the date when a
   # degraded run left the series stale), the wait times out and nothing is
   # submitted, which is the right outcome for data that did not really move.
