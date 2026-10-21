@@ -36,6 +36,9 @@ jobs:
   update-richlist:
     runs-on: ubuntu-latest
     timeout-minutes: 190
+    outputs:
+      pushed: ${{ steps.commit.outputs.pushed }}
+      ledger: ${{ steps.commit.outputs.ledger }}
     steps:
       # Depth 1: the full history of every branch took up to eight minutes to
       # fetch, and this job only ever writes one file onto the tip of main.
@@ -83,6 +86,7 @@ jobs:
           key: xrpl-richlist-ckpt-${{ github.run_id }}
 
       - name: Commit and push if changed
+        id: commit
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -107,6 +111,8 @@ jobs:
             git commit -q -m "chore: update XRP rich list $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             if git push origin HEAD:main; then
               echo "Pushed on attempt $attempt."
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
+              echo "ledger=$(node -p 'require("./data/xrp-richlist.json").ledgerIndex')" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Push rejected on attempt $attempt, retrying on the new tip."
@@ -126,3 +132,37 @@ jobs:
               process.exit(1);
             }
           '
+
+  # Tell Bing (and through IndexNow, Yandex, Seznam, Naver) that the rich list
+  # changed. The slug diff in update-data.yml never covers these pages, so
+  # until this job existed a new snapshot reached them only when they happened
+  # to recrawl. Most AI-assistant queries for the page are "today" / "current"
+  # lookups, which is why it matters.
+  #
+  # A separate job so the wait for the Vercel deploy cannot eat into the walk's
+  # time budget. It waits until the live page shows the new ledger, then pings;
+  # if that never happens it logs and submits nothing. Gated on the same repo
+  # variable as update-data.yml.
+  notify-indexnow:
+    needs: update-richlist
+    if: needs.update-richlist.outputs.pushed == 'true' && vars.INDEXNOW_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Notify IndexNow once the new snapshot is live
+        run: >-
+          node scripts/indexnow-submit.mjs
+          --url=/xrp-rich-list
+          --url=/ko/xrp-rich-list
+          --wait-for=${{ needs.update-richlist.outputs.ledger }}
