@@ -21,12 +21,23 @@
 //   --all       Full submission of the canonical URL set (home + hubs +
 //               every <loc> in public/sitemap.xml, or all slugs if the
 //               sitemap is absent). Use once after enabling, to seed.
-//   --dry-run   Print the payload; do not POST. Combine with either mode.
+//   --url=PATH  Submit exactly these pages (repeatable, site-relative). For
+//               the data pages outside the product set (/xrp-rich-list, the
+//               XRP report), whose content changes with every snapshot their
+//               own jobs land, and which the slug diff never sees.
+//   --wait-for=TEXT
+//               With --url: poll the first URL until its HTML contains TEXT
+//               before submitting. The data jobs push to main and Vercel then
+//               deploys, so a ping sent at push time would bring the crawler
+//               to the previous build. Gives up after 20 minutes and does not
+//               submit.
+//   --dry-run   Print the payload; do not POST. Combine with any mode.
 //
 // USAGE
 //   node scripts/indexnow-submit.mjs                # incremental (CI)
 //   node scripts/indexnow-submit.mjs --all          # one-time seed
 //   node scripts/indexnow-submit.mjs --all --dry-run
+//   node scripts/indexnow-submit.mjs --url=/xrp-rich-list --wait-for=107798420
 
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -48,6 +59,12 @@ const NETWORK_HUBS = [
 const argv = process.argv.slice(2);
 const ALL = argv.includes("--all");
 const DRY = argv.includes("--dry-run");
+const PATHS = argv
+  .filter((a) => a.startsWith("--url="))
+  .map((a) => a.slice("--url=".length));
+const WAIT_FOR = argv
+  .find((a) => a.startsWith("--wait-for="))
+  ?.slice("--wait-for=".length);
 
 function readSiteUrl() {
   const src = readFileSync(join(ROOT, "src", "lib", "constants.ts"), "utf-8");
@@ -133,7 +150,27 @@ function allUrls() {
 }
 
 // --- main -------------------------------------------------------------------
-let urls = ALL ? allUrls() : incrementalUrls();
+// The deploy that carries the new snapshot is not live until Vercel finishes,
+// so wait until the page itself shows it.
+async function waitForLive(url, text) {
+  const deadline = Date.now() + 20 * 60_000;
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.ok && (await res.text()).includes(text)) return true;
+    } catch {
+      // A transient fetch failure is the same as "not live yet".
+    }
+    await new Promise((r) => setTimeout(r, 30_000));
+  }
+  return false;
+}
+
+let urls = PATHS.length
+  ? PATHS.map((p) => `${SITE_URL}/${p.replace(/^\//, "")}`)
+  : ALL
+    ? allUrls()
+    : incrementalUrls();
 // Dedupe, keep same-host only (IndexNow rejects cross-host URL lists).
 urls = [...new Set(urls)].filter((u) => {
   try {
@@ -154,6 +191,16 @@ const payload = {
   keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
   urlList: urls,
 };
+
+if (PATHS.length && WAIT_FOR && !DRY) {
+  if (!(await waitForLive(urls[0], WAIT_FOR))) {
+    console.error(
+      `[indexnow] ${urls[0]} did not show "${WAIT_FOR}" within 20 minutes; not submitting.`,
+    );
+    process.exit(0);
+  }
+  console.log(`[indexnow] ${urls[0]} is live with "${WAIT_FOR}".`);
+}
 
 if (DRY) {
   console.log("[indexnow] DRY RUN — would POST:");

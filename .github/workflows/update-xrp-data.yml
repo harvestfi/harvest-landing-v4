@@ -21,6 +21,9 @@ permissions:
 jobs:
   update-xrp-data:
     runs-on: ubuntu-latest
+    outputs:
+      pushed: ${{ steps.commit.outputs.pushed }}
+      stamp: ${{ steps.commit.outputs.stamp }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -68,6 +71,7 @@ jobs:
         continue-on-error: true
 
       - name: Commit and push if changed
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -80,6 +84,8 @@ jobs:
           for attempt in 1 2 3; do
             if git push origin HEAD:main; then
               echo "Pushed on attempt $attempt."
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
+              echo "stamp=$(node -p 'require("./data/xrp-yield.json").generatedAt')" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Push rejected on attempt $attempt, rebasing on origin/main."
@@ -88,3 +94,32 @@ jobs:
           done
           echo "Failed to push after retries."
           exit 1
+
+  # Same as the rich list job: ping IndexNow for the report once the deploy
+  # carrying the new data is live. The report prints the dataset's
+  # generatedAt as its dateModified, so that is what the wait looks for. If
+  # the page ends up showing a different stamp (it can cap the date when a
+  # degraded run left the series stale), the wait times out and nothing is
+  # submitted, which is the right outcome for data that did not really move.
+  notify-indexnow:
+    needs: update-xrp-data
+    if: needs.update-xrp-data.outputs.pushed == 'true' && vars.INDEXNOW_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Notify IndexNow once the new report is live
+        run: >-
+          node scripts/indexnow-submit.mjs
+          --url=/report/xrp-yield-ranking
+          --wait-for=${{ needs.update-xrp-data.outputs.stamp }}
