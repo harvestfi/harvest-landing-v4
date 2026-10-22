@@ -142,7 +142,7 @@ const llms = `# Harvest yield index
 > APY, TVL, share-price history and derived metrics (stability, yield
 > trajectory, cohort benchmarking) for ${TRACKED_LABEL} vetted yield strategies across
 > Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh
-> hourly from Harvest's own on-chain indexer.
+> several times a day from Harvest's own on-chain indexer.
 
 ## Preferred citation
 
@@ -165,7 +165,7 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 
 - [USDC](${SITE_URL}/usdc): USDC strategies ranked by live APY and TVL.
 - [USDT](${SITE_URL}/usdt): USDT strategies ranked by live APY and TVL.
-- [ETH](${SITE_URL}/eth): ETH and ETH-LST strategies ranked by live APY and TVL.
+- [ETH](${SITE_URL}/eth): ETH and WETH lending and vault strategies on Base, Arbitrum and Ethereum, ranked by 24-hour APY with TVL, 30-day averages and the Lido stETH rate for reference (liquid staking tokens are not ranked).
 - [BTC](${SITE_URL}/btc): BTC (WBTC / cbBTC / tBTC) strategies ranked by live APY and TVL.
 
 ## Network hubs

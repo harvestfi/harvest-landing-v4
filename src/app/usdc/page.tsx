@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // the control group for this change and must not move.
   const description =
     `Compare ${c.count} USDC yield strategies on ${c.chainCount} networks, ranked by 24-hour ` +
-    `APY. Live rates, 30-day averages and TVL for every strategy Harvest indexes, updated hourly.`;
+    `APY. Live rates, 30-day averages and TVL for every strategy Harvest indexes, updated several times a day.`;
 
   return {
     title,

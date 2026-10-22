@@ -181,7 +181,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
                     .map((a) => a.asset)
                     .join(", ")} across ${chainStats
                     .map((c) => c.chain)
-                    .join(", ")}. Updated hourly.`
+                    .join(", ")}. Updated several times a day.`
                 : `${platform.display} strategies are populating, check back shortly.`}
             </p>
           </div>
@@ -314,12 +314,12 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
             </article>
 
             <article>
-              <h3>What this page is, and what it is not</h3>
+              <h3>Which strategies this ranking includes</h3>
               <p>
-                A curated index of the {platform.display} strategies Harvest
-                integrates. Not a survey of every market on {platform.display}.
-                We add strategies as we vet and integrate them; we drop them
-                when products retire or fall outside our framework. Inclusion
+                The ranking lists the {platform.display} strategies Harvest
+                integrates, which is a subset of the markets on{" "}
+                {platform.display}. We add strategies as we integrate them and
+                drop them when products retire or fall outside our framework. Inclusion
                 criteria and ranking logic are on the{" "}
                 <Link href="/methodology">methodology page</Link>.
               </p>

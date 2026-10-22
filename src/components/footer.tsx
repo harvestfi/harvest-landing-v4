@@ -176,8 +176,8 @@ export async function Footer() {
             </span>
             <p className="foot-blurb">
               Harvest is an onchain yield index tracking{" "}
-              {vaults.length}+ DeFi yield strategies across major networks.
-              APY, TVL and performance data are updated hourly and derive from
+              {vaults.length} DeFi yield strategies across major networks.
+              APY, TVL and performance data are updated several times a day and derive from
               our own indexer monitoring vault contracts continuously since
               2020. See <Link href="/methodology">methodology</Link> for how
               data is collected and calculated.
@@ -317,8 +317,14 @@ export async function Footer() {
         {/* === Legal compliance === */}
         <div className="foot-legal">
           <div className="foot-legal-line">
-            &copy; 2026 Harvest Finance · Operating onchain since 2020 · Data
-            refreshed hourly · See{" "}
+            {/* Scoped to the yield index, which is what the data rebuild
+                actually covers. Unscoped it read as a claim about every
+                dataset on the site, and on /xrp-rich-list it sat on the same
+                page as a ledger walk that runs four times a day. Two
+                cadences, one page, and nothing to tell a machine which
+                applied to what. */}
+            &copy; 2026 Harvest Finance · Operating onchain since 2020 · Yield
+            data refreshed several times a day · See{" "}
             <Link href="/methodology">methodology</Link> for calculation
             details · All content on this site is published for informational
             purposes only and does not constitute investment, financial, legal,

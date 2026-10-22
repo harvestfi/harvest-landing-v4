@@ -66,7 +66,7 @@ const ENTITY_CAP = 10;
 // under them, so it is safe here. Porting the rules themselves is deliberately
 // NOT in this PR: they would newly evaluate the existing XRP report page,
 // which is also enforced, and that belongs in its own change.
-const ENFORCED = new Set(["report/xrp-yield-ranking", "xrp-rich-list", "usdc"]);
+const ENFORCED = new Set(["report/xrp-yield-ranking", "xrp-rich-list", "usdc", "eth"]);
 
 // A date token is "as of", a month name, or a four-digit year.
 const DATE_TOKEN =

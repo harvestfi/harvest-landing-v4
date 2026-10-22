@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { YieldVault } from "@/lib/types";
-import { formatAPY, stripChainSuffix } from "@/lib/format";
+import { formatAPY, formatTVL, stripChainSuffix } from "@/lib/format";
 import { isLpPairVault, getCanonicalDisplayName } from "@/lib/lp-pair";
 import { AssetIcon, ChainIcon } from "./token-icons";
 import { LpBadge } from "./lp-badge";
@@ -27,6 +27,14 @@ interface Props {
   // app in a new tab. Off by default: it restructures the row markup (see the
   // comment in Row) and every other call site keeps the plain wrapping anchor.
   openLinks?: boolean;
+  // Adds TVL and 30-day mean APY as numeric columns after the trend, and
+  // marks rows under the low-liquidity floor. Off by default so every other
+  // hub renders as before; /eth turns it on because a reader (or a parser)
+  // taking row one of a rate-only table gets a rate nobody earns at size.
+  metrics?: boolean;
+  // Header for the venue column. "Strategy" everywhere else; /eth says
+  // "Protocol", which is what the column holds.
+  venueLabel?: string;
 }
 
 function buildSparklinePath(values: number[]): string {
@@ -76,6 +84,8 @@ export function HubTable({
   scopeLabel,
   networkFirst = false,
   openLinks = false,
+  metrics = false,
+  venueLabel = "Strategy",
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("apy24h");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -224,7 +234,7 @@ export function HubTable({
       <div
         className={`hub-table${networkFirst ? " hub-table--net-first" : ""}${
           openLinks ? " hub-table--links" : ""
-        }`}
+        }${metrics ? " hub-table--metrics" : ""}`}
         role="table"
         aria-label="Ranking"
       >
@@ -238,11 +248,15 @@ export function HubTable({
             dir={sortDir}
             onClick={() => clickSort("apy24h")}
           />
-          <span className="hub-th hub-th-right">Strategy</span>
-          {!networkFirst && (
+          <span className="hub-th hub-th-right">{venueLabel}</span>
+          {/* The metrics variant names the network under the vault name,
+              so it carries no separate Network column. */}
+          {!networkFirst && !metrics && (
             <span className="hub-th hub-th-center">Network</span>
           )}
           <span className="hub-th hub-th-num">30d APY trend</span>
+          {metrics && <span className="hub-th hub-th-num">TVL</span>}
+          {metrics && <span className="hub-th hub-th-num">30d avg</span>}
           {openLinks && <span className="hub-th hub-th-center">Link</span>}
         </div>
         <div className="hub-tbody" role="rowgroup">
@@ -257,6 +271,7 @@ export function HubTable({
                 sparkline={sparklineFor(v, sparklines)}
                 networkFirst={networkFirst}
                 openLinks={openLinks}
+                metrics={metrics}
               />
             ))
           )}
@@ -342,12 +357,14 @@ function Row({
   sparkline,
   networkFirst = false,
   openLinks = false,
+  metrics = false,
 }: {
   rank: number;
   vault: YieldVault;
   sparkline: number[] | undefined;
   networkFirst?: boolean;
   openLinks?: boolean;
+  metrics?: boolean;
 }) {
   const protocolName = stripChainSuffix(vault.category, vault.chain);
   // If upstream history is missing for this vault but we have a live
@@ -383,13 +400,24 @@ function Row({
       <span className="hub-cell hub-vault">
         <AssetIcon asset={vault.asset} size={28} />
         <span className="hub-vault-name">
-          {getCanonicalDisplayName(vault)}
+          {metrics ? (
+            // The network sits under the name instead of in brackets after it,
+            // so the name column reads as product, then where it runs.
+            <>
+              <span className="hub-vault-title">
+                {getCanonicalDisplayName(vault).replace(/\s*\([^)]*\)$/, "")}
+              </span>
+              <span className="hub-vault-net">{`${vault.chain} · ${protocolName}`}</span>
+            </>
+          ) : (
+            getCanonicalDisplayName(vault)
+          )}
           {isLpPairVault(vault) && <LpBadge />}
         </span>
       </span>
       <span className="hub-cell hub-num hub-apy">{formatAPY(vault.apy24h)}</span>
       <span className="hub-cell hub-strategy">{protocolName}</span>
-      {!networkFirst && networkCell}
+      {!networkFirst && !metrics && networkCell}
       <span
         className={`hub-cell hub-spark${trendUp ? " hub-spark-up" : " hub-spark-flat"}`}
         aria-hidden="true"
@@ -420,6 +448,10 @@ function Row({
           <span className="hub-spark-empty">-</span>
         )}
       </span>
+      {metrics && (
+        <span className="hub-cell hub-num hub-tvl">{formatTVL(vault.tvl)}</span>
+      )}
+      {metrics && <span className="hub-cell hub-num hub-apy30">{formatAPY(vault.apy30d)}</span>}
     </>
   );
 

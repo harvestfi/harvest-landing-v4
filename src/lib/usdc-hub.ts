@@ -377,17 +377,21 @@ export function buildUsdcCohort(
   if (history) {
     for (const v of all) {
       const h = history[v.contractAddress] ?? history[v.contractAddress.toLowerCase()];
-      const pts = (h?.apyHistory ?? [])
-        .filter((p) => p.apy >= 0)
-        .sort((a, b) => a.timestamp - b.timestamp)
-        .slice(-30)
+      // The same window deriveApyMetrics uses for vault.apy30d (every reading
+      // within 30 days of the latest one), so the mean quoted here is the
+      // "30d avg" the tables print, not a near-miss over the last 30 points.
+      if (!h || freshness(h).apyStale) continue;
+      const valid = h.apyHistory.filter((p) => Number.isFinite(p.apy) && p.apy >= 0);
+      const latestTs = Math.max(...valid.map((p) => p.timestamp));
+      const pts = valid
+        .filter((p) => p.timestamp >= latestTs - 30 * 86400)
         .map((p) => p.apy);
       if (pts.length < STABILITY_MIN_POINTS) continue;
       stabilityRows.push({
         slug: v.slug,
         name: proseName(v),
         stdev: stdev(pts),
-        mean: pts.reduce((a, b) => a + b, 0) / pts.length,
+        mean: v.apy30d,
         min: Math.min(...pts),
         max: Math.max(...pts),
       });

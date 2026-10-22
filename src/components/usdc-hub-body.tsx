@@ -992,8 +992,8 @@ export async function UsdcHubBody() {
         eyebrow="Scope"
         asOf={c.asOf}
         asOfIso={c.asOfIso}
-        title="What this page is, and what it is not"
-        lead="This page is a curated index of USDC yield strategies, not a census of the USDC yield market."
+        title="Which strategies this ranking includes"
+        lead="The ranking covers the USDC yield strategies Harvest has vetted and integrated, which is a subset of the USDC yield market."
       >
         <p>
           Strategies are added as they are vetted and integrated, and dropped when the upstream

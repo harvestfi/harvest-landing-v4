@@ -124,7 +124,6 @@ for (const v of vaults) {
     },
     apyPercent: { "24h": round(v.apy24h), "30d": round(v.apy30d) },
     tvlUsd: round(v.tvl),
-    riskLevel: v.riskLevel ?? null,
     history: summary,
     dataAsOf: summary?.dataAsOf ?? null,
     generatedAt: GENERATED_AT,

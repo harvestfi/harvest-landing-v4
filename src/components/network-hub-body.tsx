@@ -276,12 +276,13 @@ export async function NetworkHubBody({
             </article>
 
             <article>
-              <h3>What this page is, and what it is not</h3>
+              <h3>Which strategies this ranking includes</h3>
               <p>
-                A curated {networkDisplay} index. Not a survey of every
-                yield source on the chain. We add strategies as we vet
-                and integrate them; we drop them when products retire
-                or fall outside our framework. Inclusion criteria and
+                The ranking lists the {networkDisplay} strategies we have
+                vetted and integrated, which is a subset of the yield
+                available on the chain. We add strategies as we integrate
+                them and drop them when products retire or fall outside
+                our framework. Inclusion criteria and
                 ranking logic are documented on the{" "}
                 <Link href="/methodology">methodology page</Link>.
               </p>
