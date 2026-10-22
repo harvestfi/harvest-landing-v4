@@ -44,7 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     openGraph: { title, description, url: URL, siteName: SITE_NAME, type: "website" },
-    alternates: { canonical: URL },
+    // The markdown twin, linked so agents that follow links can find it.
+    alternates: { canonical: URL, types: { "text/markdown": `${URL}.md` } },
   };
 }
 
