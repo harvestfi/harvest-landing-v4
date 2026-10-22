@@ -98,7 +98,14 @@ function interestRateValue(apyPercent: number): object {
   };
 }
 
-export function itemListSchema(vaults: YieldVault[], hubUrl: string): object {
+// `rate` picks which APY each item declares. A list named as ranked by the
+// 24-hour rate should declare that rate, or the schema and the table it marks
+// up quote two different numbers for the same row.
+export function itemListSchema(
+  vaults: YieldVault[],
+  hubUrl: string,
+  rate: "24h" | "30d" = "30d",
+): object {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -110,8 +117,10 @@ export function itemListSchema(vaults: YieldVault[], hubUrl: string): object {
         "@type": "FinancialProduct",
         name: v.productName,
         url: `${SITE_URL}/${v.slug}`,
-        provider: { "@type": "Organization", name: v.protocol.name },
-        ...(v.apy30d > 0 ? { interestRate: interestRateValue(v.apy30d) } : {}),
+        provider: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+        ...((rate === "24h" ? v.apy24h : v.apy30d) > 0
+          ? { interestRate: interestRateValue(rate === "24h" ? v.apy24h : v.apy30d) }
+          : {}),
       },
     })),
   };

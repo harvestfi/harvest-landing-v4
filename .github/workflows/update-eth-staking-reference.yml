@@ -1,0 +1,71 @@
+name: Update ETH Staking Reference
+
+# Reads Lido's daily oracle reports from the stETH contract and commits
+# data/eth-staking-reference.json, the staking reference rate /eth quotes
+# beside its lending ranking. Lido reports around 12:00 UTC, so this runs
+# after. Kept out of the site build so a build never depends on RPC
+# availability.
+
+on:
+  schedule:
+    - cron: "23 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-eth-staking-reference
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Read Lido stETH APR
+        run: node scripts/fetch-eth-staking-reference.mjs
+
+      - name: Commit and push if changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/eth-staking-reference.json; then
+            echo "No changes."
+            exit 0
+          fi
+          cp data/eth-staking-reference.json "$RUNNER_TEMP/eth-staking-reference.json"
+          for attempt in 1 2 3 4; do
+            # Only this job writes the file, so landing it on whatever main is
+            # now is always correct, and a shallow clone has no history to
+            # rebase across.
+            git fetch --depth=1 origin main
+            git checkout -q -f -B main FETCH_HEAD
+            cp "$RUNNER_TEMP/eth-staking-reference.json" data/eth-staking-reference.json
+            git add data/eth-staking-reference.json
+            if git diff --cached --quiet; then
+              echo "Already on main."
+              exit 0
+            fi
+            git commit -q -m "chore: update ETH staking reference $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, retrying on the new tip."
+            sleep $((attempt * 5))
+          done
+          echo "Failed to push after retries."
+          exit 1

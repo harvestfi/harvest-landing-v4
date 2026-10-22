@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Best DeFi Yields: Compare Top APY Rankings | Harvest",
     description:
-      "Track and compare yield sources across DeFi. Best APY for USDC, ETH, Bitcoin and USDT. Updated hourly.",
+      "Track and compare yield sources across DeFi. Best APY for USDC, ETH, Bitcoin and USDT. Updated several times a day.",
     url: SITE_URL,
     siteName: SITE_NAME,
     type: "website",
@@ -271,7 +271,7 @@ export default async function HomePage() {
           <p>
             Harvest is a live yield index. Every product on this page
             is running on chain right now. We read APY and TVL straight
-            off the source contracts, refresh hourly, and rank the lot
+            off the source contracts several times a day, and rank the lot
             in one table. Each row links to a daily-resolution history
             of how that strategy has performed.
           </p>

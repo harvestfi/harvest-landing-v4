@@ -66,8 +66,8 @@ const RISK_ITEMS = [
 
 const LIMITATIONS = [
   {
-    title: "Hourly cadence, not real-time",
-    desc: "APY and TVL figures reflect the state of the last hourly fetch. Intraday spikes or dips are not captured. Strategies with extremely volatile yields will not be accurately represented by our snapshot-based system.",
+    title: "Snapshot cadence, not real-time",
+    desc: "APY and TVL figures reflect the state of the last fetch. The fetch is scheduled hourly and in practice lands several times a day, typically two to five hours apart, and every page states the time of the reading it shows. Intraday spikes or dips are not captured. Strategies with extremely volatile yields will not be accurately represented by our snapshot-based system.",
   },
   {
     title: "Reward token conversion is upstream",
@@ -566,7 +566,7 @@ export default async function MethodologyPage() {
               <h2 className="meth-h2">Methodology versioning</h2>
               <p>
                 This methodology is versioned. Each meaningful change to how data is
-                collected, calculated, or presented will be logged here. Hourly data
+                collected, calculated, or presented will be logged here. Routine data
                 refreshes are not methodology changes and are not logged. Future version
                 entries will note: (a) what changed, (b) why the change was made, and
                 (c) how it affects historical comparisons or displayed figures.
