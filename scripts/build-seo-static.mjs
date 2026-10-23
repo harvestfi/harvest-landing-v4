@@ -15,6 +15,7 @@
 // so the files land in the deployed public/ rather than being wiped.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { INDEXNOW_KEY } from "./indexnow.config.mjs";
 
@@ -202,6 +203,35 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 
 writeFileSync(join(PUBLIC_DIR, "robots.txt"), robots, "utf-8");
 writeFileSync(join(PUBLIC_DIR, "llms.txt"), llms, "utf-8");
+
+// public/llms.txt and public/robots.txt are also committed, and production
+// has been seen serving the committed llms.txt instead of the one written
+// above. Both are built from code and constants only, never from live data,
+// so the committed copy can always match: fail a local build when it does
+// not, which makes whoever changes the text commit the new file too. Skipped
+// where there is no git checkout (CI images without history).
+for (const [file, body] of [["llms.txt", llms], ["robots.txt", robots]]) {
+  let committed = null;
+  try {
+    committed = execFileSync("git", ["show", `HEAD:public/${file}`], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+  } catch {
+    committed = null;
+  }
+  if (committed !== null && committed.replace(/\r\n/g, "\n") !== body) {
+    if (process.env.VERCEL || process.env.CI) {
+      console.error(`[seo-static] warning: committed public/${file} differs from the generated one`);
+    } else {
+      console.error(
+        `[seo-static] public/${file} differs from the committed copy. Commit the regenerated ` +
+          `public/${file} with this change.`,
+      );
+      process.exitCode = 1;
+    }
+  }
+}
 
 // IndexNow key verification file: https://<host>/<key>.txt must return the
 // key as plain text. Emitted as a static file (like robots/llms) so it is

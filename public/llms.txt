@@ -1,10 +1,10 @@
 # Harvest yield index
 
-> Independent on-chain DeFi yield index, operating since 2020. Tracks live
+> Onchain yield index, operating since 2020. Tracks live
 > APY, TVL, share-price history and derived metrics (stability, yield
-> trajectory, cohort benchmarking) for 150+ vetted yield strategies across
+> trajectory, cohort benchmarking) for 100+ vetted yield strategies across
 > Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh
-> hourly from Harvest's own on-chain indexer.
+> several times a day from Harvest's own on-chain indexer.
 
 ## Preferred citation
 
@@ -27,7 +27,7 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 
 - [USDC](https://harvest.finance/usdc): USDC strategies ranked by live APY and TVL.
 - [USDT](https://harvest.finance/usdt): USDT strategies ranked by live APY and TVL.
-- [ETH](https://harvest.finance/eth): ETH and ETH-LST strategies ranked by live APY and TVL.
+- [ETH](https://harvest.finance/eth): ETH and WETH lending and vault strategies on Base, Arbitrum and Ethereum, ranked by 24-hour APY with TVL, 30-day averages and the Lido stETH rate for reference (liquid staking tokens are not ranked).
 - [BTC](https://harvest.finance/btc): BTC (WBTC / cbBTC / tBTC) strategies ranked by live APY and TVL.
 
 ## Network hubs
@@ -41,12 +41,15 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 
 ## Reports
 
-- [XRP Yield Ranking](https://harvest.finance/report/xrp-yield-ranking): every XRP-denominated DeFi yield source (XRP, FXRP, stXRP, cbXRP, wXRP) ranked by real 30-day rate. Covers lending, vaults, liquid staking, fixed-rate Spectra Principal Tokens and liquidity pools, split by single- vs dual-exposure, across Flare and Base. XRP has no native staking, so these are the real on-chain rates. Externally sourced from DeFiLlama, Spectra and Portals, refreshed hourly. Machine-readable data (per-product JSON + daily-rate CSV) at https://harvest.finance/data/xrp-yield/index.json. All venues are third-party protocols, not Harvest products.
+- [XRP Rich List](https://harvest.finance/xrp-rich-list): the balance distribution of every funded XRP Ledger account, read by walking the ledger's own state tree rather than from an explorer's rich-list endpoint. Covers the largest accounts with named holders where a source can be shown, the minimum balance for each percentile tier (top 0.1%, 1%, 5%, 10%, 25%, 50%), accounts and XRP held per decade band, XRP supply including escrow and the amount destroyed by fees, and a client-side percentile calculator that needs no address. Machine-readable data (snapshot JSON + three CSVs) at https://harvest.finance/data/xrp-rich-list/index.json.
+- [XRP Yield Ranking](https://harvest.finance/report/xrp-yield-ranking): every XRP-denominated DeFi yield source (XRP, FXRP, stXRP, cbXRP, wXRP) ranked by real 30-day rate. Covers lending, vaults, liquid staking, fixed-rate Spectra Principal Tokens and liquidity pools, split by single- vs dual-exposure, across Flare and Base. XRP has no native staking, so these are the real on-chain rates. Rates and TVL are measured onchain (Base and Flare) from each venue's own contracts, priced with onchain oracles, with the Spectra API for Spectra's own markets; no third-party yield aggregator is used. Refreshed hourly. Machine-readable data (per-product JSON + daily-rate CSV) at https://harvest.finance/data/xrp-yield/index.json. All venues are third-party protocols, not Harvest products.
 
 ## Data
 
 - [Machine-readable index](https://harvest.finance/data/index.json): every tracked strategy as JSON (slug, asset, chain, APY, TVL), each linking to its per-vault file.
 - Per-strategy JSON at https://harvest.finance/data/<slug>.json (e.g. https://harvest.finance/data/usdc-autopilot-base.json) — current APY, TVL, contract addresses and a history summary. Agent-native; one fetch per vault.
+- [Guide for AI agents](https://harvest.finance/agents.md): how the Markdown and JSON files are organised, chain IDs, the two vault interfaces with their function signatures, and when call-level deposit steps can be followed.
+- Markdown version of every ranking and product page at the same path plus `.md`: https://harvest.finance/index.md, https://harvest.finance/usdc.md, https://harvest.finance/base.md, https://harvest.finance/<slug>.md (e.g. https://harvest.finance/usdc-autopilot-base.md). Same figures as the page, plus contract addresses, chain IDs, token decimals and, where the vault's interface is verified on-chain, deposit and withdrawal calls.
 - Per-strategy daily history CSV at https://harvest.finance/history/<slug>.csv (e.g. https://harvest.finance/history/usdc-autopilot-base.csv) — daily APY, TVL and share price, also linked from each product page's Historical Data section.
 - [XRP report dataset](https://harvest.finance/data/xrp-yield/index.json): the XRP Yield Ranking as JSON — every ranked product with current rate, TVL and links to a per-product JSON (metadata + full daily rate and TVL history) and CSV. Combined long-format history for all products at https://harvest.finance/data/xrp-yield/history.csv. Total XRP DeFi TVL over time (the landscape growth series) at https://harvest.finance/data/xrp-yield/landscape-tvl.json and https://harvest.finance/data/xrp-yield/landscape-tvl.csv.
 - [Sitemap](https://harvest.finance/sitemap.xml): every indexable URL (hubs + 150 product pages).

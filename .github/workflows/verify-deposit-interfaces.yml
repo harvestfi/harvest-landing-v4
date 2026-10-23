@@ -1,0 +1,71 @@
+name: Verify Deposit Interfaces
+
+# Reads each vault's deposit interface from chain state and commits
+# data/deposit-interfaces.json. The agent Markdown pages print call-level
+# deposit steps only for vaults verified here; everything else links the
+# Harvest app. Kept out of the site build so a build never depends on RPC
+# availability.
+
+on:
+  schedule:
+    - cron: "40 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verify-deposit-interfaces
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify deposit interfaces
+        run: node scripts/verify-deposit-interfaces.mjs
+
+      - name: Commit and push if changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/deposit-interfaces.json; then
+            echo "No changes."
+            exit 0
+          fi
+          cp data/deposit-interfaces.json "$RUNNER_TEMP/deposit-interfaces.json"
+          for attempt in 1 2 3 4; do
+            # Only this job writes the file, so landing it on whatever main is
+            # now is always correct, and a shallow clone has no history to
+            # rebase across.
+            git fetch --depth=1 origin main
+            git checkout -q -f -B main FETCH_HEAD
+            cp "$RUNNER_TEMP/deposit-interfaces.json" data/deposit-interfaces.json
+            git add data/deposit-interfaces.json
+            if git diff --cached --quiet; then
+              echo "Already on main."
+              exit 0
+            fi
+            git commit -q -m "chore: verify deposit interfaces $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, retrying on the new tip."
+            sleep $((attempt * 5))
+          done
+          echo "Failed to push after retries."
+          exit 1

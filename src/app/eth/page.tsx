@@ -30,14 +30,18 @@ export async function generateMetadata(): Promise<Metadata> {
     ? `Best ETH Yield (${monthYear}): Live APY on Base, Arbitrum & Ethereum`
     : "Best ETH Yield on Base, Arbitrum & Ethereum: Live APY";
 
-  // The description leads with the answer, the way the page does, so the
-  // snippet a reader sees is already the figure they searched for.
-  const base = networkPicks(c, "Base").picks[0];
+  // The description leads with the answer, the way the page does: the top
+  // 24-hour rate first, then the best rate above the liquidity floor, so the
+  // snippet and the intro name the same figures.
+  const top = c.all[0];
+  const name = (v: typeof top) => v.productName.replace(/\s*\([^)]*\)$/, "");
   const description = c.best
-    ? `Best ETH yield${monthYear ? `, ${monthYear}` : ""}: ${formatAPY(c.best.apy24h)} APY paid in ETH${
-        base ? ` on ${base.chain}` : ""
-      }. Compare ${c.count} ETH and WETH strategies on ${c.chainCount} networks by 24-hour ` +
-      `APY, TVL and 30-day steadiness, updated several times a day.`
+    ? `Best ETH yield${monthYear ? `, ${monthYear}` : ""}: ${formatAPY(top.apy24h)} APY on ` +
+      `${name(top)} (${top.chain})` +
+      (top.slug !== c.best.slug
+        ? `; ${formatAPY(c.best.apy24h)} on ${name(c.best)} is the best above $50K`
+        : "") +
+      `. Compare ${c.count} ETH and WETH strategies by 24-hour APY, TVL and 30-day steadiness.`
     : `Compare ETH and WETH yield strategies by 24-hour APY, TVL and 30-day steadiness, updated several times a day.`;
 
   return {
