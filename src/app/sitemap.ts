@@ -4,6 +4,7 @@ import { getCanonicalSlugs } from "@/lib/canonical-vaults";
 import { SITE_URL } from "@/lib/constants";
 import { NETWORKS } from "@/lib/networks";
 import { LIVE_PLATFORM_SLUGS } from "@/lib/platforms";
+import { getDocsPages } from "@/lib/docs";
 
 export const dynamic = "force-static";
 
@@ -131,6 +132,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
       },
     },
+    ...getDocsPages().map((p) => ({
+      url: `${SITE_URL}${p.path}`,
+      lastModified: new Date("2026-11-01"),
+      changeFrequency: "monthly" as const,
+      priority: p.path === "/docs" ? 0.7 : 0.5,
+    })),
     ...assetHubPages,
     ...networkHubPages,
     ...platformHubPages,

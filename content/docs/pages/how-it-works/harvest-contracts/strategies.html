@@ -1,0 +1,16 @@
+<h1 id="strategies"><a class="hlink" href="#strategies" aria-hidden="true">#</a>Strategies</h1>
+<p>Strategies are a key component in the Harvest machinery that define the ways in which vault funds can be utilized with 3rd party protocols to generate yield.</p>
+<p>Because strategies are directly moving user&#39;s tokens, they are strictly scrutinized and tested prior to their deployment. Strategies become associated with a vault through a &#39;timelock&#39; mechanism, meaning that the change is first announced, then a period of time must elapse (currently 12 hours) before the change is made official and the new strategy can access funds.</p>
+<p>While the specifics of each strategy may differ based on the farming opportunity being taken advantage of, all strategies use a function called <code>doHardWork()</code> to compound their tokens with the following steps:</p>
+<ol>
+<li>Collect reward tokens accumulated by the farmed tokens.</li>
+<li>Liquidate the rewards into the farming token.</li>
+<li>Reutilize the new tokens in the farming opportunity.</li>
+</ol>
+<blockquote>
+<p>During liquidation, a performance fee (8-15%) is taken from the rewards and used to buy FARM on the market, which is then distributed to those who have staked FARM in Profitsharing.</p>
+</blockquote>
+<p>Whenever <code>doHardWork()</code> is called, the price of each share of the associated vault increases. Most vaults are harvested every 12-48 hours, depending on the liquidity of their associated token. If you notice that a vault has failed to harvest in more than 48 hours, please let a mod know in the Harvest community discord server.</p>
+<p>The following is an example of what this &#39;harvest&#39; transaction via <code>doHardWork()</code> looks like: <a href="https://etherscan.io/tx/0xa96648073820c1b2a9e2427963a439d7ae895661e5ea3c7f8c99604b04832d3b" rel="noopener" target="_blank">https://etherscan.io/tx/0xa96648073820c1b2a9e2427963a439d7ae895661e5ea3c7f8c99604b04832d3b</a></p>
+
+<aside class="related" aria-label="Related on harvest.finance"><div class="rel-k">Related on harvest.finance</div><ul><li><a href="/methodology">Methodology</a><span>How APY, TVL and other data on harvest.finance are calculated.</span></li><li><a href="/risk-framework">Risk framework</a><span>How vaults are grouped into risk categories.</span></li><li><a href="/morpho">Morpho vaults</a><span>Vaults that use Morpho, and their curators.</span></li><li><a href="/aave">Aave vaults</a><span>Vaults that use Aave, by network.</span></li></ul></aside>

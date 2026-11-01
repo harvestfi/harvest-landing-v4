@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf public/_next public/agent-md && find public -maxdepth 1 -name \"*.md\" -delete && node scripts/build-network-tvl.mjs && next build && rm -rf public && mv out public && node scripts/build-seo-static.mjs && node scripts/build-data-json.mjs && node scripts/build-markdown.mjs && node scripts/build-search-index.mjs && node scripts/build-design-system.mjs && node scripts/build-master-config.mjs && node scripts/build-history-csv.mjs && node scripts/build-xrp-history.mjs && node scripts/build-richlist-export.mjs && node scripts/build-casino-export.mjs && npm run check-xrpl-labels && npm run check-banned-words && npm run check-consistency && npm run check-atomicity && npm run check-evidence && npm run check-markdown",
+    "build": "rm -rf public/_next public/agent-md && find public -maxdepth 1 -name \"*.md\" -delete && node scripts/build-network-tvl.mjs && next build && rm -rf public && mv out public && node scripts/build-seo-static.mjs && node scripts/build-docs-static.mjs && node scripts/build-data-json.mjs && node scripts/build-markdown.mjs && node scripts/build-search-index.mjs && node scripts/build-design-system.mjs && node scripts/build-master-config.mjs && node scripts/build-history-csv.mjs && node scripts/build-xrp-history.mjs && node scripts/build-richlist-export.mjs && node scripts/build-casino-export.mjs && npm run check-xrpl-labels && npm run check-banned-words && npm run check-consistency && npm run check-atomicity && npm run check-evidence && npm run check-markdown",
     "check-banned-words": "node scripts/check-banned-words.mjs",
     "check-consistency": "node scripts/check-page-consistency.mjs",
     "build-master-config": "node scripts/build-master-config.mjs",

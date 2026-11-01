@@ -1,0 +1,47 @@
+<h1 id="fweth-revert-failure-sept-18-2020"><a class="hlink" href="#fweth-revert-failure-sept-18-2020" aria-hidden="true">#</a>fWETH Revert Failure Sept 18 2020</h1>
+<blockquote>
+<p>This summary was prepared by user <code>Silage Pete</code> and has not been reviewed for accuracy or completeness by the Harvest team.</p>
+</blockquote>
+<p>At around 06:00 UTC on Friday September 18th 2020, users in the Harvest Finance Discord chat began reporting problems with fWETH revertings.</p>
+<p>At the time of the incident, the fWETH vault was using a farming strategy that earned yield for farmers by converting the underlying WETH onto the CREAM platform for lending. CREAM lending is based on a fork of the Compound lending codebase.</p>
+<p>When an fWETH reverting is processed, the underlying WETH should be removed from CREAM and returned to the claimant, and the interest-bearing fWETH convert receipt should be burned. In the faulty transactions, the convert receipt was burned, but only some or even none of the requested WETH was returned from CREAM and returned to the user:</p>
+<ul>
+<li><a href="https://etherscan.io/tx/0x8231e0136b47526d9dd55367767ea0bbda174758b1ce3b8f07ac5cd207c1a4f9" rel="noopener" target="_blank">https://etherscan.io/tx/0x8231e0136b47526d9dd55367767ea0bbda174758b1ce3b8f07ac5cd207c1a4f9</a></li>
+<li><a href="https://etherscan.io/tx/0xe77f253d3035e60fc6629e7d553e8b5a1d0ed2870d38666d4d27c9818d940d69" rel="noopener" target="_blank">https://etherscan.io/tx/0xe77f253d3035e60fc6629e7d553e8b5a1d0ed2870d38666d4d27c9818d940d69</a></li>
+</ul>
+<p>CREAM, like Compound, cannot always guarantee that reverting of any size can be honored at any time. As a result, large reverting may result in partial or no return of funds and the error message <code>TOKEN_INSUFFICIENT_CASH</code>. Due to an oversight, the Harvest strategy contract failed to check for this error and would burn the user&#39;s fWETH even if only some or none of the requested WETH was returned.</p>
+<p>When the issue was understood, Harvest community wiki managers <code>BIBI CAT</code>, <code>Silage Pete</code>, and several other Harvest Discord moderators and helpful users notified the Harvest development team of the problem and alerted everyone in Discord that they should not attempt any more WETH revertings until the issue was fixed. Notices to avoid reverting were placed in Discord and the wiki.</p>
+<p>At 07:00 UTC, around 1 hour after the incident was reported, contributor <code>Byron McKeeby</code> submitted <a href="https://github.com/harvest-finance/harvest/pull/4/files" rel="noopener" target="_blank">a pull request to the WETH strategy repository</a> attempting to fix this bug. This PR would not recover the WETH for those who had failed to revert, but it proposed an approach for avoiding the failed reverting problem in future strategy deployments.</p>
+<p>Approximately 5% of the fWETH supply held by 11 owners attempted to revert and was affected by this bug. When a reverting failed, ownership of the WETH in CREAM that failed to be reverted was transferred to the remaining shareholders in the fWETH pool and causing the fWETH share price to increase.</p>
+<p><img src="https://farm.chainwiki.dev/fweth-shareprice.png" alt="fweth-shareprice.png"></p>
+<p>Around 14:00 UTC, Discord administrator and development team member <code>Bread for the People</code> posted in Discord to announce that the problem was being worked on:</p>
+<blockquote>
+<p>Revert for WETH are currently disabled due to a lack of ETH inside Cream lending. We are working with CREAM and are actively working to resolve the issue. Safe reverting of WETH will be enabled soon. We would like to take responsibility and to thank Andre Cronje and the CREAM team for actively assisting with the fix.</p>
+</blockquote>
+<p>Around 16:00 UTC, <code>Bread for the People</code> announced that the Harvest and CREAM teams had a plan to restore the funds:</p>
+<blockquote>
+<p><img src="https://farm.chainwiki.dev/_assets/svg/twemoji/1f391.svg" alt="🎑"> Working together with the CREAM team, we have a plan to restore peace and harmony to the WETH Farm. <img src="https://farm.chainwiki.dev/_assets/svg/twemoji/1f391.svg" alt="🎑"> <img src="https://farm.chainwiki.dev/_assets/svg/twemoji/1f468-200d-1f33e.svg" alt="👨‍🌾"> Users do not need to do anything, the strategy will be updated with the fix. After that, all values will be double-checked, and then reverting will be re-enabled.</p>
+</blockquote>
+<p>Around 17:00 UTC, <code>Bread for the People</code> announced that the WETH had been recovered:</p>
+<blockquote>
+<p>Update: crWETH from the CREAM strategy has been successfully redeemed to WETH.<br>
+<img src="https://farm.chainwiki.dev/_assets/svg/twemoji/1f468-200d-1f33e.svg" alt="👨‍🌾"> Users do not need to do anything, all values will be double-checked once the strategy is updated with the fix, and then reverting will be re-enabled.</p>
+</blockquote>
+<p>Around 19:00 UTC, <code>Bread for the People</code> announced that the incident was resolved:</p>
+<blockquote>
+<p><img src="https://farm.chainwiki.dev/_assets/svg/twemoji/1f391.svg" alt="🎑"> Peace and harmony has been restored to the WETH Farm. <img src="https://farm.chainwiki.dev/_assets/svg/twemoji/1f391.svg" alt="🎑"><br>
+<img src="https://farm.chainwiki.dev/_assets/svg/twemoji/2705.svg" alt="✅"> fWETH balances have been restored.<br>
+<img src="https://farm.chainwiki.dev/_assets/svg/twemoji/2705.svg" alt="✅"> Revertings have been re-enabled.<br>
+<img src="https://farm.chainwiki.dev/_assets/svg/twemoji/2705.svg" alt="✅"> All WETH Farm participants are in profit.<br>
+<img src="https://farm.chainwiki.dev/_assets/svg/twemoji/1f468-200d-1f33e.svg" alt="👨‍🌾"> Thanks to the excellent Cream team and the prolific Andre Cronje for helping out.</p>
+</blockquote>
+<p>Recovery transactions:</p>
+<ul>
+<li><a href="https://etherscan.io/tx/0x519acf0a0a71f944e2ae573740d399b77d60220e7c8e4b22742c2a76f2cad69a" rel="noopener" target="_blank">all WETH is redeemed from CREAM and converted in the fWETH contract</a></li>
+<li><a href="https://etherscan.io/tx/0x4482df10258c414853155be260ce4626a645779aa9b600deead35eb621395675" rel="noopener" target="_blank">fWETH strategy is changed to a recovery strategy contract</a></li>
+<li><a href="https://etherscan.io/address/0x26d3e02999beffaeb07af3a94438769df0ee4150#tokentxns" rel="noopener" target="_blank">all WETH is moved from fWETH to an intermediate recovery strategy contract</a></li>
+<li><a href="https://etherscan.io/address/0x23b6c1f600111895cc4536d070eb35660500d670#tokentxns" rel="noopener" target="_blank">4,295 WETH from failed reverting are pooled for return to their 11 owners</a></li>
+<li><a href="https://etherscan.io/tx/0x706068b557f9b61a3780f357daf0f6b710d80db86fec72aaae003b4a8110af1d" rel="noopener" target="_blank">85,271 WETH is returned to the fWETH contract and fWETH strategy switched to safewithdrawal contract</a></li>
+</ul>
+
+<aside class="related" aria-label="Related on harvest.finance"><div class="rel-k">Related on harvest.finance</div><ul><li><a href="/security">Security and audits</a><span>Audit reports and security practices.</span></li><li><a href="/risk-framework">Risk framework</a><span>How vaults are grouped into risk categories.</span></li></ul></aside>

@@ -1,0 +1,292 @@
+<h1 id="supported-protocols"><a class="hlink" href="#supported-protocols" aria-hidden="true">#</a>Supported protocols</h1>
+<p class="lead">The DeFi protocols where Harvest vaults and Autopilots deploy your assets, on which networks, and for which assets.</p>
+<p>When you supply assets to a Harvest vault, a strategy contract deploys them into a third-party DeFi protocol: a lending market, a curated lending vault or a liquidity pool. The strategy then claims the rewards, converts them back into the deposited asset and compounds them, so you hold one receipt token instead of managing positions yourself. Autopilots go one step further and move your deposit between several of these vaults automatically.</p>
+<p>This page lists the protocols Harvest currently integrates. Live rates, TVL and the full list of vaults for each asset are on the asset pages: <a href="/usdc" rel="noopener" target="_blank">USDC</a>, <a href="/usdt" rel="noopener" target="_blank">USDT</a>, <a href="/eth" rel="noopener" target="_blank">ETH</a> and <a href="/btc" rel="noopener" target="_blank">BTC</a>.</p>
+<div class="hint hint-info">
+
+<p>The list reflects vaults live on harvest.finance in October 2026. Harvest adds and retires vaults as markets change; the asset and network pages always show the current set.</p>
+</div>
+
+<h2 id="overview"><a class="hlink" href="#overview" aria-hidden="true">#</a>Overview</h2>
+<table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Type</th>
+<th>Networks</th>
+<th>Assets</th>
+<th>Where to compare</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#morpho">Morpho</a></td>
+<td>Curated lending vaults and markets</td>
+<td>Ethereum, Base, Arbitrum, Polygon, HyperEVM</td>
+<td>USDC, USDT, ETH, cbBTC</td>
+<td><a href="/morpho" rel="noopener" target="_blank">harvest.finance/morpho</a></td>
+</tr>
+<tr>
+<td><a href="#aave">Aave</a></td>
+<td>Lending market</td>
+<td>Ethereum, Base, Arbitrum, Polygon</td>
+<td>USDC, USDT, ETH</td>
+<td><a href="/aave" rel="noopener" target="_blank">harvest.finance/aave</a></td>
+</tr>
+<tr>
+<td><a href="#autopilot-and-ipor">Autopilot (IPOR technology)</a></td>
+<td>Automated allocation across Harvest vaults</td>
+<td>Ethereum, Base, Arbitrum</td>
+<td>USDC, ETH, WBTC, cbBTC</td>
+<td><a href="/docs/how-it-works/autopilots">Autopilots</a></td>
+</tr>
+<tr>
+<td><a href="#autopilot-and-ipor">IPOR</a></td>
+<td>Optimised lending vaults</td>
+<td>Ethereum, Base</td>
+<td>USDC, ETH, WBTC</td>
+<td><a href="/usdc" rel="noopener" target="_blank">USDC</a>, <a href="/eth" rel="noopener" target="_blank">ETH</a></td>
+</tr>
+<tr>
+<td><a href="#fluid">Fluid</a></td>
+<td>Lending market</td>
+<td>Ethereum, Base, Arbitrum</td>
+<td>USDC, USDT, ETH</td>
+<td><a href="/usdc" rel="noopener" target="_blank">USDC</a>, <a href="/usdt" rel="noopener" target="_blank">USDT</a></td>
+</tr>
+<tr>
+<td><a href="#euler">Euler</a></td>
+<td>Modular lending vaults</td>
+<td>Ethereum, Base, Arbitrum</td>
+<td>USDC, ETH</td>
+<td><a href="/usdc" rel="noopener" target="_blank">USDC</a>, <a href="/eth" rel="noopener" target="_blank">ETH</a></td>
+</tr>
+<tr>
+<td><a href="#compound-v3">Compound V3</a></td>
+<td>Lending market</td>
+<td>Base, Arbitrum</td>
+<td>USDC, USDT, ETH</td>
+<td><a href="/usdc" rel="noopener" target="_blank">USDC</a>, <a href="/eth" rel="noopener" target="_blank">ETH</a></td>
+</tr>
+<tr>
+<td><a href="#extrafi">ExtraFi</a></td>
+<td>Lending pools</td>
+<td>Base</td>
+<td>USDC, ETH, cbBTC</td>
+<td><a href="/base" rel="noopener" target="_blank">Base</a></td>
+</tr>
+<tr>
+<td><a href="#dolomite">Dolomite</a></td>
+<td>Lending market</td>
+<td>Arbitrum</td>
+<td>USDC, USDT, ETH, WBTC</td>
+<td><a href="/arbitrum" rel="noopener" target="_blank">Arbitrum</a></td>
+</tr>
+<tr>
+<td><a href="#arcadia">Arcadia</a></td>
+<td>Lending pools</td>
+<td>Base</td>
+<td>USDC, ETH, cbBTC</td>
+<td><a href="/base" rel="noopener" target="_blank">Base</a></td>
+</tr>
+<tr>
+<td><a href="#stake-dao">Stake DAO</a></td>
+<td>Boosted Curve and Convex liquidity</td>
+<td>Ethereum</td>
+<td>ETH/CVX, ETH/stETH, BTC/WBTC</td>
+<td><a href="/ethereum" rel="noopener" target="_blank">Ethereum</a></td>
+</tr>
+<tr>
+<td><a href="#hypurrfi">HypurrFi</a></td>
+<td>Lending market</td>
+<td>HyperEVM</td>
+<td>USDC, USDT</td>
+<td><a href="/hyperevm" rel="noopener" target="_blank">HyperEVM</a></td>
+</tr>
+<tr>
+<td><a href="#venus">Venus</a></td>
+<td>Lending market</td>
+<td>Arbitrum</td>
+<td>ETH</td>
+<td><a href="/eth" rel="noopener" target="_blank">ETH</a></td>
+</tr>
+<tr>
+<td><a href="#40-acres">40 Acres</a></td>
+<td>Lending vault</td>
+<td>Base</td>
+<td>USDC</td>
+<td><a href="/usdc" rel="noopener" target="_blank">USDC</a></td>
+</tr>
+<tr>
+<td><a href="#aerodrome">Aerodrome</a></td>
+<td>Liquidity pool</td>
+<td>Base</td>
+<td>ETH/GENOME</td>
+<td><a href="/base" rel="noopener" target="_blank">Base</a></td>
+</tr>
+</tbody></table>
+<h2 id="protocols-by-type"><a class="hlink" href="#protocols-by-type" aria-hidden="true">#</a>Protocols by type</h2>
+<h3 id="lending-markets-and-curated-vaults"><a class="hlink" href="#lending-markets-and-curated-vaults" aria-hidden="true">#</a>Lending markets and curated vaults</h3>
+<p>Most Harvest vaults supply a single asset, usually a stablecoin or ETH, to a lending protocol. Borrowers pay interest on it, and many protocols add token incentives on top. Harvest&#39;s strategy claims those incentives, sells them for the deposited asset and adds the proceeds to your position. This is the &quot;auto-harvested&quot; part of the APY breakdown described in <a href="/docs/general-info/yield-sources-on-harvest-how-to-get-and-track-them">Yield Sources on Harvest</a>.</p>
+<p>Protocols in this group: Morpho, Aave, Fluid, Euler, Compound V3, ExtraFi, Dolomite, Arcadia, HypurrFi, Venus and 40 Acres.</p>
+<h3 id="automated-allocation"><a class="hlink" href="#automated-allocation" aria-hidden="true">#</a>Automated allocation</h3>
+<p><a href="/docs/how-it-works/autopilots">Autopilots</a> do not add a new protocol. They allocate one deposit across several Harvest vaults of the same asset and rebalance it as rates move. The allocation technology is developed by IPOR Labs.</p>
+<h3 id="liquidity-pools"><a class="hlink" href="#liquidity-pools" aria-hidden="true">#</a>Liquidity pools</h3>
+<p>A smaller number of vaults provide liquidity to a pool and earn trading fees plus rewards: Stake DAO (Curve and Convex positions on Ethereum) and Aerodrome on Base.</p>
+<h2 id="morpho"><a class="hlink" href="#morpho" aria-hidden="true">#</a>Morpho</h2>
+<p>Morpho is a lending protocol where independent risk curators run vaults that lend to a selected set of Morpho markets. Harvest offers the largest number of vaults on Morpho, with curators such as Steakhouse, Gauntlet, Moonwell, KPK, Clearstar, API3, Felix, Hyperithm and MEV Capital, plus direct Morpho markets on Base (USDC lent against cbETH, wstETH, cbBTC or WETH).</p>
+<ul>
+<li><strong>Networks:</strong> Ethereum, Base, Arbitrum, Polygon, HyperEVM</li>
+<li><strong>Assets:</strong> USDC, USDT, ETH, cbBTC</li>
+<li><strong>Compare all Morpho vaults:</strong> <a href="/morpho" rel="noopener" target="_blank">harvest.finance/morpho</a></li>
+<li><strong>Examples:</strong> <a href="/usdc-morpho-gauntlet-hyperevm" rel="noopener" target="_blank">USDC on Morpho: Gauntlet (HyperEVM)</a>, <a href="/usdc-morpho-kpk-yield-v2-ethereum" rel="noopener" target="_blank">USDC on Morpho: KPK Yield V2 (Ethereum)</a>, <a href="/usdc-morpho-market-cbbtc-base" rel="noopener" target="_blank">USDC on Morpho Market: cbBTC (Base)</a></li>
+</ul>
+<p>Morpho vaults are managed by third-party curators, who can change allocations and risk parameters. See the <a href="/docs/legal/risk-disclosures">Risk Disclosures</a>.</p>
+<h2 id="aave"><a class="hlink" href="#aave" aria-hidden="true">#</a>Aave</h2>
+<p>Aave is one of the longest-running lending markets in DeFi. Harvest supplies stablecoins and ETH to Aave on several networks, including Aave Prime on Ethereum and a WETH looping strategy on Base.</p>
+<ul>
+<li><strong>Networks:</strong> Ethereum, Base, Arbitrum, Polygon</li>
+<li><strong>Assets:</strong> USDC, USDT, ETH</li>
+<li><strong>Compare all Aave vaults:</strong> <a href="/aave" rel="noopener" target="_blank">harvest.finance/aave</a></li>
+<li><strong>Examples:</strong> <a href="/usdc-aave-ethereum" rel="noopener" target="_blank">USDC on Aave (Ethereum)</a>, <a href="/usdc-aave-prime-ethereum" rel="noopener" target="_blank">USDC on Aave: Prime</a>, <a href="/weth-aave-looping-base" rel="noopener" target="_blank">WETH on Aave: Looping (Base)</a></li>
+</ul>
+<h2 id="autopilot-and-ipor"><a class="hlink" href="#autopilot-and-ipor" aria-hidden="true">#</a>Autopilot and IPOR</h2>
+<p>Autopilots spread one deposit across the Harvest vaults of an asset and rebalance it automatically, with no lockups. The technology comes from IPOR Labs AG and has been audited twice; see <a href="/docs/how-it-works/autopilots">Autopilots</a>. Harvest also offers IPOR lending optimiser vaults on Ethereum and Base.</p>
+<ul>
+<li><strong>Autopilot networks and assets:</strong> USDC on Ethereum, Base and Arbitrum; WETH on Base and Arbitrum; WBTC on Arbitrum; cbBTC on Base</li>
+<li><strong>Examples:</strong> <a href="/usdc-autopilot-base" rel="noopener" target="_blank">USDC Autopilot (Base)</a>, <a href="/usdc-autopilot-ethereum" rel="noopener" target="_blank">USDC Autopilot (Ethereum)</a>, <a href="/usdc-ipor-base-usdc-lending-optimizer-base" rel="noopener" target="_blank">USDC on IPOR: Base USDC Lending Optimizer</a></li>
+</ul>
+<h2 id="fluid"><a class="hlink" href="#fluid" aria-hidden="true">#</a>Fluid</h2>
+<p>Fluid is a lending protocol with a shared liquidity layer for lending and borrowing.</p>
+<ul>
+<li><strong>Networks:</strong> Ethereum, Base, Arbitrum</li>
+<li><strong>Assets:</strong> USDC, USDT, ETH</li>
+<li><strong>Examples:</strong> <a href="/usdc-fluid-base" rel="noopener" target="_blank">USDC on Fluid (Base)</a>, <a href="/usdt-fluid-ethereum" rel="noopener" target="_blank">USDT on Fluid (Ethereum)</a>, <a href="/eth-fluid-ethereum" rel="noopener" target="_blank">ETH on Fluid (Ethereum)</a></li>
+</ul>
+<h2 id="euler"><a class="hlink" href="#euler" aria-hidden="true">#</a>Euler</h2>
+<p>Euler is a modular lending protocol in which each vault has its own collateral and risk settings, often managed by a curator.</p>
+<ul>
+<li><strong>Networks:</strong> Ethereum, Base, Arbitrum</li>
+<li><strong>Assets:</strong> USDC, ETH</li>
+<li><strong>Examples:</strong> <a href="/usdc-euler-euler-base-base" rel="noopener" target="_blank">USDC on Euler (Base)</a>, <a href="/eth-euler-clearstar-fusion-base" rel="noopener" target="_blank">ETH on Euler: Clearstar Fusion (Base)</a></li>
+</ul>
+<h2 id="compound-v3"><a class="hlink" href="#compound-v3" aria-hidden="true">#</a>Compound V3</h2>
+<p>Compound V3 (Comet) is a lending market in which each market has a single borrowable base asset.</p>
+<ul>
+<li><strong>Networks:</strong> Base, Arbitrum</li>
+<li><strong>Assets:</strong> USDC, USDT, ETH</li>
+<li><strong>Examples:</strong> <a href="/usdc-compound-v3-base" rel="noopener" target="_blank">USDC on Compound V3 (Base)</a>, <a href="/eth-compound-v3-arbitrum" rel="noopener" target="_blank">ETH on Compound V3 (Arbitrum)</a></li>
+</ul>
+<h2 id="extrafi"><a class="hlink" href="#extrafi" aria-hidden="true">#</a>ExtraFi</h2>
+<p>ExtraFi runs lending pools on Base, which also fund leveraged yield farming.</p>
+<ul>
+<li><strong>Network:</strong> Base</li>
+<li><strong>Assets:</strong> USDC, ETH, cbBTC</li>
+<li><strong>Examples:</strong> <a href="/usdc-extrafi-lend-base" rel="noopener" target="_blank">USDC on ExtraFi: Lend</a>, <a href="/cbbtc-extrafi-lend-base" rel="noopener" target="_blank">cbBTC on ExtraFi</a></li>
+</ul>
+<h2 id="dolomite"><a class="hlink" href="#dolomite" aria-hidden="true">#</a>Dolomite</h2>
+<p>Dolomite is a lending and margin protocol on Arbitrum.</p>
+<ul>
+<li><strong>Network:</strong> Arbitrum</li>
+<li><strong>Assets:</strong> USDC, USDT, ETH, WBTC</li>
+<li><strong>Examples:</strong> <a href="/usdc-dolomite-arbitrum" rel="noopener" target="_blank">USDC on Dolomite</a>, <a href="/wbtc-dolomite-arbitrum" rel="noopener" target="_blank">WBTC on Dolomite</a></li>
+</ul>
+<h2 id="arcadia"><a class="hlink" href="#arcadia" aria-hidden="true">#</a>Arcadia</h2>
+<p>Arcadia offers lending pools on Base.</p>
+<ul>
+<li><strong>Network:</strong> Base</li>
+<li><strong>Assets:</strong> USDC, ETH, cbBTC</li>
+<li><strong>Examples:</strong> <a href="/usdc-arcadia-lend-base" rel="noopener" target="_blank">USDC on Arcadia</a>, <a href="/cbbtc-arcadia-lend-base" rel="noopener" target="_blank">cbBTC on Arcadia</a></li>
+</ul>
+<h2 id="stake-dao"><a class="hlink" href="#stake-dao" aria-hidden="true">#</a>Stake DAO</h2>
+<p>Stake DAO&#39;s OnlyBoost strategies hold boosted Curve and Convex liquidity positions. Harvest compounds their rewards.</p>
+<ul>
+<li><strong>Network:</strong> Ethereum</li>
+<li><strong>Pairs:</strong> ETH/CVX, ETH/stETH, BTC/WBTC</li>
+<li><strong>Examples:</strong> <a href="/steth-stake-dao-onlyboost-ethereum" rel="noopener" target="_blank">ETH/stETH on Stake DAO</a>, <a href="/wbtc-stake-dao-onlyboost-ethereum" rel="noopener" target="_blank">BTC/WBTC on Stake DAO</a></li>
+</ul>
+<h2 id="hypurrfi"><a class="hlink" href="#hypurrfi" aria-hidden="true">#</a>HypurrFi</h2>
+<p>HypurrFi is a lending market on HyperEVM, the EVM network of Hyperliquid.</p>
+<ul>
+<li><strong>Network:</strong> HyperEVM</li>
+<li><strong>Assets:</strong> USDC, USDT (USDT0)</li>
+<li><strong>Examples:</strong> <a href="/usdc-hypurr-hyperevm" rel="noopener" target="_blank">USDC on Hypurr</a>, <a href="/usdt-hypurr-usdt0-hyperevm" rel="noopener" target="_blank">USDT on Hypurr</a></li>
+</ul>
+<h2 id="venus"><a class="hlink" href="#venus" aria-hidden="true">#</a>Venus</h2>
+<p>Venus is a lending market. Harvest supplies ETH to its Core pool on Arbitrum.</p>
+<ul>
+<li><strong>Network:</strong> Arbitrum</li>
+<li><strong>Asset:</strong> ETH</li>
+<li><strong>Example:</strong> <a href="/eth-venus-core-arbitrum" rel="noopener" target="_blank">ETH on Venus</a></li>
+</ul>
+<h2 id="40-acres"><a class="hlink" href="#40-acres" aria-hidden="true">#</a>40 Acres</h2>
+<p>40 Acres runs a USDC lending vault on Base.</p>
+<ul>
+<li><strong>Network:</strong> Base</li>
+<li><strong>Asset:</strong> USDC</li>
+<li><strong>Example:</strong> <a href="/usdc-40-acres-base" rel="noopener" target="_blank">USDC on 40 Acres</a></li>
+</ul>
+<h2 id="aerodrome"><a class="hlink" href="#aerodrome" aria-hidden="true">#</a>Aerodrome</h2>
+<p>Aerodrome is the main decentralised exchange on Base. Harvest&#39;s vault provides ETH/GENOME liquidity and compounds the rewards.</p>
+<ul>
+<li><strong>Network:</strong> Base</li>
+<li><strong>Pair:</strong> ETH/GENOME</li>
+<li><strong>Example:</strong> <a href="/eth-aerodrome-genome-base" rel="noopener" target="_blank">ETH/GENOME on Aerodrome</a></li>
+</ul>
+<h2 id="supported-networks"><a class="hlink" href="#supported-networks" aria-hidden="true">#</a>Supported networks</h2>
+<table>
+<thead>
+<tr>
+<th>Network</th>
+<th>Protocols</th>
+<th>Vaults</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="/ethereum" rel="noopener" target="_blank">Ethereum</a></td>
+<td>Morpho, Aave, Fluid, Euler, IPOR, Stake DAO, Autopilot</td>
+<td><a href="/ethereum" rel="noopener" target="_blank">harvest.finance/ethereum</a></td>
+</tr>
+<tr>
+<td><a href="/base" rel="noopener" target="_blank">Base</a></td>
+<td>Morpho, Aave, Fluid, Euler, Compound V3, ExtraFi, Arcadia, IPOR, 40 Acres, Aerodrome, Autopilot</td>
+<td><a href="/base" rel="noopener" target="_blank">harvest.finance/base</a></td>
+</tr>
+<tr>
+<td><a href="/arbitrum" rel="noopener" target="_blank">Arbitrum</a></td>
+<td>Morpho, Aave, Fluid, Euler, Compound V3, Dolomite, Venus, Autopilot</td>
+<td><a href="/arbitrum" rel="noopener" target="_blank">harvest.finance/arbitrum</a></td>
+</tr>
+<tr>
+<td><a href="/polygon" rel="noopener" target="_blank">Polygon</a></td>
+<td>Morpho, Aave</td>
+<td><a href="/polygon" rel="noopener" target="_blank">harvest.finance/polygon</a></td>
+</tr>
+<tr>
+<td><a href="/hyperevm" rel="noopener" target="_blank">HyperEVM</a></td>
+<td>Morpho, HypurrFi</td>
+<td><a href="/hyperevm" rel="noopener" target="_blank">harvest.finance/hyperevm</a></td>
+</tr>
+<tr>
+<td><a href="/zksync" rel="noopener" target="_blank">zkSync</a></td>
+<td>See the network page</td>
+<td><a href="/zksync" rel="noopener" target="_blank">harvest.finance/zksync</a></td>
+</tr>
+</tbody></table>
+<h2 id="how-harvest-chooses-protocols"><a class="hlink" href="#how-harvest-chooses-protocols" aria-hidden="true">#</a>How Harvest chooses protocols</h2>
+<p>Harvest adds a protocol when it has audited contracts, enough liquidity to enter and exit without large price impact, and a yield that Harvest can automate: claiming and selling rewards, compounding, or allocating between markets. Each integration is a separate strategy contract behind a Harvest vault, and every vault is listed with its contract addresses in <a href="/docs/how-it-works/contract-addresses">Contract Addresses</a>.</p>
+<p>How Harvest measures and displays yields is described in the <a href="/methodology" rel="noopener" target="_blank">Methodology</a>. How each vault is rated for risk is described in the <a href="/risk-framework" rel="noopener" target="_blank">Risk Framework</a>. Audits of Harvest&#39;s own contracts are listed under <a href="/security" rel="noopener" target="_blank">Security</a> and <a href="/docs/other/security/audits">Audits</a>.</p>
+<div class="hint hint-warning">
+
+<p>Every vault also carries the risks of the protocol it uses: smart contract bugs, oracle failures, curator decisions, bad debt and temporary withdrawal limits when a market is fully borrowed. Read the <a href="/docs/legal/risk-disclosures">Risk Disclosures</a> before you deposit.</p>
+</div>
+
+<h2 id="faq"><a class="hlink" href="#faq" aria-hidden="true">#</a>FAQ</h2>
+<h3 id="which-defi-protocols-does-harvest-support"><a class="hlink" href="#which-defi-protocols-does-harvest-support" aria-hidden="true">#</a>Which DeFi protocols does Harvest support?</h3>
+<p>As of October 2026: Morpho, Aave, Fluid, Euler, Compound V3, IPOR, ExtraFi, Dolomite, Arcadia, Stake DAO, HypurrFi, Venus, 40 Acres and Aerodrome, plus Autopilots that allocate across Harvest vaults. Morpho and Aave have their own comparison pages: <a href="/morpho" rel="noopener" target="_blank">harvest.finance/morpho</a> and <a href="/aave" rel="noopener" target="_blank">harvest.finance/aave</a>.</p>
+<h3 id="do-i-need-an-account-with-each-protocol"><a class="hlink" href="#do-i-need-an-account-with-each-protocol" aria-hidden="true">#</a>Do I need an account with each protocol?</h3>
+<p>No. You deposit into the Harvest vault with your own wallet, and the vault&#39;s strategy holds the position in the underlying protocol. You receive one receipt token and can withdraw at any time. See <a href="/docs/how-it-works/how-to-deposit-withdraw">How to convert and revert</a>.</p>
+<h3 id="where-can-i-compare-yields-for-one-asset-across-protocols"><a class="hlink" href="#where-can-i-compare-yields-for-one-asset-across-protocols" aria-hidden="true">#</a>Where can I compare yields for one asset across protocols?</h3>
+<p>On the asset pages: <a href="/usdc" rel="noopener" target="_blank">USDC</a>, <a href="/usdt" rel="noopener" target="_blank">USDT</a>, <a href="/eth" rel="noopener" target="_blank">ETH</a> and <a href="/btc" rel="noopener" target="_blank">BTC</a>. Each lists every Harvest vault for that asset, with live APY and TVL.</p>
+<h3 id="why-is-a-protocol-i-used-before-no-longer-listed"><a class="hlink" href="#why-is-a-protocol-i-used-before-no-longer-listed" aria-hidden="true">#</a>Why is a protocol I used before no longer listed?</h3>
+<p>Harvest retires vaults when liquidity or rewards dry up, or when a protocol&#39;s risk changes. Retired vaults stay withdrawable in the app.</p>
+
