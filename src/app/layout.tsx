@@ -151,7 +151,6 @@ const ORGANIZATION_JSONLD = {
     "https://harvestfinance.medium.com/",
     "https://discord.gg/xHXe3tYjPY",
     "https://github.com/harvestfi",
-    "https://docs.harvest.finance/",
     "https://defillama.com/protocol/harvest-finance",
     "https://www.coingecko.com/en/coins/harvest-finance",
   ],
@@ -185,14 +184,12 @@ export default async function RootLayout({
       className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
     >
       <head>
-        {/* Google tag (gtag.js) */}
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-EJMXWBVX4R"
-        />
+        {/* Google tag (gtag.js): loaded only for visitors who accepted analytics
+            cookies. Everyone else gets no Google script and no cookies until they
+            click Accept in the banner (see components/analytics.tsx). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-EJMXWBVX4R');`,
+            __html: `(function(){try{if(localStorage.getItem('harvest_analytics_consent')!=='accepted')return;window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('consent','default',{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});gtag('js',new Date());gtag('config','G-EJMXWBVX4R');var s=document.createElement('script');s.id='ga-gtag';s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-EJMXWBVX4R';document.head.appendChild(s);}catch(e){}})();`,
           }}
         />
         {/* Pre-paint theme resolver. Runs synchronously before the body

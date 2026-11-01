@@ -2,9 +2,10 @@
 
 // Site-wide analytics + cookie consent banner. Mounted once in the
 // root layout. Handles three things:
-//   1. Render the consent banner on first visit (until accept/decline).
-//   2. On every route change (after Accept), POST a visit row to the
-//      Supabase frontpage_visits table.
+//   1. Render the consent banner on first visit (until accept/reject).
+//      The choice controls Google Analytics only.
+//   2. On every route change, POST a visit row to the Supabase
+//      frontpage_visits table (independent of the banner choice).
 //   3. Skip admin pages entirely so the operator's own browsing
 //      doesn't pollute the data.
 
@@ -19,6 +20,7 @@ import {
   getConsent,
   setConsent,
   takeIsEntryPage,
+  CONSENT_OPEN_EVENT,
   type Consent,
 } from "@/lib/analytics";
 
@@ -32,16 +34,19 @@ export function Analytics() {
   useEffect(() => {
     setMounted(true);
     setConsentState(getConsent());
+    // "Cookie settings" in the footer reopens the banner.
+    const reopen = () => setConsentState(null);
+    window.addEventListener(CONSENT_OPEN_EVENT, reopen);
+    return () => window.removeEventListener(CONSENT_OPEN_EVENT, reopen);
   }, []);
 
-  // Track on every route change once consent is granted. Defer the
+  // Track on every route change. Defer the
   // actual POST + fetchGeo through requestIdleCallback (falling back
   // to a 1-frame setTimeout on Safari) so analytics never competes
   // with hydration or the LCP paint - the visit row lands during
   // browser idle time after the user can interact with the page.
   useEffect(() => {
     if (!mounted) return;
-    if (consent !== "accepted") return;
     if (!pathname) return;
     if (pathname.startsWith("/control-room")) return;
     const run = () => {
@@ -57,13 +62,13 @@ export function Analytics() {
     }
     const id = window.setTimeout(run, 0);
     return () => window.clearTimeout(id);
-  }, [pathname, consent, mounted]);
+  }, [pathname, mounted]);
 
   const accept = () => {
     setConsent("accepted");
     setConsentState("accepted");
   };
-  const decline = () => {
+  const reject = () => {
     setConsent("declined");
     setConsentState("declined");
   };
@@ -75,7 +80,7 @@ export function Analytics() {
   if (!mounted) return null;
   if (pathname?.startsWith("/control-room")) return null;
   if (consent === "accepted" || consent === "declined") return null;
-  return <CookieBanner onAccept={accept} onDecline={decline} />;
+  return <CookieBanner onAccept={accept} onReject={reject} />;
 }
 
 async function trackVisit(pathname: string) {
@@ -131,28 +136,29 @@ async function trackVisit(pathname: string) {
 
 function CookieBanner({
   onAccept,
-  onDecline,
+  onReject,
 }: {
   onAccept: () => void;
-  onDecline: () => void;
+  onReject: () => void;
 }) {
   return (
-    <div className="cookie-banner" role="dialog" aria-label="Analytics consent">
+    <div className="cookie-banner" role="dialog" aria-label="Cookie consent">
       <p className="cookie-banner-text">
         <span className="cookie-banner-text-lede">
-          We track anonymous page visits to understand how the index gets used.
+          We use cookies to understand how people use Harvest and to improve it.
         </span>
         <span className="cookie-banner-text-detail">
-          {" "}No third-party cookies, no cross-site trackers, no personal data.
+          {" "}You can accept or reject analytics cookies.{" "}
+          <a href="/docs/legal/privacy-policy" className="cookie-banner-link">Privacy policy</a>
         </span>
       </p>
       <div className="cookie-banner-actions">
         <button
           type="button"
-          onClick={onDecline}
+          onClick={onReject}
           className="cookie-banner-decline"
         >
-          Decline
+          Reject
         </button>
         <button
           type="button"

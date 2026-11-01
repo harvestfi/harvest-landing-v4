@@ -200,9 +200,9 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 ## Optional
 
 - [Security](${SITE_URL}/security): security posture and audits.
-- [Disclosures](${SITE_URL}/disclosures): editorial and conflict-of-interest disclosures.
+- [Risk Disclosures](${SITE_URL}/docs/legal/risk-disclosures): risks of using Harvest and the related services.
 - [Contact](${SITE_URL}/contact): how to reach the team.
-- [Terms](${SITE_URL}/terms) · [Privacy](${SITE_URL}/privacy)
+- [Terms and Conditions](${SITE_URL}/docs/legal/terms-and-conditions) · [Privacy Policy](${SITE_URL}/docs/legal/privacy-policy)
 `;
 
 writeFileSync(join(PUBLIC_DIR, "robots.txt"), robots, "utf-8");

@@ -975,8 +975,8 @@ function ProductPageFootnote({ history }: { history: FullVaultHistory }) {
         forecast. See the{" "}
         <Link href="/methodology">methodology</Link>,{" "}
         <Link href="/risk-framework">risk framework</Link>,{" "}
-        <Link href="/terms">terms</Link>, and{" "}
-        <Link href="/disclosures">disclosures</Link> for details on
+        <Link href="/docs/legal/terms-and-conditions">terms</Link>, and{" "}
+        <Link href="/docs/legal/risk-disclosures">disclosures</Link> for details on
         how data is calculated and the risks associated with onchain
         yield strategies.
       </p>

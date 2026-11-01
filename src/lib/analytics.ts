@@ -9,11 +9,9 @@
 
 const CONSENT_KEY = "harvest_analytics_consent";
 
-// TEMP: testing-phase override. While CONSENT_REQUIRED is false, the
-// cookie banner is suppressed and every visitor is treated as
-// consented so tracking fires immediately. Flip to `true` before
-// shipping a public consent flow.
-const CONSENT_REQUIRED = false;
+const CONSENT_REQUIRED = true;
+const GA_ID = "G-EJMXWBVX4R";
+export const CONSENT_OPEN_EVENT = "harvest:open-consent";
 
 export type Consent = "accepted" | "declined";
 
@@ -33,6 +31,46 @@ export function setConsent(v: Consent): void {
   } catch {
     // private browsing or storage blocked - tracking simply won't fire.
   }
+  if (v === "accepted") loadGoogleAnalytics();
+  else clearGoogleAnalytics();
+}
+
+// Google Analytics is not loaded until the visitor accepts. The layout
+// loads it on page load for visitors who accepted earlier; this covers
+// the moment of acceptance.
+export function loadGoogleAnalytics(): void {
+  const w = window as Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void };
+  if (document.getElementById("ga-gtag")) return;
+  w.dataLayer = w.dataLayer || [];
+  w.gtag = function gtag() {
+    // eslint-disable-next-line prefer-rest-params
+    w.dataLayer!.push(arguments);
+  };
+  w.gtag("consent", "default", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+  w.gtag("js", new Date());
+  w.gtag("config", GA_ID);
+  const s = document.createElement("script");
+  s.id = "ga-gtag";
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+  document.head.appendChild(s);
+}
+
+// On Reject after an earlier Accept: stop Google Analytics and remove its cookies.
+function clearGoogleAnalytics(): void {
+  const w = window as Window & { gtag?: (...args: unknown[]) => void };
+  w.gtag?.("consent", "update", { analytics_storage: "denied" });
+  const host = location.hostname;
+  const domains = ["", host, "." + host, "." + host.split(".").slice(-2).join(".")];
+  for (const c of document.cookie.split(";")) {
+    const name = c.split("=")[0].trim();
+    if (!/^_ga/.test(name)) continue;
+    for (const d of domains) document.cookie = `${name}=; Max-Age=0; path=/${d ? "; domain=" + d : ""}`;
+  }
+}
+
+export function openConsent(): void {
+  window.dispatchEvent(new Event(CONSENT_OPEN_EVENT));
 }
 
 // --------------------------------------------------------------------------

@@ -1082,7 +1082,8 @@ export async function EthHubBody() {
           Strategies are added as they are vetted and integrated, and dropped when the product
           behind them retires or fails the risk framework. Solo staking, liquid staking tokens
           held on their own and centralised exchange products are outside it. The inclusion rules
-          are on the <Link href="/methodology">methodology page</Link>.
+          are on the <Link href="/methodology">methodology page</Link>. How the vaults work is
+          covered in the <Link href="/docs/how-it-works/harvest-contracts/vaults">Harvest docs</Link>.
         </p>
         <p className="eh-whose">
           {`Every rate here is the APY of a Harvest vault built on the named protocol, after ` +

@@ -318,7 +318,8 @@ export async function AssetHubBody({ asset }: Props) {
         <p>
           {before}
           {link}
-          {interpolate(after as string)}
+          {interpolate(after as string)} How the vaults work is covered in the{" "}
+          <Link href="/docs/how-it-works/harvest-contracts/vaults">Harvest docs</Link>.
         </p>
       );
     }

@@ -85,24 +85,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
     },
     {
-      url: `${SITE_URL}/privacy`,
-      lastModified: new Date("2026-05-03"),
-      changeFrequency: "yearly" as const,
-      priority: 0.3,
-    },
-    {
-      url: `${SITE_URL}/terms`,
-      lastModified: new Date("2026-05-03"),
-      changeFrequency: "yearly" as const,
-      priority: 0.3,
-    },
-    {
-      url: `${SITE_URL}/disclosures`,
-      lastModified: new Date("2026-05-03"),
-      changeFrequency: "yearly" as const,
-      priority: 0.3,
-    },
-    {
       url: `${SITE_URL}/report/xrp-yield-ranking`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,

@@ -30,6 +30,9 @@ export function Header() {
               <span>{item.label}</span>
             </Link>
           ))}
+          <Link href="/docs" className="nav-asset-link">
+            <span>Docs</span>
+          </Link>
         </nav>
         <div className="nav-right">
           <SearchBox />

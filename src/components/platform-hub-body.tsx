@@ -321,7 +321,9 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
                 {platform.display}. We add strategies as we integrate them and
                 drop them when products retire or fall outside our framework. Inclusion
                 criteria and ranking logic are on the{" "}
-                <Link href="/methodology">methodology page</Link>.
+                <Link href="/methodology">methodology page</Link>. The protocols Harvest
+                uses are listed in the{" "}
+                <Link href="/docs/general-info/supported-protocols">Harvest docs</Link>.
               </p>
             </article>
 

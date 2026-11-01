@@ -284,7 +284,9 @@ export async function NetworkHubBody({
                 them and drop them when products retire or fall outside
                 our framework. Inclusion criteria and
                 ranking logic are documented on the{" "}
-                <Link href="/methodology">methodology page</Link>.
+                <Link href="/methodology">methodology page</Link>. The protocols Harvest
+                uses are listed in the{" "}
+                <Link href="/docs/general-info/supported-protocols">Harvest docs</Link>.
               </p>
             </article>
 
