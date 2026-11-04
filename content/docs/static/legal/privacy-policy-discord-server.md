@@ -6,4 +6,4 @@ On Harvest's Discord server we use Ban Reaper, a moderation bot that helps enfor
 * No user data is logged long-term or shared with third parties.
 * There is no opt-out for moderation actions, as verification is required by the server rules.
 
-*Last updated: November 1, 2026*
+Last updated: July 26, 2026

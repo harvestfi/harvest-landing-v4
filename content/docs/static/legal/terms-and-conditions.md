@@ -1,7 +1,5 @@
 # Terms & Conditions
 
-*Last updated: November 1, 2026*
-
 ## Harvest Terms of  Use
 
 These Terms of Use and any terms and conditions incorporated by reference (collectively, the Terms) govern access to and use of the Interface available at [https://Harvest.finance](https://autopilot.finance) (the “Interface”) and the Application/Toolset available at <https://app.harvest.finance/>  (the “App”, and collectively with the Interface, the Website), by each individual, entity, group, or association (collectively User or Users) who views, interacts, links to, or otherwise uses or derives any benefit from the Website. The Website is provided by The Farmer Chad Foundation (the Operator).
