@@ -1,0 +1,30 @@
+<h1 id="timelocks"><a class="hlink" href="#timelocks" aria-hidden="true">#</a>Timelocks</h1>
+<p class="lead">All Harvest vaults operate with a 12 hour timelock in place</p>
+<p>Timelocks are an often-referenced security feature in Ethereum contracts that protect users from changes they disagree with.</p>
+<p>Because DeFi platforms handle money, there have been numerous examples of scams and projects turned fraudulent that have stolen money from users. Timelocks have been popularized as a method of distancing developers from users funds by requiring a period of time to elapse before changes can be made.</p>
+<p>Harvest has deployed timelocks on all vaults that function as follows:</p>
+<ol>
+<li>If the devs wish to change the investing strategy, they must first deploy the new strategy to the blockchain.</li>
+<li>Next they &quot;announce&quot; the strategy change, which emits a web3 event that can be read by chainwatching bots.</li>
+<li>Users have a specified amount of time (currently 12 hours) to examine the new contract and revert funds if they wish to opt out.</li>
+<li>Any time after the specified period has elapsed, the deployer may choose to either accept or reject the strategy change.</li>
+</ol>
+<p>The primary function of timelocks is to protect farmers from malicious strategies attempting to steal funds.</p>
+<p>Example scenario without timelock:</p>
+<ul>
+<li>A malicious investment strategy is deployed that funds all of users&#39; funds into a malicious wallet.</li>
+<li>In the same block, the investment strategy in the vault updates.</li>
+<li>In the same block, the vault transfers funds to the malicious wallet, and all funds are lost.</li>
+</ul>
+<p>Example scenario with timelock:</p>
+<ul>
+<li>A malicious investment strategy is deployed that funds all of users&#39; funds into a malicious wallet.</li>
+<li>The strategy change is announced by the vault, indicating that it can change to this malicious strategy in 12 hours.</li>
+<li>Chainwatchers report the strategy change, and technically competent users can sound the alarm, warning others to revert.</li>
+<li>Users have the remaining time to revert their funds.</li>
+</ul>
+<p>While timelocks can play a big role in protecting funds from malicious or compromised developers, they are not without drawbacks. Because the timelock period must elapse before <em>any</em> strategy change, timelocks <strong>amplify</strong> users exposure to bugs and vulnerabilities in the code. If a bug exposes user funds to exploitation, developers must wait the timelock&#39;s duration after building a fix to apply it. Additionally, timelocks limit the flexibility developers have in swiftly deploying new strategies to capture shorter term opportunities.</p>
+<p>The current 12 hour duration of timelocks was selected on 9/15/2020 by the harvest community as a compromise between the risks and benefits of timelocks via a farmer&#39;s market discord poll:</p>
+<p><img src="/docs/assets/4c05730489-image.png" alt=""></p>
+
+<aside class="related" aria-label="Related on harvest.finance"><div class="rel-k">Related on harvest.finance</div><ul><li><a href="/security">Security and audits</a><span>Audit reports and security practices.</span></li><li><a href="/risk-framework">Risk framework</a><span>How vaults are grouped into risk categories.</span></li></ul></aside>

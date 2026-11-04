@@ -1,0 +1,41 @@
+<h1 id="risks"><a class="hlink" href="#risks" aria-hidden="true">#</a>Risks</h1>
+<blockquote>
+<p>Do farming at your own risk. Problems with Harvest or with protocols that Harvest integrates with may result in partial or total loss of funds. Stated yields aren&#39;t guaranteed. Do your own research and don&#39;t do farming with more than you can afford to lose.</p>
+</blockquote>
+<h3 id="smart-contract-failures"><a class="hlink" href="#smart-contract-failures" aria-hidden="true">#</a>Smart Contract Failures <a href="#smart-contract-failures" id="smart-contract-failures"></a></h3>
+<p>Harvest&#39;s smart contracts are open source, readable, and include tests. They are not a direct fork of an existing contract system. Multiple <a href="/docs/other/security/audits">Audits finished</a>, but a successful audit does not guarantee that a new or existing Harvest strategy will hit APY targets or avoid hacks of Harvest or contracts that Harvest integrates with (Curve, Sushi, Uniswap, Compound, AAVE &amp; etc).</p>
+<h3 id="composability-risks"><a class="hlink" href="#composability-risks" aria-hidden="true">#</a>Composability Risks <a href="#composability-risks" id="composability-risks"></a></h3>
+<p>Harvest contracts handle many different assets and interact with many other contracts. This contract composability gives Harvest its utility, but interacting with multiple contracts creates risk if there is a failure in one of the contracts. Harvest makes a best effort to audit and evaluate the risks of the contracts that Harvest farms, but farming tokens are subject to the risks inherent to each strategy. Look into the strategies employed by the vaults that you farm into to get acquainted with the risks.</p>
+<h3 id="asset-risks"><a class="hlink" href="#asset-risks" aria-hidden="true">#</a>Asset Risks <a href="#asset-risks" id="asset-risks"></a></h3>
+<blockquote>
+<p>Stablecoins aren&#39;t necessarily stable! Stablecoins and synthetics may depeg from the target price and you may lose value. Carefully evaluate the risks of all of your so-called &quot;stable&quot; assets!</p>
+</blockquote>
+<p>Harvest interacts with many stablecoins and synthetic representations of other assets like Bitcoin. These assets may rely on collateralization with other digital assets (DAI, sUSD, sBTC) or may be non-bearer liabilities that are only redeemable for the underlying asset with a centralized third party (USDC, USDT, wBTC). If a non-bearer asset is blacklisted by the issuer or a synthetic asset becomes undercollateralized, your positions that hold or interact with these assets may lose value or even become worthless.</p>
+<h3 id="automated-market-maker-risks"><a class="hlink" href="#automated-market-maker-risks" aria-hidden="true">#</a>Automated Market Maker Risks <a href="#automated-market-maker-risks" id="automated-market-maker-risks"></a></h3>
+<blockquote>
+<p>Harvest uses yield farming strategies that have exposure to liquidity pools. Providing liquidity on an AMM is an advanced topic and there are several ways to lose money. Proceed at your own risk!</p>
+</blockquote>
+<p>Impermanent loss (aka Divergence Loss) is associated with providing assets to a liquidity pool. Liquidity pools are used in Decentralized Exchanges such as Uniswap, Curve, and Balancer in order to create money markets and enable traders to buy and sell the assets that the pools support.</p>
+<p>If you convert funds to provide liquidity in an automated market maker, you may lose some or all of the value you converted if there is a change in the relative values of the assets in the automated market maker. If just one of the assets in the pool loses value or becomes worthless, your entire position in the pool, regardless of which assets you originally provided when you entered the pool, may lose value or become worthless.</p>
+<p>If you provide liquidity to a pool and one of the assets <em>gains</em> in value relative to the others in the pool, you may not make as much money as you would have, had you held these assets instead of converting  them in the pool. It is critical to understand the math behind impermanent loss before providing liquidity!</p>
+<p>Many yield farming strategies, including the yield farming strategies employed by Harvest, provide incentives for providing liquidity in an AMM. <strong>These incentives do not guarantee that providing liquidity will be profitable for you.</strong></p>
+<p>Further reading on impermanent loss and AMM risks:</p>
+<ul>
+<li><a href="https://blog.bancor.network/beginners-guide-to-getting-rekt-by-impermanent-loss-7c9510cb2f22" rel="noopener" target="_blank">Beginner’s Guide to (Getting Rekt by) Impermanent Loss</a></li>
+<li><a href="https://medium.com/@pintail/uniswap-a-good-deal-for-liquidity-providers-104c0b6816f2" rel="noopener" target="_blank">Uniswap: a good deal for liquidity providers?</a></li>
+<li><a href="https://medium.com/balancer-protocol/calculating-value-impermanent-loss-and-slippage-for-balancer-pools-4371a21f1a86" rel="noopener" target="_blank">Calculating Value, Impermanent Loss and Slippage for Balancer Pools</a></li>
+<li><a href="https://www.youtube.com/watch?v=8XJ1MSTEuU0" rel="noopener" target="_blank">What Is IMPERMANENT LOSS? DEFI Explained - Uniswap, Curve, Balancer, Bancor</a></li>
+</ul>
+<h3 id="liquidity-and-market-impact"><a class="hlink" href="#liquidity-and-market-impact" aria-hidden="true">#</a>Liquidity and Market Impact <a href="#liquidity-and-market-impact" id="liquidity-and-market-impact"></a></h3>
+<blockquote>
+<p>Many new DeFi assets have extremely poor liquidity and you may experience significant losses due to market impact when buying or selling. Liquidity may disappear when prices are changing rapidly, and you may be stranded in a position and unable to sell. Carefully evaluate the liquidity profiles of the assets that you hold!</p>
+</blockquote>
+<p>Market impact (aka price impact) occurs when a trade is large enough to change the price of the assets that are traded on the exchange where they are being traded. Market impact can increase when liquidity decreases during periods of high volatility.</p>
+<p>Some Harvest strategies may involve entering and exiting automated market maker LP positions on Curve, Swerve, Balancer, Uniswap from a single asset supported by the AMM. If price volatility reduces the liquidity of the asset you have converted, <strong>you may experience market impact losses when you try to revert.</strong> These losses may appear as a reduction in your farming balance. If the liquidity situation for your asset improves, your displayed balance may also improve.</p>
+<h3 id="death-spiral-risk"><a class="hlink" href="#death-spiral-risk" aria-hidden="true">#</a>Death Spiral Risk <a href="#death-spiral-risk" id="death-spiral-risk"></a></h3>
+<blockquote>
+<p>Crypto markets can be volatile, while this provides huge opportunities it can also be a huge risk.</p>
+</blockquote>
+<p>Many market events can increase volatility, those events can have a direct effect in value converted in harvest finance through many different assets, also, a panic in the market can trigger a bank run, if such an event happens in the same time FARM token suffers sell pressure, incentives in harvest finance may be affected and this can cause a negative feedback loop.</p>
+
+<aside class="related" aria-label="Related on harvest.finance"><div class="rel-k">Related on harvest.finance</div><ul><li><a href="/risk-framework">Risk framework</a><span>How vaults are grouped into risk categories.</span></li><li><a href="/security">Security and audits</a><span>Audit reports and security practices.</span></li><li><a href="/methodology">Methodology</a><span>How APY, TVL and other data on harvest.finance are calculated.</span></li></ul></aside>

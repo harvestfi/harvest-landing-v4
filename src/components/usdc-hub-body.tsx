@@ -1000,7 +1000,8 @@ export async function UsdcHubBody() {
           product retires or fails the risk framework. Every comparison here is a comparison within
           that set, and the rules behind the set are on the{" "}
           <Link href="/methodology">methodology page</Link>. Plenty of USDC yield exists outside
-          it.
+          it. How the vaults work is covered in the{" "}
+          <Link href="/docs/how-it-works/harvest-contracts/vaults">Harvest docs</Link>.
         </p>
         {c.benchmark ? (
           <p>

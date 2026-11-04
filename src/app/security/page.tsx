@@ -213,10 +213,14 @@ export default function SecurityPage() {
               </Link>{" "}
               page. The legal disclaimer that accompanies all of this is
               the{" "}
-              <Link href="/disclosures" className="meth-link">
+              <Link href="/docs/legal/risk-disclosures" className="meth-link">
                 Risk Disclosures
               </Link>{" "}
-              statement.
+              statement. Audit reports, the bug bounty and past incidents are also documented in the{" "}
+              <Link href="/docs/other/security" className="meth-link">
+                Harvest docs
+              </Link>
+              .
             </p>
           </section>
         </article>
