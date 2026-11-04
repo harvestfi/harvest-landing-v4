@@ -1,6 +1,6 @@
 # Terms & Conditions
 
-*Last updated: November 1, 2026*
+Last updated: December 15, 2025
 
 ## Harvest Terms of  Use
 
