@@ -625,5 +625,11 @@ export function networkBlock(c: UsdcCohort): string {
 }
 
 export function protocolBlock(c: UsdcCohort, limit = 5): string {
-  return listOf(c.byVenue.slice(0, limit).map((v) => `${v.venue} (${v.count})`));
+  // Harvest Autopilot allocates across these protocols and is not one of them.
+  return listOf(
+    c.byVenue
+      .filter((v) => v.venue !== "Autopilot")
+      .slice(0, limit)
+      .map((v) => `${v.venue} (${v.count})`),
+  );
 }

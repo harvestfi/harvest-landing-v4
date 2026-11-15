@@ -1,0 +1,2977 @@
+/* Docs-style preview for the asset hubs, on /btc only (class .ld).
+   Values read from docs.langdock.com (Mintlify) with computed styles on
+   15 November 2026: Inter, a 648px content column, 16/28 body in gray-700,
+   36/40 semibold H1 at -0.9px, 24/32 H2 at -0.6px with 36/18 margins, an
+   18/28 lead, a 14/20 semibold primary eyebrow, semibold links on a 1px
+   primary rule, 6px list dots, hairline tables, and a right-hand
+   "On this page" rail. Remove the .ld class to fall back to the editorial
+   layout. */
+
+.uni-hub-test.uh-page.ae.ld {
+  --ld-bg: #ffffff;
+  --ld-ink: rgb(24, 26, 30);
+  --ld-h2: oklch(0.21 0.034 264.665);
+  --ld-text: rgb(64, 65, 70);
+  --ld-muted: rgb(114, 115, 119);
+  --ld-faint: rgb(160, 161, 166);
+  --ld-line: rgb(240, 241, 245);
+  --ld-line-2: rgb(224, 225, 230);
+  --ld-soft: rgb(244, 246, 250);
+  --ld-primary: rgb(68, 105, 252);
+  --ld-primary-soft: rgb(236, 240, 255);
+  --ld-dot: rgb(82, 83, 87);
+  --ld-btn: rgb(13, 0, 29);
+  --ld-btn-ink: #ffffff;
+
+  /* Feed the editorial tokens so every shared rule picks the palette up. */
+  --ae-ink: var(--ld-ink);
+  --ae-ink-2: var(--ld-text);
+  --ae-ink-3: var(--ld-muted);
+  --ae-line: var(--ld-line-2);
+  --ae-line-2: var(--ld-line-2);
+  --ae-gold: var(--ld-primary);
+  --ae-hl: var(--ld-primary-soft);
+  --ae-radius: 12px;
+  --uni-bg: var(--ld-bg);
+
+  max-width: 648px;
+  padding: 40px 0 96px;
+  font-family: Inter, var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 28px;
+  color: var(--ld-text);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: normal;
+}
+/* Dark: the site's own warm graphite (globals.css), so the article, the
+   rails and the page share one background instead of a navy slab. */
+:root[data-theme="dark"] .uni-hub-test.uh-page.ae.ld {
+  --ld-bg: var(--bg);
+  --ld-ink: var(--ink);
+  --ld-h2: var(--ink);
+  --ld-text: var(--ink-2);
+  --ld-muted: var(--ink-3);
+  --ld-faint: var(--ink-4);
+  --ld-line: var(--line);
+  --ld-line-2: var(--line-2);
+  --ld-soft: var(--bg-2);
+  --ld-primary: rgb(128, 156, 255);
+  --ld-primary-soft: rgba(128, 156, 255, 0.1);
+  --ld-dot: var(--ink-3);
+  --ld-btn: var(--ink);
+  --ld-btn-ink: var(--bg);
+  --ae-hl: rgba(128, 156, 255, 0.12);
+  background: transparent;
+}
+html:has(.uni-hub-test.ld),
+html:has(.uni-hub-test.ld) body {
+  background: #ffffff;
+}
+:root[data-theme="dark"]:has(.uni-hub-test.ld),
+:root[data-theme="dark"]:has(.uni-hub-test.ld) body {
+  background: var(--bg);
+}
+.uni-hub-test.uh-page.ae.ld table,
+.uni-hub-test.uh-page.ae.ld td,
+.uni-hub-test.uh-page.ae.ld th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- header: eyebrow, H1, lead ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-crumbs {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-primary);
+  margin: 0 0 10px;
+  gap: 6px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-crumbs a,
+.uni-hub-test.uh-page.ae.ld .ae-crumbs [aria-current] {
+  color: var(--ld-primary);
+  text-decoration: none;
+  border: 0;
+}
+.uni-hub-test.uh-page.ae.ld .ae-crumbs span[aria-hidden] {
+  color: var(--ld-faint);
+  font-weight: 400;
+}
+.uni-hub-test.uh-page.ae.ld .ae-head {
+  gap: 12px;
+  align-items: center;
+}
+.uni-hub-test.uh-page.ae.ld .ae-head-icon {
+  margin: 0;
+  align-self: flex-start;
+  padding-top: 2px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-head-icon img {
+  width: 36px !important;
+  height: 36px !important;
+}
+.uni-hub-test.uh-page.ae.ld .ae-h1 {
+  font-size: 36px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: -0.9px;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .ae-h1-dek {
+  display: block;
+  margin-top: 6px;
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: -0.3px;
+  font-weight: 500;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .ae-lede {
+  font-size: 18px;
+  line-height: 28px;
+  color: var(--ld-text);
+  margin: 10px 0 8px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-byline {
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--ld-muted);
+  margin: 0 0 32px;
+}
+
+/* ---------- running text ---------- */
+.uni-hub-test.uh-page.ae.ld :is(.ae-intro p, .ae-section > p, .ae-pattern > p, .uh-block p, .uh-block li, .uh-block dd) {
+  font-size: 16px;
+  line-height: 28px;
+  color: var(--ld-text);
+  margin: 0 0 20px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-intro .ae-muted {
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld strong,
+.uni-hub-test.uh-page.ae.ld .uh-block strong {
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+/* Links: semibold, heading colour, a 1px primary rule, no underline. */
+.uni-hub-test.uh-page.ae.ld a,
+.uni-hub-test.uh-page.ae.ld .uh-block a,
+.uni-hub-test.uh-page.ae.ld .uh-block > p > a,
+.uni-hub-test.uh-page.ae.ld .uh-risks > li > a,
+.uni-hub-test.uh-page.ae.ld .uh-venues > li > a {
+  color: var(--ld-ink);
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  border-bottom: 1px solid var(--ld-primary);
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae.ld a:hover {
+  border-bottom-width: 2px;
+}
+:root[data-theme="dark"] .uni-hub-test.uh-page.ae.ld a {
+  border-bottom-color: var(--ld-primary-soft);
+}
+/* Links that are UI rather than prose stay quiet. */
+.uni-hub-test.uh-page.ae.ld :is(.ae-vault-name, .ae-lead-t, .ae-open a, .ld-toc a, .hub-row, .hub-rowlink, .hub-table-wrap a, .uh-calc a, table tbody th a) {
+  border-bottom: 0;
+}
+
+/* ---------- sections and headings ---------- */
+.uni-hub-test.uh-page.ae.ld :is(.ae-section, .uh-block) {
+  margin: 48px 0 0;
+  scroll-margin-top: 96px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-section, .uh-block) > h2 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  color: var(--ld-h2);
+  margin: 0 0 18px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-pattern, .uh-block) h3 {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: var(--ld-h2);
+  margin: 0 0 12px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-sub,
+.uni-hub-test.uh-page.ae.ld .uh-block > .uh-lead {
+  font-size: 16px !important;
+  line-height: 28px !important;
+  color: var(--ld-text) !important;
+  margin: 0 0 20px;
+}
+/* Datelines: a quiet line, not a shouting label. */
+.uni-hub-test.uh-page.ae.ld :is(.ae-dateline, .rp-eyebrow, .ae-kicker, .eh-keys-h, .eh-stat-h, .ae-pattern-n) {
+  font-size: 14px !important;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  color: var(--ld-primary) !important;
+  margin: 0 0 6px;
+}
+.uni-hub-test.uh-page.ae.ld .rp-eyebrow .uh-eyebrow-date,
+.uni-hub-test.uh-page.ae.ld .rp-eyebrow .uh-eyebrow-sep {
+  color: var(--ld-muted);
+  font-weight: 400;
+}
+.uni-hub-test.uh-page.ae.ld .ae-caption,
+.uni-hub-test.uh-page.ae.ld .uh-note,
+.uni-hub-test.uh-page.ae.ld table caption {
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--ld-muted);
+}
+
+/* ---------- lists: 6px dots, 32px indent ---------- */
+.uni-hub-test.uh-page.ae.ld :is(.eh-keys li, .uh-venues li, .uh-findings li, .ae-quick li) {
+  padding-left: 32px;
+  margin: 8px 0;
+  font-size: 16px;
+  line-height: 28px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.eh-keys li, .uh-venues li, .uh-findings li, .ae-quick li)::before {
+  left: 8px;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  background: var(--ld-dot);
+}
+:root[data-theme="dark"] .uni-hub-test.uh-page.ae.ld :is(.eh-keys li, .uh-venues li, .uh-findings li, .ae-quick li)::before {
+  background: rgb(82, 83, 87);
+}
+.uni-hub-test.uh-page.ae.ld .eh-steps li::marker {
+  color: var(--ld-muted);
+}
+
+/* ---------- quick answers: a callout ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-quick {
+  border: 1px solid var(--ld-line-2);
+  border-radius: 16px;
+  background: var(--ld-soft);
+  padding: 16px 20px 8px;
+  margin: 0 0 32px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-quick li {
+  font-size: 15px;
+  line-height: 26px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-quick .ae-q {
+  color: var(--ld-ink);
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae.ld .ae-quick .ae-a {
+  color: var(--ld-text);
+}
+
+/* ---------- in this article ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-toc {
+  font-size: 14px;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .ae-toc a {
+  font-weight: 500;
+  color: var(--ld-text);
+  border-bottom: 1px solid var(--ld-line-2);
+}
+
+/* ---------- tables: docs-style, rows on hairlines ---------- */
+.uni-hub-test.uh-page.ae.ld :is(.ae-card, .eh-evidence-wrap) {
+  border: 1px solid var(--ld-line-2);
+  border-radius: 12px;
+  background: var(--ld-bg);
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) :is(th, td) {
+  font-size: 14px;
+  line-height: 24px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--ld-line);
+  color: var(--ld-text);
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) thead :is(th, td) {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ld-ink);
+  border-top: 0;
+  border-bottom: 1px solid var(--ld-line-2);
+}
+.uni-hub-test.uh-page.ae.ld :is(table.eh-earn, table.eh-rows) {
+  border-color: var(--ld-line-2);
+  border-radius: 12px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-takeaways :is(th, td) {
+  font-size: 15px;
+  line-height: 26px;
+  padding: 12px 0;
+  border-top: 1px solid var(--ld-line);
+}
+.uni-hub-test.uh-page.ae.ld .ae-takeaways tr:last-child > * {
+  border-bottom: 1px solid var(--ld-line);
+}
+.uni-hub-test.uh-page.ae.ld .ae-takeaways th {
+  color: var(--ld-muted);
+}
+
+/* ---------- stat pairs, definitions, risks ---------- */
+.uni-hub-test.uh-page.ae.ld .eh-stat-row {
+  border-color: var(--ld-line-2);
+  border-radius: 12px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-stat-row > div + div {
+  border-left-color: var(--ld-line-2);
+}
+.uni-hub-test.uh-page.ae.ld .eh-stat-row .eh-stat-v {
+  font-size: 24px !important;
+  line-height: 32px;
+  font-weight: 600 !important;
+  letter-spacing: -0.6px;
+  color: var(--ld-ink) !important;
+}
+.uni-hub-test.uh-page.ae.ld .eh-defs dt {
+  font-size: 16px;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .uh-risks li {
+  border-top-color: var(--ld-line);
+  padding: 16px 0;
+}
+
+/* ---------- questions ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-faq,
+.uni-hub-test.uh-page.ae.ld .ae-faq-item {
+  border-color: var(--ld-line);
+}
+.uni-hub-test.uh-page.ae.ld .ae-faq-item summary {
+  font-size: 16px;
+  line-height: 28px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  padding: 12px 0;
+}
+.uni-hub-test.uh-page.ae.ld .ae-faq-item p {
+  font-size: 16px;
+  line-height: 28px;
+  color: var(--ld-text);
+  margin: 0 0 16px;
+}
+
+/* ---------- buttons: the docs' dark pill ---------- */
+.uni-hub-test.uh-page.ae.ld :is(.ae-btn, .eh-btn-primary) {
+  background: var(--ld-btn);
+  color: var(--ld-btn-ink);
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae.ld .ae-cta {
+  border-top: 1px solid var(--ld-line);
+  margin-top: 48px;
+}
+
+/* ---------- "On this page" rail, right of the column ---------- */
+.uni-hub-test.uh-page.ae.ld .ld-toc {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .uni-hub-test.uh-page.ae.ld .ld-toc {
+    display: block;
+    position: fixed;
+    top: 112px;
+    left: calc(50% + 324px + 48px);
+    width: 240px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 24px;
+  }
+}
+.uni-hub-test.uh-page.ae.ld .ld-toc-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ld-ink);
+  margin: 0 0 8px;
+}
+.uni-hub-test.uh-page.ae.ld .ld-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae.ld .ld-toc li {
+  margin: 0;
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae.ld .ld-toc a {
+  display: block;
+  padding: 4px 0 4px 12px;
+  margin-left: -12px;
+  font-weight: 400;
+  color: var(--ld-muted);
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+}
+.uni-hub-test.uh-page.ae.ld .ld-toc a:hover {
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .ld-toc a[aria-current="true"] {
+  color: var(--ld-primary);
+  border-left-color: var(--ld-primary);
+  background: color-mix(in srgb, var(--ld-primary) 7%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-hub-test.uh-page.ae.ld .ld-toc a {
+    transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld {
+    padding: 24px 16px 72px;
+  }
+  .uni-hub-test.uh-page.ae.ld .ae-h1 {
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: -0.75px;
+  }
+}
+
+/* ===================================================================
+   Tables, docs-style. Mintlify prose tables: no outer frame, a 14px
+   semibold header on a gray-200 rule, rows on gray-100 hairlines, one
+   line per cell, figures right-aligned in tabular numerals. Every row in
+   a table has the same height, and header and cells share one alignment
+   per column (.num right, .txt left).
+   =================================================================== */
+.uni-hub-test.uh-page.ae.ld :is(.ae-card, .eh-evidence-wrap) {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow-x: auto;
+  margin: 0 0 4px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) :is(th, td) {
+  height: 48px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--ld-line);
+  background: none;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--ld-text);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) :is(th, td):first-child {
+  padding-left: 0;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) :is(th, td):last-child {
+  padding-right: 0;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) thead :is(th, td) {
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ld-ink);
+  border-top: 0;
+  border-bottom: 1px solid var(--ld-line-2);
+  vertical-align: bottom;
+  padding-bottom: 8px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) .txt {
+  text-align: left;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table, table.eh-evidence, table.eh-earn, table.eh-rows) tbody th {
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .ae-table strong,
+.uni-hub-test.uh-page.ae.ld .ae-table .ae-strong {
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .ae-table .ae-dim,
+.uni-hub-test.uh-page.ae.ld .ae-table .ae-cell-rest {
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .ae-figure {
+  margin: 20px 0 0;
+}
+.uni-hub-test.uh-page.ae.ld .ae-figure .ae-caption,
+.uni-hub-test.uh-page.ae.ld .ae-section > .ae-caption {
+  margin: 10px 0 20px;
+}
+
+/* ---------- the ranking: fixed columns, two-line vault cell ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-rank {
+  table-layout: fixed;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank :is(th, td):nth-child(1) { width: 32px; }
+.uni-hub-test.uh-page.ae.ld .ae-rank :is(th, td):nth-child(3) { width: 84px; }
+.uni-hub-test.uh-page.ae.ld .ae-rank :is(th, td):nth-child(4) { width: 76px; }
+.uni-hub-test.uh-page.ae.ld .ae-rank :is(th, td):nth-child(5) { width: 72px; }
+.uni-hub-test.uh-page.ae.ld .ae-rank :is(th, td):nth-child(6) { width: 64px; }
+.uni-hub-test.uh-page.ae.ld .ae-rank tbody :is(th, td) {
+  height: 60px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-rank-n {
+  color: var(--ld-muted);
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank tr.ae-hl > * {
+  background: var(--ld-primary-soft);
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank tr.ae-hl > :first-child {
+  box-shadow: inset 2px 0 0 var(--ld-primary);
+  padding-left: 8px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-vault {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-rows: 20px 20px;
+  column-gap: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-ico {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-vault-name,
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-vault-meta {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0;
+  flex-basis: auto;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-vault-name {
+  grid-row: 1;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-vault-meta {
+  grid-row: 2;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-open {
+  text-align: right;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-open a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-open a:hover {
+  color: var(--ld-primary);
+}
+
+/* ---------- lead cell with an icon, one line ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae.ld .ae-lead-t {
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+
+/* ---------- evidence table: name over network, one height ---------- */
+.uni-hub-test.uh-page.ae.ld table.eh-evidence tbody :is(th, td) {
+  height: 60px;
+}
+.uni-hub-test.uh-page.ae.ld table.eh-evidence .eh-netname {
+  display: block;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--ld-muted);
+  margin: 0;
+}
+
+/* ---------- venue table: one line per protocol ---------- */
+.uni-hub-test.uh-page.ae.ld table.eh-rows tbody :is(th, td) {
+  height: 60px;
+}
+.uni-hub-test.uh-page.ae.ld table.eh-rows .eh-rows-num span,
+.uni-hub-test.uh-page.ae.ld table.eh-rows .eh-rows-s {
+  display: block;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--ld-muted);
+  margin: 0;
+}
+.uni-hub-test.uh-page.ae.ld table.eh-rows .eh-chip {
+  font-size: 14px;
+  color: var(--ld-text);
+}
+.uni-hub-test.uh-page.ae.ld table.eh-rows .eh-chip-dim {
+  color: var(--ld-muted);
+}
+
+/* ---------- key takeaways: label | value, same rhythm ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-takeaways :is(th, td) {
+  font-size: 14px;
+  line-height: 24px;
+  padding: 12px 0;
+  vertical-align: top;
+  border-top: 0;
+  border-bottom: 1px solid var(--ld-line);
+}
+.uni-hub-test.uh-page.ae.ld .ae-takeaways tr:first-child > * {
+  border-top: 1px solid var(--ld-line-2);
+}
+.uni-hub-test.uh-page.ae.ld .ae-takeaways th {
+  width: 200px;
+  padding-right: 16px;
+  font-weight: 500;
+  color: var(--ld-muted);
+  white-space: nowrap;
+}
+
+/* ---------- breadcrumb chevrons ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-crumbs {
+  align-items: center;
+  gap: 6px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-crumb-chev {
+  flex: none;
+  color: var(--ld-faint);
+}
+.uni-hub-test.uh-page.ae .ae-crumb-chev {
+  flex: none;
+  opacity: 0.7;
+}
+
+/* ---------- hero and row actions, docs-style ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-crumb-asset {
+  color: var(--ld-primary);
+}
+.uni-hub-test.uh-page.ae.ld .ae-h1 {
+  margin: 0;
+}
+.uni-hub-test.uh-page.ae.ld .ae-h1-dek {
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: -0.3px;
+  font-weight: 500;
+  color: var(--ld-muted);
+  margin: 6px 0 0;
+}
+.uni-hub-test.uh-page.ae.ld .ae-lede {
+  margin-top: 16px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-byline {
+  margin-bottom: 20px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas {
+  gap: 8px;
+  margin: 0 0 32px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas .ae-btn,
+.uni-hub-test.uh-page.ae.ld .ae-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  border-bottom-width: 1px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-btn-ghost {
+  border: 1px solid var(--ld-line-2);
+  background: var(--ld-bg);
+  color: var(--ld-text);
+}
+.uni-hub-test.uh-page.ae.ld .ae-btn-ghost:hover {
+  border-color: var(--ld-faint);
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .ae-section-first {
+  margin-top: 40px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank tbody tr.ae-row:hover > * {
+  background: var(--ld-soft);
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank tbody tr.ae-hl:hover > * {
+  background: var(--ld-primary-soft);
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-open-btn {
+  border: 1px solid var(--ld-line-2);
+  border-radius: 8px;
+  background: var(--ld-bg);
+  color: var(--ld-ink);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 3px 10px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank .ae-open-btn:hover {
+  border-color: var(--ld-primary);
+  color: var(--ld-primary);
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank tr.ae-row:hover .ae-vault-name {
+  color: var(--ld-primary);
+}
+
+/* Pattern number badge and the wider Open column, docs-style. */
+.uni-hub-test.uh-page.ae.ld .ae-pattern-h .ae-pattern-n {
+  background: var(--ld-primary-soft);
+  color: var(--ld-primary) !important;
+  font-size: 13px !important;
+  line-height: 1;
+  margin: 2px 0 0;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank :is(th, td):nth-child(6) {
+  width: 80px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-rank :is(th, td):nth-child(2) {
+  width: auto;
+}
+
+/* ---------- calculator: one quiet card, inputs left, result right ---------- */
+.uni-hub-test.uh-page.ae.ld .uh-calc {
+  margin: 4px 0 0;
+  padding: 0;
+  border: 1px solid var(--ld-line-2);
+  border-radius: 16px;
+  background: var(--ld-bg);
+  box-shadow: none;
+  overflow: hidden;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-in {
+  padding: 20px;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-res {
+  padding: 20px;
+  border: 0;
+  border-left: 1px solid var(--ld-line);
+  background: var(--ld-soft);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-h {
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600;
+  color: var(--ld-ink) !important;
+  margin: 0 0 16px !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-label {
+  display: block;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--ld-muted);
+  margin: 0 0 6px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-field {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  margin: 0 0 14px;
+  padding: 0 12px;
+  border: 1px solid var(--ld-line-2);
+  border-radius: 8px;
+  background: var(--ld-bg);
+  box-shadow: none;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-field:focus-within {
+  border-color: var(--ld-primary);
+  box-shadow: 0 0 0 3px var(--ld-primary-soft);
+}
+.uni-hub-test.uh-page.ae.ld :is(.uh-calc-input, .uh-calc-select) {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  border: 0;
+  outline: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--ld-ink);
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-go {
+  width: 100%;
+  height: 40px;
+  margin: 4px 0 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ld-btn);
+  color: var(--ld-btn-ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-rest {
+  font-size: 14px !important;
+  line-height: 24px !important;
+  color: var(--ld-muted) !important;
+  text-align: center;
+  margin: 0 !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-headline {
+  font-size: 15px !important;
+  line-height: 24px !important;
+  color: var(--ld-text) !important;
+  margin: 0 0 8px !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-headline strong {
+  display: block;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-detail {
+  font-size: 13px !important;
+  line-height: 20px !important;
+  color: var(--ld-muted) !important;
+  margin: 0 0 12px !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-facts {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-facts li {
+  font-size: 13px !important;
+  line-height: 20px !important;
+  padding: 0 0 0 14px !important;
+  margin: 0 0 6px !important;
+  color: var(--ld-text) !important;
+  position: relative;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-facts li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ld-dot);
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-cta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  border-bottom: 1px solid var(--ld-primary);
+  align-self: flex-start;
+}
+/* The disclaimer now sits under the card, as small print. */
+.uni-hub-test.uh-page.ae.ld .uh-calc-note {
+  margin: 10px 0 24px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  color: var(--ld-muted) !important;
+}
+@media (max-width: 640px) {
+  .uni-hub-test.uh-page.ae.ld .uh-calc-panes {
+    grid-template-columns: 1fr;
+  }
+  .uni-hub-test.uh-page.ae.ld .uh-calc-res {
+    border-left: 0;
+    border-top: 1px solid var(--ld-line);
+  }
+}
+
+/* ---------- lede: a plain body paragraph ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-lede {
+  font-size: 16px;
+  line-height: 28px;
+  font-weight: 400;
+  color: var(--ld-text);
+}
+
+/* ---------- hero CTAs: a small lift on hover ---------- */
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas a {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas a span[aria-hidden] {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas .ae-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(13, 0, 29, 0.35);
+  border-bottom-width: 1px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas .ae-btn:hover span[aria-hidden] {
+  transform: translateY(2px);
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas .ae-btn-ghost:hover {
+  transform: translateY(-1px);
+  border-color: var(--ld-primary);
+  color: var(--ld-primary);
+  background: var(--ld-primary-soft);
+  box-shadow: 0 4px 12px -6px rgba(68, 105, 252, 0.4);
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas a:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.uni-hub-test.uh-page.ae.ld .ae-hero-ctas a:focus-visible {
+  outline: 2px solid var(--ld-primary);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-hub-test.uh-page.ae.ld .ae-hero-ctas a,
+  .uni-hub-test.uh-page.ae.ld .ae-hero-ctas a span[aria-hidden] {
+    transition: none;
+    transform: none !important;
+  }
+}
+
+/* ---------- calculator: the result pane fills the card ---------- */
+.uni-hub-test.uh-page.ae.ld .uh-calc-panes {
+  align-items: stretch !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-res {
+  align-self: stretch;
+  height: auto;
+}
+
+/* ---------- rate spark table ---------- */
+.uni-hub-test.uh-page.ae .rs-table {
+  margin: 8px 0 20px;
+}
+.uni-hub-test.uh-page.ae .rs-grid {
+  --rs-cols: minmax(0, 190px) minmax(0, 1fr) 128px 72px;
+  position: relative;
+  outline: none;
+  border-radius: 8px;
+  touch-action: pan-y;
+  user-select: none;
+}
+.uni-hub-test.uh-page.ae .rs-grid:focus-visible {
+  box-shadow: 0 0 0 2px var(--ld-primary, #4469fc);
+}
+.uni-hub-test.uh-page.ae .rs-head,
+.uni-hub-test.uh-page.ae .rs-row {
+  display: grid;
+  grid-template-columns: var(--rs-cols);
+  column-gap: 16px;
+  align-items: center;
+}
+.uni-hub-test.uh-page.ae .rs-head {
+  height: 40px;
+  padding-bottom: 8px;
+  align-items: end;
+  border-bottom: 1px solid var(--ld-line-2, var(--ae-line));
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rs-head-spark {
+  position: relative;
+  height: 20px;
+}
+.uni-hub-test.uh-page.ae .rs-head-date {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ld-muted, var(--ae-ink-3));
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae .rs-head-date[data-active="false"] {
+  left: 50% !important;
+}
+.uni-hub-test.uh-page.ae .rs-head-date[data-active="true"] {
+  color: var(--ld-primary, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rs-row {
+  height: 56px;
+  border-bottom: 1px solid var(--ld-line, var(--ae-line));
+}
+.uni-hub-test.uh-page.ae .rs-row:hover {
+  background: var(--ld-soft, rgba(0, 0, 0, 0.02));
+}
+.uni-hub-test.uh-page.ae .rs-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.uni-hub-test.uh-page.ae .rs-label .rs-name {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 0;
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .rs-label .rs-name:hover {
+  color: var(--ld-primary, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rs-sub {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ld-muted, var(--ae-ink-3));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-hub-test.uh-page.ae .rs-spark {
+  position: relative;
+  height: 32px;
+}
+.uni-hub-test.uh-page.ae .rs-spark svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.uni-hub-test.uh-page.ae .rs-line {
+  fill: none;
+  stroke: var(--ld-primary, #4469fc);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+.uni-hub-test.uh-page.ae .rs-cross {
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  width: 1px;
+  background: var(--ld-line-2, var(--ae-line));
+  transform: translateX(-0.5px);
+  pointer-events: none;
+}
+.uni-hub-test.uh-page.ae .rs-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 999px;
+  background: var(--ld-primary, #4469fc);
+  box-shadow: 0 0 0 2px var(--ld-bg, #fff);
+  pointer-events: none;
+}
+.uni-hub-test.uh-page.ae .rs-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae .rs-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rs-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae .rs-chip.is-up {
+  color: rgb(21, 128, 61);
+  background: rgba(22, 163, 74, 0.1);
+}
+.uni-hub-test.uh-page.ae .rs-chip.is-down {
+  color: rgb(185, 28, 28);
+  background: rgba(220, 38, 38, 0.08);
+}
+.uni-hub-test.uh-page.ae .rs-chip.is-flat {
+  color: var(--ld-muted, var(--ae-ink-3));
+  background: var(--ld-soft, rgba(0, 0, 0, 0.04));
+}
+:root[data-theme="dark"] .uni-hub-test.uh-page.ae .rs-chip.is-up {
+  color: rgb(74, 222, 128);
+  background: rgba(74, 222, 128, 0.12);
+}
+:root[data-theme="dark"] .uni-hub-test.uh-page.ae .rs-chip.is-down {
+  color: rgb(248, 113, 113);
+  background: rgba(248, 113, 113, 0.12);
+}
+.uni-hub-test.uh-page.ae .rs-caption {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ld-muted, var(--ae-ink-3));
+}
+@media (max-width: 560px) {
+  .uni-hub-test.uh-page.ae .rs-grid {
+    --rs-cols: minmax(0, 120px) minmax(0, 1fr) 96px;
+  }
+  .uni-hub-test.uh-page.ae .rs-head > :last-child,
+  .uni-hub-test.uh-page.ae .rs-row > :last-child {
+    display: none;
+  }
+}
+
+/* Row names in the spark table are UI, not prose links. */
+.uni-hub-test.uh-page.ae.ld .rs-table a.rs-name {
+  border-bottom: 0;
+  font-weight: 600;
+}
+
+/* ===================================================================
+   Main ranking table (rank-table.tsx), after the data-table pattern:
+   a framed card, a toolbar with title and search, a grey header with
+   sortable columns, an icon tile per product, a TVL bar and a status.
+   =================================================================== */
+.uni-hub-test.uh-page.ae .rk {
+  border: 1px solid var(--ld-line-2, var(--ae-line));
+  border-radius: 16px;
+  background: var(--ld-bg, var(--uni-bg));
+  overflow: hidden;
+  margin: 8px 0 0;
+}
+.uni-hub-test.uh-page.ae .rk-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+}
+.uni-hub-test.uh-page.ae .rk-title {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rk-search {
+  position: relative;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  width: 220px;
+  transition: width 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+.uni-hub-test.uh-page.ae .rk-search:focus-within {
+  width: 260px;
+}
+.uni-hub-test.uh-page.ae .rk-search svg {
+  position: absolute;
+  left: 10px;
+  color: var(--ld-faint, var(--ae-ink-3));
+  pointer-events: none;
+}
+.uni-hub-test.uh-page.ae .rk-search input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px 0 32px;
+  border: 1px solid var(--ld-line-2, var(--ae-line));
+  border-radius: 10px;
+  background: var(--ld-bg, var(--uni-bg));
+  font: inherit;
+  font-size: 14px;
+  color: var(--ld-ink, var(--ae-ink));
+  outline: none;
+}
+.uni-hub-test.uh-page.ae .rk-search input:focus {
+  border-color: var(--ld-primary, var(--ae-ink-3));
+  box-shadow: 0 0 0 3px var(--ld-primary-soft, rgba(0, 0, 0, 0.05));
+}
+.uni-hub-test.uh-page.ae .rk-scroll {
+  overflow-x: auto;
+}
+.uni-hub-test.uh-page.ae .rk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae .rk-table thead th {
+  height: 40px;
+  padding: 0 16px;
+  background: var(--ld-soft, rgba(0, 0, 0, 0.02));
+  border-top: 1px solid var(--ld-line-2, var(--ae-line));
+  border-bottom: 1px solid var(--ld-line-2, var(--ae-line));
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ld-muted, var(--ae-ink-3));
+  text-align: left;
+  vertical-align: middle;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.uni-hub-test.uh-page.ae .rk-table .rk-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae .rk-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 -6px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.uni-hub-test.uh-page.ae .rk-num .rk-sort {
+  flex-direction: row-reverse;
+}
+.uni-hub-test.uh-page.ae .rk-sort:hover,
+.uni-hub-test.uh-page.ae .rk-sort[data-active="true"] {
+  color: var(--ld-ink, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rk-sort:active {
+  transform: scale(0.96);
+}
+.uni-hub-test.uh-page.ae .rk-sort-ico {
+  opacity: 0;
+  transform: scale(0.75);
+  transition: opacity 0.15s ease, transform 0.2s ease;
+}
+.uni-hub-test.uh-page.ae .rk-sort:hover .rk-sort-ico {
+  opacity: 0.4;
+  transform: scale(1);
+}
+.uni-hub-test.uh-page.ae .rk-sort-ico[data-active="true"] {
+  opacity: 1;
+  transform: scale(1);
+}
+.uni-hub-test.uh-page.ae .rk-sort-ico[data-active="true"][data-dir="asc"] {
+  transform: rotate(180deg);
+}
+.uni-hub-test.uh-page.ae .rk-table tbody :is(th, td) {
+  height: 60px;
+  padding: 0 16px;
+  border-top: 1px solid var(--ld-line, var(--ae-line));
+  color: var(--ld-text, var(--ae-ink-2));
+  font-weight: 400;
+  text-align: left;
+  vertical-align: middle;
+  background: none;
+  transition: background-color 0.1s ease;
+}
+.uni-hub-test.uh-page.ae .rk-table tbody tr:first-child :is(th, td) {
+  border-top: 0;
+}
+.uni-hub-test.uh-page.ae .rk-table tbody .rk-num {
+  text-align: right;
+}
+.uni-hub-test.uh-page.ae .rk-row {
+  cursor: pointer;
+}
+.uni-hub-test.uh-page.ae .rk-row:hover > * {
+  background: var(--ld-soft, rgba(0, 0, 0, 0.025));
+}
+.uni-hub-test.uh-page.ae .rk-row.is-top > * {
+  background: var(--ld-primary-soft, var(--ae-hl));
+}
+.uni-hub-test.uh-page.ae .rk-prod {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.uni-hub-test.uh-page.ae .rk-tile {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--ld-soft, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--ld-line, var(--ae-line));
+}
+.uni-hub-test.uh-page.ae .rk-tile img {
+  border-radius: 999px;
+}
+.uni-hub-test.uh-page.ae .rk-tile-chain {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: inline-flex;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1.5px var(--ld-bg, var(--uni-bg));
+}
+.uni-hub-test.uh-page.ae .rk-prod-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.uni-hub-test.uh-page.ae.ld .rk-table a.rk-name,
+.uni-hub-test.uh-page.ae .rk-name {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink));
+  border: 0;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uni-hub-test.uh-page.ae .rk-row:hover .rk-name {
+  color: var(--ld-primary, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rk-sub {
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--ld-muted, var(--ae-ink-3));
+}
+.uni-hub-test.uh-page.ae .rk-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.uni-hub-test.uh-page.ae .rk-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.uni-hub-test.uh-page.ae .rk-status.is-funded {
+  color: rgb(21, 128, 61);
+}
+.uni-hub-test.uh-page.ae .rk-status.is-thin {
+  color: rgb(180, 83, 9);
+}
+:root[data-theme="dark"] .uni-hub-test.uh-page.ae .rk-status.is-funded {
+  color: rgb(74, 222, 128);
+}
+:root[data-theme="dark"] .uni-hub-test.uh-page.ae .rk-status.is-thin {
+  color: rgb(252, 211, 77);
+}
+.uni-hub-test.uh-page.ae .rk-tvl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.uni-hub-test.uh-page.ae .rk-meter {
+  width: 56px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--ld-line, rgba(0, 0, 0, 0.06));
+}
+.uni-hub-test.uh-page.ae .rk-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.uni-hub-test.uh-page.ae .rk-meter > .is-funded {
+  background: rgb(22, 163, 74);
+}
+.uni-hub-test.uh-page.ae .rk-meter > .is-thin {
+  background: rgb(245, 158, 11);
+}
+.uni-hub-test.uh-page.ae .rk-tvl-v {
+  min-width: 44px;
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae .rk-c-apy strong {
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .rk-empty {
+  text-align: center !important;
+  color: var(--ld-muted, var(--ae-ink-3)) !important;
+  height: 80px;
+}
+@media (max-width: 640px) {
+  .uni-hub-test.uh-page.ae :is(.rk-c-status, .rk-c-30) {
+    display: none;
+  }
+  .uni-hub-test.uh-page.ae .rk-meter {
+    display: none;
+  }
+  .uni-hub-test.uh-page.ae .rk-search,
+  .uni-hub-test.uh-page.ae .rk-search:focus-within {
+    width: 100%;
+  }
+  .uni-hub-test.uh-page.ae .rk-bar {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- stat lists (were boxes) ---------- */
+.uni-hub-test.uh-page.ae .ae-statlist {
+  margin: 0 0 24px;
+}
+.uni-hub-test.uh-page.ae .ae-statlist-h {
+  margin: 0 0 6px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink)) !important;
+}
+.uni-hub-test.uh-page.ae .ae-statlist ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae .ae-statlist li {
+  position: relative;
+  margin: 6px 0 !important;
+  padding-left: 32px !important;
+  font-size: 16px;
+  line-height: 28px;
+}
+.uni-hub-test.uh-page.ae .ae-statlist li::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ld-dot, var(--ae-gold));
+}
+.uni-hub-test.uh-page.ae .ae-statlist-v {
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink));
+}
+.uni-hub-test.uh-page.ae .ae-statlist-s {
+  color: var(--ld-muted, var(--ae-ink-3));
+}
+.uni-hub-test.uh-page.ae .ae-statlist-note {
+  margin: 4px 0 0 !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  color: var(--ld-muted, var(--ae-ink-3)) !important;
+}
+
+/* ---------- readers often ask (questions in place) ---------- */
+.uni-hub-test.uh-page.ae.ld .eh-ask {
+  margin: 24px 0 8px;
+  padding: 16px 20px 4px;
+  border: 1px solid var(--ld-line-2);
+  border-radius: 16px;
+  background: var(--ld-bg);
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask-h {
+  margin: 0 0 4px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  color: var(--ld-primary) !important;
+  font-family: inherit !important;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq {
+  border: 0;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-item {
+  border: 0;
+  border-top: 1px solid var(--ld-line);
+  background: none;
+  border-radius: 0;
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-item:first-child {
+  border-top: 0;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  cursor: pointer;
+  list-style: none;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-q::-webkit-details-marker {
+  display: none;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-chev {
+  flex: none;
+  color: var(--ld-muted);
+  transition: transform 0.2s ease;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-item[open] .uh-faq-chev {
+  transform: rotate(180deg);
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-a {
+  margin: 0 0 14px !important;
+  font-size: 15px !important;
+  line-height: 26px !important;
+  color: var(--ld-text) !important;
+}
+.uni-hub-test.uh-page.ae.ld .eh-ask .uh-faq-a strong {
+  font-weight: 400;
+  color: inherit;
+}
+
+/* ---------- calculator: one column, full product name and rate ---------- */
+.uni-hub-test.uh-page.ae.ld .uh-calc-panes {
+  grid-template-columns: 1fr !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-res {
+  border-left: 0 !important;
+  border-top: 1px solid var(--ld-line);
+  min-height: 88px;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-in {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: end;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-h {
+  grid-column: 1 / -1;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-in > .uh-calc-label:nth-of-type(1) {
+  grid-column: 1;
+  grid-row: 2;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-in > .uh-calc-field:nth-of-type(1) {
+  grid-column: 1;
+  grid-row: 3;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-in > .uh-calc-label:nth-of-type(2) {
+  grid-column: 2;
+  grid-row: 2;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-in > .uh-calc-field--select {
+  grid-column: 2;
+  grid-row: 3;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-in > .uh-calc-go {
+  grid-column: 1 / -1;
+  grid-row: 4;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-select {
+  text-overflow: ellipsis;
+  appearance: auto;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-go {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  height: 40px !important;
+  padding: 0 16px !important;
+  line-height: 20px !important;
+  margin: 4px 0 0 !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-go:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(13, 0, 29, 0.35);
+}
+.uni-hub-test.uh-page.ae.ld .uh-calc-go:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+@media (max-width: 560px) {
+  .uni-hub-test.uh-page.ae.ld .uh-calc-in {
+    grid-template-columns: 1fr;
+  }
+  .uni-hub-test.uh-page.ae.ld .uh-calc-in > * {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+}
+
+/* ---------- one rhythm under every box and table ---------- */
+.uni-hub-test.uh-page.ae.ld :is(.rk, .ae-figure, .eh-evidence-wrap, table.eh-rows, .uh-calc, .rs-table, .ae-quick, .ae-takeaways, .eh-keys, .ae-statlist) {
+  margin-bottom: 24px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.rk, .eh-evidence-wrap, .uh-calc) + :is(.ae-caption, .uh-calc-note, p) {
+  margin-top: 12px;
+}
+.uni-hub-test.uh-page.ae.ld .rk + .ae-caption {
+  margin-top: 12px;
+  margin-bottom: 24px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-figure .ae-caption {
+  margin-bottom: 0;
+}
+
+/* Risks: no separators; each risk's name carries the accent instead. */
+.uni-hub-test.uh-page.ae.ld .uh-risks li {
+  border-top: 0 !important;
+  padding: 0 !important;
+  margin: 0 0 16px !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-risks li > strong {
+  color: var(--ld-primary);
+  font-weight: 600;
+}
+
+/* TVL under the floor reads grey, no bars. */
+.uni-hub-test.uh-page.ae .rk-tvl-v.is-thin {
+  color: var(--ld-faint, var(--ae-ink-3));
+}
+
+/* Ranking toolbar CTA (replaces the search field). */
+.uni-hub-test.uh-page.ae .rk-cta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--ld-btn, var(--ae-ink));
+  color: var(--ld-btn-ink, #fff);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-hub-test.uh-page.ae.ld .rk a.rk-cta {
+  color: var(--ld-btn-ink);
+  border-bottom: 0;
+}
+.uni-hub-test.uh-page.ae .rk-cta svg {
+  transition: transform 0.2s ease;
+}
+.uni-hub-test.uh-page.ae .rk-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(13, 0, 29, 0.35);
+}
+.uni-hub-test.uh-page.ae .rk-cta:hover svg {
+  transform: translate(1px, -1px);
+}
+.uni-hub-test.uh-page.ae .rk-cta:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* The rail runs the height of the content column and sticks inside it, so it
+   stops above the footer instead of sliding over it. */
+.uni-hub-test.uh-page.ae.ld {
+  position: relative;
+}
+@media (min-width: 1280px) {
+  .uni-hub-test.uh-page.ae.ld .ld-toc {
+    display: block;
+    position: absolute;
+    top: 40px;
+    bottom: 96px;
+    left: calc(100% + 48px);
+    width: 240px;
+    max-height: none;
+    overflow: visible;
+  }
+  .uni-hub-test.uh-page.ae.ld .ld-toc-in {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+}
+
+/* ---------- explore other rankings ---------- */
+.uni-hub-test.uh-page.ae .ex {
+  margin: 48px 0 0;
+  padding: 32px 0 0;
+  border-top: 1px solid var(--ld-line, var(--ae-line));
+}
+.uni-hub-test.uh-page.ae .ex-h {
+  margin: 0 0 12px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600;
+  color: var(--ld-ink, var(--ae-ink)) !important;
+}
+.uni-hub-test.uh-page.ae .ex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 12px;
+  margin: 0 0 28px;
+}
+.uni-hub-test.uh-page.ae .ex-card,
+.uni-hub-test.uh-page.ae.ld a.ex-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  border: 1px solid var(--ld-line-2, var(--ae-line));
+  border-radius: 12px;
+  background: var(--ld-bg, var(--uni-bg));
+  text-decoration: none;
+  color: var(--ld-ink, var(--ae-ink));
+  font-weight: 400;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-hub-test.uh-page.ae .ex-card:hover,
+.uni-hub-test.uh-page.ae.ld a.ex-card:hover {
+  border-color: var(--ld-primary, var(--ae-ink-3));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -10px rgba(13, 0, 29, 0.25);
+}
+.uni-hub-test.uh-page.ae .ex-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--ld-soft, rgba(0, 0, 0, 0.04));
+}
+.uni-hub-test.uh-page.ae .ex-ico img {
+  border-radius: 999px;
+}
+.uni-hub-test.uh-page.ae .ex-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.uni-hub-test.uh-page.ae .ex-title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae .ex-meta {
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--ld-muted, var(--ae-ink-3));
+}
+.uni-hub-test.uh-page.ae .ex-arrow {
+  flex: none;
+  color: var(--ld-faint, var(--ae-ink-3));
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.uni-hub-test.uh-page.ae .ex-card:hover .ex-arrow {
+  transform: translateX(2px);
+  color: var(--ld-primary, var(--ae-ink));
+}
+
+/* ===================================================================
+   Three columns from 1280px: contents on the left, the article in the
+   middle, the app promo on the right. Both rails run the full height of
+   the article and stick inside it, so neither slides over the footer.
+   =================================================================== */
+.uni-hub-test.uh-page.ae.ld .ld-promo {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .uni-hub-test.uh-page.ae.ld .ld-toc {
+    left: auto;
+    right: calc(100% + 56px);
+    width: 200px;
+  }
+  .uni-hub-test.uh-page.ae.ld .ld-promo {
+    display: block;
+    position: absolute;
+    top: 40px;
+    bottom: 96px;
+    left: calc(100% + 56px);
+    width: 260px;
+  }
+  .uni-hub-test.uh-page.ae.ld .ld-promo-in {
+    position: sticky;
+    top: 96px;
+  }
+}
+
+/* ---------- app promo card ---------- */
+.uni-hub-test.uh-page.ae .ap {
+  padding: 16px 16px 18px;
+  border: 1px solid var(--ld-line-2, var(--ae-line));
+  border-radius: 16px;
+  background: var(--ld-bg, var(--uni-bg));
+}
+.uni-hub-test.uh-page.ae .ap-stage {
+  display: grid;
+  place-items: center;
+  padding: 18px 0 0;
+  margin: 0 0 14px;
+  height: 236px;
+  overflow: hidden;
+  border-radius: 12px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(68, 105, 252, 0.18), transparent 60%),
+    linear-gradient(180deg, var(--ld-primary-soft, #eef1ff), var(--ld-soft, #f4f6fa));
+}
+.uni-hub-test.uh-page.ae .ap-phone {
+  position: relative;
+  width: 150px;
+  height: 260px;
+  margin-top: 6px;
+  align-self: start;
+  border-radius: 28px;
+  padding: 7px;
+  background: #0d001d;
+  box-shadow:
+    0 18px 40px -16px rgba(13, 0, 29, 0.55),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.08);
+  transform: rotate(-4deg);
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+.uni-hub-test.uh-page.ae .ap:hover .ap-phone {
+  transform: rotate(0deg) translateY(-4px);
+}
+.uni-hub-test.uh-page.ae .ap-notch {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 44px;
+  height: 10px;
+  margin-left: -22px;
+  border-radius: 999px;
+  background: #0d001d;
+  z-index: 1;
+}
+.uni-hub-test.uh-page.ae .ap-screen {
+  height: 100%;
+  border-radius: 22px;
+  background: #fff;
+  padding: 26px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.uni-hub-test.uh-page.ae .ap-screen p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.uni-hub-test.uh-page.ae .ap-app {
+  font-size: 10px !important;
+  line-height: 14px !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #18181e !important;
+  align-self: flex-start;
+}
+.uni-hub-test.uh-page.ae .ap-asset {
+  position: relative;
+  margin: 12px 0 6px;
+}
+.uni-hub-test.uh-page.ae .ap-asset img {
+  border-radius: 999px;
+}
+.uni-hub-test.uh-page.ae .ap-chain {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: inline-flex;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px #fff;
+}
+.uni-hub-test.uh-page.ae .ap-name {
+  font-size: 10.5px !important;
+  line-height: 14px !important;
+  font-weight: 600;
+  color: #18181e !important;
+}
+.uni-hub-test.uh-page.ae .ap-rate {
+  margin-top: 8px !important;
+  font-size: 22px !important;
+  line-height: 26px !important;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #18181e !important;
+}
+.uni-hub-test.uh-page.ae .ap-rate-l {
+  font-size: 9px !important;
+  line-height: 12px !important;
+  color: #727377 !important;
+}
+.uni-hub-test.uh-page.ae .ap-input {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid #e0e1e6;
+  border-radius: 8px;
+  font-size: 10px;
+  color: #18181e;
+}
+.uni-hub-test.uh-page.ae .ap-max {
+  font-size: 8px;
+  font-weight: 700;
+  color: #4469fc;
+}
+.uni-hub-test.uh-page.ae .ap-btn {
+  width: 100%;
+  margin-top: 6px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #0d001d;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae .ap-h {
+  margin: 0 0 6px !important;
+  font-size: 15px !important;
+  line-height: 22px !important;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--ld-ink, var(--ae-ink)) !important;
+}
+.uni-hub-test.uh-page.ae .ap-p {
+  margin: 0 0 14px !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  color: var(--ld-muted, var(--ae-ink-3)) !important;
+}
+.uni-hub-test.uh-page.ae .ap-cta,
+.uni-hub-test.uh-page.ae.ld a.ap-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--ld-btn, #0d001d);
+  color: var(--ld-btn-ink, #fff);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.uni-hub-test.uh-page.ae .ap-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(13, 0, 29, 0.35);
+}
+.uni-hub-test.uh-page.ae .ap-link,
+.uni-hub-test.uh-page.ae.ld a.ap-link {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ld-text, var(--ae-ink-2));
+  border: 0;
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .ap-link:hover {
+  color: var(--ld-primary, var(--ae-ink));
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-hub-test.uh-page.ae .ap-phone {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* The ranking toolbar inside a section: section paragraph and link rules
+   must not reach the table's own title and CTA. */
+.uni-hub-test.uh-page.ae.ld .rk .rk-bar .rk-title {
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 600 !important;
+  color: var(--ld-ink) !important;
+}
+.uni-hub-test.uh-page.ae.ld .rk .rk-bar a.rk-cta {
+  background: var(--ld-btn) !important;
+  color: var(--ld-btn-ink) !important;
+  border: 0 !important;
+  padding: 0 14px !important;
+  font-weight: 600 !important;
+}
+
+/* The hub wrapper clips sideways overflow; the docs layout puts its rails
+   outside the column, so it must not. The body still clips the viewport. */
+.uni-hub-test.uh-page.ae.ld {
+  overflow-x: visible;
+}
+
+/* App promo, asset-only screen and a single CTA. */
+.uni-hub-test.uh-page.ae .ap-asset {
+  margin: 22px 0 10px;
+}
+.uni-hub-test.uh-page.ae .ap-name {
+  font-size: 15px !important;
+  line-height: 20px !important;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: #18181e !important;
+}
+.uni-hub-test.uh-page.ae .ap-ticker {
+  font-size: 10px !important;
+  line-height: 14px !important;
+  font-weight: 600;
+  color: #727377 !important;
+}
+.uni-hub-test.uh-page.ae .ap-btn {
+  margin-top: auto;
+}
+.uni-hub-test.uh-page.ae .ap-h {
+  margin: 0 0 14px !important;
+  font-size: 16px !important;
+  line-height: 24px !important;
+}
+.uni-hub-test.uh-page.ae .ap-note {
+  margin: 8px 0 0 !important;
+  text-align: center;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  color: var(--ld-muted, var(--ae-ink-3)) !important;
+}
+
+/* ===================================================================
+   /eth in the docs layout. The page keeps its own markup and words (the
+   ranking copy is live and ranking); these rules give its own pieces the
+   same look as the /btc preview.
+   =================================================================== */
+/* breadcrumb with the asset icon, chevron-like separators */
+.uni-hub-test.uh-page.ae.ld .uni-hub-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-primary);
+}
+.uni-hub-test.uh-page.ae.ld .uni-hub-crumbs a {
+  color: var(--ld-primary);
+  border: 0;
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae.ld .uni-hub-crumbs-sep {
+  color: var(--ld-faint);
+  font-weight: 400;
+}
+.uni-hub-test.uh-page.ae.ld .uni-hub-crumbs-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ld-primary);
+}
+.uni-hub-test.uh-page.ae.ld .uni-hub-crumbs-current img {
+  border-radius: 999px;
+}
+
+/* meta line, hero */
+.uni-hub-test.uh-page.ae.ld .eh-topmeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ld-muted);
+  font-family: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.uni-hub-test.uh-page.ae.ld .eh-topmeta strong {
+  font-weight: 600;
+  color: var(--ld-text);
+}
+.uni-hub-test.uh-page.ae.ld .uni-hub-hero {
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+.uni-hub-test.uh-page.ae.ld .eh-hero-title {
+  display: block;
+}
+.uni-hub-test.uh-page.ae.ld .eh-hero-title > img,
+.uni-hub-test.uh-page.ae.ld .eh-hero-title > span:has(img) {
+  display: none;
+}
+.uni-hub-test.uh-page.ae.ld .uni-hub-h1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: -0.9px;
+  color: var(--ld-ink);
+  text-align: left;
+}
+.uni-hub-test.uh-page.ae.ld .eh-dek {
+  margin: 8px 0 20px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  color: var(--ld-muted);
+  font-family: inherit;
+  text-transform: none;
+}
+.uni-hub-test.uh-page.ae.ld .eh-dek-accent {
+  color: var(--ld-muted);
+}
+
+/* key takeaways: a callout with label / sentence rows */
+.uni-hub-test.uh-page.ae.ld .eh-takeaways {
+  margin: 0 0 24px;
+  padding: 16px 20px 8px;
+  border: 1px solid var(--ld-line-2);
+  border-radius: 16px;
+  background: var(--ld-soft);
+}
+.uni-hub-test.uh-page.ae.ld .eh-tk-h {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ld-primary);
+}
+.uni-hub-test.uh-page.ae.ld .eh-tk-date {
+  color: var(--ld-muted);
+  font-weight: 400;
+}
+.uni-hub-test.uh-page.ae.ld .eh-tk-list {
+  margin: 0;
+  display: block;
+}
+.uni-hub-test.uh-page.ae.ld .eh-tk-item {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+}
+.uni-hub-test.uh-page.ae.ld .eh-tk-item dt {
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: inherit;
+}
+.uni-hub-test.uh-page.ae.ld .eh-tk-item dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--ld-text);
+}
+.uni-hub-test.uh-page.ae.ld .eh-tk-item dd strong {
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+
+/* intro paragraph and its button */
+.uni-hub-test.uh-page.ae.ld .eh-intro {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: block;
+}
+.uni-hub-test.uh-page.ae.ld .eh-intro p {
+  font-size: 16px;
+  line-height: 28px;
+  color: var(--ld-text);
+  margin: 0 0 16px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-intro .eh-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--ld-btn);
+  color: var(--ld-btn-ink);
+  font-size: 14px;
+  font-weight: 600;
+  border: 0;
+  text-decoration: none;
+}
+
+/* network cards */
+.uni-hub-test.uh-page.ae.ld .eh-nets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 12px;
+  margin: 20px 0 24px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-net {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border: 1px solid var(--ld-line-2);
+  border-radius: 12px;
+  background: var(--ld-bg);
+  box-shadow: none;
+}
+.uni-hub-test.uh-page.ae.ld .eh-net-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-net-head h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .eh-net-tag {
+  margin-left: auto;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--ld-muted);
+  background: var(--ld-soft);
+  border: 0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: inherit;
+}
+.uni-hub-test.uh-page.ae.ld .eh-net-meta,
+.uni-hub-test.uh-page.ae.ld .eh-net-empty {
+  margin: 0 0 8px !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  color: var(--ld-muted) !important;
+}
+.uni-hub-test.uh-page.ae.ld .eh-picks {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 10px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-pick {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--ld-line);
+}
+.uni-hub-test.uh-page.ae.ld .eh-pick:first-child {
+  border-top: 0;
+}
+.uni-hub-test.uh-page.ae.ld a.eh-pick-name {
+  font-size: 13.5px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  border: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae.ld .eh-pick-apy {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae.ld .eh-pick-sub {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld a.eh-net-more {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ld-text);
+  border: 0;
+}
+.uni-hub-test.uh-page.ae.ld a.eh-net-more:hover {
+  color: var(--ld-primary);
+}
+
+/* strategy type cards */
+.uni-hub-test.uh-page.ae.ld .eh-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 24px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-type {
+  padding: 14px 16px;
+  border: 1px solid var(--ld-line-2);
+  border-radius: 12px;
+  background: var(--ld-bg);
+  box-shadow: none;
+}
+.uni-hub-test.uh-page.ae.ld .eh-type h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--ld-ink);
+}
+.uni-hub-test.uh-page.ae.ld .eh-type-blurb,
+.uni-hub-test.uh-page.ae.ld .eh-type-best {
+  margin: 0 0 10px !important;
+  font-size: 13.5px !important;
+  line-height: 21px !important;
+  color: var(--ld-text) !important;
+}
+.uni-hub-test.uh-page.ae.ld .eh-type-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-type-stats dt {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ld-muted);
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: inherit;
+}
+.uni-hub-test.uh-page.ae.ld .eh-type-stats dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  font-variant-numeric: tabular-nums;
+}
+.uni-hub-test.uh-page.ae.ld .eh-type-best a {
+  font-weight: 600;
+}
+
+/* question index */
+.uni-hub-test.uh-page.ae.ld .eh-qindex .eh-qlist {
+  margin: 0 0 8px;
+  padding-left: 22px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-qindex .eh-qlist li {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 24px;
+}
+.uni-hub-test.uh-page.ae.ld .eh-qindex .eh-qlist li::marker {
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .eh-qindex .eh-qlist a {
+  font-weight: 500;
+}
+
+/* the loop figure keeps its own design, without the old shell's spacing */
+.uni-hub-test.uh-page.ae.ld .eh-figwrap {
+  max-width: none;
+  margin: 20px 0 24px;
+  padding: 0;
+  background: none;
+  overflow: visible;
+}
+.uni-hub-test.uh-page.ae.ld .eh-figwrap .eh-figblock {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .uni-hub-test.uh-page.ae.ld .eh-types {
+    grid-template-columns: 1fr;
+  }
+  .uni-hub-test.uh-page.ae.ld .eh-tk-item {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+/* Network cards: the layer tag drops under the heading instead of squeezing it. */
+.uni-hub-test.uh-page.ae.ld .eh-net-head {
+  flex-wrap: wrap;
+}
+.uni-hub-test.uh-page.ae.ld .eh-net-tag {
+  margin-left: 30px;
+  order: 3;
+  flex-basis: auto;
+}
+.uni-hub-test.uh-page.ae.ld .eh-net-head h3 {
+  flex: 1;
+  min-width: 0;
+}
+
+.uni-hub-test.uh-page.ae .ap-h,
+.uni-hub-test.uh-page.ae .ap-note {
+  display: block;
+}
+
+/* ===================================================================
+   /usdc in the docs layout: its own hero, summary and FAQ pieces.
+   =================================================================== */
+.uni-hub-test.uh-page.ae.ld .uh-hero {
+  padding: 0;
+  margin: 0 0 8px;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+.uni-hub-test.uh-page.ae.ld .uh-titlerow {
+  display: block;
+}
+.uni-hub-test.uh-page.ae.ld .uh-titlerow .uni-hub-hero-icon {
+  display: none;
+}
+.uni-hub-test.uh-page.ae.ld .uh-answer {
+  margin: 12px 0 8px;
+  font-size: 16px;
+  line-height: 28px;
+  font-weight: 400;
+  color: var(--ld-text);
+  max-width: none;
+}
+.uni-hub-test.uh-page.ae.ld .uh-updated {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .uh-summary {
+  margin: 0 0 24px;
+  padding: 16px 20px 8px;
+  border: 1px solid var(--ld-line-2);
+  border-radius: 16px;
+  background: var(--ld-soft);
+}
+.uni-hub-test.uh-page.ae.ld .uh-summary-h {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ld-primary);
+  letter-spacing: normal;
+  text-transform: none;
+}
+.uni-hub-test.uh-page.ae.ld .uh-summary-date {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ld-muted);
+}
+.uni-hub-test.uh-page.ae.ld .uh-summary .uh-findings li {
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--ld-text);
+}
+.uni-hub-test.uh-page.ae.ld .uh-block .uh-faq {
+  border-top: 1px solid var(--ld-line);
+  display: block;
+}
+.uni-hub-test.uh-page.ae.ld .uh-block > .uh-faq .uh-faq-item {
+  border: 0;
+  border-bottom: 1px solid var(--ld-line);
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+.uni-hub-test.uh-page.ae.ld .uh-block > .uh-faq .uh-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--ld-ink);
+  list-style: none;
+  cursor: pointer;
+}
+.uni-hub-test.uh-page.ae.ld .uh-block > .uh-faq .uh-faq-q::-webkit-details-marker {
+  display: none;
+}
+.uni-hub-test.uh-page.ae.ld .uh-block > .uh-faq .uh-faq-a {
+  margin: 0 0 16px !important;
+  font-size: 16px !important;
+  line-height: 28px !important;
+  color: var(--ld-text) !important;
+}
+.uni-hub-test.uh-page.ae.ld .uh-block > .uh-faq .uh-faq-chev {
+  color: var(--ld-muted);
+  transition: transform 0.2s ease;
+}
+.uni-hub-test.uh-page.ae.ld .uh-block > .uh-faq .uh-faq-item[open] .uh-faq-chev {
+  transform: rotate(180deg);
+}
+
+.uni-hub-test.uh-page.ae.ld :is(.uh-updated, .uh-summary-date, .uh-summary-h) {
+  font-family: inherit !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+/* Mockup: the Automate button sits right under the asset name, in view. */
+.uni-hub-test.uh-page.ae .ap-screen .ap-btn {
+  margin-top: 12px;
+  width: 78%;
+}
+
+/* Note under every ranking: what a low TVL does and does not mean. */
+.uni-hub-test.uh-page.ae .rk .rk-note {
+  margin: 0 !important;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--ld-line-2, var(--ae-line));
+  background: var(--ld-soft, rgba(0, 0, 0, 0.02));
+  font-size: 13px !important;
+  line-height: 20px !important;
+  color: var(--ld-muted, var(--ae-ink-3)) !important;
+}
+.uni-hub-test.uh-page.ae .rk .rk-note strong {
+  font-weight: 600;
+  color: var(--ld-text, var(--ae-ink-2));
+}
+
+/* ---------- breathing room, everywhere (tables, subheads) ----------
+   Plain .ae-table wrappers were missing from the rhythm above, so a table
+   ran straight into whatever followed. Section subheads (h3) in .ae-section
+   had no style at all and sat on the next element. */
+.uni-hub-test.uh-page.ae.ld :is(.ae-table-wrap, table.ae-table, .eh-steps, .uh-risks, .ae-faq) {
+  margin-top: 16px;
+  margin-bottom: 28px;
+}
+.uni-hub-test.uh-page.ae.ld .ae-table-wrap > table.ae-table {
+  margin: 0;
+}
+.uni-hub-test.uh-page.ae.ld .ae-section h3 {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: var(--ld-h2);
+  margin: 0 0 12px;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-section, .uh-block) :is(p, ul, ol, .ae-table-wrap, .eh-keys, .rk, aside) + h3 {
+  margin-top: 36px;
+}
+/* A subhead already names the list, so the "Key points" label under it repeats it. */
+.uni-hub-test.uh-page.ae.ld h3 + .eh-keys .eh-keys-h {
+  display: none;
+}
+.uni-hub-test.uh-page.ae.ld :is(.ae-table-wrap, .rk, .eh-evidence-wrap) + :is(p, h3, .eh-keys, aside) {
+  margin-top: 24px;
+}
+/* A table never spills past the text column: it scrolls inside its wrapper. */
+.uni-hub-test.uh-page.ae.ld .ae-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* =====================================================================
+   Mobile (≤ 720px): nothing wider than the screen, and a smaller, calmer
+   type scale. Tables first try to fit (tighter cells, secondary columns
+   dropped); anything still too wide scrolls inside its own box, never
+   the page.
+   ===================================================================== */
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld {
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+  .uni-hub-test.uh-page.ae.ld,
+  .uni-hub-test.uh-page.ae.ld :is(p, li, dd, td, th, summary, .uh-lead, .ae-sub, .ae-lede) {
+    font-size: 15px !important;
+    line-height: 24px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .ae-h1 {
+    font-size: 26px !important;
+    line-height: 32px !important;
+    letter-spacing: -0.5px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .ae-h1-dek {
+    font-size: 16px !important;
+    line-height: 22px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld h2 {
+    font-size: 21px !important;
+    line-height: 28px !important;
+    letter-spacing: -0.3px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld h3,
+  .uni-hub-test.uh-page.ae.ld .ae-pattern-h {
+    font-size: 17px !important;
+    line-height: 24px !important;
+    letter-spacing: -0.2px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld :is(.ae-byline, .ae-dateline, .rp-eyebrow, .ae-kicker, .ae-caption, .rk-note, .rk-sub, .uni-data-note) {
+    font-size: 12.5px !important;
+    line-height: 18px !important;
+  }
+
+  /* Tables: contained, tighter, smaller. */
+  .uni-hub-test.uh-page.ae.ld table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .uni-hub-test.uh-page.ae.ld table :is(th, td) {
+    font-size: 13px !important;
+    line-height: 18px !important;
+    padding: 8px 8px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld table :is(th, td):first-child {
+    padding-left: 0 !important;
+  }
+  .uni-hub-test.uh-page.ae.ld :is(.rk-scroll, .ae-table-wrap, .eh-evidence-wrap) {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  /* The ranking: name and rate always fit; secondary columns go. */
+  .uni-hub-test.uh-page.ae.ld .rk-table {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table .rk-c-name {
+    width: auto;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table :is(.rk-c-apy, .rk-c-tvl) {
+    width: 84px;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table .rk-c-30 {
+    display: none;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-prod-txt {
+    min-width: 0;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  /* Evidence table: keep strategy, rate, swing and size. */
+  .uni-hub-test.uh-page.ae.ld .eh-evidence :is(th, td):nth-child(3),
+  .uni-hub-test.uh-page.ae.ld .eh-evidence :is(th, td):nth-child(4) {
+    display: none;
+  }
+
+  /* Calculator: one column. */
+  .uni-hub-test.uh-page.ae.ld .uh-calc-panes {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .uh-calc-res {
+    border-left: 0 !important;
+    border-top: 1px solid var(--ld-line);
+  }
+  .uni-hub-test.uh-page.ae.ld .uh-calc-in {
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding: 16px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .uh-calc-in > * {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Hero buttons wrap instead of running off the edge. */
+  .uni-hub-test.uh-page.ae.ld .ae-hero-ctas {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- Mobile ranking card (≤ 720px) ----------
+   Title on its own line with the app button under it, then a compact table
+   that fits the screen: 12px inner gutter on both edges, smaller type, the
+   name truncates instead of pushing the rate off the edge. */
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld .rk-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 12px 12px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-title {
+    font-size: 14px !important;
+    line-height: 20px !important;
+    margin: 0;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk a.rk-cta {
+    justify-content: center;
+    width: 100%;
+    font-size: 13px !important;
+    line-height: 18px !important;
+    padding: 8px 12px !important;
+    white-space: nowrap;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-scroll {
+    overflow: hidden;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table {
+    display: table !important;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table :is(th, td),
+  .uni-hub-test.uh-page.ae.ld .rk-table :is(th, td):first-child {
+    padding: 10px 12px !important;
+    font-size: 12.5px !important;
+    line-height: 17px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table :is(th, td):not(:first-child) {
+    padding-left: 4px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table thead th {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-sort {
+    font-size: 11.5px !important;
+    line-height: 16px !important;
+    white-space: nowrap;
+    padding: 0 !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-sort-ico {
+    width: 10px;
+    height: 10px;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table :is(.rk-c-apy, .rk-c-30) {
+    width: 76px;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table .rk-c-tvl {
+    width: 62px;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table td.rk-c-apy strong {
+    font-size: 13px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-prod {
+    gap: 10px;
+    min-width: 0;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-tile {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-tile > img {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-tile-chain img {
+    width: 9px !important;
+    height: 9px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-name {
+    font-size: 13px !important;
+    line-height: 18px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-sub {
+    font-size: 11px !important;
+    line-height: 15px !important;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-note {
+    padding: 12px !important;
+  }
+}
+
+/* ---------- Ranking: trailing arrow, rows read as links ---------- */
+.uni-hub-test.uh-page.ae .rk-table .rk-c-go {
+  width: 36px;
+  padding-left: 0 !important;
+  padding-right: 14px !important;
+  text-align: right;
+  color: var(--ld-faint, var(--ae-ink-3));
+}
+.uni-hub-test.uh-page.ae .rk-table .rk-go {
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+.uni-hub-test.uh-page.ae .rk-row:hover .rk-go {
+  transform: translateX(2px);
+  color: var(--ld-ink, currentColor);
+}
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld .rk-table .rk-c-go {
+    width: 26px;
+    padding-right: 10px !important;
+    padding-left: 0 !important;
+  }
+  .uni-hub-test.uh-page.ae.ld .rk-table .rk-go {
+    width: 12px;
+    height: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-hub-test.uh-page.ae .rk-table .rk-go {
+    transition: none;
+  }
+}
+
+/* ---------- Hero: Open App leads, with an external-link mark ---------- */
+.uni-hub-test.uh-page.ae .ae-btn .ae-btn-ext {
+  margin-left: 6px;
+  vertical-align: -2px;
+  transition: transform 0.18s ease;
+}
+.uni-hub-test.uh-page.ae .ae-btn:hover .ae-btn-ext {
+  transform: translate(1px, -1px);
+}
+
+/* ---------- Ranking title: the hub's mark before the name ---------- */
+.uni-hub-test.uh-page.ae .rk-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.uni-hub-test.uh-page.ae .rk-title-ico {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.uni-hub-test.uh-page.ae .rk-title-ico img + img {
+  margin-left: -5px;
+  box-shadow: 0 0 0 1.5px var(--ld-bg, #fff);
+  border-radius: 50%;
+}
+@media (max-width: 720px) {
+  /* A comfortable tap target: 44px tall. */
+  .uni-hub-test.uh-page.ae.ld .rk a.rk-cta {
+    min-height: 44px;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Icons are always circles: no flex parent may squeeze them into ovals. */
+.uni-hub-test.uh-page.ae :is(.rk-tile, .rk-tile-chain, .rk-title-ico, .ae-crumb-asset, .ap-asset) img {
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ---------- Mobile tables, second pass ----------
+   A table made into a scroll box puts its scrollbar on top of the caption.
+   Tables fit instead: normal table layout, full width, headers and cells
+   allowed to wrap. Only the wide multi-column tables keep a scroll wrapper,
+   and that wrapper leaves room under the rows for its scrollbar. */
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld table:not(.rk-table) {
+    display: table;
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+    table-layout: auto;
+  }
+  .uni-hub-test.uh-page.ae.ld table:not(.rk-table) :is(th, td) {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .uni-hub-test.uh-page.ae.ld table:not(.rk-table) thead th {
+    font-size: 12px !important;
+    line-height: 16px !important;
+    vertical-align: bottom;
+  }
+  .uni-hub-test.uh-page.ae.ld table caption {
+    caption-side: bottom;
+    text-align: left;
+    padding-top: 10px;
+    font-size: 12.5px !important;
+    line-height: 18px !important;
+  }
+  .uni-hub-test.uh-page.ae.ld :is(.ae-table-wrap, .eh-evidence-wrap) {
+    overflow-x: auto;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    scrollbar-width: thin;
+  }
+}
+@media (max-width: 720px) {
+  /* Figures stay on one line; only the headers wrap. */
+  .uni-hub-test.uh-page.ae.ld table:not(.rk-table) tbody :is(th, td) {
+    white-space: nowrap !important;
+    overflow-wrap: normal;
+  }
+  .uni-hub-test.uh-page.ae.ld table:not(.rk-table) tbody :is(th, td):not(.num):not(:first-child) {
+    white-space: normal !important;
+  }
+}

@@ -115,6 +115,7 @@ export function UsdcCalculator({
   if (!products.length) return null;
 
   return (
+    <>
     <div className="uh-calc" data-nosnippet="">
       <div className="uh-calc-panes">
         <div className="uh-calc-in">
@@ -172,7 +173,7 @@ export function UsdcCalculator({
         <div className="uh-calc-res">
           {!result ? (
             <p className="uh-calc-rest">
-              Results appear here once you calculate.
+              Results appear here after calculation.
             </p>
           ) : null}
 
@@ -226,7 +227,9 @@ export function UsdcCalculator({
           </div>
         </div>
       </div>
-      {/* Full width under both panes, so the inputs pane stays short. */}
+    </div>
+      {/* Under the calculator, outside the card, so the card holds only the
+          inputs and the result. */}
       <p className="uh-calc-note">
         Educational only. The figures extrapolate one day&rsquo;s rate across a
         full year and assume it holds, which no onchain rate does. Rates move
@@ -235,12 +238,12 @@ export function UsdcCalculator({
         enough amount can move the rate it earns. Nothing here is advice, an
         offer, or a forecast.
       </p>
-      {/* A fee disclaimer used to sit here saying these figures were gross
+      {/* A fee disclaimer used to sit under the calculator saying these figures were gross
           of fees and a realised amount would be lower. That was wrong: the
           published APY is already net of the performance fee, so the
           paragraph was warning about a deduction that has already been
           taken. Removed rather than reworded, because nothing needs
           disclosing when the figure shown is the figure earned. */}
-    </div>
+    </>
   );
 }

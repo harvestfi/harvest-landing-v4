@@ -20,7 +20,6 @@
 // calculator, schema helpers), so the two long-form hubs read as one site.
 import { Fragment } from "react";
 import Link from "next/link";
-import { getAllSparklines } from "@/lib/data";
 import { AssetIcon, ChainIcon } from "@/components/token-icons";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { assetHubCrumbs } from "@/lib/seo";
@@ -30,12 +29,14 @@ import {
   faqPageSchema,
   reportDatasetSchema,
 } from "@/lib/jsonld";
-import { HubTable } from "@/components/hub-table";
 import { HomeCrumb } from "@/components/home-crumb";
 import { RankingDataNote } from "@/components/ranking-data-note";
 import { UsdcCalculator, type CalcProduct } from "@/components/usdc-calculator";
-import { EthLoopFigure } from "@/components/eth-loop-figure";
 import { harvestAppUrl } from "@/lib/harvest-app";
+import { RankTable } from "@/components/rank-table";
+import { DocsRails, ExploreHubs } from "@/components/editorial-hub";
+import { edRows } from "@/lib/editorial-hub";
+import { exploreHubs } from "@/lib/explore-hubs";
 import { proseName, listOf, plural, apy, apyFloorLabel, tvl } from "@/lib/usdc-hub";
 import { strategyTypeOf, isL2 } from "@/lib/eth-hub";
 import {
@@ -63,6 +64,24 @@ import {
 } from "@/lib/eth-hub-copy";
 
 const HUB_URL = `${SITE_URL}/eth`;
+
+/** "On this page" entries, in page order. */
+const ETH_TOC: [string, string][] = [
+  ["key-takeaways", "Key takeaways"],
+  ["top-ten", "Top 10"],
+  ["by-network", "By network"],
+  ["strategy-types", "Strategy types"],
+  ["safest", "Safety evidence"],
+  ["calculator", "Calculator"],
+  ["how-to-start", "How to start"],
+  ["vs-staking", "Vs staking"],
+  ["rate-stability", "Rate stability"],
+  ["by-venue", "By protocol"],
+  ["risk-surfaces", "Risks"],
+  ["faq", "Questions"],
+  ["full-index", "Full index"],
+];
+const ETH_APP_URL = "https://app.harvest.finance/?search=eth&asset=singlestakes";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -96,11 +115,11 @@ function Em({ text }: { text: string }) {
  * place. Same <details> pattern as the FAQ on /usdc, so every answer is in the
  * HTML whether or not it is open, and the FAQPage schema still lists them all.
  */
-function Ask({ items }: { items: Faq[] }) {
+function Ask({ items, title = "Readers often ask" }: { items: Faq[]; title?: string }) {
   if (!items.length) return null;
   return (
-    <aside className="eh-ask" aria-label="Questions on this section">
-      <p className="eh-ask-h">Questions readers ask here</p>
+    <aside className="eh-ask" aria-label={title}>
+      <p className="eh-ask-h">{title}</p>
       <div className="uh-faq">
         {items.map((f, i) => (
           <details className="uh-faq-item" key={f.q} id={qid(f.q)} open={i === 0}>
@@ -139,7 +158,7 @@ function KeyPoints({ items }: { items: string[] }) {
   );
 }
 
-/** Two figures side by side under one label, with a dated note below. */
+/** Two figures under one label, as a short list with a dated note below. */
 function StatPair({
   title,
   items,
@@ -150,19 +169,18 @@ function StatPair({
   note: string;
 }) {
   return (
-    <figure className="eh-stat" data-nosnippet="">
-      <figcaption className="eh-stat-h">{title}</figcaption>
-      <dl className="eh-stat-row">
+    <div className="ae-statlist">
+      <p className="ae-statlist-h">{title}</p>
+      <ul data-lint="chrome">
         {items.map((it) => (
-          <div key={it.label}>
-            <dt>{it.label}</dt>
-            <dd className="eh-stat-v">{it.value}</dd>
-            {it.sub ? <dd className="eh-stat-s">{it.sub}</dd> : null}
-          </div>
+          <li key={it.label}>
+            <strong>{it.label}</strong> <span className="ae-statlist-v">{it.value}</span>
+            {it.sub ? <span className="ae-statlist-s">{` · ${it.sub}`}</span> : null}
+          </li>
         ))}
-      </dl>
-      <p className="eh-stat-note">{note}</p>
-    </figure>
+      </ul>
+      <p className="ae-statlist-note">{note}</p>
+    </div>
   );
 }
 
@@ -236,7 +254,7 @@ function Chevron() {
 
 
 export async function EthHubBody() {
-  const [m, sparklines] = await Promise.all([ethPageModel(), getAllSparklines()]);
+  const [m, explore] = await Promise.all([ethPageModel(), exploreHubs("ETH")]);
 
   if (!m) {
     return (
@@ -267,7 +285,12 @@ export async function EthHubBody() {
     (r) => r.vault.contractAddress.toLowerCase() === "0xfe09e53a81fe2808bc493ea64319109b5baa573e",
   );
   const mmFunded = c.funded.filter((v) => strategyTypeOf(v) === "money-market").length;
-  const asks = (at: FaqSpot) => faqs.filter((f) => f.at === at);
+  // Up to three questions sit under the section they belong to; the rest are
+  // answered under the question index at the foot.
+  const asks = (at: FaqSpot) => faqs.filter((f) => f.at === at).slice(0, 3);
+  const SPOTS: FaqSpot[] = ["network", "types", "safety", "calc", "staking", "stability", "venue", "risk"];
+  const placed = new Set(SPOTS.flatMap((at) => asks(at)).map((f) => f.q));
+  const restFaqs = faqs.filter((f) => !placed.has(f.q));
   const base = nets.find((n) => n.chain === "Base");
   const visibleChains = [...c.chains].sort();
 
@@ -279,10 +302,9 @@ export async function EthHubBody() {
     appUrl: harvestAppUrl(v.chain, v.contractAddress),
   }));
 
-  const topRaw = c.bestRaw && c.bestRaw.slug !== best.slug ? c.bestRaw : null;
-
   return (
-    <div className="uni-hub-test uh-page eh-page eh-read">
+    <div className="uni-hub-test uh-page ae ld eth-ld">
+      <DocsRails toc={ETH_TOC} token="ETH" assetName="ETH" appUrl={ETH_APP_URL} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(crumbs)) }}
@@ -343,7 +365,10 @@ export async function EthHubBody() {
       <nav className="uni-hub-crumbs" aria-label="Breadcrumb">
         <HomeCrumb />
         <span className="uni-hub-crumbs-sep" aria-hidden="true">›</span>
-        <span className="uni-hub-crumbs-current">ETH Ranking</span>
+        <span className="uni-hub-crumbs-current">
+          <AssetIcon asset="ETH" size={16} decorative />
+          ETH Ranking
+        </span>
       </nav>
 
       <p className="eh-topmeta" data-dateline="">
@@ -368,54 +393,52 @@ export async function EthHubBody() {
           Live ETH and WETH lending rates for {monthYear}{" "}
           <span className="eh-dek-accent">· read from the vault contracts</span>
         </p>
-        <p className="uh-answer">
-          <Em text={m.heroAnswer} />
-        </p>
-        <div className="eh-ctas">
-          <a className="eh-btn eh-btn-primary" href="https://app.harvest.finance/?search=eth&asset=singlestakes" target="_blank" rel="noopener noreferrer">
-            Open the Harvest app
+        <div className="ae-hero-ctas">
+          <a className="ae-btn" href={ETH_APP_URL} target="_blank" rel="noopener noreferrer">
+            Open App
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="ae-btn-ext"><path d="M5 11 11 5M6 5h5v5" /></svg>
           </a>
-          <a className="eh-btn" href="#top-ten">
-            See the top 10 ranking
-            <span aria-hidden="true">&nbsp;↓</span>
+          <a className="ae-btn-ghost" href="#top-ten">
+            Jump to Top 10
+            <span aria-hidden="true"> ↓</span>
           </a>
         </div>
       </div>
 
-      {/* Four figures as text in a ruled grid: a label over a value, dated by
-          the meta line above. */}
-      <dl className="eh-statgrid" data-asof={c.asOfIso}>
-        {topRaw ? (
-          <div>
-            <dt>Top rate overall</dt>
-            <dd className="eh-sg-v">{apy(topRaw.apy24h)}</dd>
-            <dd className="eh-sg-s">
-              {bare(topRaw)} · {SINGULAR[strategyTypeOf(topRaw)]}
-            </dd>
-          </div>
-        ) : null}
-        <div>
-          <dt>Best above {tvl(c.fundedFloor)}</dt>
-          <dd className="eh-sg-v">{apy(best.apy24h)}</dd>
-          <dd className="eh-sg-s">
-            {bare(best)} · {best.chain}
-          </dd>
-        </div>
-        <div>
-          <dt>Tracked in ETH strategies</dt>
-          <dd className="eh-sg-v">{tvl(c.totalTvl)}</dd>
-          <dd className="eh-sg-s">
-            {c.count} strategies on {c.chainCount} networks
-          </dd>
-        </div>
-        {staking ? (
-          <div>
-            <dt>Staking reference</dt>
-            <dd className="eh-sg-v">{`${aprToApy(staking.aprAverage).toFixed(2)}%`}</dd>
-            <dd className="eh-sg-s">Lido stETH, after its fee</dd>
-          </div>
-        ) : null}
-      </dl>
+      {/* Key takeaways first: the most-asked questions, one dated sentence
+          each, in the first screen of HTML (where most AI citations are
+          drawn from). Then one paragraph on how the figures are measured,
+          then the ranking. */}
+      <section className="eh-takeaways" aria-labelledby="key-takeaways" data-asof={c.asOfIso}>
+        <h2 id="key-takeaways" className="eh-tk-h">
+          Key takeaways <span className="eh-tk-date" data-dateline="">· {c.asOf}</span>
+        </h2>
+        <dl className="eh-tk-list">
+          {m.takeaways.map((t) => (
+            <div key={t.k} className="eh-tk-item">
+              <dt>{t.k}</dt>
+              <dd>
+                <Em text={t.a} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <div className="eh-intro">
+        <p>
+          <Em text={m.intro} /> How each figure is measured is set out in the{" "}
+          <Link href="/methodology">methodology</Link>.
+        </p>
+        <a
+          className="eh-btn eh-btn-primary"
+          href="https://app.harvest.finance/?search=eth&asset=singlestakes"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open the Harvest app
+        </a>
+      </div>
 
       <Block
         id="top-ten"
@@ -429,22 +452,17 @@ export async function EthHubBody() {
           `${listOf([...new Set(c.top10.map((v) => v.chain))])}.`
         }
       >
-        <HubTable
-          vaults={c.top10}
-          sparklines={sparklines}
-          scopeLabel="ETH strategies"
-          openLinks
-          metrics
-          venueLabel="Protocol"
+        <RankTable
+          rows={edRows(c.top10, "ETH", c.fundedFloor)}
+          tvl={false}
+          title="ETH Ranking"
+          icon={{ asset: "ETH" }}
+          floorLabel={tvl(c.fundedFloor)}
+          appUrl={ETH_APP_URL}
         />
         <p className="uh-note">
-          {`Rates are read from the vault contracts on ${listOf(visibleChains)}, net of fees, and ` +
-            `refreshed several times a day, as the `}
-          <Link href="/methodology">methodology</Link>
-          {` sets out. ` +
-            `Sorted on the 24-hour rate with no floor applied, so a row near the top can sit on a ` +
-            `few hundred dollars of ETH. The headline figure uses a ${tvl(c.fundedFloor)} floor ` +
-            `for that reason, and ${c.fundedCount} of the ${c.count} strategies cleared it.`}
+          {`Sorted on the 24-hour rate with no floor applied, so a row near the top can sit on a ` +
+            `few hundred dollars of ETH. Rates on ${listOf(visibleChains)}, net of fees.`}
         </p>
         <p>
           The rest of the page breaks the ranking down: <a href="#by-network">ETH yield by network</a>
@@ -453,7 +471,6 @@ export async function EthHubBody() {
           <a href="#calculator">what 1 ETH earns in a year</a>. The same rates for stablecoins are on
           the <Link href="/usdc">USDC yield ranking</Link>.
         </p>
-        <Ask items={asks("top")} />
       </Block>
 
       <Block
@@ -536,7 +553,7 @@ export async function EthHubBody() {
       <Block
         id="strategy-types"
         eyebrow="Strategy types"
-        title="What you can do with ETH or WETH to earn yield"
+        title="How ETH and WETH earn yield"
         asOf={c.asOf}
         asOfIso={c.asOfIso}
         lead={
@@ -603,12 +620,6 @@ export async function EthHubBody() {
           A curated vault on <Link href="/morpho">Morpho</Link>{" "}adds the curator&rsquo;s choice of
           markets. An allocator adds a contract that moves the position between venues.
         </p>
-        <EthLoopFigure
-          vaultHref={(() => {
-            const loop = c.all.find((v) => strategyTypeOf(v) === "looping");
-            return loop ? `/${loop.slug}` : undefined;
-          })()}
-        />
         <p>
           <strong>Looping adds leverage</strong>, the only one of the four with a liquidation
           path. Building the loop costs fees, so it charges an entry cost the app shows before a
@@ -632,11 +643,11 @@ export async function EthHubBody() {
             <thead>
               <tr>
                 <th scope="col">Strategy</th>
+                <th scope="col">24h APY</th>
                 <th scope="col">Type</th>
-                <th scope="col">Tracked value</th>
                 <th scope="col">Vault history</th>
                 <th scope="col">30-day swing</th>
-                <th scope="col">24h APY</th>
+                <th scope="col">Tracked value</th>
               </tr>
             </thead>
             <tbody>
@@ -646,13 +657,13 @@ export async function EthHubBody() {
                     <Link href={`/${r.vault.slug}`}>{bare(r.vault)}</Link>
                     <span className="eh-netname">{r.vault.chain}</span>
                   </th>
+                  <td data-label="24h APY">{apy(r.vault.apy24h)}</td>
                   <td data-label="Type">{cap(SINGULAR[r.type])}</td>
-                  <td data-label="Tracked value">{tvl(r.vault.tvl)}</td>
                   <td data-label="Vault history">{r.trackedDays ? r.ageLabel : "–"}</td>
                   <td data-label="30-day swing">
                     {r.stdev == null ? "–" : `±${r.stdev.toFixed(2)} pts`}
                   </td>
-                  <td data-label="24h APY">{apy(r.vault.apy24h)}</td>
+                  <td data-label="Tracked value">{tvl(r.vault.tvl)}</td>
                 </tr>
               ))}
             </tbody>
@@ -717,7 +728,7 @@ export async function EthHubBody() {
         <p>
           <Em
             text={
-              `At the top funded rate of ${apy(best.apy24h)} as of ${c.asOf}, 1 ETH would earn about ` +
+              `At the top funded rate of ${apy(best.apy24h)} as of ${c.asOf}, 1 ETH works out to about ` +
               `${(best.apy24h / 100).toFixed(4)} ETH over a year. The table runs the same sum for ` +
               `10 and 32 ETH, beside the median rate.`
             }
@@ -807,7 +818,7 @@ export async function EthHubBody() {
         eyebrow="Mechanism"
         asOf={c.asOf}
         asOfIso={c.asOfIso}
-        title="ETH yield vs staking (Lido stETH)"
+        title="ETH yield vs staking APY (Lido stETH)"
         lead={STAKING_LEAD}
       >
         {staking ? (
@@ -941,7 +952,7 @@ export async function EthHubBody() {
       <Block
         id="by-venue"
         eyebrow="By venue"
-        title={venueVs ? `ETH yield by protocol: ${venueVs}` : "ETH yield by protocol"}
+        title={venueVs ? `ETH lending rates by protocol: ${venueVs}` : "ETH lending rates by protocol"}
         asOf={c.asOf}
         asOfIso={c.asOfIso}
         lead={venueLead(venues)}
@@ -992,6 +1003,7 @@ export async function EthHubBody() {
           collateral separately, which spreads rates wider and keeps a bad collateral asset
           contained to the market that accepted it.
         </p>
+        <Ask items={asks("venue")} />
       </Block>
 
       <Block
@@ -1029,7 +1041,10 @@ export async function EthHubBody() {
           link opening its answer in place. A <nav>, because it is navigation and
           the answers already sit in the page once. */}
       <section className="uh-block eh-qindex" aria-labelledby="faq">
-        <p className="rp-eyebrow">Questions</p>
+        <p className="rp-eyebrow" data-dateline="">
+          Questions<span className="uh-eyebrow-sep" aria-hidden="true"> · </span>
+          <span className="uh-eyebrow-date">{c.asOf}</span>
+        </p>
         <h2 id="faq">Every ETH yield question on this page</h2>
         <nav aria-label="Questions answered on this page">
           <ol className="eh-qlist">
@@ -1040,6 +1055,7 @@ export async function EthHubBody() {
             ))}
           </ol>
         </nav>
+        <Ask items={restFaqs} title="More answers" />
         {/* Opens the <details> a question link points at; without it the page
             scrolls to a closed answer. Plain script, no client bundle. */}
         <script
@@ -1063,12 +1079,12 @@ export async function EthHubBody() {
           `The network and protocol filters narrow rows already on the page.`
         }
       >
-        <HubTable
-          vaults={c.all}
-          sparklines={sparklines}
-          scopeLabel="ETH strategies"
-          metrics
-          venueLabel="Protocol"
+        <RankTable
+          rows={edRows(c.all, "ETH", c.fundedFloor)}
+          title={`All ${c.count} ETH strategies`}
+          icon={{ asset: "ETH" }}
+          floorLabel={tvl(c.fundedFloor)}
+          appUrl={ETH_APP_URL}
         />
       </Block>
 
@@ -1097,19 +1113,7 @@ export async function EthHubBody() {
         </p>
       </Block>
 
-      <section className="uni-hub-cta-row">
-        <p className="uni-hub-cta-meta">
-          Looking for a specific chain? Network ranking pages cut the same data by network.
-        </p>
-        <div className="uni-hub-cta-links">
-          {visibleChains.slice(0, 6).map((chain) => (
-            <Link key={chain} href={`/${chain.toLowerCase()}`} className="uni-hub-cta-pill">
-              <ChainIcon chain={chain} size={14} />
-              {chain}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <ExploreHubs assets={explore.assets} networks={explore.networks} />
 
       <RankingDataNote sortedBy="24-hour APY, highest first" />
     </div>

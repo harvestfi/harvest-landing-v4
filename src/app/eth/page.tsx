@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { getLiveVaults, loadHistoryFile } from "@/lib/data";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
-import { formatAPY } from "@/lib/format";
 import { buildEthCohort, networkPicks } from "@/lib/eth-hub";
 import { EthHubBody } from "@/components/eth-hub-body";
 import "../_styles/asset-hub.css";
 import "../_styles/usdc-hub.css";
 import "../_styles/eth-hub.css";
+import "../_styles/eth-institutional.css";
+import "../_styles/asset-editorial.css";
+import "../_styles/asset-ld.css";
 
 const ASSET = "ETH" as const;
 const URL = `${SITE_URL}/eth`;
@@ -18,30 +20,26 @@ export async function generateMetadata(): Promise<Metadata> {
     loadHistoryFile(),
   );
 
-  // The queries reaching this page name a network ("on Base", "on an L2"), so
-  // the title carries the networks and keeps the "best ETH yield" head term.
-  // It also carries the month and year of the data: in Ahrefs' study of
-  // ChatGPT's query fan-out, the year was the modifier added most often to
-  // the searches it runs (22.9% of them), and a dated title matches those.
+  // The head terms people search ("ethereum yield", "eth apy") were missing
+  // from the title, and Ahrefs files them all under one parent topic, so one
+  // page can carry them. The title stays under ~600px (about 60 characters
+  // with " | Harvest"), past which Google rewrites titles far more often
+  // (46% vs 29% in Ahrefs' title study). "Live" matches the wording of the
+  // pages that rank for these terms; the month and year of the data stay, as
+  // the year is the modifier ChatGPT's query fan-out adds most often (22.9%).
   const monthYear = c.asOfIso
-    ? new Date(c.asOfIso).toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })
+    ? new Date(c.asOfIso).toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
     : "";
   const title = monthYear
-    ? `Best ETH Yield (${monthYear}): Live APY on Base, Arbitrum & Ethereum`
-    : "Best ETH Yield on Base, Arbitrum & Ethereum: Live APY";
+    ? `Ethereum Yield & ETH APY: Live Rates (${monthYear})`
+    : "Ethereum Yield & ETH APY: Live Rates";
 
-  // The description leads with the answer, the way the page does: the top
-  // 24-hour rate first, then the best rate above the liquidity floor, so the
-  // snippet and the intro name the same figures.
-  const top = c.all[0];
-  const name = (v: typeof top) => v.productName.replace(/\s*\([^)]*\)$/, "");
+  // No live rate in the description: Google rewrites about 63% of them anyway,
+  // and a one-day spike on a small vault (110% on 31 Oct) once reached the
+  // snippet. The live figures sit in the visible hero and table instead.
   const description = c.best
-    ? `Best ETH yield${monthYear ? `, ${monthYear}` : ""}: ${formatAPY(top.apy24h)} APY on ` +
-      `${name(top)} (${top.chain})` +
-      (top.slug !== c.best.slug
-        ? `; ${formatAPY(c.best.apy24h)} on ${name(c.best)} is the best above $50K`
-        : "") +
-      `. Compare ${c.count} ETH and WETH strategies by 24-hour APY, TVL and 30-day steadiness.`
+    ? `Live ETH APY and Ethereum yield across ${c.count} ETH and WETH strategies on Base, ` +
+      `Arbitrum and Ethereum, ranked by 24-hour rate and steadiness and compared with staking.`
     : `Compare ETH and WETH yield strategies by 24-hour APY, TVL and 30-day steadiness, updated several times a day.`;
 
   return {

@@ -220,7 +220,7 @@ export function XrpStakingCalculator({
 
         <div className="rp-calc-res">
           {!shown ? (
-            <p className="rp-calc-rest">Results appear here once you calculate.</p>
+            <p className="rp-calc-rest">Results appear here after calculation.</p>
           ) : null}
 
           <div className="rp-calc-out" role="status" aria-live="polite" ref={outRef}>

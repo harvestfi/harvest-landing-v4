@@ -13,6 +13,7 @@ import {
   apy,
   apyFloorLabel,
   tvl,
+  venueOf,
 } from "./usdc-hub";
 import {
   buildEthCohort,
@@ -42,8 +43,9 @@ export const HARVEST_FEE_TEXT = "10% on Base and Arbitrum and 15% on Ethereum ma
 
 // The shared asset-hub H1 reads "Best Ethereum Yield", which on this site is
 // also the name of the /ethereum network page. The hub ranks the asset, so it
-// says ETH, as its title, schema and Markdown twin do.
-export const ETH_HUB_H1 = "Best ETH Yield";
+// leads with ETH. "Ethereum APY" carries the second head term, so a title
+// rewritten from the H1 (about half of Google's rewrites) still names both.
+export const ETH_HUB_H1 = "Best ETH Yield & Ethereum APY";
 
 /** Rows holding less than this are called dust where the median is qualified. */
 export const DUST_TVL = 1_000;
@@ -77,6 +79,7 @@ export type FaqSpot =
   | "calc"
   | "staking"
   | "stability"
+  | "venue"
   | "risk";
 export interface Faq {
   q: string;
@@ -222,6 +225,19 @@ export function buildFaqs(
             `holding at least ${tvl(c.fundedFloor)}, the highest was ${apy(c.best.apy24h)} on ` +
             `${proseName(c.best)}, holding ${tvl(c.best.tvl)}.`),
     },
+    // "ethereum interest rate" reaches the page from position 30 and over in
+    // Search Console, and the page never used the words. The answer names the
+    // lending rate as the interest rate and keeps staking apart.
+    {
+      q: "What is the ETH interest rate?",
+      at: "top",
+      a:
+        `The ETH interest rate is what borrowers pay to borrow ETH, passed to the lenders who ` +
+        `supply it. As of ${c.asOf}, the median across the ${c.fundedCount} ETH strategies ` +
+        `holding at least ${tvl(c.fundedFloor)} was ${apy(fundedMedian(c))}, and the best of ` +
+        `them paid ${apy(c.best.apy24h)} on ${proseName(c.best)}. Staking pays a separate rate, ` +
+        `set by the network itself.`,
+    },
     {
       q: "Where can I earn yield on ETH on Base?",
       at: "network",
@@ -286,6 +302,39 @@ export function buildFaqs(
           `autocompounds, so the rate shown already includes compounding.`
         : "",
     },
+    // "eth farming" fell from position 10 to 37 with no farming vocabulary on
+    // the page. Farming here is the same lending, compounded inside the vault.
+    {
+      q: "What is ETH yield farming?",
+      at: "types",
+      a:
+        `Supplying ETH to a strategy that earns interest from borrowers, harvests any reward ` +
+        `token the market adds and sells it back into ETH, so the balance compounds on its own. ` +
+        `Every one of the ${c.count} ETH strategies tracked here works that way as of ${c.asOf}, ` +
+        `and the rate shown already includes the compounding.`,
+    },
+    // "aave eth" and "ethereum aave" already earn clicks from position 36 to
+    // 39; the plain Aave lending rows answer them, the leveraged loop apart.
+    {
+      q: "What does Aave pay on ETH?",
+      at: "venue",
+      a: (() => {
+        const aave = c.all.filter(
+          (v) => venueOf(v) === "Aave" && strategyTypeOf(v) !== "looping",
+        );
+        if (!aave.length) return "";
+        return (
+          `${listOf(aave.map((v) => `${apy(v.apy24h)} on ${v.chain}`))} as of ${c.asOf}, ` +
+          `through the ${aave.length} Aave ETH ${plural(aave.length, "vault", "vaults")} tracked ` +
+          `here, after the vault's fee. Aave sets one rate for every lender in a market, so the ` +
+          `vault's size does not change it` +
+          (loop && venueOf(loop) === "Aave"
+            ? `; the leveraged loop built on Aave is counted apart, since its rate comes from ` +
+              `borrowing against the position.`
+            : `.`)
+        );
+      })(),
+    },
     {
       q: "Which DeFi vaults pay the best yield on WETH?",
       at: "types",
@@ -324,9 +373,9 @@ export function buildFaqs(
       q: "How much can I earn on 1 ETH or 10 ETH?",
       at: "calc",
       a:
-        `At the top funded rate of ${apy(c.best.apy24h)} as of ${c.asOf}, 1 ETH would earn about ` +
+        `At the top funded rate of ${apy(c.best.apy24h)} as of ${c.asOf}, 1 ETH works out to about ` +
         `${onOne(c.best.apy24h)} ETH over a year and 10 ETH about ${onTen(c.best.apy24h)} ETH, ` +
-        `before any rate change. At the median of ${apy(c.medianApy)}, 10 ETH would earn about ` +
+        `before any rate change. At the median of ${apy(c.medianApy)}, 10 ETH works out to about ` +
         `${onTen(c.medianApy)} ETH. The yield is paid in ETH, so its dollar value moves with ` +
         `the ETH price.`,
     },
@@ -584,6 +633,78 @@ export async function ethPageModel() {
         `holding ${tvl(top.tvl)}; among strategies holding at least ${tvl(c.fundedFloor)}, the ` +
         `best was ${apy(best.apy24h)} on ${proseName(best)}.`);
 
+  // Key takeaways: the questions /eth receives most in Search Console, each
+  // answered in one self-contained sentence that carries its own figure and
+  // date, so a reader (or an AI answer quoting one line) needs nothing else.
+  // Ordered by how often the question arrives. They sit first on the page;
+  // the full answers stay in their sections and in the FAQ.
+  const l2Best = c.funded.find((v) => isL2(v.chain)) ?? null;
+  const mainnetBest = c.funded.find((v) => v.chain === "Ethereum") ?? null;
+  const above = staking ? aboveStaking(c, staking) : [];
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const takeaways: { k: string; a: string }[] = [
+    {
+      k: "Best ETH yield now",
+      a:
+        `${apy(best.apy24h)} APY on ${proseName(best)}, the highest rate among ETH strategies ` +
+        `holding at least ${tvl(c.fundedFloor)}, as of ${c.asOf}.`,
+    },
+    ...(staking
+      ? [
+          {
+            k: "Against staking",
+            a:
+              (above.length
+                ? `${cap(countOf(above.length, c.fundedCount))} funded ETH strategies paid more than `
+                : `No funded ETH strategy paid more than `) +
+              `staking, which returned ${aprToApy(staking.aprAverage).toFixed(2)}% on Lido stETH ` +
+              `after its fee.`,
+          },
+        ]
+      : []),
+    ...(l2Best
+      ? [
+          {
+            k: "Best on a layer 2",
+            a:
+              `${apy(l2Best.apy24h)} on ${proseName(l2Best)}` +
+              (mainnetBest
+                ? `, against ${apy(mainnetBest.apy24h)} for the best funded strategy on Ethereum ` +
+                  `mainnet, where gas costs more.`
+                : `; no funded ETH strategy ran on Ethereum mainnet.`),
+          },
+        ]
+      : []),
+    {
+      k: "Typical rate",
+      a:
+        `The median was ${apy(fMedian)} across the ${c.fundedCount} strategies holding at least ` +
+        `${tvl(c.fundedFloor)}, and ${apy(c.medianApy)} across all ${c.count}.`,
+    },
+    {
+      k: "1 ETH for a year",
+      a:
+        `About ${(best.apy24h / 100).toFixed(4)} ETH at ${apy(best.apy24h)}, paid in ETH, ` +
+        `before any change in the rate.`,
+    },
+    {
+      k: "Lockups",
+      a:
+        `None: no strategy here is a validator position, so there is no exit queue. A ` +
+        `withdrawal needs unborrowed ETH in the market underneath, which is nearly always there.`,
+    },
+  ];
+
+  // The paragraph between the takeaways and the ranking: what is measured and
+  // how, in plain words, so the figures above can be trusted and the table
+  // below read correctly.
+  const intro =
+    `This page ranks the ${c.count} ETH and WETH lending strategies Harvest tracks on ` +
+    `${listOf(ETH_NETWORKS.filter((n) => c.all.some((v) => v.chain === n)))} by their ` +
+    `24-hour APY. Rates are read from the vault contracts several times a day, are net of ` +
+    `fees and are paid in ETH. The table includes small vaults, so the figures above use a ` +
+    `${tvl(c.fundedFloor)} floor: ${c.fundedCount} of the ${c.count} strategies cleared it.`;
+
   const findings = [
     `The ${c.count} ETH strategies tracked here held ${tvl(c.totalTvl)} between them across ` +
       `${c.chainCount} ${plural(c.chainCount, "network", "networks")}, and ${c.fundedCount} ` +
@@ -627,6 +748,8 @@ export async function ethPageModel() {
     fundedL2,
     answer,
     heroAnswer,
+    takeaways,
+    intro,
     findings,
   };
 }

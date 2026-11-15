@@ -11,8 +11,8 @@
 // /polygon set the precedent (polygon-hub-body.tsx) for a hub that outgrew the
 // shared body.
 import Link from "next/link";
-import { getLiveVaults, getAllSparklines, loadHistoryFile } from "@/lib/data";
-import { AssetIcon, ChainIcon } from "@/components/token-icons";
+import { getLiveVaults, loadHistoryFile } from "@/lib/data";
+import { AssetIcon } from "@/components/token-icons";
 import { SITE_URL } from "@/lib/constants";
 import { assetHubH1, assetHubCrumbs } from "@/lib/seo";
 import {
@@ -21,11 +21,14 @@ import {
   faqPageSchema,
   reportDatasetSchema,
 } from "@/lib/jsonld";
-import { HubTable } from "@/components/hub-table";
 import { HomeCrumb } from "@/components/home-crumb";
 import { RankingDataNote } from "@/components/ranking-data-note";
 import { UsdcCalculator, type CalcProduct } from "@/components/usdc-calculator";
 import { harvestAppUrl } from "@/lib/harvest-app";
+import { RankTable } from "@/components/rank-table";
+import { DocsRails, ExploreHubs } from "@/components/editorial-hub";
+import { edRows } from "@/lib/editorial-hub";
+import { exploreHubs } from "@/lib/explore-hubs";
 import {
   buildUsdcCohort,
   answerSentence,
@@ -47,6 +50,27 @@ import {
 } from "@/lib/usdc-hub";
 
 const HUB_URL = `${SITE_URL}/usdc`;
+const USDC_APP_URL = "https://app.harvest.finance/?search=usdc&asset=singlestakes";
+
+/** "On this page" entries, in page order. */
+const USDC_TOC: [string, string][] = [
+  ["summary", "Summary"],
+  ["top-ten", "Top 10"],
+  ["calculator", "Calculator"],
+  ["yield-source", "Where yield comes from"],
+  ["rate-composition", "Rate composition"],
+  ["rate-stability", "Rate stability"],
+  ["venue-rates", "By venue"],
+  ["staking-rates", "Staking rates"],
+  ["yield-vs-rewards", "Yield vs rewards"],
+  ["by-network", "By network"],
+  ["protocol-families", "Protocol families"],
+  ["risk-surfaces", "Risks"],
+  ["faq", "Questions"],
+  ["full-index", "Full index"],
+  ["reading-columns", "Reading the columns"],
+  ["scope", "Scope"],
+];
 
 // Venue families named in prose, in the order they are listed. Only the ones
 // present in the current cohort produce a line, so a build where a family
@@ -182,11 +206,10 @@ function buildFaqs(c: UsdcCohort): { q: string; a: string }[] {
     {
       q: "How much can you earn on 10,000 USDC?",
       a:
-        `At the median rate of ${apy(c.medianApy)} as of ${c.asOf}, a 10,000 USDC position would ` +
-        `earn about $${onTen(c.medianApy)} over a year, before any rate change. At ` +
-        `the top rate of ${apy(c.best.apy24h)}, among strategies holding at least ` +
-        `${tvl(c.fundedFloor)}, the same position would earn about $${onTen(c.best.apy24h)}. ` +
-        `Rates move daily, so neither figure is a forecast.`,
+        `As arithmetic only: the median rate of ${apy(c.medianApy)} as of ${c.asOf}, applied to 10,000 USDC ` +
+        `for a year with no change in rate, works out to about $${onTen(c.medianApy)}. The top rate of ` +
+        `${apy(c.best.apy24h)}, among strategies holding at least ${tvl(c.fundedFloor)}, works out to about ` +
+        `$${onTen(c.best.apy24h)} on the same basis. Rates move daily, so neither figure is a forecast or a promise.`,
     },
     {
       // Worded as "USDC APY" because that exact string has its own demand
@@ -194,7 +217,7 @@ function buildFaqs(c: UsdcCohort): { q: string; a: string }[] {
       // USDC" says the same thing to a reader but not to a phrase match.
       q: "What is a good USDC APY?",
       a:
-        `A good USDC APY is best judged against the median of whatever cohort you are comparing against. ` +
+        `The useful reference point is the median of the cohort being compared against. ` +
         `Across the ${c.count} USDC strategies on this page the median was ${apy(c.medianApy)} ` +
         `as of ${c.asOf}, and half the index sat below it. A rate above the median is usually ` +
         `paying for something, most often reward emissions that can stop, a contract with a ` +
@@ -260,7 +283,7 @@ function buildFaqs(c: UsdcCohort): { q: string; a: string }[] {
 }
 
 export async function UsdcHubBody() {
-  const [allVaults, sparklines] = await Promise.all([getLiveVaults(), getAllSparklines()]);
+  const [allVaults, explore] = await Promise.all([getLiveVaults(), exploreHubs("USDC")]);
   const history = loadHistoryFile();
   const c = buildUsdcCohort(
     allVaults.filter((v) => v.asset === "USDC"),
@@ -271,11 +294,8 @@ export async function UsdcHubBody() {
   const faqs = buildFaqs(c);
   const findings = keyFindings(c);
   const venues = venueLines(c, VENUE_FAMILIES);
-  // The networks this page actually covers, not every network on the site.
-  // The rail offers to "cut the same data by network", so listing a chain the
-  // cohort excludes points at a ranking with none of these rows in it.
-  const visibleChains = [...c.chains].sort();
-  const topVenues = c.byVenue.slice(0, 3);
+  // Protocols only: Harvest Autopilot allocates across them and is not one.
+  const topVenues = c.byVenue.filter((v) => v.venue !== "Autopilot").slice(0, 3);
 
   // Morpho exposure, for the collateral paragraph in the risk section. Both
   // reviews called out that over half the index lends into Morpho and the page
@@ -316,7 +336,8 @@ export async function UsdcHubBody() {
   const [n1, n2] = c.byNetwork;
 
   return (
-    <div className="uni-hub-test uh-page">
+    <div className="uni-hub-test uh-page ae ld usdc-ld">
+      <DocsRails toc={USDC_TOC} token="USDC" assetName="USDC" appUrl={USDC_APP_URL} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(crumbs)) }}
@@ -382,7 +403,10 @@ export async function UsdcHubBody() {
       <nav className="uni-hub-crumbs" aria-label="Breadcrumb">
         <HomeCrumb />
         <span className="uni-hub-crumbs-sep" aria-hidden="true">›</span>
-        <span className="uni-hub-crumbs-current">USDC Ranking</span>
+        <span className="uni-hub-crumbs-current">
+          <AssetIcon asset="USDC" size={16} decorative />
+          USDC Ranking
+        </span>
       </nav>
 
       {/* Hero: heading, then the answer, and nothing between them.
@@ -421,6 +445,16 @@ export async function UsdcHubBody() {
         <p className="uh-updated" data-dateline="">
           Rates last recorded {c.asOf}, and refreshed hourly.
         </p>
+        <div className="ae-hero-ctas">
+          <a className="ae-btn" href={USDC_APP_URL} target="_blank" rel="noopener noreferrer">
+            Open App
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="ae-btn-ext"><path d="M5 11 11 5M6 5h5v5" /></svg>
+          </a>
+          <a className="ae-btn-ghost" href="#top-ten">
+            Jump to Top 10
+            <span aria-hidden="true"> ↓</span>
+          </a>
+        </div>
       </div>
 
       <section className="uh-summary" aria-labelledby="summary" data-asof={c.asOfIso}>
@@ -449,7 +483,14 @@ export async function UsdcHubBody() {
           `${listOf([...new Set(c.top10.map((v) => v.chain))])}.`
         }
       >
-        <HubTable vaults={c.top10} sparklines={sparklines} scopeLabel="USDC strategies" openLinks />
+        <RankTable
+          rows={edRows(c.top10, "USDC", c.fundedFloor)}
+          tvl={false}
+          title="USDC Ranking"
+          icon={{ asset: "USDC" }}
+          floorLabel={tvl(c.fundedFloor)}
+          appUrl={USDC_APP_URL}
+        />
         <p className="uh-note">
           {`Sorted on the 24-hour rate with no floor applied: a rate at the top of this table can ` +
             `sit on a few hundred dollars of liquidity. The headline figure above uses a ` +
@@ -565,8 +606,8 @@ export async function UsdcHubBody() {
           </p>
         ) : null}
         <p>
-          Deviation is the figure that tells you whether a headline rate is a rate or a spike. A
-          strategy paying more than its own monthly mean on the day you read it has usually just
+          Deviation is the figure that separates a rate from a spike. A
+          strategy paying more than its own monthly mean on a given day has usually just
           received an emission or seen a jump in borrowing, and neither lasts. A strategy whose
           deviation is a fraction of a point has been paying roughly the same thing all month,
           which is the more useful property if the position is meant to sit. Standard deviation
@@ -904,7 +945,13 @@ export async function UsdcHubBody() {
           `descending. The network and protocol filters narrow rows already in the page.`
         }
       >
-        <HubTable vaults={c.all} sparklines={sparklines} scopeLabel="USDC strategies" />
+        <RankTable
+          rows={edRows(c.all, "USDC", c.fundedFloor)}
+          title={`All ${c.count} USDC strategies`}
+          icon={{ asset: "USDC" }}
+          floorLabel={tvl(c.fundedFloor)}
+          appUrl={USDC_APP_URL}
+        />
       </Block>
 
       {/* Sits under the full table rather than above the top ten, which is
@@ -958,7 +1005,7 @@ export async function UsdcHubBody() {
           <dt>30d APY trend</dt>
           <dd>
             {`Plots the daily rate across the last month as a sparkline, and it is the column that ` +
-              `tells you whether the 24-hour figure means anything. A flat line means the strategy ` +
+              `shows whether the 24-hour figure is representative. A flat line means the strategy ` +
               `has been paying roughly that rate all month. A line with one spike means the ` +
               `headline is a moment, not a level. Rising or falling shape says the rate is moving, ` +
               `and the direction is what the 24-hour figure alone cannot show. Exact daily ` +
@@ -1021,19 +1068,7 @@ export async function UsdcHubBody() {
           the deployment this page ships to, so the link would 404 there. The
           Aave benchmark figure it supplied stays in the scope block, because
           that is our own onchain measurement rather than a claim about a page. */}
-      <section className="uni-hub-cta-row">
-        <p className="uni-hub-cta-meta">
-          Looking for a specific chain? Network ranking pages cut the same data by network.
-        </p>
-        <div className="uni-hub-cta-links">
-          {visibleChains.slice(0, 6).map((chain) => (
-            <Link key={chain} href={`/${chain.toLowerCase()}`} className="uni-hub-cta-pill">
-              <ChainIcon chain={chain} size={14} />
-              {chain}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <ExploreHubs assets={explore.assets} networks={explore.networks} />
 
       <RankingDataNote />
     </div>

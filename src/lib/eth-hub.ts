@@ -257,6 +257,8 @@ export interface EthVenue {
 export function ethVenues(c: EthCohort): EthVenue[] {
   const groups = new Map<string, YieldVault[]>();
   for (const v of c.all) {
+    // Harvest Autopilot is an allocator across these protocols, not one of them.
+    if (v.vaultType === "Autopilot" || venueOf(v) === "Autopilot") continue;
     const k = `${venueOf(v)}|${strategyTypeOf(v) === "looping" ? "loop" : ""}`;
     groups.set(k, [...(groups.get(k) ?? []), v]);
   }
