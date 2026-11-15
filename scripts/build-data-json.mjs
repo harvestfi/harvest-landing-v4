@@ -52,6 +52,17 @@ function readSiteUrl() {
 const SITE_URL = readSiteUrl();
 const GENERATED_AT = new Date().toISOString();
 const vaults = JSON.parse(readFileSync(VAULTS_FILE, "utf-8"));
+
+// The figures the pages print (derived 30d, reconciled TVL) and the live
+// set, from public/facts.json, which the Next build emits.
+// vaults.json still supplies names and addresses, which do not differ.
+const FACTS_FILE = join(ROOT, "public", "facts.json");
+if (!existsSync(FACTS_FILE)) {
+  console.error("[data-json] public/facts.json missing; the Next build must emit it first.");
+  process.exit(1);
+}
+const FACTS = JSON.parse(readFileSync(FACTS_FILE, "utf-8"));
+const factBySlug = new Map(FACTS.vaults.map((f) => [f.slug, f]));
 const history = JSON.parse(readFileSync(HISTORY_FILE, "utf-8"));
 
 const histFor = (v) =>
@@ -108,6 +119,11 @@ for (const v of vaults) {
   if (!v.slug) continue;
   const url = `${SITE_URL}/${v.slug}`;
   const summary = historySummary(histFor(v));
+  const fact = factBySlug.get(v.slug);
+  const apy24h = fact?.apy24h ?? v.apy24h;
+  const apy30d = fact?.apy30d ?? v.apy30d;
+  const tvl = fact?.tvl ?? v.tvl;
+  const live = fact?.live ?? false;
   const record = {
     slug: v.slug,
     name: v.productName,
@@ -122,10 +138,11 @@ for (const v of vaults) {
       strategy: v.strategyAddress ?? null,
       token: v.tokenAddress ?? null,
     },
-    apyPercent: { "24h": round(v.apy24h), "30d": round(v.apy30d) },
-    tvlUsd: round(v.tvl),
+    apyPercent: { "24h": round(apy24h), "30d": round(apy30d) },
+    tvlUsd: round(tvl),
+    live,
     history: summary,
-    dataAsOf: summary?.dataAsOf ?? null,
+    dataAsOf: fact?.dataAsOf ?? summary?.dataAsOf ?? null,
     generatedAt: GENERATED_AT,
     disclaimer:
       "Informational onchain analytics indexed by Harvest, not financial advice.",
@@ -136,13 +153,16 @@ for (const v of vaults) {
     "utf-8",
   );
   written++;
+  // index.json lists the live set, so its count is the one the site states.
+  // Retired vaults keep their per-vault file (their pages still resolve).
+  if (!live) continue;
   index.push({
     slug: v.slug,
     name: v.productName,
     asset: v.asset,
     chain: v.chain,
-    apyPercent30d: round(v.apy30d),
-    tvlUsd: round(v.tvl),
+    apyPercent30d: round(apy30d),
+    tvlUsd: round(tvl),
     url,
     data: `${SITE_URL}/data/${v.slug}.json`,
   });
@@ -155,8 +175,9 @@ writeFileSync(
     {
       site: SITE_URL,
       description:
-        "Machine-readable index of every yield strategy tracked by Harvest. Each entry links to a per-vault JSON with current APY, TVL, addresses and history summary.",
+        "Machine-readable index of every live yield strategy tracked by Harvest (the same set and count the site shows). Each entry links to a per-vault JSON with current APY, TVL, addresses and history summary.",
       generatedAt: GENERATED_AT,
+      dataAsOf: FACTS.dataAsOf,
       count: index.length,
       vaults: index,
     },

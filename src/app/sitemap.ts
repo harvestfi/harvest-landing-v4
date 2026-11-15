@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/constants";
 import { NETWORKS } from "@/lib/networks";
 import { LIVE_PLATFORM_SLUGS } from "@/lib/platforms";
 import { getDocsPages } from "@/lib/docs";
+import { getSiteFacts } from "@/lib/site-facts";
 
 export const dynamic = "force-static";
 
@@ -13,6 +14,16 @@ const ASSET_HUBS = ["usdc", "usdt", "btc", "eth"];
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const vaults = await getVaults();
   const canonical = await getCanonicalSlugs();
+  const facts = await getSiteFacts();
+
+  // lastmod is the newest indexed reading behind the page, not the build
+  // time: a rebuild with unchanged data must not tell crawlers
+  // that every URL changed. Pages whose figures come from the whole index
+  // use the index date.
+  const siteAsOf = facts.dataAsOf ? new Date(facts.dataAsOf) : new Date();
+  const asOf = (iso: string | null | undefined) => (iso ? new Date(iso) : siteAsOf);
+  const vaultAsOf = new Map(facts.vaults.map((v) => [v.slug, v.dataAsOf]));
+  const ASSET_KEY: Record<string, string> = { usdc: "USDC", usdt: "USDT", btc: "BTC", eth: "ETH" };
 
   // Mirror the per-page robots gate (app/[slug]/page.tsx) exactly so the
   // sitemap never lists a URL we noindex - canonical only, no broken /
@@ -21,28 +32,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((v) => isVaultPageIndexable(v, canonical.has(v.slug)))
     .map((v) => ({
       url: `${SITE_URL}/${v.slug}`,
-      lastModified: new Date(),
+      lastModified: asOf(vaultAsOf.get(v.slug)),
       changeFrequency: "daily" as const,
       priority: 0.8,
     }));
 
   const assetHubPages = ASSET_HUBS.map((hub) => ({
     url: `${SITE_URL}/${hub}`,
-    lastModified: new Date(),
+    lastModified: asOf(facts.byAsset[ASSET_KEY[hub]]?.dataAsOf),
     changeFrequency: "daily" as const,
     priority: 0.9,
   }));
 
-  const networkHubPages = NETWORKS.map((n) => ({
+  // /zksync is noindex while it has no strategies, so it stays
+  // out of the sitemap too.
+  const networkHubPages = NETWORKS.filter((n) => n.slug !== "zksync").map((n) => ({
     url: `${SITE_URL}/${n.slug}`,
-    lastModified: new Date(),
+    lastModified: asOf(facts.byChain[n.chain]?.dataAsOf),
     changeFrequency: "daily" as const,
     priority: 0.9,
   }));
 
   const platformHubPages = LIVE_PLATFORM_SLUGS.map((slug) => ({
     url: `${SITE_URL}/${slug}`,
-    lastModified: new Date(),
+    lastModified: siteAsOf,
     changeFrequency: "daily" as const,
     priority: 0.9,
   }));
@@ -50,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     {
       url: SITE_URL,
-      lastModified: new Date(),
+      lastModified: siteAsOf,
       changeFrequency: "hourly",
       priority: 1,
     },
