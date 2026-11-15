@@ -194,7 +194,7 @@ export function SearchBox() {
               <div className="search-pop-head">Products</div>
               {results.map((r, i) => (
                 <button
-                  key={r.slug}
+                  key={`${r.slug}:${r.displayName}`}
                   type="button"
                   className={`search-row${i === active ? " active" : ""}`}
                   onMouseEnter={() => setActive(i)}

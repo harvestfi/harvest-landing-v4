@@ -40,6 +40,7 @@ const REPORTS = [
   // footer link naming the old thing sends a different signal than the page
   // it points at.
   { label: "XRP Staking", href: "/report/xrp-yield-ranking" },
+  { label: "Tokenized Stocks Yield", href: "/yield-on-tokenized-stocks" },
 ];
 
 // Legitimacy-signal pages.

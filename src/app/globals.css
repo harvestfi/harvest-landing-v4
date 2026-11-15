@@ -173,6 +173,21 @@ button { font-family: inherit; cursor: pointer; }
   flex-shrink: 0;
   display: block;
 }
+/* Tokenized stocks: the four Coinbase stock marks, overlapped like avatars
+   and fanned out a little on hover. */
+.navlinks .nav-stack { display: inline-flex; align-items: center; }
+.navlinks .nav-stack img {
+  margin-left: -6px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--bg);
+  transition: margin 0.2s ease;
+}
+.navlinks .nav-stack img:first-child { margin-left: 0; }
+.navlinks .nav-stocks:hover .nav-stack img { margin-left: -3px; }
+.navlinks .nav-stocks:hover .nav-stack img:first-child { margin-left: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .navlinks .nav-stack img { transition: none; }
+}
 .navlinks a:hover { background: var(--bg-2); color: var(--ink); }
 .navlinks a.active { color: var(--ink); font-weight: 600; background: var(--bg-2); }
 
