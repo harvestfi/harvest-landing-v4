@@ -7,7 +7,7 @@
 // arithmetic is the part worth reading.
 //
 // COMPOUNDING. The rate this page publishes is an APY, which already encodes
-// the strategy's own harvesting and reinvestment. Multiplying it by an amount
+// the strategy's own harvesting and compounding. Multiplying it by an amount
 // and calling the result "compounded", then showing the same number again as
 // "not compounded", would be two labels on one figure. The honest split runs
 // the other way: the APY is the compounded outcome, and the simple figure is
@@ -193,7 +193,7 @@ export function UsdcCalculator({
                   <li>
                     Left to compound, the position earns{" "}
                     <strong>{fmt(result.compounded)}</strong> over a year. The
-                    quoted APY already assumes the strategy harvests and reinvests
+                    quoted APY already assumes the strategy harvests and compounds
                     on its own schedule.
                   </li>
                   <li>

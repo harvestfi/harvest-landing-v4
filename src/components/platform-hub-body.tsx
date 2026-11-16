@@ -141,7 +141,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
     },
     {
       q: `How does Harvest's ${platform.display} strategy work?`,
-      a: `Each vault deposits into ${platform.display} and continuously reinvests the interest and any rewards back into the position (autocompounding), so claiming and restaking are automated rather than manual. The headline APY already reflects that compounding.`,
+      a: `Each vault supplies to ${platform.display} and continuously converts the interest and any rewards into more of the position (autocompounding), so claiming and restaking are automated rather than manual. The headline APY already reflects that compounding.`,
     },
     {
       q: `Which assets and networks can I earn ${platform.display} yield on?`,
@@ -152,7 +152,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
     },
     {
       q: `Is ${platform.display} yield safe?`,
-      a: `No yield is risk-free. ${platform.display} strategies carry smart-contract, oracle, deposit-token and governance risk, which can differ by chain. See the Harvest risk framework for how we weigh each surface.`,
+      a: `No yield is risk-free. ${platform.display} strategies carry smart-contract, oracle, underlying-token and governance risk, which can differ by chain. See the Harvest risk framework for how we weigh each surface.`,
     },
   ];
   const faqSchema = {
@@ -283,7 +283,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
               <p>
                 Right now we track {vaults.length} {platform.display}{" "}
                 {vaults.length !== 1 ? "strategies" : "strategy"}, holding{" "}
-                {formatTVL(totalTvl)} in deposits. 24-hour APYs{" "}
+                {formatTVL(totalTvl)} in tracked value. 24-hour APYs{" "}
                 {apyRangeClause(minApy, bestApy)}. Median{" "}
                 {formatAPY(medianApy)}, mean {formatAPY(avgApy)}. Numbers are
                 scoped to our index, not the wider {platform.display} market.
@@ -293,7 +293,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
             <article>
               <h3>Assets in the {platform.display} cohort</h3>
               <p>
-                {assetBlockText}. Open any vault to see the exact deposit
+                {assetBlockText}. Open any vault to see the exact underlying
                 token and reward stream. The asset hub pages cut this same
                 data by token across every venue.
               </p>
@@ -336,7 +336,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
               <p>
                 Smart-contract risk on the Harvest vault and on{" "}
                 {platform.display} underneath. Oracle risk on the price feeds
-                those contracts trust. Bridge or depeg risk on the deposit
+                those contracts trust. Bridge or depeg risk on the underlying
                 token. Governance risk on every parameter operators can
                 change. The same venue can carry different risks on different
                 chains. Tiers and what we leave out, on the{" "}

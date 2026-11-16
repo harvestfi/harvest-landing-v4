@@ -208,7 +208,7 @@ export async function NetworkHubBody({
               <p>
                 Right now we track {vaults.length} {networkDisplay}
                 {" "}{vaults.length !== 1 ? "strategies" : "strategy"},
-                holding {formatTVL(totalTvl)} in deposits. 24-hour
+                holding {formatTVL(totalTvl)} in tracked value. 24-hour
                 APYs {apyRangeClause(minApy, bestApy)}.
                 Median {formatAPY(medianApy)}, mean{" "}
                 {formatAPY(avgApy)}. Numbers are scoped to our index,
