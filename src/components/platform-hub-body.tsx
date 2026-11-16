@@ -17,6 +17,8 @@ import { getPlatform, platformVaults, PLATFORMS } from "@/lib/platforms";
 import { HubTable } from "@/components/hub-table";
 import { RankingDataNote } from "@/components/ranking-data-note";
 import { HomeCrumb } from "@/components/home-crumb";
+import { getSiteFacts } from "@/lib/site-facts";
+import { stripChainSuffix } from "@/lib/format";
 
 interface Props {
   platformSlug: string;
@@ -61,6 +63,23 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
     sortedApys.length > 0 ? sortedApys[Math.floor(sortedApys.length / 2)] : 0;
   const minApy = sortedApys.length > 0 ? sortedApys[0] : 0;
   const totalTvl = vaults.reduce((s, v) => s + v.tvl, 0);
+
+  // Bottom line up front: the answer to "best <venue> yield" in
+  // the first sentence under the H1, with the cohort median, the count and
+  // the date of the newest reading, so a reader or an answer engine gets the
+  // figure without reading the table.
+  const top = vaults.reduce<(typeof vaults)[number] | null>(
+    (b, v) => (!b || v.apy24h > b.apy24h ? v : b),
+    null,
+  );
+  const facts = await getSiteFacts();
+  const slugs = new Set(vaults.map((v) => v.slug));
+  const asOfIso = facts.vaults
+    .filter((v) => slugs.has(v.slug) && v.dataAsOf)
+    .reduce<string | null>((m, v) => (!m || v.dataAsOf! > m ? v.dataAsOf : m), null);
+  const asOfLabel = asOfIso
+    ? new Date(asOfIso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+    : null;
 
   // Asset breakdown across this platform.
   const assetStats = Object.values(
@@ -122,7 +141,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
     },
     {
       q: `How does Harvest's ${platform.display} strategy work?`,
-      a: `Each vault deposits into ${platform.display} and continuously reinvests the interest and any rewards back into the position (autocompounding), so you do not have to claim or restake manually. The headline APY already reflects that compounding.`,
+      a: `Each vault deposits into ${platform.display} and continuously reinvests the interest and any rewards back into the position (autocompounding), so claiming and restaking are automated rather than manual. The headline APY already reflects that compounding.`,
     },
     {
       q: `Which assets and networks can I earn ${platform.display} yield on?`,
@@ -175,6 +194,18 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
         <div className="uni-hub-hero-headline">
           <div>
             <h1 className="uni-hub-h1">{platformHubH1(platform.display)}</h1>
+            {top && asOfLabel ? (
+              <p className="uni-hub-sub uni-hub-bluf" data-dateline={asOfLabel}>
+                <strong>
+                  On {asOfLabel}, the best {platform.display} yield we track is{" "}
+                  {stripChainSuffix(top.productName)} on {top.chain} at{" "}
+                  {formatAPY(top.apy24h)} (24-hour APY).
+                </strong>{" "}
+                The median across all {vaults.length} {platform.display}{" "}
+                {vaults.length !== 1 ? "strategies" : "strategy"} on that date was{" "}
+                {formatAPY(medianApy)}.
+              </p>
+            ) : null}
             <p className="uni-hub-sub">
               {vaults.length > 0
                 ? `Compare all ${vaults.length} ${platform.display} yield opportunities Harvest indexes: ${assetStats
@@ -260,7 +291,7 @@ export async function PlatformHubBody({ platformSlug, livePlatformSlugs }: Props
             </article>
 
             <article>
-              <h3>Assets you can earn on via {platform.display}</h3>
+              <h3>Assets in the {platform.display} cohort</h3>
               <p>
                 {assetBlockText}. Open any vault to see the exact deposit
                 token and reward stream. The asset hub pages cut this same

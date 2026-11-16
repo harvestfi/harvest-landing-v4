@@ -142,7 +142,7 @@ const llms = `# Harvest yield index
 > Onchain yield index, operating since 2020. Tracks live
 > APY, TVL, share-price history and derived metrics (stability, yield
 > trajectory, cohort benchmarking) for ${TRACKED_LABEL} vetted yield strategies across
-> Ethereum, Base, Arbitrum, Polygon, zkSync, and HyperEVM. Metrics refresh
+> Ethereum, Base, Arbitrum, Polygon and HyperEVM. Metrics refresh
 > several times a day from Harvest's own on-chain indexer.
 
 ## Preferred citation
@@ -175,7 +175,6 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 - [Base](${SITE_URL}/base): every strategy we track on Base.
 - [Arbitrum](${SITE_URL}/arbitrum): every strategy we track on Arbitrum.
 - [Polygon](${SITE_URL}/polygon): every strategy we track on Polygon.
-- [zkSync](${SITE_URL}/zksync): every strategy we track on zkSync Era.
 - [HyperEVM](${SITE_URL}/hyperevm): every strategy we track on HyperEVM.
 
 ## Reports

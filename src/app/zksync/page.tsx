@@ -20,6 +20,9 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     openGraph: { title, description, url, siteName: SITE_NAME, type: "website" },
     alternates: { canonical: url },
+    // No strategies on zkSync yet: kept out of the index, the sitemap and
+    // llms.txt until it has some.
+    robots: { index: false, follow: true },
   };
 }
 
