@@ -504,8 +504,8 @@ export function buildEditorial(cfg: EdConfig, c: HubCohort, special: EdSpecial):
     measureTitle: `How we measure ${yld}`,
     measure,
     cta: N
-      ? `Every vault in this ranking is an autocompounder: it claims rewards and reinvests them into the position automatically, with no manual harvesting. All of them are listed in the Harvest app.`
-      : `Every ${unit} vault in this ranking is an autocompounder: it claims rewards and reinvests them into the position automatically, with no manual harvesting. All of them are listed in the Harvest app.`,
+      ? `Every vault in this ranking is an autocompounder: it claims rewards and converts them into more of the position automatically, with no manual harvesting. All of them are listed in the Harvest app.`
+      : `Every ${unit} vault in this ranking is an autocompounder: it claims rewards and converts them into more of the position automatically, with no manual harvesting. All of them are listed in the Harvest app.`,
     appUrl: cfg.appUrl,
   };
 }

@@ -304,7 +304,7 @@ export async function UsdtHubBody() {
         <p>
           <strong>What it costs.</strong>{" "}
           {`Harvest keeps a share of the yield each strategy harvests, ${USDT_FEE_TEXT}, split ` +
-            `between a profit share and a platform fee set in each strategy contract. Every rate ` +
+            `between a performance fee and a platform fee set in each strategy contract. Every rate ` +
             `on this page is after that fee, and there is no fee to enter or leave a vault.`}
         </p>
       </Block>

@@ -799,7 +799,7 @@ export async function EthHubBody() {
         <p>
           <strong>What it costs.</strong>{" "}
           {`Harvest keeps a share of the yield each strategy harvests, ${HARVEST_FEE_TEXT}, ` +
-            `split between a profit share and a platform fee set in each strategy contract.`}
+            `split between a performance fee and a platform fee set in each strategy contract.`}
         </p>
         <p>
           {`Every rate on this page is after that fee, so the APY shown is what the position ` +
@@ -869,7 +869,7 @@ export async function EthHubBody() {
         </p>
         <p>
           A withdrawal waits only if the market underneath has lent out all of its ETH, which
-          happens rarely and briefly, and the rate climbs until supply returns.
+          happens rarely and briefly, and the rate climbs until supply comes back.
         </p>
         {staking ? (
           <p>

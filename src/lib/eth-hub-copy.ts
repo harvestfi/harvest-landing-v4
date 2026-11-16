@@ -435,7 +435,7 @@ export function buildFaqs(
       q: "What fees do ETH yield vaults charge?",
       at: "calc",
       a:
-        `A share of the yield, not of the deposit. The vaults on this page keep ` +
+        `A share of the yield, not of the position. The vaults on this page keep ` +
         `${HARVEST_FEE_TEXT} of the yield each strategy harvests, and every APY shown is ` +
         `already after that fee. There is no fee to enter or leave a vault; gas is paid on each ` +
         `transaction, and the looping strategy charges an entry cost the app shows before a ` +

@@ -107,8 +107,8 @@ export async function TokenizedStocksBody() {
       at: "top",
       a: top
         ? `Through autocompounding vaults. Each of Harvest's four vaults on Coinbase Tokenized Stocks (NVDAc, AAPLc, ` +
-          `METAc and GOOGLc) on Base holds the stock, runs a carry trade on top of it and reinvests the proceeds ` +
-          `as more of the same stock automatically. On ${asOf} their 24-hour APYs ranged from ${pct(low.apy24h)} ` +
+          `METAc and GOOGLc) on Base holds the stock, runs a carry trade on top of it and converts the proceeds ` +
+          `into more of the same stock automatically. On ${asOf} their 24-hour APYs ranged from ${pct(low.apy24h)} ` +
           `to ${pct(top.apy24h)}, denominated in the stock, and the position stays exposed to the share price.`
         : "",
     },
@@ -236,7 +236,7 @@ export async function TokenizedStocksBody() {
             {`and the four vaults paid from ${pct(low.apy24h)} to ${pct(top.apy24h)}.`}
           </strong>{" "}
           The yield is denominated in the stock itself: each vault holds the share, runs a carry trade on top of
-          it and automates the rest, claiming rewards and reinvesting them as more shares with no manual steps.
+          it and automates the rest, claiming rewards and converting them into more shares with no manual steps.
         </p>
       ) : null}
       <p className="ae-byline" data-dateline="">
@@ -275,7 +275,7 @@ export async function TokenizedStocksBody() {
         lead={
           vaults.length
             ? `${vaults.length} vaults, one per stock, all on Base, holding ${usd(totalTvl)} between them. ` +
-              `Each one deposits into an IPOR Fusion carry vault that holds ${usd(carryTvl)} in total.`
+              `Each one allocates to an IPOR Fusion carry vault that holds ${usd(carryTvl)} in total.`
             : undefined
         }
       >
@@ -501,7 +501,7 @@ export async function TokenizedStocksBody() {
         <h3>Contracts</h3>
         <p data-dateline="">
           Token addresses as Coinbase lists them on base.org, and the Harvest vault for each. Match the token
-          address before acquiring or depositing anything.
+          address before acquiring or moving anything.
         </p>
         <div className="ae-table-wrap">
           <table className="ae-table">
@@ -554,8 +554,8 @@ export async function TokenizedStocksBody() {
             address against the contracts table above.
           </li>
           <li>
-            <strong>Depositing the token into its vault hands the compounding to the vault.</strong> Each stock
-            has its own vault in the Harvest app, and from that point the vault claims and reinvests on its own;
+            <strong>Moving the token into its vault hands the compounding to the vault.</strong> Each stock
+            has its own vault in the Harvest app, and from that point the vault claims and converts on its own;
             the vault share is denominated in the stock.
           </li>
           <li>
@@ -626,7 +626,7 @@ export async function TokenizedStocksBody() {
       ) : null}
 
       <EditorialCta
-        text="Each tokenized stock vault automates the compounding: rewards are claimed and reinvested as more of the stock by the vault itself. The vaults are listed in the Harvest app."
+        text="Each tokenized stock vault automates the compounding: rewards are claimed and converted into more of the stock by the vault itself. The vaults are listed in the Harvest app."
         appUrl={stockAppUrl()}
       />
       <ExploreHubs assets={explore.assets} networks={explore.networks} />

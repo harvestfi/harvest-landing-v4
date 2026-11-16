@@ -43,7 +43,7 @@ const BANNED = [
   { name: "deposit / deposits / depositing", regex: /\b(deposit|deposits|depositing)\b/i, scope: "always" },
   { name: "depositor / depositors", regex: /\b(depositor|depositors)\b/i, scope: "always" },
   { name: "deposited (yield-trajectory exemption)", regex: /\bdeposited\b/i, scope: "except-yield-trajectory" },
-  { name: "redeposit / reinvest family", regex: /\b(redeposit|redepositing|redeposits|reinvest|reinvesting|reinvests)\b/i, scope: "always" },
+  { name: "redeposit / reinvest family", regex: /\b(redeposit|redepositing|redeposits|redeposited|reinvest|reinvesting|reinvests|reinvested|reinvestment|reinvestments)\b/i, scope: "always" },
   { name: "capital", regex: /\bcapital\b/i, scope: "always" },
   { name: "outperform family", regex: /\b(outperform|outperforms|outperformed|outperforming)\b/i, scope: "always" },
   { name: "competes against / goes up against", regex: /\b(competes against|goes up against)\b/i, scope: "always" },
@@ -74,11 +74,22 @@ const PHRASE_ALLOWLIST = [
   /liquidity returns/gi, // verb usage in withdrawal-availability clause
 ];
 
-// /usdc is hand-written long-form prose rather than the shared template body,
-// which makes it the one hub carrying the copy register this gate exists for,
-// and it was the only page carrying it that no word gate covered. /eth, /btc
-// and /usdt still render the shared template body and stay out.
-const ASSET_HUB_SLUGS = ["usdc"];
+// Hub and editorial pages held to the same list as product pages.
+const ASSET_HUB_SLUGS = [
+  "usdc",
+  "usdt",
+  "eth",
+  "btc",
+  "ethereum",
+  "base",
+  "arbitrum",
+  "polygon",
+  "hyperevm",
+  "zksync",
+  "aave",
+  "morpho",
+  "yield-on-tokenized-stocks",
+];
 
 async function loadProductSlugs() {
   const raw = await fs.readFile(VAULTS_JSON, "utf8");

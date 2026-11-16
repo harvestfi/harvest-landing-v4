@@ -218,10 +218,10 @@ export default async function MethodologyPage() {
             <section id="what-counts" className="meth-section">
               <h2 className="meth-h2">What counts as a yield source</h2>
               <p>
-                The index covers vault-based autocompounding strategies. A vault accepts
-                a deposit of a single underlying token, deploys it into one or more
+                The index covers vault-based autocompounding strategies. A vault takes
+                in a single underlying token, deploys it into one or more
                 yield-bearing positions, harvests rewards on an ongoing basis, swaps them
-                back into the underlying token, and redeposits. The user holds a share
+                back into the underlying token, and adds them to the position. The user holds a share
                 token representing a pro-rata claim on the vault.
               </p>
               <p>

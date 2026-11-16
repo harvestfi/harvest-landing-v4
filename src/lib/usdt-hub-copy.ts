@@ -219,7 +219,7 @@ export function buildFaqs(
         `Yes, when the rate has a borrower behind it. A lending market pays USDT suppliers the ` +
         `interest that borrowers pay, which put the median across the ` +
         `${c.count} USDT strategies here at ${apy(c.medianApy)}. A site promising a fixed daily ` +
-        `return far above lending rates, with no named market or contract behind it, has no ` +
+        `payout far above lending rates, with no named market or contract behind it, has no ` +
         `borrower paying for it.`,
     },
     {
