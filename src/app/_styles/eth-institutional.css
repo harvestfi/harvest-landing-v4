@@ -1,0 +1,477 @@
+/* /eth institutional pass (preview).
+   One typeface (Inter, tabular figures for every number), one surface style
+   (hairline border, no fill, 8px radius), one accent (gold, primary CTA only),
+   one type scale. Scoped to the hero, the stat strip and the first two
+   sections (#top-ten, #by-network) so it can be judged before the rest of the
+   page follows. Remove the `eh-inst` class on the page wrapper to switch the
+   whole layer off. */
+
+.uni-hub-test.eh-page.eh-read.eh-inst {
+  --ei-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --ei-radius: 8px;
+  --ei-line: var(--uni-line);
+  --ei-ink: var(--uni-ink);
+  --ei-ink-2: var(--uni-ink-2);
+  --ei-ink-3: var(--uni-ink-3);
+  --ei-accent: var(--uni-gold, #ffb936);
+}
+
+/* ---------- Shared: type and numbers ---------- */
+.uni-hub-test.eh-page.eh-read.eh-inst :is(
+    .eh-topmeta, .uni-hub-hero, .eh-statgrid,
+    section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]
+  ),
+.uni-hub-test.eh-page.eh-read.eh-inst :is(
+    .eh-topmeta, .uni-hub-hero, .eh-statgrid,
+    section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]
+  ) * {
+  font-family: var(--ei-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Eyebrows: small sans caps, muted. No monospace, no colour. */
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) .rp-eyebrow,
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) :is(.eh-ask-h, .eh-keys-h) {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ei-ink-3);
+  margin: 0 0 10px;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) .uh-eyebrow-date {
+  color: var(--ei-ink-3);
+  font-weight: 500;
+}
+
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) h2 {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ei-ink);
+  margin: 0 0 12px;
+}
+
+/* Body copy: one size, one colour, emphasis by weight 600 only. */
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) :is(p, li, .uh-faq-a) {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ei-ink-2);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst :is(.uni-hub-hero, section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) strong {
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) .uh-note {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ei-ink-3);
+}
+
+/* Links: ink, hairline underline. Gold is kept for the primary button. */
+.uni-hub-test.eh-page.eh-read.eh-inst :is(.uni-hub-hero, section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) p a {
+  color: var(--ei-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ei-ink-3);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  background: none;
+  box-shadow: none;
+  font-weight: 500;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst :is(.uni-hub-hero, section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) p a:hover {
+  text-decoration-color: var(--ei-ink);
+}
+
+/* ---------- Top meta line ---------- */
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-topmeta {
+  font-size: 13px;
+  color: var(--ei-ink-3);
+  gap: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-topmeta > span {
+  padding: 0 12px;
+  border-left: 1px solid var(--ei-line);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-topmeta > span:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-topmeta strong {
+  font-weight: 600;
+  color: var(--ei-ink-2);
+}
+
+/* ---------- Hero ---------- */
+.uni-hub-test.eh-page.eh-read.eh-inst .uni-hub-hero {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .uni-hub-h1 {
+  font-size: clamp(32px, 4.2vw, 44px);
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-hero-title img {
+  width: 40px;
+  height: 40px;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-dek {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ei-ink-2);
+  margin-top: 10px;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-dek-accent {
+  color: var(--ei-ink-3);
+  font-weight: 400;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .uh-answer {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ei-ink-2);
+  max-width: 68ch;
+}
+
+/* Buttons: same height and radius; gold only on the primary. */
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-btn {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: var(--ei-radius);
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ei-line);
+  background: transparent;
+  color: var(--ei-ink);
+  box-shadow: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-btn-primary {
+  background: var(--ei-accent);
+  border-color: var(--ei-accent);
+  color: #1a1917;
+}
+
+/* ---------- Stat strip ---------- */
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 32px;
+  border: 1px solid var(--ei-line);
+  border-radius: var(--ei-radius);
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid > div {
+  padding: 18px 20px;
+  border: 0;
+  border-left: 1px solid var(--ei-line);
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid > div:first-child {
+  border-left: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid dt {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ei-ink-3);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid .eh-sg-v {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ei-ink);
+  margin: 8px 0 4px;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid .eh-sg-s {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ei-ink-3);
+}
+@media (max-width: 760px) {
+  .uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid > div:nth-child(3) {
+    border-left: 0;
+  }
+  .uni-hub-test.eh-page.eh-read.eh-inst .eh-statgrid > div:nth-child(n + 3) {
+    border-top: 1px solid var(--ei-line);
+  }
+}
+
+/* ---------- Surfaces: table, callouts, network cards ---------- */
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) :is(.hub-table-wrap, .eh-ask, .eh-keys, .eh-net) {
+  background: none;
+  border: 1px solid var(--ei-line);
+  border-radius: var(--ei-radius);
+  box-shadow: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) :is(.eh-ask, .eh-keys) {
+  padding: 18px 20px;
+}
+
+/* Table: one frame. The wrap (filter bar + table) loses its own box so the
+   table's hairline is the only border. */
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-table-wrap {
+  border: 0;
+  padding: 0;
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-filterbar {
+  padding: 0 0 10px;
+  background: none;
+  border: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-table {
+  border: 1px solid var(--ei-line);
+  border-radius: var(--ei-radius);
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-th {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ei-ink-3);
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-thead {
+  border-bottom: 1px solid var(--ei-line);
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-tbody > .hub-row,
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-tbody > .hub-row:nth-child(-n + 3) {
+  background: none;
+  border-top: 1px solid var(--ei-line);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-tbody > .hub-row:first-child {
+  border-top: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-tbody > .hub-row:hover {
+  background: color-mix(in srgb, var(--ei-ink) 4%, transparent);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-rank,
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-tbody > .hub-row:nth-child(-n + 3) .hub-rank {
+  color: var(--ei-ink-3);
+  font-weight: 500;
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-vault-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-vault-net {
+  font-size: 13px;
+  color: var(--ei-ink-3);
+}
+/* Every figure in the table: same size, tabular, right-aligned. */
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] :is(.hub-num, .hub-apy, .hub-tvl, .hub-apy30) {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ei-ink-2);
+  text-align: right;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-apy {
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+/* Sparklines in one neutral colour; direction is in the line, not the hue. */
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-spark,
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-spark-up,
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-spark-flat {
+  color: var(--ei-ink-3);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-open {
+  border: 1px solid var(--ei-line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ei-ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="top-ten"] .hub-dropdown-btn {
+  border-radius: 6px;
+  border: 1px solid var(--ei-line);
+  background: none;
+}
+
+/* FAQ inside callouts */
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) .uh-faq-q {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst :is(section[aria-labelledby="top-ten"], section[aria-labelledby="by-network"]) .uh-faq-item {
+  border-color: var(--ei-line);
+}
+
+/* Key points: plain list with a short neutral rule instead of gold checks. */
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-keys ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-keys li {
+  position: relative;
+  padding-left: 20px;
+  margin: 6px 0;
+  background: none;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-keys li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.8em;
+  width: 10px;
+  height: 1px;
+  background: var(--ei-ink-3);
+  border: 0;
+  border-radius: 0;
+  -webkit-mask: none;
+  mask: none;
+}
+
+/* Network cards: same surface, figures aligned. */
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-net {
+  padding: 20px;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-net-head {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-net-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ei-ink-3);
+  background: none;
+  border: 1px solid var(--ei-line);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-net-meta {
+  font-size: 13px;
+  color: var(--ei-ink-3);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-pick {
+  border-top: 1px solid var(--ei-line);
+  padding: 10px 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-pick-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-pick-apy {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ei-ink);
+  text-align: right;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-pick-sub {
+  font-size: 12.5px;
+  color: var(--ei-ink-3);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst section[aria-labelledby="by-network"] .eh-net-more {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ei-ink-2);
+}
+
+/* ---------- Key takeaways (first block under the H1) ----------
+   A ruled two-column list: the question as a short label, the answer as one
+   sentence. Same hairline surface as the table. */
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-takeaways {
+  margin-top: 28px;
+  border: 1px solid var(--ei-line);
+  border-radius: var(--ei-radius);
+  font-family: var(--ei-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-h {
+  margin: 0;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--ei-line);
+  font-family: var(--ei-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ei-ink-3);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-date {
+  font-weight: 500;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-list {
+  margin: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-item {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 16px;
+  padding: 13px 20px;
+  border-top: 1px solid var(--ei-line);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-item:first-child {
+  border-top: 0;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-item dt {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-item dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ei-ink-2);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-item dd strong {
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+@media (max-width: 640px) {
+  .uni-hub-test.eh-page.eh-read.eh-inst .eh-tk-item {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+/* ---------- Intro paragraph + single CTA ---------- */
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-intro {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  font-family: var(--ei-sans);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-intro p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ei-ink-2);
+  max-width: 70ch;
+  margin: 0 0 18px;
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-intro strong {
+  font-weight: 600;
+  color: var(--ei-ink);
+}
+.uni-hub-test.eh-page.eh-read.eh-inst .eh-intro a:not(.eh-btn) {
+  color: var(--ei-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ei-ink-3);
+  text-underline-offset: 3px;
+  background: none;
+  box-shadow: none;
+}

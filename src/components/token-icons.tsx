@@ -83,14 +83,14 @@ export function AssetIcon({
         loading={priority ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={priority ? "high" : "auto"}
-        style={{ width: size, height: size, borderRadius: "50%" }}
+        style={{ width: size, height: size, minWidth: size, minHeight: size, flexShrink: 0, aspectRatio: "1 / 1", objectFit: "cover", borderRadius: "50%" }}
       />
     );
   }
   return (
     <span
       className="asset-dot"
-      style={{ background: "#999", width: size, height: size, fontSize: size * 0.5 }}
+      style={{ background: "#999", width: size, height: size, minWidth: size, flexShrink: 0, aspectRatio: "1 / 1", borderRadius: "50%", fontSize: size * 0.5 }}
     >
       {asset[0] || "?"}
     </span>
@@ -101,19 +101,21 @@ export function ChainIcon({
   chain,
   size = 18,
   priority = false,
-}: { chain: string } & IconProps) {
+  decorative = false,
+}: { chain: string; decorative?: boolean } & IconProps) {
   const icon = CHAIN_ICONS[chain];
   if (icon) {
     return (
       <img
         src={icon.src}
-        alt={chain}
+        alt={decorative ? "" : chain}
+        aria-hidden={decorative || undefined}
         width={size}
         height={size}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={priority ? "high" : "auto"}
-        style={{ width: size, height: size, borderRadius: "50%" }}
+        style={{ width: size, height: size, minWidth: size, minHeight: size, flexShrink: 0, aspectRatio: "1 / 1", objectFit: "cover", borderRadius: "50%" }}
       />
     );
   }

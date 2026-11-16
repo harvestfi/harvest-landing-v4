@@ -1,0 +1,974 @@
+/* Editorial layout for the asset hubs (/eth, /btc, /usdt, /usdc).
+   One column, one typeface with tabular figures, hairline tables, one accent
+   (gold, quick-answer bullets, the highlighted row and the CTA). Colours come
+   from the --uni-* ramp in asset-hub.css, so dark mode follows the site.
+   The hubs' deeper sections keep their markup (uh-block, eh-*) and are
+   brought into the same system at the bottom of this file. */
+
+.uni-hub-test.ae {
+  --ae-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --ae-ink: var(--uni-ink);
+  --ae-ink-2: var(--uni-ink-2);
+  --ae-ink-3: var(--uni-ink-3);
+  --ae-line: var(--uni-line);
+  --ae-line-2: var(--uni-line-2);
+  --ae-gold: var(--uni-gold, #ffb936);
+  --ae-hl: #fff8e6;
+  --ae-radius: 10px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px 72px;
+  font-family: var(--ae-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ae-ink-2);
+}
+:root[data-theme="dark"] .uni-hub-test.ae {
+  --ae-hl: rgba(255, 185, 54, 0.1);
+}
+.uni-hub-test.ae * {
+  font-family: inherit;
+}
+
+/* ---------- header ---------- */
+.uni-hub-test.uh-page.ae .ae-crumbs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--ae-ink-3);
+  margin: 0 0 28px;
+}
+.uni-hub-test.uh-page.ae .ae-crumbs a {
+  color: var(--ae-ink-3);
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .ae-crumbs a:hover {
+  color: var(--ae-ink);
+}
+.uni-hub-test.uh-page.ae .ae-crumbs [aria-current] {
+  color: var(--ae-ink);
+}
+.uni-hub-test.uh-page.ae .ae-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.uni-hub-test.uh-page.ae .ae-head-icon {
+  flex: none;
+  margin-top: 4px;
+}
+.uni-hub-test.uh-page.ae .ae-head-icon img {
+  border-radius: 999px;
+}
+.uni-hub-test.uh-page.ae .ae-h1 {
+  font-size: 32px;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  margin: 0;
+  font-weight: 650;
+  color: var(--ae-ink);
+}
+.uni-hub-test.uh-page.ae .ae-h1-dek {
+  font-weight: 450;
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .ae-lede {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ae-ink-2);
+  margin: 18px 0 8px;
+}
+.uni-hub-test.uh-page.ae .ae-byline {
+  font-size: 13px;
+  color: var(--ae-ink-3);
+  margin: 0 0 28px;
+}
+
+/* ---------- quick answers ---------- */
+.uni-hub-test.uh-page.ae .ae-quick {
+  border-top: 1px solid var(--ae-line);
+  border-bottom: 1px solid var(--ae-line);
+  padding: 18px 0 14px;
+  margin: 0 0 32px;
+}
+.uni-hub-test.uh-page.ae .ae-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+  margin: 0 0 12px;
+}
+.uni-hub-test.uh-page.ae .ae-quick ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.uni-hub-test.uh-page.ae .ae-quick li {
+  position: relative;
+  padding-left: 18px;
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ae-ink-2);
+}
+.uni-hub-test.uh-page.ae .ae-quick li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ae-gold);
+}
+.uni-hub-test.uh-page.ae .ae-quick li p {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+.uni-hub-test.uh-page.ae .ae-quick .ae-q {
+  color: var(--ae-ink);
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae .ae-quick .ae-a {
+  color: var(--ae-ink-2);
+}
+
+/* ---------- running text ---------- */
+.uni-hub-test.uh-page.ae .ae-intro p,
+.uni-hub-test.uh-page.ae .ae-section > p,
+.uni-hub-test.uh-page.ae .ae-pattern > p,
+.uni-hub-test.uh-page.ae .uh-block > p,
+.uni-hub-test.uh-page.ae .uh-block li,
+.uni-hub-test.uh-page.ae .uh-block dd {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ae-ink-2);
+  margin: 0 0 14px;
+}
+.uni-hub-test.uh-page.ae .ae-intro .ae-muted {
+  color: var(--ae-ink-3);
+  font-size: 15px;
+}
+.uni-hub-test.uh-page.ae a {
+  color: var(--ae-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ae-line-2);
+  text-underline-offset: 3px;
+}
+.uni-hub-test.uh-page.ae a:hover {
+  text-decoration-color: currentColor;
+}
+.uni-hub-test.uh-page.ae .ae-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 13px;
+  color: var(--ae-ink-3);
+  margin: 18px 0 0;
+}
+.uni-hub-test.uh-page.ae .ae-toc a {
+  color: var(--ae-ink-2);
+}
+
+/* ---------- sections ---------- */
+.uni-hub-test.uh-page.ae .ae-section,
+.uni-hub-test.uh-page.ae .uh-block {
+  margin: 64px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.uni-hub-test.uh-page.ae .ae-section > h2,
+.uni-hub-test.uh-page.ae .uh-block > h2 {
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 650;
+  color: var(--ae-ink);
+  margin: 0 0 10px;
+}
+.uni-hub-test.uh-page.ae .ae-sub,
+.uni-hub-test.uh-page.ae .uh-block > .uh-lead {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ae-ink-2);
+  margin: 0 0 18px;
+}
+.uni-hub-test.uh-page.ae .ae-dateline,
+.uni-hub-test.uh-page.ae .uh-block > .rp-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+  margin: 0 0 8px;
+  font-family: inherit;
+}
+.uni-hub-test.uh-page.ae .uh-block > .rp-eyebrow .uh-eyebrow-date {
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .ae-caption {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ae-ink-3);
+  margin: 10px 0 18px;
+}
+
+/* ---------- tables ---------- */
+.uni-hub-test.uh-page.ae .ae-card {
+  border: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+  background: var(--uni-bg);
+}
+.uni-hub-test.uh-page.ae .ae-scroll {
+  overflow-x: auto;
+}
+.uni-hub-test.uh-page.ae .ae-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.uni-hub-test.uh-page.ae .ae-table th,
+.uni-hub-test.uh-page.ae .ae-table td {
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: middle;
+  border-top: 1px solid var(--ae-line);
+  color: var(--ae-ink-2);
+  font-weight: 400;
+}
+.uni-hub-test.uh-page.ae .ae-table thead th {
+  border-top: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae .ae-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae .ae-table .ae-wide {
+  text-align: left;
+}
+.uni-hub-test.uh-page.ae .ae-table .ae-strong,
+.uni-hub-test.uh-page.ae .ae-table strong {
+  color: var(--ae-ink);
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae .ae-dim,
+.uni-hub-test.uh-page.ae .ae-table .ae-dim,
+.uni-hub-test.uh-page.ae .ae-cell-rest {
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .ae-table tbody tr.ae-hl > * {
+  background: var(--ae-hl);
+}
+.uni-hub-test.uh-page.ae .ae-rank-n {
+  color: var(--ae-ink-3);
+  width: 28px;
+}
+.uni-hub-test.uh-page.ae .ae-vault {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.uni-hub-test.uh-page.ae .ae-ico {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.uni-hub-test.uh-page.ae .ae-ico img {
+  border-radius: 999px;
+}
+.uni-hub-test.uh-page.ae .ae-ico-chain {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: inline-flex;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1.5px var(--uni-bg);
+}
+.uni-hub-test.uh-page.ae .ae-vault-name {
+  color: var(--ae-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .ae-vault-name:hover {
+  text-decoration: underline;
+}
+.uni-hub-test.uh-page.ae .ae-vault-meta {
+  color: var(--ae-ink-3);
+  font-size: 13px;
+}
+.uni-hub-test.uh-page.ae .ae-open {
+  text-align: right;
+  white-space: nowrap;
+}
+.uni-hub-test.uh-page.ae .ae-open a {
+  font-size: 13px;
+  color: var(--ae-ink-2);
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .ae-open a:hover {
+  color: var(--ae-ink);
+}
+.uni-hub-test.uh-page.ae .ae-lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.uni-hub-test.uh-page.ae .ae-lead-t {
+  color: var(--ae-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .ae-lead-s {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ae-ink-3);
+  max-width: 420px;
+}
+.uni-hub-test.uh-page.ae .ae-figure {
+  margin: 18px 0 0;
+}
+
+/* ---------- patterns ---------- */
+.uni-hub-test.uh-page.ae .ae-pattern {
+  margin: 32px 0 0;
+}
+.uni-hub-test.uh-page.ae .ae-pattern-n {
+  font-size: 12px;
+  color: var(--ae-ink-3);
+  margin: 0 0 4px;
+}
+.uni-hub-test.uh-page.ae .ae-pattern h3,
+.uni-hub-test.uh-page.ae .uh-block h3 {
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 650;
+  color: var(--ae-ink);
+  margin: 0 0 8px;
+}
+
+/* ---------- key takeaways ---------- */
+.uni-hub-test.uh-page.ae .ae-takeaways {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 0;
+  font-size: 14.5px;
+}
+.uni-hub-test.uh-page.ae .ae-takeaways th,
+.uni-hub-test.uh-page.ae .ae-takeaways td {
+  text-align: left;
+  padding: 13px 0;
+  border-top: 1px solid var(--ae-line);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.uni-hub-test.uh-page.ae .ae-takeaways tr:last-child > * {
+  border-bottom: 1px solid var(--ae-line);
+}
+.uni-hub-test.uh-page.ae .ae-takeaways th {
+  width: 34%;
+  font-weight: 400;
+  color: var(--ae-ink-3);
+  padding-right: 18px;
+}
+.uni-hub-test.uh-page.ae .ae-takeaways td {
+  color: var(--ae-ink-2);
+}
+.uni-hub-test.uh-page.ae .ae-takeaways strong {
+  color: var(--ae-ink);
+  font-weight: 600;
+}
+
+/* ---------- questions ---------- */
+.uni-hub-test.uh-page.ae .ae-faq {
+  border-top: 1px solid var(--ae-line);
+}
+.uni-hub-test.uh-page.ae .ae-faq-item {
+  border-bottom: 1px solid var(--ae-line);
+}
+.uni-hub-test.uh-page.ae .ae-faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 0;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--ae-ink);
+}
+.uni-hub-test.uh-page.ae .ae-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+.uni-hub-test.uh-page.ae .ae-faq-chev {
+  color: var(--ae-ink-3);
+  font-weight: 400;
+  transition: transform 0.15s ease;
+}
+.uni-hub-test.uh-page.ae .ae-faq-item[open] .ae-faq-chev {
+  transform: rotate(45deg);
+}
+.uni-hub-test.uh-page.ae .ae-faq-item p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ae-ink-2);
+  margin: 0 0 16px;
+}
+
+/* ---------- CTA ---------- */
+.uni-hub-test.uh-page.ae .ae-cta {
+  margin: 64px 0 0;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--ae-line);
+}
+.uni-hub-test.uh-page.ae .ae-cta p {
+  font-size: 16px;
+  color: var(--ae-ink-2);
+  margin: 0 0 14px;
+}
+.uni-hub-test.uh-page.ae .ae-btn,
+.uni-hub-test.uh-page.ae .eh-btn-primary {
+  display: inline-block;
+  background: var(--ae-gold);
+  color: #191717;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .ae-btn:hover {
+  filter: brightness(0.96);
+}
+
+.uni-hub-test.uh-page.ae .ae-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- the hubs' deeper sections, in the same system ---------- */
+.uni-hub-test.uh-page.ae .uh-block :is(table.eh-evidence, table.eh-earn, table.eh-rows) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  border: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+}
+.uni-hub-test.uh-page.ae .uh-block :is(table.eh-evidence, table.eh-earn, table.eh-rows) :is(th, td) {
+  border-top: 1px solid var(--ae-line);
+  padding: 11px 14px;
+  color: var(--ae-ink-2);
+  background: none;
+}
+.uni-hub-test.uh-page.ae .uh-block :is(table.eh-evidence, table.eh-earn, table.eh-rows) thead th {
+  border-top: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .uh-block caption {
+  caption-side: bottom;
+  text-align: left;
+  font-size: 13px;
+  color: var(--ae-ink-3);
+  padding-top: 10px;
+}
+.uni-hub-test.uh-page.ae .uh-risks {
+  padding-left: 18px;
+}
+.uni-hub-test.uh-page.ae .uh-risks li strong,
+.uni-hub-test.uh-page.ae .uh-block p strong {
+  color: var(--ae-ink);
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae .eh-steps li {
+  margin-bottom: 10px;
+}
+.uni-hub-test.uh-page.ae .eh-defs dt {
+  font-weight: 600;
+  color: var(--ae-ink);
+  margin-top: 10px;
+}
+.uni-hub-test.uh-page.ae .uh-faq-item {
+  border-color: var(--ae-line);
+}
+
+@media (max-width: 640px) {
+  .uni-hub-test.ae {
+    padding: 16px 16px 56px;
+  }
+  .uni-hub-test.uh-page.ae .ae-h1 {
+    font-size: 25px;
+  }
+  .uni-hub-test.uh-page.ae .ae-head-icon img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .uni-hub-test.uh-page.ae .ae-section,
+  .uni-hub-test.uh-page.ae .uh-block {
+    margin-top: 48px;
+  }
+  .uni-hub-test.uh-page.ae .ae-section > h2,
+  .uni-hub-test.uh-page.ae .uh-block > h2 {
+    font-size: 22px;
+  }
+  .uni-hub-test.uh-page.ae .ae-table th,
+  .uni-hub-test.uh-page.ae .ae-table td {
+    padding: 10px 10px;
+  }
+  .uni-hub-test.uh-page.ae .ae-vault-meta {
+    flex-basis: 100%;
+    padding-left: 32px;
+  }
+  .uni-hub-test.uh-page.ae .ae-takeaways th {
+    width: 40%;
+  }
+}
+
+/* ===================================================================
+   Deeper sections, rebuilt in the same system. The hubs' own pieces
+   (key points, stat pairs, steps, evidence and earnings tables, venue
+   table, definitions, risks, calculator, USDC venue and column lists)
+   lose their old card, gold and monospace treatments here.
+   =================================================================== */
+.uni-hub-test.uh-page.ae .uh-block {
+  margin: 64px 0 0;
+  padding: 0;
+  border: 0;
+}
+.uni-hub-test.uh-page.ae .uh-block > h2 {
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+.uni-hub-test.uh-page.ae .rp-eyebrow {
+  display: block;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+  margin: 0 0 8px;
+}
+.uni-hub-test.uh-page.ae .rp-eyebrow * {
+  color: inherit;
+  font: inherit;
+}
+.uni-hub-test.uh-page.ae .uh-lead {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  font-weight: 400 !important;
+  color: var(--ae-ink-2) !important;
+}
+.uni-hub-test.uh-page.ae .uh-block p,
+.uni-hub-test.uh-page.ae .uh-block li,
+.uni-hub-test.uh-page.ae .uh-block dd {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ae-ink-2);
+}
+.uni-hub-test.uh-page.ae .uh-block strong {
+  color: var(--ae-ink);
+  font-weight: 600;
+}
+/* One link style everywhere: ink text, hairline underline. */
+.uni-hub-test.uh-page.ae .uh-block a,
+.uni-hub-test.uh-page.ae .uh-block > p > a,
+.uni-hub-test.uh-page.ae .uh-risks > li > a,
+.uni-hub-test.uh-page.ae .uh-venues > li > a,
+.uni-hub-test.uh-page.ae .uh-cols > dd > a {
+  color: var(--ae-ink);
+  font-weight: inherit;
+  background: none;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--ae-line-2);
+  text-underline-offset: 3px;
+}
+.uni-hub-test.uh-page.ae .uh-block a:hover {
+  text-decoration-color: currentColor;
+  background: none;
+}
+.uni-hub-test.uh-page.ae .uh-note {
+  font-size: 13px;
+  color: var(--ae-ink-3);
+}
+
+/* Key points: a plain list with the gold dot, no box, no ticks. */
+.uni-hub-test.uh-page.ae .eh-keys {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0 0 18px;
+}
+.uni-hub-test.uh-page.ae .uh-block .eh-keys-h {
+  font-size: 11px !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+  margin: 0 0 10px;
+}
+.uni-hub-test.uh-page.ae .eh-keys ul,
+.uni-hub-test.uh-page.ae .uh-venues,
+.uni-hub-test.uh-page.ae .uh-findings {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: block;
+}
+.uni-hub-test.uh-page.ae .eh-keys li,
+.uni-hub-test.uh-page.ae .uh-venues li,
+.uni-hub-test.uh-page.ae .uh-findings li {
+  position: relative;
+  padding-left: 18px;
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.uni-hub-test.uh-page.ae .eh-keys li::before,
+.uni-hub-test.uh-page.ae .uh-venues li::before,
+.uni-hub-test.uh-page.ae .uh-findings li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.65em;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ae-gold);
+}
+.uni-hub-test.uh-page.ae .eh-keys li strong {
+  font-weight: 400;
+  color: inherit;
+}
+
+/* Stat pair: two figures in a hairline card, ink not gold. */
+.uni-hub-test.uh-page.ae .eh-stat {
+  margin: 18px 0;
+}
+.uni-hub-test.uh-page.ae .eh-stat-h {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+  margin: 0 0 8px;
+  font-family: inherit;
+}
+.uni-hub-test.uh-page.ae .eh-stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  border: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+  overflow: hidden;
+}
+.uni-hub-test.uh-page.ae .eh-stat-row > div {
+  padding: 14px 16px;
+}
+.uni-hub-test.uh-page.ae .eh-stat-row > div + div {
+  border-left: 1px solid var(--ae-line);
+}
+.uni-hub-test.uh-page.ae .eh-stat-row dt {
+  font-size: 13px;
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .eh-stat-row dd {
+  margin: 0;
+}
+.uni-hub-test.uh-page.ae .eh-stat-row .eh-stat-v {
+  font-size: 22px !important;
+  font-weight: 650 !important;
+  color: var(--ae-ink) !important;
+  margin: 2px 0 !important;
+}
+.uni-hub-test.uh-page.ae .eh-stat-s,
+.uni-hub-test.uh-page.ae .eh-stat-note {
+  font-size: 13px;
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .eh-stat-note {
+  margin: 8px 0 0;
+}
+
+/* Steps: plain numbers. */
+.uni-hub-test.uh-page.ae .eh-steps {
+  list-style: decimal;
+  padding-left: 22px;
+  margin: 0 0 18px;
+}
+.uni-hub-test.uh-page.ae .eh-steps li {
+  padding: 0 0 0 4px;
+  margin: 0 0 10px;
+}
+.uni-hub-test.uh-page.ae .eh-steps li::marker {
+  color: var(--ae-ink-3);
+  font-weight: 600;
+}
+
+/* Tables from the deeper sections: same card as the top 10. */
+.uni-hub-test.uh-page.ae .eh-evidence-wrap {
+  border: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+  overflow-x: auto;
+  margin: 0 0 18px;
+}
+.uni-hub-test.uh-page.ae :is(table.eh-evidence, table.eh-earn, table.eh-rows) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 0;
+}
+.uni-hub-test.uh-page.ae :is(table.eh-earn, table.eh-rows) {
+  border: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  margin: 0 0 18px;
+}
+.uni-hub-test.uh-page.ae :is(table.eh-evidence, table.eh-earn, table.eh-rows) :is(th, td) {
+  padding: 12px 14px;
+  border-top: 1px solid var(--ae-line);
+  color: var(--ae-ink-2);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: middle;
+}
+.uni-hub-test.uh-page.ae :is(table.eh-evidence, table.eh-earn, table.eh-rows) thead :is(th, td) {
+  border-top: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae :is(table.eh-evidence, table.eh-earn, table.eh-rows) tbody th,
+.uni-hub-test.uh-page.ae :is(table.eh-evidence, table.eh-earn, table.eh-rows) tbody th a {
+  color: var(--ae-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .eh-netname,
+.uni-hub-test.uh-page.ae .eh-rows-s {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--ae-ink-3);
+  margin-top: 2px;
+}
+.uni-hub-test.uh-page.ae .eh-rows-t {
+  color: var(--ae-ink);
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae .eh-rows-num strong {
+  font-size: 14px;
+  color: var(--ae-ink);
+  font-weight: 600;
+}
+.uni-hub-test.uh-page.ae .eh-rows-num span {
+  display: block;
+  font-size: 12px;
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .eh-chip {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 14px;
+  color: var(--ae-ink-2);
+}
+.uni-hub-test.uh-page.ae .eh-chip-dim {
+  color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae table .num {
+  text-align: right;
+}
+.uni-hub-test.uh-page.ae table caption {
+  caption-side: bottom;
+  text-align: left;
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ae-ink-3);
+  padding: 10px 0 0;
+}
+
+/* Definitions: label over text. */
+.uni-hub-test.uh-page.ae .eh-defs,
+.uni-hub-test.uh-page.ae .uh-cols {
+  display: block;
+  margin: 0 0 18px;
+}
+.uni-hub-test.uh-page.ae .eh-defs dt,
+.uni-hub-test.uh-page.ae .uh-cols dt {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ae-ink);
+  margin: 14px 0 2px;
+  font-family: inherit;
+}
+.uni-hub-test.uh-page.ae .eh-defs dd,
+.uni-hub-test.uh-page.ae .uh-cols dd {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* Risks: hairline-separated, bold lead-in, no bullets. */
+.uni-hub-test.uh-page.ae .uh-risks {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  display: block;
+}
+.uni-hub-test.uh-page.ae .uh-risks li {
+  padding: 14px 0;
+  margin: 0;
+  border-top: 1px solid var(--ae-line);
+  background: none;
+}
+.uni-hub-test.uh-page.ae .uh-risks li::before {
+  content: none;
+}
+
+/* Calculator: hairline card. */
+.uni-hub-test.uh-page.ae .uh-calc {
+  border: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+  background: none;
+  box-shadow: none;
+}
+
+.uni-hub-test.uh-page.ae .eh-whose {
+  font-size: 15px;
+  color: var(--ae-ink-3);
+}
+
+/* ---------- hero: breadcrumb with the asset icon, title, two CTAs ---------- */
+.uni-hub-test.uh-page.ae .ae-crumb-asset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.uni-hub-test.uh-page.ae .ae-crumb-asset img {
+  border-radius: 999px;
+}
+.uni-hub-test.uh-page.ae .ae-h1-dek {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 450;
+  color: var(--ae-ink-3);
+  margin: 6px 0 0;
+}
+.uni-hub-test.uh-page.ae .ae-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 32px;
+}
+.uni-hub-test.uh-page.ae .ae-btn-ghost {
+  display: inline-block;
+  padding: 10px 18px;
+  border: 1px solid var(--ae-line);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ae-ink);
+  text-decoration: none;
+  background: var(--uni-bg);
+}
+.uni-hub-test.uh-page.ae .ae-btn-ghost:hover {
+  border-color: var(--ae-ink-3);
+}
+.uni-hub-test.uh-page.ae .ae-section-first {
+  margin-top: 40px;
+}
+
+/* ---------- ranking rows: the whole row opens the vault page ---------- */
+.uni-hub-test.uh-page.ae .ae-rank tbody tr.ae-row {
+  position: relative;
+  cursor: pointer;
+}
+.uni-hub-test.uh-page.ae .ae-rank tbody tr.ae-row:hover > * {
+  background: var(--uni-tint-thin, rgba(0, 0, 0, 0.03));
+}
+.uni-hub-test.uh-page.ae .ae-rank tbody tr.ae-hl:hover > * {
+  background: var(--ae-hl);
+}
+.uni-hub-test.uh-page.ae .ae-rank .ae-vault-name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.uni-hub-test.uh-page.ae .ae-rank .ae-open {
+  position: relative;
+  z-index: 1;
+}
+.uni-hub-test.uh-page.ae .ae-rank .ae-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--ae-line);
+  border-radius: 8px;
+  background: var(--uni-bg);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ae-ink);
+  text-decoration: none;
+}
+.uni-hub-test.uh-page.ae .ae-rank .ae-open-btn:hover {
+  border-color: var(--ae-ink-3);
+}
+
+/* Pattern number sits in the heading line, not on a row of its own. */
+.uni-hub-test.uh-page.ae .ae-pattern h3.ae-pattern-h {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.uni-hub-test.uh-page.ae .ae-pattern-h .ae-pattern-n {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 2px 0 0;
+  border-radius: 999px;
+  background: var(--ae-hl);
+  color: var(--ae-ink);
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.uni-hub-test.uh-page.ae .ae-hero-ctas a {
+  gap: 6px;
+}

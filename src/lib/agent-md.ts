@@ -38,6 +38,35 @@ import {
   ETH_RISKS_LEAD,
   STAKING_LEAD,
 } from "./eth-hub-copy";
+import {
+  strategyTypeOf as hubType,
+  SINGULAR as HUB_SINGULAR,
+  typeBlurb,
+  type HubCohort,
+  type NetworkPicks,
+  type TypeRow,
+  type Faq,
+  type Risk,
+} from "./long-hub";
+import {
+  btcPageModel,
+  wrapperLine,
+  venueLine as btcVenueLine,
+  BTC_HUB_H1,
+  BTC_FEE_TEXT,
+  BTC_RISKS,
+  BTC_RISKS_LEAD,
+  BTC_SOURCE_LEAD,
+  WRAPPER_ABOUT,
+} from "./btc-hub-copy";
+import {
+  usdtPageModel,
+  venueLine as usdtVenueLine,
+  USDT_HUB_H1,
+  USDT_FEE_TEXT,
+  USDT_RISKS,
+  USDT_RISKS_LEAD,
+} from "./usdt-hub-copy";
 import { getPlatform } from "./platforms";
 import { NETWORKS } from "./networks";
 import { assetHubH1, networkHubH1, platformHubH1 } from "./seo";
@@ -218,7 +247,7 @@ async function rankingTable(rows: YieldVault[]): Promise<string> {
   ];
   rows.forEach((v, i) => {
     out.push(
-      `| ${i + 1} | ${cell(getCanonicalDisplayName(v))} | ${cell(stripChainSuffix(v.category, v.chain))} | ${cell(v.chain)} | ${formatAPY(v.apy24h)} | ${formatAPY(v.apy30d)} | ${formatTVL(v.tvl)} | ${
+      `| ${i + 1} | ${cell(getCanonicalDisplayName(v))} | ${cell(v.vaultType === "Autopilot" ? "Harvest Autopilot" : stripChainSuffix(v.category, v.chain))} | ${cell(v.chain)} | ${formatAPY(v.apy24h)} | ${formatAPY(v.apy30d)} | ${formatTVL(v.tvl)} | ${
         products.has(v.slug) ? `[${v.slug}.md](${SITE_URL}/${v.slug}.md)` : "-"
       } | ${SITE_URL}/${v.slug} |`,
     );
@@ -254,6 +283,14 @@ async function homeMd(page: AgentPage): Promise<string> {
 async function assetMd(page: AgentPage): Promise<string> {
   if (page.key === "ETH") {
     const md = await ethMd(page);
+    if (md) return md;
+  }
+  if (page.key === "BTC") {
+    const md = await btcMd(page);
+    if (md) return md;
+  }
+  if (page.key === "USDT") {
+    const md = await usdtMd(page);
     if (md) return md;
   }
   const live = await getLiveVaults();
@@ -328,6 +365,153 @@ async function ethMd(page: AgentPage): Promise<string | null> {
   for (const f of m.faqs) out.push(`### ${f.q}`, "", f.a, "");
   out.push(agentNotes("/eth", asOf, `${HARVEST_FEE_TEXT} of harvested yield, already deducted from every APY shown.`));
   return out.join("\n");
+}
+
+// /btc and /usdt follow the /eth formula, so their Markdown pages do too: the
+// same summary, ranking, sections, risks and answers, from the same models
+// (btc-hub-copy.ts, usdt-hub-copy.ts), in the page's order.
+async function longHubMd(
+  page: AgentPage,
+  o: {
+    title: string;
+    path: string;
+    c: HubCohort;
+    hero: string;
+    findings: string[];
+    scope: string;
+    fees: string;
+    sections: { h: string; lines: string[] }[];
+    risksLead: string;
+    risks: Risk[];
+    faqs: Faq[];
+  },
+): Promise<string> {
+  const { c } = o;
+  const asOf = c.asOfIso;
+  const link = (part: string | { text: string; href: string }) =>
+    typeof part === "string" ? part : `[${part.text}](${part.href})`;
+  const out: string[] = [
+    frontMatter(page, o.title, asOf),
+    `# ${o.title}`,
+    "",
+    "## Summary",
+    "",
+    o.hero,
+    "",
+    ...o.findings.map((f) => `- ${f}`),
+    "",
+    o.scope,
+    "",
+    "## Ranking",
+    "",
+    `${c.count} strategies, as ranked on ${page.canonical}. Strategies holding under ${formatTVL(LOW_LIQUIDITY_TVL_THRESHOLD)} are included; the headline figures above use that floor.`,
+    "",
+    await rankingTable(c.all),
+    methodologyNote(),
+  ];
+  for (const s of o.sections) out.push(`## ${s.h}`, "", ...s.lines, "");
+  out.push(`## Risks on every ${page.key} yield strategy`, "", o.risksLead, "");
+  for (const r of o.risks) out.push(`- **${r.title}**${r.parts.map(link).join("")}`);
+  out.push("", `More: ${RISK_URL}`, "", "## Questions and answers", "");
+  for (const f of o.faqs) out.push(`### ${f.q}`, "", f.a, "");
+  out.push(agentNotes(o.path, asOf, `${o.fees} of harvested yield, already deducted from every APY shown.`));
+  return out.join("\n");
+}
+
+const pickLine = (v: YieldVault) =>
+  `- ${proseName(v)}: ${formatAPY(v.apy24h)} APY, ${HUB_SINGULAR[hubType(v)]}, ${formatTVL(v.tvl)} (${SITE_URL}/${v.slug})`;
+
+function hubNetworkLines(nets: NetworkPicks[], c: HubCohort, unit: string): string[] {
+  const out: string[] = [];
+  for (const n of nets) {
+    out.push(`### ${unit} yield on ${n.chain}`, "");
+    out.push(
+      `${n.count} ${n.count === 1 ? "strategy" : "strategies"}, ${formatTVL(n.tvl)} tracked, median ${formatAPY(n.medianApy)}.` +
+        (n.picks.length ? "" : ` No ${unit} strategy there held ${formatTVL(c.fundedFloor)} or more.`),
+      "",
+    );
+    for (const v of n.picks) out.push(pickLine(v));
+    if (n.picks.length) out.push("");
+  }
+  return out;
+}
+
+const hubTypeLines = (types: TypeRow[], unit: string) =>
+  types.map(
+    (t) =>
+      `- ${t.label}: ${t.count} ${t.count === 1 ? "strategy" : "strategies"}, median ${formatAPY(t.medianApy)}, ${formatTVL(t.tvl)} tracked` +
+      (t.bestFunded ? `; best funded ${proseName(t.bestFunded)} at ${formatAPY(t.bestFunded.apy24h)}.` : ".") +
+      ` ${typeBlurb(t.type, unit)}`,
+  );
+
+async function btcMd(page: AgentPage): Promise<string | null> {
+  const m = await btcPageModel();
+  if (!m) return null;
+  return longHubMd(page, {
+    title: BTC_HUB_H1,
+    path: "/btc",
+    c: m.c,
+    hero: m.heroAnswer,
+    findings: m.findings,
+    scope: `Every rate is the APY of a Harvest vault built on the named protocol, after Harvest's fee on harvested yield (${BTC_FEE_TEXT}). Autopilot is Harvest's own allocator. Every strategy holds wrapped Bitcoin (WBTC or cbBTC); tBTC and native Bitcoin staking are not ranked.`,
+    fees: BTC_FEE_TEXT,
+    sections: [
+      { h: "Where to earn BTC yield by network", lines: hubNetworkLines(m.nets, m.c, "BTC") },
+      {
+        h: "WBTC versus cbBTC",
+        lines: [
+          BTC_SOURCE_LEAD,
+          "",
+          ...m.wrappers.map((w) => `- ${wrapperLine(w, m.c)}`),
+          "",
+          ...m.wrappers
+            .filter((w) => WRAPPER_ABOUT[w.token])
+            .map((w) => `${WRAPPER_ABOUT[w.token].line} Source: ${WRAPPER_ABOUT[w.token].href}`),
+        ],
+      },
+      { h: "Strategy types", lines: hubTypeLines(m.types, "BTC") },
+      { h: "BTC yield by protocol", lines: m.venues.map((v) => `- ${btcVenueLine(v)}`) },
+    ],
+    risksLead: BTC_RISKS_LEAD,
+    risks: BTC_RISKS,
+    faqs: m.faqs,
+  });
+}
+
+async function usdtMd(page: AgentPage): Promise<string | null> {
+  const m = await usdtPageModel();
+  if (!m) return null;
+  return longHubMd(page, {
+    title: USDT_HUB_H1,
+    path: "/usdt",
+    c: m.c,
+    hero: m.heroAnswer,
+    findings: m.findings,
+    scope: `Every rate is the APY of a Harvest vault built on the named protocol, after Harvest's fee on harvested yield (${USDT_FEE_TEXT}). USDT on HyperEVM is USDT0. Centralised exchange savings products are not ranked.`,
+    fees: USDT_FEE_TEXT,
+    sections: [
+      { h: "Where to earn USDT yield by network", lines: hubNetworkLines(m.nets, m.c, "USDT") },
+      {
+        h: "USDT versus USDC",
+        lines: [
+          `Pooled markets that list both stablecoins on the same network, as of ${m.c.asOf}. Curated Morpho vaults are left out, since two of them on one network lend into different markets.`,
+          "",
+          "| Market | Network | USDT APY | USDC APY | USDT vault TVL |",
+          "|---|---|---|---|---|",
+          ...m.cmp.pairs.map(
+            (p) => `| ${cell(p.venue)} | ${cell(p.chain)} | ${formatAPY(p.usdt)} | ${formatAPY(p.usdc)} | ${formatTVL(p.usdtTvl)} |`,
+          ),
+          "",
+          `Across the whole index, the ${m.cmp.usdcCount} USDC strategies paid a median of ${formatAPY(m.cmp.usdcMedian)} and the ${m.c.count} USDT strategies ${formatAPY(m.c.medianApy)}. USDC ranking: ${SITE_URL}/usdc`,
+        ],
+      },
+      { h: "Strategy types", lines: hubTypeLines(m.types, "USDT") },
+      { h: "USDT yield by protocol", lines: m.venues.map((v) => `- ${usdtVenueLine(v)}`) },
+    ],
+    risksLead: USDT_RISKS_LEAD,
+    risks: USDT_RISKS,
+    faqs: m.faqs,
+  });
 }
 
 async function platformMd(page: AgentPage): Promise<string> {

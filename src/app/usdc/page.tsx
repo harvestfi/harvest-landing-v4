@@ -6,6 +6,8 @@ import { buildUsdcCohort } from "@/lib/usdc-hub";
 import { UsdcHubBody } from "@/components/usdc-hub-body";
 import "../_styles/asset-hub.css";
 import "../_styles/usdc-hub.css";
+import "../_styles/asset-editorial.css";
+import "../_styles/asset-ld.css";
 
 const ASSET = "USDC" as const;
 const URL = `${SITE_URL}/usdc`;
