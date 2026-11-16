@@ -18,9 +18,18 @@ import sonicIcon from "@/assets/icons/sonic.png";
 import polygonIcon from "@/assets/icons/polygon.svg";
 import zksyncIcon from "@/assets/icons/zksync.svg";
 import hyperevmIcon from "@/assets/icons/hyperevm.svg";
+// Coinbase tokenized stocks on Base, the marks app.harvest.finance uses.
+import nvdacIcon from "@/assets/icons/nvdac.svg";
+import aaplcIcon from "@/assets/icons/aaplc.svg";
+import metacIcon from "@/assets/icons/metac.svg";
+import googlcIcon from "@/assets/icons/googlc.svg";
 
 const ASSET_ICONS: Record<string, { src: string }> = {
   USDC: usdcIcon,
+  NVDAc: nvdacIcon,
+  AAPLc: aaplcIcon,
+  METAc: metacIcon,
+  GOOGLc: googlcIcon,
   USDT: usdtIcon,
   USDT0: usdtIcon,
   ETH: ethIcon,

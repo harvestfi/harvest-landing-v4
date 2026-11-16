@@ -101,6 +101,28 @@ const items = live.map((v) => ({
   tvl: v.tvl,
 }));
 
+// Coinbase Tokenized Stocks vaults (data/tokenized-stocks.json) have no
+// product page of their own; each result opens the stocks page. productName
+// is the haystack, so company names, tickers and "stocks" all match.
+const STOCKS_FILE = join(ROOT, "data", "tokenized-stocks.json");
+if (existsSync(STOCKS_FILE)) {
+  const stocks = JSON.parse(readFileSync(STOCKS_FILE, "utf-8")).vaults ?? [];
+  for (const v of stocks) {
+    items.push({
+      slug: "yield-on-tokenized-stocks#ranking",
+      productName: `${v.company} ${v.ticker} ${v.token} ${v.name} tokenized stock stocks equity coinbase`,
+      displayName: `${v.token} ${v.name}`,
+      isLpPair: false,
+      asset: v.token,
+      chain: v.chain,
+      protocol: "Coinbase Tokenized Stocks",
+      category: "Coinbase Tokenized Stocks · IPOR Fusion",
+      apy24h: v.apy24h,
+      tvl: v.tvlUsd,
+    });
+  }
+}
+
 if (!existsSync(PUBLIC_DIR)) mkdirSync(PUBLIC_DIR, { recursive: true });
 writeFileSync(OUT_FILE, JSON.stringify(items));
 console.log(

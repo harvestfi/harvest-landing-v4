@@ -169,6 +169,10 @@ All Harvest yield data is licensed CC-BY-4.0 (https://creativecommons.org/licens
 - [ETH](${SITE_URL}/eth): ETH and WETH lending and vault strategies on Base, Arbitrum and Ethereum, ranked by 24-hour APY with TVL, 30-day averages and the Lido stETH rate for reference (liquid staking tokens are not ranked).
 - [BTC](${SITE_URL}/btc): BTC (WBTC / cbBTC / tBTC) strategies ranked by live APY and TVL.
 
+## Tokenized stocks
+
+- [Yield on Coinbase Tokenized Stocks](${SITE_URL}/yield-on-tokenized-stocks): Harvest's autocompounding carry-trade vaults on Coinbase Tokenized Stocks (NVDAc, AAPLc, METAc, GOOGLc), issued by Coinbase under Regulation S on Base, ranked by APY, with each position's leverage, the fixed-term markets built on the vault shares, fees and risks. Yield is paid in the stock, not in dollars.
+
 ## Network hubs
 
 - [Ethereum](${SITE_URL}/ethereum): every strategy we track on Ethereum mainnet.

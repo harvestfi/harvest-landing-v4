@@ -31,6 +31,10 @@ jobs:
       - name: Fetch data from APIs
         run: node scripts/fetch-data.mjs
 
+      - name: Fetch tokenized-stock vaults (Harvest + IPOR + Spectra)
+        run: node scripts/fetch-tokenized-stocks.mjs
+        continue-on-error: true
+
       - name: Fetch holder counts (Blockscout)
         run: node scripts/fetch-holders.mjs
         continue-on-error: true
@@ -54,6 +58,7 @@ jobs:
           if [ -f data/holders.json ]; then git add data/holders.json; fi
           if [ -f data/xrp-yield.json ]; then git add data/xrp-yield.json; fi
           if [ -f data/hidden.json ]; then git add data/hidden.json; fi
+          if [ -f data/tokenized-stocks.json ]; then git add data/tokenized-stocks.json; fi
           if git diff --cached --quiet; then
             echo "No data changes detected."
             echo "changed=false" >> "$GITHUB_OUTPUT"

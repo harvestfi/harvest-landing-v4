@@ -15,6 +15,7 @@ export function Header() {
     { label: "ETH", href: "/eth", asset: "ETH" },
     { label: "BTC", href: "/btc", asset: "BTC" },
   ];
+  const STOCKS = ["NVDAc", "AAPLc", "METAc", "GOOGLc"];
 
   return (
     <header className="topnav">
@@ -32,6 +33,18 @@ export function Header() {
           ))}
           <Link href="/docs" className="nav-asset-link">
             <span>Docs</span>
+          </Link>
+          <Link
+            href="/yield-on-tokenized-stocks"
+            className="nav-asset-link nav-stocks"
+            title="Yield on Coinbase Tokenized Stocks"
+          >
+            <span className="nav-stack" aria-hidden="true">
+              {STOCKS.map((t) => (
+                <AssetIcon key={t} asset={t} size={16} decorative />
+              ))}
+            </span>
+            <span>Tokenized Stocks</span>
           </Link>
         </nav>
         <div className="nav-right">

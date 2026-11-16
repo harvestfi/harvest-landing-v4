@@ -141,6 +141,13 @@ export async function NetworkLongBody({ chain }: { chain: string }) {
             ))}{" "}
           rankings.
         </p>
+        {f.slug === "base" ? (
+          <p>
+            Base also hosts the vaults on Coinbase Tokenized Stocks (NVDAc, AAPLc, METAc and GOOGLc). They
+            pay yield in the stock rather than in dollars, so they are ranked separately, on the page about{" "}
+            <Link href="/yield-on-tokenized-stocks">yield on Coinbase Tokenized Stocks</Link>.
+          </p>
+        ) : null}
       </Block>
 
       <Block

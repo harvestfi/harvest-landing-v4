@@ -6,6 +6,7 @@ import { NETWORKS } from "@/lib/networks";
 import { LIVE_PLATFORM_SLUGS } from "@/lib/platforms";
 import { getDocsPages } from "@/lib/docs";
 import { getSiteFacts } from "@/lib/site-facts";
+import { loadStockData } from "@/lib/tokenized-stocks";
 
 export const dynamic = "force-static";
 
@@ -133,6 +134,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: p.path === "/docs" ? 0.7 : 0.5,
     })),
+    {
+      url: `${SITE_URL}/yield-on-tokenized-stocks`,
+      lastModified: new Date(loadStockData().dataAsOf),
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    },
     ...assetHubPages,
     ...networkHubPages,
     ...platformHubPages,
