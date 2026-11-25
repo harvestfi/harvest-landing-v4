@@ -7,6 +7,7 @@ import { LIVE_PLATFORM_SLUGS } from "@/lib/platforms";
 import { getDocsPages } from "@/lib/docs";
 import { getSiteFacts } from "@/lib/site-facts";
 import { loadStockData } from "@/lib/tokenized-stocks";
+import { reportMeta } from "@/lib/usdc-yield-report";
 
 export const dynamic = "force-static";
 
@@ -139,6 +140,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(loadStockData().dataAsOf),
       changeFrequency: "daily" as const,
       priority: 0.9,
+    },
+    // A dated edition: it changes only when its data is re-read.
+    {
+      url: `${SITE_URL}${reportMeta().path}`,
+      lastModified: new Date(reportMeta().asOfIso),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
     },
     ...assetHubPages,
     ...networkHubPages,

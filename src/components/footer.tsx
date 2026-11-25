@@ -41,6 +41,7 @@ const REPORTS = [
   // it points at.
   { label: "XRP Staking", href: "/report/xrp-yield-ranking" },
   { label: "Tokenized Stocks Yield", href: "/yield-on-tokenized-stocks" },
+  { label: "USDC Yield Report", href: "/research/usdc-yield-report-november-2026" },
 ];
 
 // Legitimacy-signal pages.

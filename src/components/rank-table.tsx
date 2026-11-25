@@ -55,7 +55,11 @@ export function RankTable({
   note = true,
   tvl = true,
   icon,
+  labels,
 }: {
+  /** Column headings, for tables that rank something other than live APY
+   *  (e.g. the USDC Yield Report's realized 90d / 30d). Defaults are the hubs'. */
+  labels?: { name?: string; apy?: string; apy30?: string };
   rows: EdRow[];
   title: string;
   /** "$50K": the liquidity floor, named in the status column. */
@@ -142,9 +146,9 @@ export function RankTable({
         <table className="rk-table">
           <thead>
             <tr>
-              {head("name", "Strategy", "rk-c-name")}
-              {head("apy", "24h APY", "rk-num rk-c-apy")}
-              {head("apy30", "30d avg", "rk-num rk-c-30")}
+              {head("name", labels?.name ?? "Strategy", "rk-c-name")}
+              {head("apy", labels?.apy ?? "24h APY", "rk-num rk-c-apy")}
+              {head("apy30", labels?.apy30 ?? "30d avg", "rk-num rk-c-30")}
               {tvl ? head("tvl", "TVL", "rk-num rk-c-tvl") : null}
               <th scope="col" className="rk-c-go" aria-hidden="true" />
             </tr>
@@ -170,11 +174,11 @@ export function RankTable({
                     </span>
                     <span className="rk-prod-txt">
                       {r.href && /^https?:/.test(r.href) ? (
-                        <a href={r.href} className="rk-name" target="_blank" rel="noopener noreferrer">
+                        <a href={r.href} className="rk-name" title={r.name} target="_blank" rel="noopener noreferrer">
                           {r.name}
                         </a>
                       ) : (
-                        <Link href={r.href ?? `/${r.slug}`} className="rk-name">
+                        <Link href={r.href ?? `/${r.slug}`} className="rk-name" title={r.name}>
                           {r.name}
                         </Link>
                       )}
