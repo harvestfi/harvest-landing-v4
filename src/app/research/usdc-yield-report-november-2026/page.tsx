@@ -15,7 +15,6 @@
 //                shown in its own section with withdrawal-risk framing
 import type { Metadata } from "next";
 import { SharePriceChart } from "@/components/share-price-chart";
-import { AllResultsTable } from "@/components/all-results-table";
 import { LeaveGuard } from "@/components/leave-guard";
 import { REPORT_PATH } from "@/lib/usdc-yield-report";
 import { articleSchema, breadcrumbSchema, reportDatasetSchema } from "@/lib/jsonld";
@@ -116,7 +115,6 @@ const TOC: [string, string][] = [
   ["methodology", "Methodology"],
   ["definitions", "Definitions"],
   ["limitations", "Disclosure"],
-  ["data", "All results"],
   ["addresses", "Contract addresses"],
 ];
 
@@ -347,6 +345,15 @@ export default function UsdcYieldReportPage() {
   const smaller = all.filter((v) => v.tier === "smaller");
   const util = all.filter((v) => v.tier === "utilization");
   const credit = all.filter((v) => v.tier === "credit");
+  // The Harvest autocompounder on IPOR's Bitcoin Dollar USDC vault: explained where it is listed.
+  const btcd = all.find((v) => /bitcoin dollar/i.test(v.name));
+  const btcdSince = btcd
+    ? (() => {
+        const ok = btcd.series.filter(([, p]) => Number.isFinite(p));
+        const days = (Date.parse(ok[ok.length - 1][0]) - Date.parse(ok[0][0])) / 864e5;
+        return ((ok[ok.length - 1][1] / ok[0][1]) ** (365 / days) - 1) * 100;
+      })()
+    : null;
   // Lending vaults only: credit vaults are reported in their own section.
   const lending = all.filter((v) => v.tier !== "credit");
   const list = (xs: string[]) => xs.join(", ").replace(/, ([^,]*)$/, " and $1");
@@ -466,25 +473,25 @@ export default function UsdcYieldReportPage() {
     {
       q: `What is the best USDC yield in ${month}?`,
       a:
-        `Among USDC vaults holding more than ${floor}, the best realized rate in ${month} was ${pct(real(coreHi, "d30"))} a year on ` +
-        `${coreHi.name} (${at(coreHi)})${coreTies.length ? `, level with ${coreTies.map((v) => v.name).join(" and ")}` : ""}. ` +
+        `The best USDC yield in ${month} recorded in this report was ${pct(real(coreHi, "d30"))} a year, on ${coreHi.name} ` +
+        `(${at(coreHi)})${coreTies.length ? `, level with ${coreTies.map((v) => v.name).join(" and ")}` : ""}, among vaults holding more than ${floor}. ` +
         `Higher rates existed, up to ${pct(real(lending[0], "d30"))} on ${lending[0].name}, but they came from small vaults running at high ` +
         `utilization, where withdrawals can be delayed.`,
     },
     {
       q: "What is the USDC interest rate lately?",
       a:
-        `The deposit-weighted average USDC lending rate across the ${core.length} largest vaults in this report was ${pct(avg30)} a year over ` +
-        `the 30 days to ${until}, ${avg30 >= avg90 ? "up" : "down"} from ${pct(avg90)} over 90 days. Individual large vaults ranged from ` +
-        `${pct(real(coreLo, "d30"))} to ${pct(real(coreHi, "d30"))}.`,
+        `The USDC interest rate lately is about ${pct(avg30)} a year. That is the deposit-weighted average across the ${core.length} largest ` +
+        `USDC lending vaults in this report over the 30 days to ${until}, ${avg30 >= avg90 ? "up" : "down"} from ${pct(avg90)} over 90 days. ` +
+        `Individual large vaults ranged from ${pct(real(coreLo, "d30"))} to ${pct(real(coreHi, "d30"))}.`,
     },
     ...(aave.length
       ? [{
           q: "What has the Aave USDC supply APY been recently?",
           a:
-            `Over the 30 days to ${until}, USDC supplied to Aave v3 earned ` +
+            `The Aave USDC supply APY has recently been ` +
             aave.map((v) => `${pct(real(v, "d30"))} on ${v.name.replace(/^Aave v3 /, "").replace(/ USDC.*$/, "")}`).join(", ").replace(/, ([^,]*)$/, " and $1") +
-            `. These are realized rates measured from the pool on-chain, so they differ from the live rate the Aave app shows on a given day.`,
+            `, measured over the 30 days to ${until}. These are realized rates read from the pool on-chain, so they differ from the live rate the Aave app shows on a given day.`,
         }]
       : []),
     {
@@ -497,19 +504,19 @@ export default function UsdcYieldReportPage() {
     {
       q: "Can you stake USDC?",
       a:
-        `Not in the strict sense: USDC does not secure a network, so there is nothing to stake. What is usually called USDC staking is ` +
+        `No, not in the strict sense: USDC does not secure a network, so there is nothing to stake. What is usually called USDC staking is ` +
         `lending. Over the 30 days to ${until}, lending USDC through the largest vaults paid ${pct(avg30)} a year on average.`,
     },
     {
       q: "How often does USDC interest get paid?",
       a:
-        `In an on-chain vault, yield is not paid out on a schedule. It accrues continuously into the vault's share price (on Aave, into ` +
+        `USDC yield in an on-chain vault is not paid out on a schedule: it accrues continuously into the vault's share price (on Aave, into ` +
         `your balance), so a deposit is worth slightly more with every block, and you collect it when you withdraw.`,
     },
     {
       q: `Which network had the best USDC rates in ${month}?`,
       a:
-        `Among large vaults, Base led in ${month}: ${coreHi.name} paid ${pct(real(coreHi, "d30"))}. ` +
+        `Base had the best large-vault USDC rates in ${month}: ${coreHi.name} paid ${pct(real(coreHi, "d30"))}. ` +
         `${coreBig.name}, the largest USDC market, paid ${pct(real(coreBig, "d30"))}` +
         (core.find((v) => v.chain === "Arbitrum") ? `, and ${core.find((v) => v.chain === "Arbitrum")!.name} paid ${pct(real(core.find((v) => v.chain === "Arbitrum")!, "d30"))}` : "") +
         `. This report covers ${list(r.chains)}.`,
@@ -700,6 +707,14 @@ export default function UsdcYieldReportPage() {
               <>The extra yield comes with less depth: together these vaults hold {usd(smallTvl)}, against {usd(coreTvl)} in the large ones, so one big deposit or withdrawal can move the rate.</>,
             ]}
           />
+        ) : null}
+        {btcd ? (
+          <p className="uh-note">
+            <strong>What is under {btcd.name}:</strong> this Harvest vault autocompounds the IPOR Fusion vault Bitcoin
+            Dollar USDC, curated by BTCD Labs. That vault does not lend USDC. About 92% of it is a position on Morpho
+            that holds staked Bitcoin Dollar (wsBTCD) and owes WBTC, so its share price moves both ways. It launched
+            on September 11, so it has no 90-day figure yet; since launch it has paid {pct(btcdSince ?? undefined)} a year.
+          </p>
         ) : null}
       </Block>
 
@@ -1020,36 +1035,11 @@ export default function UsdcYieldReportPage() {
         <ul className="uh-venues">
           <li>Vaults were chosen by their size today, so vaults that shrank or closed during the period are less likely to appear.</li>
           <li>Reward rates are listed as the campaigns published them and are not added to any vault&rsquo;s rate; older Aave Merit rewards could not be checked.</li>
-          {all.some((v) => v.name === "Bitcoin Dollar USDC") ? (
-            <li>One IPOR Fusion vault, Bitcoin Dollar USDC, holds a leveraged bitcoin position instead of lending USDC, so its rate moves with that position.</li>
+          {btcd ? (
+            <li>{btcd.name} sits on a vault that holds a leveraged bitcoin-backed position instead of lending USDC, so its rate moves with that position and can be negative over short windows.</li>
           ) : null}
           <li>Arbitrum has few entries because few USDC vaults there are large: outside Aave, none of the platforms had one above about $1.3M.</li>
         </ul>
-      </Block>
-
-      <Block
-        id="data"
-        eyebrow="Data"
-        title="All results: every USDC vault in this report"
-        lead={`All ${all.length} vaults in one table, ranked by 30-day rate, with current deposits beside it. Click a row to open the vault on its own platform.`}
-      >
-        <p className="uyr-files">
-          The same data for machines:{" "}
-          <a href={`${REPORT_PATH}.json`}>JSON dataset</a> (every vault with its daily share price) and{" "}
-          <a href={`${REPORT_PATH}.md`}>Markdown version</a> of this report.
-        </p>
-        <AllResultsTable
-          title={`All ${all.length} USDC vaults`}
-          rows={all.map((v) => ({
-            id: v.address,
-            name: v.name,
-            chain: v.chain,
-            venue: v.venue,
-            href: product(v),
-            d30: pct(real(v, "d30")),
-            tvl: usd(v.tvl_usd_now),
-          }))}
-        />
       </Block>
 
 
@@ -1059,6 +1049,10 @@ export default function UsdcYieldReportPage() {
         title="Contract addresses of every vault"
         lead="The on-chain address of each vault measured in this report, on the network it runs on. Every rate here can be reproduced by reading the share price at that address."
       >
+        <p className="uyr-files">
+          The same report for machines: <a href={`${REPORT_PATH}.json`}>JSON dataset</a> (every vault with its daily
+          share price) and <a href={`${REPORT_PATH}.md`}>Markdown version</a>.
+        </p>
         <VaultContracts
           title="Vault contracts"
           rows={[...all]
