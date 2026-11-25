@@ -421,3 +421,12 @@
   /* The APY formula wraps on a phone instead of running off the screen. */
   .uni-hub-test.uh-page.ae.ld.uyr .uh-block code { white-space: normal; overflow-wrap: anywhere; }
 }
+
+/* Rows breathe: a name that wraps to two lines keeps clear space above and below. */
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table tbody :is(th, td) { padding-top: 14px !important; padding-bottom: 14px !important; height: auto; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-name { line-height: 20px; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-sub { margin-top: 3px; line-height: 17px; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-prod { gap: 12px; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table tbody :is(th, td) { padding-top: 12px !important; padding-bottom: 12px !important; }
+}

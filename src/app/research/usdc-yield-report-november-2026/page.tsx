@@ -375,7 +375,8 @@ export default function UsdcYieldReportPage() {
   const hv30 = smaller.filter((v) => v.venue === "Harvest").map((v) => real(v, "d30")).filter((x): x is number => x != null);
 
 
-  const rewarded = lending.filter((v) => v.merkl?.had_rewards_in_period);
+  // Points-only programs (no token paid) are not reward campaigns here.
+  const rewarded = lending.filter((v) => v.merkl?.had_rewards_in_period && v.merkl_peak);
 
   // ---- Summary findings: one product per bullet ----
   // Shape: <Label>: <rate>, <Product> (network, platform, context). Label renders blue, rate bold.
@@ -795,7 +796,7 @@ export default function UsdcYieldReportPage() {
             cells: [
               <Prod key="p" v={v} />,
               v.merkl_peak ? `${v.merkl_peak.apr}%` : "–",
-              v.merkl_tokens.map((x) => x.replace(" points", "")).join(", ") || "–",
+              v.merkl_tokens.filter((x) => !/points/i.test(x)).join(", ") || "–",
             ],
           }))}
         />

@@ -155,7 +155,7 @@ export function reportMarkdown(): string {
   const util = all.filter((v) => v.tier === "utilization");
   const lend = all.filter((v) => v.tier !== "credit");
   const credit = all.filter((v) => v.tier === "credit");
-  const rewarded = all.filter((v) => v.merkl?.had_rewards_in_period);
+  const rewarded = all.filter((v) => v.tier !== "credit" && v.merkl?.had_rewards_in_period && v.merkl_peak);
 
   return [
     "---",
@@ -207,11 +207,11 @@ export function reportMarkdown(): string {
       : []),
     "## Rewards on top",
     "",
-    `Reward campaigns ran on ${rewarded.length} of the ${all.length} vaults during the period. Rewards are not part of the rates above, except on Harvest vaults, which convert them back into USDC inside the vault.`,
+    `Reward campaigns ran on ${rewarded.length} of the ${lend.length} lending vaults during the period. Rewards are not part of the rates above, except on Harvest vaults, which convert them back into USDC inside the vault.`,
     "",
     ...rewarded.map(
       (v) =>
-        `- ${v.name}: ${v.merkl_tokens.join(", ") || "rewards"}` +
+        `- ${v.name}: ${v.merkl_tokens.filter((x) => !/points/i.test(x)).join(", ") || "rewards"}` +
         (v.merkl_peak ? `, peak ${v.merkl_peak.apr}% APR` : "") +
         (v.rewardEligibility ? `, ${v.rewardEligibility}` : "") +
         (v.merkl_in_share_price ? " (already included in the vault's rate)" : ""),
