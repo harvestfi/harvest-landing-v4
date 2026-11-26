@@ -1,0 +1,432 @@
+/* USDC Yield Report. Rides the /usdc hub styles (asset-hub, usdc-hub,
+   asset-editorial, asset-ld); only the data table and the placeholder state
+   are new. Table rules mirror .rp-dtable from report.css, re-scoped because
+   those are bound to .rp-page. */
+.uyr .uyr-table-wrap { width: 100%; overflow-x: auto; margin: 14px 0 6px; }
+.uyr .uyr-table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 20px; }
+.uyr .uyr-table th {
+  text-align: left; font-weight: 750; color: var(--uni-ink);
+  padding: 0 10px 9px; border-bottom: 1px solid var(--uni-line, #dedee6); white-space: nowrap;
+}
+.uyr .uyr-table td {
+  padding: 9px 10px; color: var(--uni-ink-2, #3e3e46);
+  border-bottom: 1px solid var(--rp-card-border, #eeeef5); vertical-align: middle;
+}
+.uyr .uyr-table tbody tr:last-child td { border-bottom: 0; }
+.uyr .uyr-table th:first-child, .uyr .uyr-table td:first-child { padding-left: 0; }
+.uyr .uyr-table th:last-child, .uyr .uyr-table td:last-child { padding-right: 0; }
+.uyr .uyr-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.uyr .uyr-table td.strong { color: var(--uni-ink); font-weight: 600; }
+
+/* Skeleton only: marks a section whose numbers are still being collected. */
+.uyr .uyr-pending {
+  border: 1px dashed var(--uni-line, #dedee6); border-radius: 12px;
+  padding: 14px 16px; margin: 14px 0; color: var(--uni-ink-3, #8a887f); font-size: 14.5px;
+}
+.uyr .uyr-pending b { color: var(--uni-ink-2, #3e3e46); }
+.uyr .uyr-draft {
+  display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: #b4540a; border: 1px solid currentColor;
+  border-radius: 999px; padding: 1px 9px; margin-bottom: 10px;
+}
+
+.uyr .uyr-rownote { display: block; font-weight: 400; font-size: 13px; color: var(--uni-ink-3, #8a887f); margin-top: 2px; white-space: normal; max-width: 34ch; }
+.uyr .uyr-over { color: #b42318; font-weight: 600; }
+.uyr .uyr-under { color: #1a7f4b; font-weight: 600; }
+
+/* Utilization-risk cards: amber edge so the section reads as a caution, not a leaderboard. */
+.uyr .uyr-risk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin: 18px 0 8px; }
+.uyr .uyr-risk {
+  border: 1px solid var(--rp-card-border, #e2e3e5); border-left: 4px solid #d97706;
+  border-radius: 12px; padding: 14px 16px; background: var(--uni-card, transparent);
+}
+.uyr .uyr-risk h3 { font-size: 16px; line-height: 22px; margin: 0; }
+.uyr .uyr-risk-meta { font-size: 13px; color: var(--uni-ink-3, #8a887f); margin: 2px 0 10px; }
+.uyr .uyr-risk dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 0 0 10px; }
+.uyr .uyr-risk dt { font-size: 12px; color: var(--uni-ink-3, #8a887f); }
+.uyr .uyr-risk dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+.uyr .uyr-risk p { font-size: 14.5px; line-height: 21px; margin: 6px 0 0; }
+.uyr .uyr-risk .uyr-risk-exit { color: #b45309; }
+
+.uyr .uyr-chart { margin: 14px 0 6px; }
+.uyr .uyr-chart svg { width: 100%; height: auto; display: block; }
+.uyr .uyr-grid { stroke: var(--uni-line, #dedee6); stroke-width: 1; }
+.uyr .uyr-ax { font-size: 11px; fill: var(--uni-ink-3, #8a887f); }
+.uyr .uyr-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--uni-ink-2, #3e3e46); }
+.uyr .uyr-legend i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+
+/* Summary: blue label, bold product, muted context. */
+.uyr .uh-findings .uyr-k { color: #2f6fdf; font-weight: 700; }
+.uyr .uh-findings .uyr-tail { color: var(--uni-ink-3, #8a887f); }
+
+/* Dated headline on one line on desktop. The ld column is 648px; at the hub's
+   36px the 41-character title runs ~790px, so it steps down to 28px here.
+   Below 721px it wraps as normal. */
+@media (min-width: 721px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .uni-hub-h1 {
+    font-size: 28px;
+    line-height: 34px;
+    letter-spacing: -0.6px;
+    white-space: nowrap;
+  }
+}
+
+/* Report tables reuse the hub ranking card (.rk); these only cover what the
+   static variant adds: a non-button header and plain text columns. */
+.uyr .rk-sort.uyr-static { cursor: default; }
+.uyr .rk-table .uyr-c-text { text-align: right; white-space: nowrap; }
+.uyr .rk + .uyr-notes, .uyr .rk + .uh-note { margin-top: 14px; }
+.uyr .uyr-notes { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; }
+.uyr .uyr-notes li { font-size: 14px; line-height: 21px; color: var(--uni-ink-2, #3e3e46); padding-left: 14px; position: relative; }
+.uyr .uyr-notes li::before { content: ""; position: absolute; left: 0; top: 9px; width: 5px; height: 5px; border-radius: 50%; background: var(--uni-ink-3, #8a887f); }
+.uyr .uyr-notes strong { color: var(--uni-ink); font-weight: 600; }
+
+/* Long vault names must not push the number columns out of the card: fixed
+   layout, fixed number columns, name truncates (full name stays in the link). */
+.uni-hub-test.uh-page.ae.uyr .rk-table { table-layout: fixed; width: 100%; }
+.uni-hub-test.uh-page.ae.uyr .rk-table .rk-c-name { width: auto; }
+.uni-hub-test.uh-page.ae.uyr .rk-table :is(.rk-c-apy, .rk-c-30, .rk-c-tvl, .uyr-c-text) { width: 118px; }
+.uni-hub-test.uh-page.ae.uyr .rk-table .rk-c-go { width: 28px; }
+.uni-hub-test.uh-page.ae.uyr .rk-prod-txt { min-width: 0; }
+.uni-hub-test.uh-page.ae.uyr .rk-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uni-hub-test.uh-page.ae.uyr .rk-sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.uyr .rk-table :is(.rk-c-apy, .rk-c-tvl, .uyr-c-text) { width: 84px; }
+}
+.uni-hub-test.uh-page.ae.uyr .rk-table .uyr-c-text { width: 150px; padding-right: 16px; }
+@media (max-width: 720px) { .uni-hub-test.uh-page.ae.uyr .rk-table .uyr-c-text { width: 112px; } }
+/* Four-column cards (gap view): narrower number columns so the name keeps ~350px. */
+.uni-hub-test.uh-page.ae.uyr .rk-table:has(thead th:nth-child(4):not(.rk-c-go)) :is(.rk-c-apy, .rk-c-tvl) { width: 96px; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table th.uyr-c-text,
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table td.uyr-c-text { width: 150px !important; padding-right: 16px !important; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table th.uyr-c-text,
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table td.uyr-c-text { width: 104px !important; }
+}
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table td.uyr-c-text { white-space: normal !important; overflow-wrap: anywhere; }
+
+/* Ranking cards: room for the column headings ("30d realized", "90d realized")
+   and a little more air between the card title and the table. */
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th.rk-c-apy, th.rk-c-30, td.rk-c-apy, td.rk-c-30) { width: 136px; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table thead th { padding-top: 14px; padding-bottom: 12px; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table thead .rk-sort { white-space: nowrap; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk .rk-bar { padding-top: 18px; padding-bottom: 16px; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th.rk-c-apy, th.rk-c-30, td.rk-c-apy, td.rk-c-30) { width: 104px; }
+}
+
+/* Conclusion box under the main ranking: the one number to take away. */
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion {
+  margin: 20px 0 0; padding: 20px 22px 18px; border-radius: 14px;
+  background: linear-gradient(180deg, #f2f7ff 0%, #f8fbff 100%);
+  border: 1px solid #d9e6fb; border-left: 4px solid #2f6fdf;
+}
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion p { margin: 0; }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-k {
+  font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #2f6fdf;
+}
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-big {
+  margin-top: 8px !important; font-size: 19px; line-height: 27px; font-weight: 600; color: var(--uni-ink, #16161a); letter-spacing: -.2px;
+}
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-big strong { color: #2f6fdf; font-weight: 700; }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-txt {
+  margin-top: 8px !important; font-size: 14px; line-height: 21px; color: var(--uni-ink-2, #3e3e46);
+}
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion + .uh-note { margin-top: 14px; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.uyr .uyr-conclusion { padding: 16px 16px 14px; }
+  .uni-hub-test.uh-page.ae.uyr .uyr-conclusion-big { font-size: 17px; line-height: 24px; }
+}
+
+/* Date reference sits under the summary box, not inside it. */
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-dateline { margin: 12px 0 0; padding: 0 4px; font-size: 13px; line-height: 19px; }
+
+/* The ld layout hides the hero icon; the report shows the USDC mark before the H1. */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-titlerow { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-titlerow .uni-hub-hero-icon { display: inline-flex; flex: none; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-titlerow .uni-hub-hero-icon img { width: 34px !important; height: 34px !important; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .uh-titlerow { align-items: flex-start; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uh-titlerow .uni-hub-hero-icon { margin-top: 2px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uh-titlerow .uni-hub-hero-icon img { width: 28px !important; height: 28px !important; }
+}
+
+/* Conclusion box: two sizes only, the "Conclusion" title and one body size for the rest. */
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-k { font-size: 13px; line-height: 18px; }
+.uni-hub-test.uh-page.ae.uyr :is(.uyr-conclusion-big, .uyr-conclusion-txt) { font-size: 16px; line-height: 26px; letter-spacing: 0; }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-txt { margin-top: 4px !important; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.uyr :is(.uyr-conclusion-big, .uyr-conclusion-txt) { font-size: 15px; line-height: 24px; }
+}
+
+/* Conclusion box, final: the same surface as the summary box (soft fill, hairline,
+   16px radius). No gradient, no accent stripe, no tinted border. */
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion {
+  margin: 16px 0 0; padding: 16px 20px; border-radius: 16px;
+  background: var(--ld-soft); border: 1px solid var(--ld-line-2);
+}
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-k {
+  letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--uni-ink-3, #8a887f);
+}
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-big { margin-top: 6px !important; font-weight: 500; }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-big strong { color: var(--uni-ink, #16161a); font-weight: 700; }
+/* Title matches the "Summary" heading exactly. */
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-k { font-size: 14px; line-height: 20px; color: var(--ld-primary); }
+/* Blue title and a thin blue hairline, same blue as the summary labels. */
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion { border: 1px solid rgba(47, 111, 223, .35); }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-k { color: #2f6fdf; }
+
+/* Conclusion statements: same body size as the headline, one per line. */
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-list { list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid rgba(47, 111, 223, .18); display: grid; gap: 6px; }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-list li { position: relative; margin: 0; padding-left: 14px; font-size: 16px; line-height: 26px; color: var(--uni-ink-2, #3e3e46); }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-list li::before { content: ""; position: absolute; left: 0; top: 11px; width: 5px; height: 5px; border-radius: 50%; background: #2f6fdf; }
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion-list strong { color: var(--uni-ink, #16161a); font-weight: 600; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.uyr .uyr-conclusion-list li { font-size: 15px; line-height: 24px; }
+}
+
+/* Intro in two short paragraphs. */
+.uni-hub-test.uh-page.ae.uyr .uh-answer .uyr-intro-p { display: block; }
+.uni-hub-test.uh-page.ae.uyr .uh-answer .uyr-intro-p + .uyr-intro-p { margin-top: 12px; }
+
+/* Summary: regular text, only the rate figure in bold. */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-summary .uh-findings li { font-weight: 400; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-summary .uh-findings li strong { font-weight: 700; color: var(--uni-ink, var(--ld-text)); }
+/* Conclusion title: blue, above the generic block paragraph colour. */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-conclusion p.uyr-conclusion-k { color: var(--ld-primary); }
+
+/* ---- Interactive share price chart ---- */
+/* Series colours: one validated step per theme, assigned in fixed order. */
+.uyr { --uyr-s1:#2a78d6; --uyr-s2:#eb6834; --uyr-s3:#1baf7a; --uyr-s4:#eda100; --uyr-s5:#e87ba4; --uyr-s6:#008300; --uyr-s7:#6250d6; --uyr-s8:#e34948; }
+:root[data-theme="dark"] .uyr { --uyr-s1:#3987e5; --uyr-s2:#d95926; --uyr-s3:#199e70; --uyr-s4:#c98500; --uyr-s5:#d55181; --uyr-s6:#0ca30c; --uyr-s7:#9085e9; --uyr-s8:#e66767; }
+.uyr .uyr-chart svg { cursor: crosshair; touch-action: pan-y; outline: none; border-radius: 8px; }
+.uyr .uyr-chart svg:focus-visible { box-shadow: 0 0 0 2px var(--ld-primary, #2f6fdf); }
+.uyr .uyr-cross { stroke: var(--ld-muted, #8a887f); stroke-width: 1; stroke-dasharray: 3 3; }
+.uyr .uyr-dot { stroke: var(--ld-bg, #fff); stroke-width: 2; }
+.uyr .uyr-chart polyline { transition: opacity .12s; }
+
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-readout {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 10px 0 0; padding: 8px 0 6px; border-top: 1px solid var(--ld-line, #e6e6ea);
+  font-size: 13px; line-height: 18px; color: var(--ld-muted, #8a887f);
+}
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-readout strong { color: var(--ld-text, #16161a); font-weight: 600; }
+
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-legend {
+  list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px;
+}
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-legend li { margin: 0; padding: 0; font-size: 13px; line-height: 18px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-legend li::before { content: none; display: none; }
+.uyr .uyr-legend button {
+  all: unset; box-sizing: border-box; cursor: pointer; width: 100%;
+  display: grid; grid-template-columns: 12px minmax(0, auto) minmax(0, 1fr) auto; align-items: center; gap: 0 8px;
+  padding: 4px 6px; margin: 0 -6px; border-radius: 6px; font-size: 13px; line-height: 18px;
+}
+.uyr .uyr-legend button:hover { background: var(--ld-soft, rgba(0, 0, 0, .04)); }
+.uyr .uyr-legend button:focus-visible { box-shadow: 0 0 0 2px var(--ld-primary, #2f6fdf); }
+.uyr .uyr-legend i { display: block; width: 12px; height: 3px; border-radius: 2px; margin: 0; }
+.uyr .uyr-legend-n { color: var(--ld-text, #16161a); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uyr .uyr-legend-c { color: var(--ld-muted, #8a887f); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uyr .uyr-legend-v { color: var(--ld-text, #16161a); font-variant-numeric: tabular-nums; font-weight: 600; }
+.uyr .uyr-legend button[data-off="true"] :is(.uyr-legend-n, .uyr-legend-c, .uyr-legend-v) { color: var(--ld-muted, #8a887f); text-decoration: line-through; }
+.uyr .uyr-legend button[data-off="true"] i { opacity: .3; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-legend { grid-template-columns: 1fr; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-readout span { display: none; }
+}
+
+/* ---- Chart tooltip (top 5 at the hovered date) and compact legend ---- */
+.uyr .uyr-chart-plot { position: relative; }
+.uyr .uyr-tip {
+  position: absolute; top: 8px; z-index: 2; pointer-events: none; min-width: 190px; max-width: min(280px, 72%);
+  padding: 8px 10px; border-radius: 10px; background: var(--ld-bg, #fff); border: 1px solid var(--ld-line-2, #dedee6);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .16); font-size: 12.5px; line-height: 18px;
+}
+.uyr .uyr-tip[data-side="right"] { transform: translateX(12px); }
+.uyr .uyr-tip[data-side="left"] { transform: translateX(calc(-100% - 12px)); }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-tip p { margin: 0; font-size: 12.5px; line-height: 18px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-tip .uyr-tip-d { font-weight: 600; color: var(--ld-text, #16161a); margin-bottom: 4px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-tip .uyr-tip-n { margin-top: 4px; color: var(--ld-muted, #8a887f); font-size: 11.5px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-tip ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-tip li {
+  margin: 0; padding: 0; display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 0 7px;
+  font-size: 12.5px; line-height: 18px; color: var(--ld-text, #16161a);
+}
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-tip li::before { content: none; display: none; }
+.uyr .uyr-tip li i { width: 10px; height: 3px; border-radius: 2px; }
+.uyr .uyr-tip li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uyr .uyr-tip li b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-legend { margin-top: 10px; }
+.uyr .uyr-legend button { grid-template-columns: 12px minmax(0, auto) minmax(0, 1fr); padding: 3px 6px; }
+@media (max-width: 720px) {
+  .uyr .uyr-tip { min-width: 150px; max-width: 64%; font-size: 12px; padding: 7px 8px; }
+  .uyr .uyr-legend button { padding: 6px; } /* finger-sized rows */
+}
+
+/* ---- Inline code in the method section ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875em;
+  padding: 2px 6px; border-radius: 6px; background: var(--ld-soft, #f3f3f1); border: 1px solid var(--ld-line-2, #dedee6);
+  color: var(--ld-primary, #2f6fdf); white-space: nowrap;
+}
+
+/* ---- All-results table: five columns and a pager ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n { width: 76px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n:last-child { width: 92px; padding-right: 20px; }
+.uyr .rk-table tr[hidden] { display: none; }
+.uyr .uyr-pager {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px;
+  border-top: 1px solid var(--ld-line-2, #dedee6); font-size: 13px; line-height: 18px; color: var(--ld-muted, #8a887f);
+}
+.uyr .uyr-pager-btns { display: inline-flex; align-items: center; gap: 10px; }
+.uyr .uyr-pager button {
+  all: unset; box-sizing: border-box; cursor: pointer; padding: 5px 12px; border-radius: 8px; font-size: 13px; line-height: 18px;
+  font-weight: 500; color: var(--ld-text, #16161a); border: 1px solid var(--ld-line-2, #dedee6);
+}
+.uyr .uyr-pager button:hover:not(:disabled) { background: var(--ld-soft, rgba(0, 0, 0, .04)); }
+.uyr .uyr-pager button:focus-visible { box-shadow: 0 0 0 2px var(--ld-primary, #2f6fdf); }
+.uyr .uyr-pager button:disabled { opacity: .4; cursor: default; }
+
+/* ---- Contract addresses ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-addr .rk-table :is(th, td).uyr-c-addr { width: 330px; text-align: right; padding-right: 20px; white-space: nowrap; }
+.uyr .uyr-c-addr a { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--ld-muted, #8a887f); text-decoration: none; }
+.uyr .uyr-c-addr a:hover { color: var(--ld-primary, #2f6fdf); text-decoration: underline; }
+.uyr .uyr-addr-short { display: none; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-addr .rk-table :is(th, td).uyr-c-addr { width: 132px; padding-right: 14px; }
+  .uyr .uyr-addr-full { display: none; }
+  .uyr .uyr-addr-short { display: inline; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n { width: 58px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n:first-of-type,
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n:last-child { display: none; } /* 7d and TVL */
+  .uyr .uyr-pager { flex-wrap: wrap; }
+}
+
+/* ---- "You are leaving Harvest" ---- */
+.uyr dialog.uyr-leave {
+  width: min(420px, calc(100vw - 32px)); padding: 0; border: 1px solid var(--ld-line-2, #dedee6); border-radius: 16px;
+  background: var(--ld-bg, #fff); color: var(--ld-text, #16161a); box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+.uyr dialog.uyr-leave::backdrop { background: rgba(0, 0, 0, .45); }
+.uyr .uyr-leave-in { padding: 22px 22px 18px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-leave h2 { margin: 0; font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: -.2px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-leave p { margin: 8px 0 0; font-size: 14px; line-height: 22px; color: var(--ld-muted, #6b6b73); }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-leave p strong { color: var(--ld-text, #16161a); font-weight: 600; overflow-wrap: anywhere; }
+.uyr .uyr-leave-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.uyr .uyr-leave-act :is(button, a) {
+  all: unset; box-sizing: border-box; cursor: pointer; padding: 8px 14px; border-radius: 10px; font-size: 14px; line-height: 20px; font-weight: 500;
+}
+.uyr .uyr-leave-stay { background: var(--ld-text, #16161a); color: var(--ld-bg, #fff); }
+.uyr .uyr-leave-go { border: 1px solid var(--ld-line-2, #dedee6); color: var(--ld-text, #16161a); }
+.uyr .uyr-leave-act :is(button, a):focus-visible { box-shadow: 0 0 0 2px var(--ld-primary, #2f6fdf); }
+
+/* All-results table, final: two number columns (30d realized, TVL), both always shown. */
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n { width: 124px; display: table-cell !important; }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n:last-child { width: 112px; padding-right: 20px; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n { width: 92px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-all .rk-table :is(th, td).uyr-c-n:last-child { width: 78px; padding-right: 14px; }
+}
+
+/* ---- Vault contracts: one row per vault, full name, full address, copy button ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-list { list-style: none; margin: 0; padding: 0; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-list li {
+  display: flex; align-items: flex-start; gap: 12px; margin: 0; padding: 12px 16px;
+  border-top: 1px solid var(--ld-line-2, #dedee6); font-size: 14px; line-height: 20px;
+}
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-list li::before { content: none; display: none; }
+.uyr .uyr-contracts-list .rk-tile { flex: none; margin-top: 1px; }
+.uyr .uyr-contracts-txt { min-width: 0; flex: 1; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-list p { margin: 0; font-size: 14px; line-height: 20px; }
+.uyr .uyr-contracts-n a { color: var(--ld-text, #16161a); font-weight: 600; text-decoration: none; }
+.uyr .uyr-contracts-n a:hover { color: var(--ld-primary, #2f6fdf); }
+.uyr .uyr-contracts-n span { margin-left: 8px; font-size: 12.5px; color: var(--ld-muted, #8a887f); white-space: nowrap; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-list p.uyr-contracts-a { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.uyr .uyr-contracts-a a {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 18px;
+  color: var(--ld-muted, #8a887f); text-decoration: none; overflow-wrap: anywhere; min-width: 0;
+}
+.uyr .uyr-contracts-a a:hover { color: var(--ld-primary, #2f6fdf); text-decoration: underline; }
+.uyr .uyr-contracts-a button {
+  all: unset; box-sizing: border-box; cursor: pointer; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 7px; color: var(--ld-muted, #8a887f);
+}
+.uyr .uyr-contracts-a button:hover { background: var(--ld-soft, rgba(0, 0, 0, .05)); color: var(--ld-text, #16161a); }
+.uyr .uyr-contracts-a button:focus-visible { box-shadow: 0 0 0 2px var(--ld-primary, #2f6fdf); }
+.uyr .uyr-contracts-a button[data-copied="true"] { color: #1baf7a; }
+
+/* ---- Closing disclaimer ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-disclaimer { margin: 40px 0 0; padding: 16px 0 0; border-top: 1px solid var(--ld-line-2, #dedee6); }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-disclaimer p { margin: 0 0 8px; font-size: 13px; line-height: 20px; color: var(--ld-muted, #8a887f); }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-disclaimer strong { color: var(--ld-text, #16161a); font-weight: 600; }
+
+/* ---- Conclusion surface: page background with a faint blue wash, not grey ---- */
+.uni-hub-test.uh-page.ae.uyr .uyr-conclusion { background: color-mix(in srgb, #2f6fdf 6%, var(--ld-bg, #fff)); }
+
+/* ---- Breathing room around the hero buttons ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .ae-hero-ctas { margin: 12px 0 40px; gap: 10px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-answer { padding-bottom: 16px; }
+
+/* ---- Leads come as short paragraphs: tight between them, normal after the last ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block > .uh-lead { margin-bottom: 12px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block > .uh-lead:not(:has(+ .uh-lead)) { margin-bottom: 20px; }
+
+/* ---- Phones: every table fits the screen, nothing scrolls sideways, names wrap ---- */
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-scroll { overflow: hidden; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table { table-layout: fixed; width: 100%; min-width: 0; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(.rk-name, .rk-sub) { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th, td).rk-c-go { display: none; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th.rk-c-apy, td.rk-c-apy) { width: 78px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th.rk-c-tvl, td.rk-c-tvl) { width: 74px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th, td).uyr-c-text { width: 86px !important; padding-right: 12px !important; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-sort { white-space: normal; text-align: right; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-prod { align-items: flex-start; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-contracts-n span { display: block; margin-left: 0; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-list li { padding: 12px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .uyr-conclusion-list li { padding-left: 12px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .ae-hero-ctas { margin: 8px 0 32px; }
+}
+@media (max-width: 720px) {
+  /* Room for "30d realized" plus its sort arrow. */
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th.rk-c-apy, td.rk-c-apy) { width: 104px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th, td):last-child { padding-right: 14px !important; }
+}
+@media (max-width: 720px) {
+  /* Static cards with a text column: narrower rate column, headings may wrap, so names keep their room. */
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table:has(.uyr-c-text) :is(th.rk-c-apy, td.rk-c-apy) { width: 70px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table :is(th, td).uyr-c-text { width: 82px !important; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table:has(th.rk-c-tvl) :is(th.rk-c-apy, td.rk-c-apy) { width: 80px; }
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-sort.uyr-static { white-space: normal; }
+}
+
+/* Links to the machine-readable editions, above the all-results table. */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-files { margin: 0 0 14px; font-size: 14px; line-height: 22px; color: var(--ld-muted, #8a887f); }
+
+/* Vault names wrap onto a second line instead of being cut with an ellipsis. */
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-name { white-space: normal; overflow: visible; text-overflow: clip; }
+
+/* ---- Reference half of the page: definitions list, method sub-headings ---- */
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-defs { margin: 0; display: grid; gap: 14px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-defs dt { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ld-text, #16161a); scroll-margin-top: 90px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uyr-defs dd { margin: 2px 0 0; font-size: 15px; line-height: 24px; color: var(--ld-muted, #6b6b73); }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block h3 { margin: 28px 0 10px; font-size: 17px; line-height: 24px; font-weight: 600; scroll-margin-top: 90px; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uh-note + .uh-note { margin-top: 6px; }
+
+/* Contract addresses: plain monospace text, no underline, until hovered. */
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-a a { text-decoration: none !important; font-weight: 400 !important; color: var(--ld-muted, #8a887f) !important; border: 0; background: none; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-a a:hover { color: var(--ld-primary, #2f6fdf) !important; }
+.uni-hub-test.uh-page.ae.ld.uyr .uh-block .uyr-contracts-n a { text-decoration: none !important; }
+@media (max-width: 720px) {
+  /* The APY formula wraps on a phone instead of running off the screen. */
+  .uni-hub-test.uh-page.ae.ld.uyr .uh-block code { white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* Rows breathe: a name that wraps to two lines keeps clear space above and below. */
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table tbody :is(th, td) { padding-top: 14px !important; padding-bottom: 14px !important; height: auto; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-name { line-height: 20px; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-sub { margin-top: 3px; line-height: 17px; }
+.uni-hub-test.uh-page.ae.ld.uyr .rk-table .rk-prod { gap: 12px; }
+@media (max-width: 720px) {
+  .uni-hub-test.uh-page.ae.ld.uyr .rk-table tbody :is(th, td) { padding-top: 12px !important; padding-bottom: 12px !important; }
+}
