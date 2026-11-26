@@ -174,11 +174,11 @@ export function RankTable({
                     </span>
                     <span className="rk-prod-txt">
                       {r.href && /^https?:/.test(r.href) ? (
-                        <a href={r.href} className="rk-name" title={r.name} target="_blank" rel="noopener noreferrer">
+                        <a href={r.href} className="rk-name" target="_blank" rel="noopener noreferrer">
                           {r.name}
                         </a>
                       ) : (
-                        <Link href={r.href ?? `/${r.slug}`} className="rk-name" title={r.name}>
+                        <Link href={r.href ?? `/${r.slug}`} className="rk-name">
                           {r.name}
                         </Link>
                       )}
